@@ -609,6 +609,40 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_f32x4(self, src: &[f32; 16usize]) -> [f32x4<Self>; 4usize] {
+        [
+            [src[0usize], src[4usize], src[8usize], src[12usize]].simd_into(self),
+            [src[1usize], src[5usize], src[9usize], src[13usize]].simd_into(self),
+            [src[2usize], src[6usize], src[10usize], src[14usize]].simd_into(self),
+            [src[3usize], src[7usize], src[11usize], src[15usize]].simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_f32x4(
+        self,
+        vectors: [f32x4<Self>; 4usize],
+        dest: &mut [f32; 16usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+            vectors[0usize][2usize],
+            vectors[1usize][2usize],
+            vectors[2usize][2usize],
+            vectors[3usize][2usize],
+            vectors[0usize][3usize],
+            vectors[1usize][3usize],
+            vectors[2usize][3usize],
+            vectors[3usize][3usize],
+        ];
+    }
+    #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         [
             a[0usize] as u32,
@@ -1406,6 +1440,160 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_i8x16(self, src: &[i8; 64usize]) -> [i8x16<Self>; 4usize] {
+        [
+            [
+                src[0usize],
+                src[4usize],
+                src[8usize],
+                src[12usize],
+                src[16usize],
+                src[20usize],
+                src[24usize],
+                src[28usize],
+                src[32usize],
+                src[36usize],
+                src[40usize],
+                src[44usize],
+                src[48usize],
+                src[52usize],
+                src[56usize],
+                src[60usize],
+            ]
+            .simd_into(self),
+            [
+                src[1usize],
+                src[5usize],
+                src[9usize],
+                src[13usize],
+                src[17usize],
+                src[21usize],
+                src[25usize],
+                src[29usize],
+                src[33usize],
+                src[37usize],
+                src[41usize],
+                src[45usize],
+                src[49usize],
+                src[53usize],
+                src[57usize],
+                src[61usize],
+            ]
+            .simd_into(self),
+            [
+                src[2usize],
+                src[6usize],
+                src[10usize],
+                src[14usize],
+                src[18usize],
+                src[22usize],
+                src[26usize],
+                src[30usize],
+                src[34usize],
+                src[38usize],
+                src[42usize],
+                src[46usize],
+                src[50usize],
+                src[54usize],
+                src[58usize],
+                src[62usize],
+            ]
+            .simd_into(self),
+            [
+                src[3usize],
+                src[7usize],
+                src[11usize],
+                src[15usize],
+                src[19usize],
+                src[23usize],
+                src[27usize],
+                src[31usize],
+                src[35usize],
+                src[39usize],
+                src[43usize],
+                src[47usize],
+                src[51usize],
+                src[55usize],
+                src[59usize],
+                src[63usize],
+            ]
+            .simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i8x16(
+        self,
+        vectors: [i8x16<Self>; 4usize],
+        dest: &mut [i8; 64usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+            vectors[0usize][2usize],
+            vectors[1usize][2usize],
+            vectors[2usize][2usize],
+            vectors[3usize][2usize],
+            vectors[0usize][3usize],
+            vectors[1usize][3usize],
+            vectors[2usize][3usize],
+            vectors[3usize][3usize],
+            vectors[0usize][4usize],
+            vectors[1usize][4usize],
+            vectors[2usize][4usize],
+            vectors[3usize][4usize],
+            vectors[0usize][5usize],
+            vectors[1usize][5usize],
+            vectors[2usize][5usize],
+            vectors[3usize][5usize],
+            vectors[0usize][6usize],
+            vectors[1usize][6usize],
+            vectors[2usize][6usize],
+            vectors[3usize][6usize],
+            vectors[0usize][7usize],
+            vectors[1usize][7usize],
+            vectors[2usize][7usize],
+            vectors[3usize][7usize],
+            vectors[0usize][8usize],
+            vectors[1usize][8usize],
+            vectors[2usize][8usize],
+            vectors[3usize][8usize],
+            vectors[0usize][9usize],
+            vectors[1usize][9usize],
+            vectors[2usize][9usize],
+            vectors[3usize][9usize],
+            vectors[0usize][10usize],
+            vectors[1usize][10usize],
+            vectors[2usize][10usize],
+            vectors[3usize][10usize],
+            vectors[0usize][11usize],
+            vectors[1usize][11usize],
+            vectors[2usize][11usize],
+            vectors[3usize][11usize],
+            vectors[0usize][12usize],
+            vectors[1usize][12usize],
+            vectors[2usize][12usize],
+            vectors[3usize][12usize],
+            vectors[0usize][13usize],
+            vectors[1usize][13usize],
+            vectors[2usize][13usize],
+            vectors[3usize][13usize],
+            vectors[0usize][14usize],
+            vectors[1usize][14usize],
+            vectors[2usize][14usize],
+            vectors[3usize][14usize],
+            vectors[0usize][15usize],
+            vectors[1usize][15usize],
+            vectors[2usize][15usize],
+            vectors[3usize][15usize],
+        ];
+    }
+    #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
         [val; 16usize].simd_into(self)
     }
@@ -2139,6 +2327,160 @@ impl Simd for Fallback {
         result[0..16usize].copy_from_slice(&a.val.0);
         result[16usize..32usize].copy_from_slice(&b.val.0);
         result.simd_into(self)
+    }
+    #[inline(always)]
+    fn load_four_interleaved_u8x16(self, src: &[u8; 64usize]) -> [u8x16<Self>; 4usize] {
+        [
+            [
+                src[0usize],
+                src[4usize],
+                src[8usize],
+                src[12usize],
+                src[16usize],
+                src[20usize],
+                src[24usize],
+                src[28usize],
+                src[32usize],
+                src[36usize],
+                src[40usize],
+                src[44usize],
+                src[48usize],
+                src[52usize],
+                src[56usize],
+                src[60usize],
+            ]
+            .simd_into(self),
+            [
+                src[1usize],
+                src[5usize],
+                src[9usize],
+                src[13usize],
+                src[17usize],
+                src[21usize],
+                src[25usize],
+                src[29usize],
+                src[33usize],
+                src[37usize],
+                src[41usize],
+                src[45usize],
+                src[49usize],
+                src[53usize],
+                src[57usize],
+                src[61usize],
+            ]
+            .simd_into(self),
+            [
+                src[2usize],
+                src[6usize],
+                src[10usize],
+                src[14usize],
+                src[18usize],
+                src[22usize],
+                src[26usize],
+                src[30usize],
+                src[34usize],
+                src[38usize],
+                src[42usize],
+                src[46usize],
+                src[50usize],
+                src[54usize],
+                src[58usize],
+                src[62usize],
+            ]
+            .simd_into(self),
+            [
+                src[3usize],
+                src[7usize],
+                src[11usize],
+                src[15usize],
+                src[19usize],
+                src[23usize],
+                src[27usize],
+                src[31usize],
+                src[35usize],
+                src[39usize],
+                src[43usize],
+                src[47usize],
+                src[51usize],
+                src[55usize],
+                src[59usize],
+                src[63usize],
+            ]
+            .simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u8x16(
+        self,
+        vectors: [u8x16<Self>; 4usize],
+        dest: &mut [u8; 64usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+            vectors[0usize][2usize],
+            vectors[1usize][2usize],
+            vectors[2usize][2usize],
+            vectors[3usize][2usize],
+            vectors[0usize][3usize],
+            vectors[1usize][3usize],
+            vectors[2usize][3usize],
+            vectors[3usize][3usize],
+            vectors[0usize][4usize],
+            vectors[1usize][4usize],
+            vectors[2usize][4usize],
+            vectors[3usize][4usize],
+            vectors[0usize][5usize],
+            vectors[1usize][5usize],
+            vectors[2usize][5usize],
+            vectors[3usize][5usize],
+            vectors[0usize][6usize],
+            vectors[1usize][6usize],
+            vectors[2usize][6usize],
+            vectors[3usize][6usize],
+            vectors[0usize][7usize],
+            vectors[1usize][7usize],
+            vectors[2usize][7usize],
+            vectors[3usize][7usize],
+            vectors[0usize][8usize],
+            vectors[1usize][8usize],
+            vectors[2usize][8usize],
+            vectors[3usize][8usize],
+            vectors[0usize][9usize],
+            vectors[1usize][9usize],
+            vectors[2usize][9usize],
+            vectors[3usize][9usize],
+            vectors[0usize][10usize],
+            vectors[1usize][10usize],
+            vectors[2usize][10usize],
+            vectors[3usize][10usize],
+            vectors[0usize][11usize],
+            vectors[1usize][11usize],
+            vectors[2usize][11usize],
+            vectors[3usize][11usize],
+            vectors[0usize][12usize],
+            vectors[1usize][12usize],
+            vectors[2usize][12usize],
+            vectors[3usize][12usize],
+            vectors[0usize][13usize],
+            vectors[1usize][13usize],
+            vectors[2usize][13usize],
+            vectors[3usize][13usize],
+            vectors[0usize][14usize],
+            vectors[1usize][14usize],
+            vectors[2usize][14usize],
+            vectors[3usize][14usize],
+            vectors[0usize][15usize],
+            vectors[1usize][15usize],
+            vectors[2usize][15usize],
+            vectors[3usize][15usize],
+        ];
     }
     #[inline(always)]
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {
@@ -3024,6 +3366,96 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_i16x8(self, src: &[i16; 32usize]) -> [i16x8<Self>; 4usize] {
+        [
+            [
+                src[0usize],
+                src[4usize],
+                src[8usize],
+                src[12usize],
+                src[16usize],
+                src[20usize],
+                src[24usize],
+                src[28usize],
+            ]
+            .simd_into(self),
+            [
+                src[1usize],
+                src[5usize],
+                src[9usize],
+                src[13usize],
+                src[17usize],
+                src[21usize],
+                src[25usize],
+                src[29usize],
+            ]
+            .simd_into(self),
+            [
+                src[2usize],
+                src[6usize],
+                src[10usize],
+                src[14usize],
+                src[18usize],
+                src[22usize],
+                src[26usize],
+                src[30usize],
+            ]
+            .simd_into(self),
+            [
+                src[3usize],
+                src[7usize],
+                src[11usize],
+                src[15usize],
+                src[19usize],
+                src[23usize],
+                src[27usize],
+                src[31usize],
+            ]
+            .simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i16x8(
+        self,
+        vectors: [i16x8<Self>; 4usize],
+        dest: &mut [i16; 32usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+            vectors[0usize][2usize],
+            vectors[1usize][2usize],
+            vectors[2usize][2usize],
+            vectors[3usize][2usize],
+            vectors[0usize][3usize],
+            vectors[1usize][3usize],
+            vectors[2usize][3usize],
+            vectors[3usize][3usize],
+            vectors[0usize][4usize],
+            vectors[1usize][4usize],
+            vectors[2usize][4usize],
+            vectors[3usize][4usize],
+            vectors[0usize][5usize],
+            vectors[1usize][5usize],
+            vectors[2usize][5usize],
+            vectors[3usize][5usize],
+            vectors[0usize][6usize],
+            vectors[1usize][6usize],
+            vectors[2usize][6usize],
+            vectors[3usize][6usize],
+            vectors[0usize][7usize],
+            vectors[1usize][7usize],
+            vectors[2usize][7usize],
+            vectors[3usize][7usize],
+        ];
+    }
+    #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
         [val; 8usize].simd_into(self)
     }
@@ -3534,6 +3966,96 @@ impl Simd for Fallback {
         result[0..8usize].copy_from_slice(&a.val.0);
         result[8usize..16usize].copy_from_slice(&b.val.0);
         result.simd_into(self)
+    }
+    #[inline(always)]
+    fn load_four_interleaved_u16x8(self, src: &[u16; 32usize]) -> [u16x8<Self>; 4usize] {
+        [
+            [
+                src[0usize],
+                src[4usize],
+                src[8usize],
+                src[12usize],
+                src[16usize],
+                src[20usize],
+                src[24usize],
+                src[28usize],
+            ]
+            .simd_into(self),
+            [
+                src[1usize],
+                src[5usize],
+                src[9usize],
+                src[13usize],
+                src[17usize],
+                src[21usize],
+                src[25usize],
+                src[29usize],
+            ]
+            .simd_into(self),
+            [
+                src[2usize],
+                src[6usize],
+                src[10usize],
+                src[14usize],
+                src[18usize],
+                src[22usize],
+                src[26usize],
+                src[30usize],
+            ]
+            .simd_into(self),
+            [
+                src[3usize],
+                src[7usize],
+                src[11usize],
+                src[15usize],
+                src[19usize],
+                src[23usize],
+                src[27usize],
+                src[31usize],
+            ]
+            .simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u16x8(
+        self,
+        vectors: [u16x8<Self>; 4usize],
+        dest: &mut [u16; 32usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+            vectors[0usize][2usize],
+            vectors[1usize][2usize],
+            vectors[2usize][2usize],
+            vectors[3usize][2usize],
+            vectors[0usize][3usize],
+            vectors[1usize][3usize],
+            vectors[2usize][3usize],
+            vectors[3usize][3usize],
+            vectors[0usize][4usize],
+            vectors[1usize][4usize],
+            vectors[2usize][4usize],
+            vectors[3usize][4usize],
+            vectors[0usize][5usize],
+            vectors[1usize][5usize],
+            vectors[2usize][5usize],
+            vectors[3usize][5usize],
+            vectors[0usize][6usize],
+            vectors[1usize][6usize],
+            vectors[2usize][6usize],
+            vectors[3usize][6usize],
+            vectors[0usize][7usize],
+            vectors[1usize][7usize],
+            vectors[2usize][7usize],
+            vectors[3usize][7usize],
+        ];
     }
     #[inline(always)]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {
@@ -4153,6 +4675,40 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_i32x4(self, src: &[i32; 16usize]) -> [i32x4<Self>; 4usize] {
+        [
+            [src[0usize], src[4usize], src[8usize], src[12usize]].simd_into(self),
+            [src[1usize], src[5usize], src[9usize], src[13usize]].simd_into(self),
+            [src[2usize], src[6usize], src[10usize], src[14usize]].simd_into(self),
+            [src[3usize], src[7usize], src[11usize], src[15usize]].simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i32x4(
+        self,
+        vectors: [i32x4<Self>; 4usize],
+        dest: &mut [i32; 16usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+            vectors[0usize][2usize],
+            vectors[1usize][2usize],
+            vectors[2usize][2usize],
+            vectors[3usize][2usize],
+            vectors[0usize][3usize],
+            vectors[1usize][3usize],
+            vectors[2usize][3usize],
+            vectors[3usize][3usize],
+        ];
+    }
+    #[inline(always)]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self> {
         [
             a[0usize] as f32,
@@ -4553,6 +5109,40 @@ impl Simd for Fallback {
         result[0..4usize].copy_from_slice(&a.val.0);
         result[4usize..8usize].copy_from_slice(&b.val.0);
         result.simd_into(self)
+    }
+    #[inline(always)]
+    fn load_four_interleaved_u32x4(self, src: &[u32; 16usize]) -> [u32x4<Self>; 4usize] {
+        [
+            [src[0usize], src[4usize], src[8usize], src[12usize]].simd_into(self),
+            [src[1usize], src[5usize], src[9usize], src[13usize]].simd_into(self),
+            [src[2usize], src[6usize], src[10usize], src[14usize]].simd_into(self),
+            [src[3usize], src[7usize], src[11usize], src[15usize]].simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u32x4(
+        self,
+        vectors: [u32x4<Self>; 4usize],
+        dest: &mut [u32; 16usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+            vectors[0usize][2usize],
+            vectors[1usize][2usize],
+            vectors[2usize][2usize],
+            vectors[3usize][2usize],
+            vectors[0usize][3usize],
+            vectors[1usize][3usize],
+            vectors[2usize][3usize],
+            vectors[3usize][3usize],
+        ];
     }
     #[inline(always)]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self> {
@@ -5062,6 +5652,32 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_f64x2(self, src: &[f64; 8usize]) -> [f64x2<Self>; 4usize] {
+        [
+            [src[0usize], src[4usize]].simd_into(self),
+            [src[1usize], src[5usize]].simd_into(self),
+            [src[2usize], src[6usize]].simd_into(self),
+            [src[3usize], src[7usize]].simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_f64x2(
+        self,
+        vectors: [f64x2<Self>; 4usize],
+        dest: &mut [f64; 8usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+        ];
+    }
+    #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
         [val; 2usize].simd_into(self)
     }
@@ -5400,6 +6016,32 @@ impl Simd for Fallback {
         [i64::wrapping_neg(a[0usize]), i64::wrapping_neg(a[1usize])].simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_i64x2(self, src: &[i64; 8usize]) -> [i64x2<Self>; 4usize] {
+        [
+            [src[0usize], src[4usize]].simd_into(self),
+            [src[1usize], src[5usize]].simd_into(self),
+            [src[2usize], src[6usize]].simd_into(self),
+            [src[3usize], src[7usize]].simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i64x2(
+        self,
+        vectors: [i64x2<Self>; 4usize],
+        dest: &mut [i64; 8usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+        ];
+    }
+    #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
         [val; 2usize].simd_into(self)
     }
@@ -5732,6 +6374,32 @@ impl Simd for Fallback {
         result[0..2usize].copy_from_slice(&a.val.0);
         result[2usize..4usize].copy_from_slice(&b.val.0);
         result.simd_into(self)
+    }
+    #[inline(always)]
+    fn load_four_interleaved_u64x2(self, src: &[u64; 8usize]) -> [u64x2<Self>; 4usize] {
+        [
+            [src[0usize], src[4usize]].simd_into(self),
+            [src[1usize], src[5usize]].simd_into(self),
+            [src[2usize], src[6usize]].simd_into(self),
+            [src[3usize], src[7usize]].simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u64x2(
+        self,
+        vectors: [u64x2<Self>; 4usize],
+        dest: &mut [u64; 8usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+        ];
     }
     #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
@@ -9980,36 +10648,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
-        [
-            src[0usize],
-            src[4usize],
-            src[8usize],
-            src[12usize],
-            src[1usize],
-            src[5usize],
-            src[9usize],
-            src[13usize],
-            src[2usize],
-            src[6usize],
-            src[10usize],
-            src[14usize],
-            src[3usize],
-            src[7usize],
-            src[11usize],
-            src[15usize],
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
-        *dest = [
-            a[0usize], a[4usize], a[8usize], a[12usize], a[1usize], a[5usize], a[9usize],
-            a[13usize], a[2usize], a[6usize], a[10usize], a[14usize], a[3usize], a[7usize],
-            a[11usize], a[15usize],
-        ];
-    }
-    #[inline(always)]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
         self.combine_u32x8(self.cvt_u32_f32x8(a0), self.cvt_u32_f32x8(a1))
@@ -11057,91 +11695,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self> {
-        [
-            src[0usize],
-            src[4usize],
-            src[8usize],
-            src[12usize],
-            src[16usize],
-            src[20usize],
-            src[24usize],
-            src[28usize],
-            src[32usize],
-            src[36usize],
-            src[40usize],
-            src[44usize],
-            src[48usize],
-            src[52usize],
-            src[56usize],
-            src[60usize],
-            src[1usize],
-            src[5usize],
-            src[9usize],
-            src[13usize],
-            src[17usize],
-            src[21usize],
-            src[25usize],
-            src[29usize],
-            src[33usize],
-            src[37usize],
-            src[41usize],
-            src[45usize],
-            src[49usize],
-            src[53usize],
-            src[57usize],
-            src[61usize],
-            src[2usize],
-            src[6usize],
-            src[10usize],
-            src[14usize],
-            src[18usize],
-            src[22usize],
-            src[26usize],
-            src[30usize],
-            src[34usize],
-            src[38usize],
-            src[42usize],
-            src[46usize],
-            src[50usize],
-            src[54usize],
-            src[58usize],
-            src[62usize],
-            src[3usize],
-            src[7usize],
-            src[11usize],
-            src[15usize],
-            src[19usize],
-            src[23usize],
-            src[27usize],
-            src[31usize],
-            src[35usize],
-            src[39usize],
-            src[43usize],
-            src[47usize],
-            src[51usize],
-            src[55usize],
-            src[59usize],
-            src[63usize],
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
-        *dest = [
-            a[0usize], a[16usize], a[32usize], a[48usize], a[1usize], a[17usize], a[33usize],
-            a[49usize], a[2usize], a[18usize], a[34usize], a[50usize], a[3usize], a[19usize],
-            a[35usize], a[51usize], a[4usize], a[20usize], a[36usize], a[52usize], a[5usize],
-            a[21usize], a[37usize], a[53usize], a[6usize], a[22usize], a[38usize], a[54usize],
-            a[7usize], a[23usize], a[39usize], a[55usize], a[8usize], a[24usize], a[40usize],
-            a[56usize], a[9usize], a[25usize], a[41usize], a[57usize], a[10usize], a[26usize],
-            a[42usize], a[58usize], a[11usize], a[27usize], a[43usize], a[59usize], a[12usize],
-            a[28usize], a[44usize], a[60usize], a[13usize], a[29usize], a[45usize], a[61usize],
-            a[14usize], a[30usize], a[46usize], a[62usize], a[15usize], a[31usize], a[47usize],
-            a[63usize],
-        ];
-    }
-    #[inline(always)]
     fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
         let half = self.splat_mask8x32(val);
         self.combine_mask8x32(half, half)
@@ -12028,54 +12581,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self> {
-        [
-            src[0usize],
-            src[4usize],
-            src[8usize],
-            src[12usize],
-            src[16usize],
-            src[20usize],
-            src[24usize],
-            src[28usize],
-            src[1usize],
-            src[5usize],
-            src[9usize],
-            src[13usize],
-            src[17usize],
-            src[21usize],
-            src[25usize],
-            src[29usize],
-            src[2usize],
-            src[6usize],
-            src[10usize],
-            src[14usize],
-            src[18usize],
-            src[22usize],
-            src[26usize],
-            src[30usize],
-            src[3usize],
-            src[7usize],
-            src[11usize],
-            src[15usize],
-            src[19usize],
-            src[23usize],
-            src[27usize],
-            src[31usize],
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
-        *dest = [
-            a[0usize], a[8usize], a[16usize], a[24usize], a[1usize], a[9usize], a[17usize],
-            a[25usize], a[2usize], a[10usize], a[18usize], a[26usize], a[3usize], a[11usize],
-            a[19usize], a[27usize], a[4usize], a[12usize], a[20usize], a[28usize], a[5usize],
-            a[13usize], a[21usize], a[29usize], a[6usize], a[14usize], a[22usize], a[30usize],
-            a[7usize], a[15usize], a[23usize], a[31usize],
-        ];
-    }
-    #[inline(always)]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
         let (a0, a1) = self.split_u16x32(a);
         self.combine_u8x16(self.narrow_u16x16(a0), self.narrow_u16x16(a1))
@@ -12833,36 +13338,6 @@ impl Simd for Fallback {
         b0.copy_from_slice(&a.val.0[0..8usize]);
         b1.copy_from_slice(&a.val.0[8usize..16usize]);
         (b0.simd_into(self), b1.simd_into(self))
-    }
-    #[inline(always)]
-    fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self> {
-        [
-            src[0usize],
-            src[4usize],
-            src[8usize],
-            src[12usize],
-            src[1usize],
-            src[5usize],
-            src[9usize],
-            src[13usize],
-            src[2usize],
-            src[6usize],
-            src[10usize],
-            src[14usize],
-            src[3usize],
-            src[7usize],
-            src[11usize],
-            src[15usize],
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
-        *dest = [
-            a[0usize], a[4usize], a[8usize], a[12usize], a[1usize], a[5usize], a[9usize],
-            a[13usize], a[2usize], a[6usize], a[10usize], a[14usize], a[3usize], a[7usize],
-            a[11usize], a[15usize],
-        ];
     }
     #[inline(always)]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self> {
@@ -13882,26 +14357,6 @@ impl Simd for Fallback {
         b0.copy_from_slice(&a.val.0[0..4usize]);
         b1.copy_from_slice(&a.val.0[4usize..8usize]);
         (b0.simd_into(self), b1.simd_into(self))
-    }
-    #[inline(always)]
-    fn load_interleaved_128_u64x8(self, src: &[u64; 8usize]) -> u64x8<Self> {
-        [
-            src[0usize],
-            src[4usize],
-            src[1usize],
-            src[5usize],
-            src[2usize],
-            src[6usize],
-            src[3usize],
-            src[7usize],
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> () {
-        *dest = [
-            a[0usize], a[2usize], a[4usize], a[6usize], a[1usize], a[3usize], a[5usize], a[7usize],
-        ];
     }
     #[inline(always)]
     fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {

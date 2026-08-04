@@ -20,8 +20,12 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
         for op in ops_for_type(vec_ty) {
             let method_sig = op.simd_trait_method_sig(vec_ty);
             let doc = op.format_docstring(TyFlavor::SimdTrait);
+            let doc_alias = op
+                .doc_alias()
+                .map(|alias| quote! { #[doc(alias = #alias)] });
             methods.extend(quote! {
                 #[doc = #doc]
+                #doc_alias
                 #method_sig;
             });
         }

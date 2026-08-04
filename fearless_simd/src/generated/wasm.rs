@@ -372,6 +372,56 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn load_four_interleaved_f32x4(self, src: &[f32; 16usize]) -> [f32x4<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<4usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[3]);
+        let v01_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v1);
+        let v23_lower = u32x4_shuffle::<0, 4, 1, 5>(v2, v3);
+        let v01_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v1);
+        let v23_upper = u32x4_shuffle::<2, 6, 3, 7>(v2, v3);
+        let out0 = u32x4_shuffle::<0, 1, 4, 5>(v01_lower, v23_lower);
+        let out1 = u32x4_shuffle::<2, 3, 6, 7>(v01_lower, v23_lower);
+        let out2 = u32x4_shuffle::<0, 1, 4, 5>(v01_upper, v23_upper);
+        let out3 = u32x4_shuffle::<2, 3, 6, 7>(v01_upper, v23_upper);
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_f32x4(
+        self,
+        vectors: [f32x4<Self>; 4usize],
+        dest: &mut [f32; 16usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let v02_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v2);
+        let v13_lower = u32x4_shuffle::<0, 4, 1, 5>(v1, v3);
+        let v02_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v2);
+        let v13_upper = u32x4_shuffle::<2, 6, 3, 7>(v1, v3);
+        let out0 = u32x4_shuffle::<0, 4, 1, 5>(v02_lower, v13_lower);
+        let out1 = u32x4_shuffle::<2, 6, 3, 7>(v02_lower, v13_lower);
+        let out2 = u32x4_shuffle::<0, 4, 1, 5>(v02_upper, v13_upper);
+        let out3 = u32x4_shuffle::<2, 6, 3, 7>(v02_upper, v13_upper);
+        let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         #[cfg(target_feature = "relaxed-simd")]
         {
@@ -711,6 +761,80 @@ impl Simd for WasmSimd128 {
         i8x16_neg(a.into()).simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_i8x16(self, src: &[i8; 64usize]) -> [i8x16<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<16usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[i8; 16usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[i8; 16usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[i8; 16usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[i8; 16usize], v128>(&chunks[3]);
+        let v01_lower =
+            u8x16_shuffle::<0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29>(v0, v1);
+        let v23_lower =
+            u8x16_shuffle::<0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29>(v2, v3);
+        let v01_upper =
+            u8x16_shuffle::<2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31>(v0, v1);
+        let v23_upper =
+            u8x16_shuffle::<2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31>(v2, v3);
+        let out0 = u8x16_shuffle::<0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23>(
+            v01_lower, v23_lower,
+        );
+        let out1 = u8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31>(
+            v01_lower, v23_lower,
+        );
+        let out2 = u8x16_shuffle::<0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23>(
+            v01_upper, v23_upper,
+        );
+        let out3 = u8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31>(
+            v01_upper, v23_upper,
+        );
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i8x16(
+        self,
+        vectors: [i8x16<Self>; 4usize],
+        dest: &mut [i8; 64usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let v02_lower =
+            u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(v0, v2);
+        let v13_lower =
+            u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(v1, v3);
+        let v02_upper =
+            u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(v0, v2);
+        let v13_upper =
+            u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(v1, v3);
+        let out0 = u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(
+            v02_lower, v13_lower,
+        );
+        let out1 = u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(
+            v02_lower, v13_lower,
+        );
+        let out2 = u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(
+            v02_upper, v13_upper,
+        );
+        let out3 = u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(
+            v02_upper, v13_upper,
+        );
+        let (chunks, []) = dest.as_chunks_mut::<16usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [i8; 16usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [i8; 16usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [i8; 16usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [i8; 16usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
         u8x16_splat(val).simd_into(self)
     }
@@ -1014,6 +1138,80 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256([a.val.0, b.val.0]),
             simd: self,
         }
+    }
+    #[inline(always)]
+    fn load_four_interleaved_u8x16(self, src: &[u8; 64usize]) -> [u8x16<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<16usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[3]);
+        let v01_lower =
+            u8x16_shuffle::<0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29>(v0, v1);
+        let v23_lower =
+            u8x16_shuffle::<0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29>(v2, v3);
+        let v01_upper =
+            u8x16_shuffle::<2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31>(v0, v1);
+        let v23_upper =
+            u8x16_shuffle::<2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31>(v2, v3);
+        let out0 = u8x16_shuffle::<0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23>(
+            v01_lower, v23_lower,
+        );
+        let out1 = u8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31>(
+            v01_lower, v23_lower,
+        );
+        let out2 = u8x16_shuffle::<0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23>(
+            v01_upper, v23_upper,
+        );
+        let out3 = u8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31>(
+            v01_upper, v23_upper,
+        );
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u8x16(
+        self,
+        vectors: [u8x16<Self>; 4usize],
+        dest: &mut [u8; 64usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let v02_lower =
+            u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(v0, v2);
+        let v13_lower =
+            u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(v1, v3);
+        let v02_upper =
+            u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(v0, v2);
+        let v13_upper =
+            u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(v1, v3);
+        let out0 = u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(
+            v02_lower, v13_lower,
+        );
+        let out1 = u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(
+            v02_lower, v13_lower,
+        );
+        let out2 = u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(
+            v02_upper, v13_upper,
+        );
+        let out3 = u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(
+            v02_upper, v13_upper,
+        );
+        let (chunks, []) = dest.as_chunks_mut::<16usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {
@@ -1359,6 +1557,56 @@ impl Simd for WasmSimd128 {
         i16x8_neg(a.into()).simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_i16x8(self, src: &[i16; 32usize]) -> [i16x8<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<8usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[i16; 8usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[i16; 8usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[i16; 8usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[i16; 8usize], v128>(&chunks[3]);
+        let v01_lower = u16x8_shuffle::<0, 4, 8, 12, 1, 5, 9, 13>(v0, v1);
+        let v23_lower = u16x8_shuffle::<0, 4, 8, 12, 1, 5, 9, 13>(v2, v3);
+        let v01_upper = u16x8_shuffle::<2, 6, 10, 14, 3, 7, 11, 15>(v0, v1);
+        let v23_upper = u16x8_shuffle::<2, 6, 10, 14, 3, 7, 11, 15>(v2, v3);
+        let out0 = u16x8_shuffle::<0, 1, 2, 3, 8, 9, 10, 11>(v01_lower, v23_lower);
+        let out1 = u16x8_shuffle::<4, 5, 6, 7, 12, 13, 14, 15>(v01_lower, v23_lower);
+        let out2 = u16x8_shuffle::<0, 1, 2, 3, 8, 9, 10, 11>(v01_upper, v23_upper);
+        let out3 = u16x8_shuffle::<4, 5, 6, 7, 12, 13, 14, 15>(v01_upper, v23_upper);
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i16x8(
+        self,
+        vectors: [i16x8<Self>; 4usize],
+        dest: &mut [i16; 32usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let v02_lower = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v0, v2);
+        let v13_lower = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v1, v3);
+        let v02_upper = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v0, v2);
+        let v13_upper = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v1, v3);
+        let out0 = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v02_lower, v13_lower);
+        let out1 = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v02_lower, v13_lower);
+        let out2 = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v02_upper, v13_upper);
+        let out3 = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v02_upper, v13_upper);
+        let (chunks, []) = dest.as_chunks_mut::<8usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [i16; 8usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [i16; 8usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [i16; 8usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [i16; 8usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
         u16x8_splat(val).simd_into(self)
     }
@@ -1602,6 +1850,56 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256([a.val.0, b.val.0]),
             simd: self,
         }
+    }
+    #[inline(always)]
+    fn load_four_interleaved_u16x8(self, src: &[u16; 32usize]) -> [u16x8<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<8usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[3]);
+        let v01_lower = u16x8_shuffle::<0, 4, 8, 12, 1, 5, 9, 13>(v0, v1);
+        let v23_lower = u16x8_shuffle::<0, 4, 8, 12, 1, 5, 9, 13>(v2, v3);
+        let v01_upper = u16x8_shuffle::<2, 6, 10, 14, 3, 7, 11, 15>(v0, v1);
+        let v23_upper = u16x8_shuffle::<2, 6, 10, 14, 3, 7, 11, 15>(v2, v3);
+        let out0 = u16x8_shuffle::<0, 1, 2, 3, 8, 9, 10, 11>(v01_lower, v23_lower);
+        let out1 = u16x8_shuffle::<4, 5, 6, 7, 12, 13, 14, 15>(v01_lower, v23_lower);
+        let out2 = u16x8_shuffle::<0, 1, 2, 3, 8, 9, 10, 11>(v01_upper, v23_upper);
+        let out3 = u16x8_shuffle::<4, 5, 6, 7, 12, 13, 14, 15>(v01_upper, v23_upper);
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u16x8(
+        self,
+        vectors: [u16x8<Self>; 4usize],
+        dest: &mut [u16; 32usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let v02_lower = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v0, v2);
+        let v13_lower = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v1, v3);
+        let v02_upper = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v0, v2);
+        let v13_upper = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v1, v3);
+        let out0 = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v02_lower, v13_lower);
+        let out1 = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v02_lower, v13_lower);
+        let out2 = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v02_upper, v13_upper);
+        let out3 = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v02_upper, v13_upper);
+        let (chunks, []) = dest.as_chunks_mut::<8usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {
@@ -1915,6 +2213,56 @@ impl Simd for WasmSimd128 {
         i32x4_neg(a.into()).simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_i32x4(self, src: &[i32; 16usize]) -> [i32x4<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<4usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[i32; 4usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[i32; 4usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[i32; 4usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[i32; 4usize], v128>(&chunks[3]);
+        let v01_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v1);
+        let v23_lower = u32x4_shuffle::<0, 4, 1, 5>(v2, v3);
+        let v01_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v1);
+        let v23_upper = u32x4_shuffle::<2, 6, 3, 7>(v2, v3);
+        let out0 = u32x4_shuffle::<0, 1, 4, 5>(v01_lower, v23_lower);
+        let out1 = u32x4_shuffle::<2, 3, 6, 7>(v01_lower, v23_lower);
+        let out2 = u32x4_shuffle::<0, 1, 4, 5>(v01_upper, v23_upper);
+        let out3 = u32x4_shuffle::<2, 3, 6, 7>(v01_upper, v23_upper);
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i32x4(
+        self,
+        vectors: [i32x4<Self>; 4usize],
+        dest: &mut [i32; 16usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let v02_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v2);
+        let v13_lower = u32x4_shuffle::<0, 4, 1, 5>(v1, v3);
+        let v02_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v2);
+        let v13_upper = u32x4_shuffle::<2, 6, 3, 7>(v1, v3);
+        let out0 = u32x4_shuffle::<0, 4, 1, 5>(v02_lower, v13_lower);
+        let out1 = u32x4_shuffle::<2, 6, 3, 7>(v02_lower, v13_lower);
+        let out2 = u32x4_shuffle::<0, 4, 1, 5>(v02_upper, v13_upper);
+        let out3 = u32x4_shuffle::<2, 6, 3, 7>(v02_upper, v13_upper);
+        let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [i32; 4usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [i32; 4usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [i32; 4usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [i32; 4usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self> {
         f32x4_convert_i32x4(a.into()).simd_into(self)
     }
@@ -2138,6 +2486,56 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256([a.val.0, b.val.0]),
             simd: self,
         }
+    }
+    #[inline(always)]
+    fn load_four_interleaved_u32x4(self, src: &[u32; 16usize]) -> [u32x4<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<4usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[3]);
+        let v01_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v1);
+        let v23_lower = u32x4_shuffle::<0, 4, 1, 5>(v2, v3);
+        let v01_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v1);
+        let v23_upper = u32x4_shuffle::<2, 6, 3, 7>(v2, v3);
+        let out0 = u32x4_shuffle::<0, 1, 4, 5>(v01_lower, v23_lower);
+        let out1 = u32x4_shuffle::<2, 3, 6, 7>(v01_lower, v23_lower);
+        let out2 = u32x4_shuffle::<0, 1, 4, 5>(v01_upper, v23_upper);
+        let out3 = u32x4_shuffle::<2, 3, 6, 7>(v01_upper, v23_upper);
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u32x4(
+        self,
+        vectors: [u32x4<Self>; 4usize],
+        dest: &mut [u32; 16usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let v02_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v2);
+        let v13_lower = u32x4_shuffle::<0, 4, 1, 5>(v1, v3);
+        let v02_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v2);
+        let v13_upper = u32x4_shuffle::<2, 6, 3, 7>(v1, v3);
+        let out0 = u32x4_shuffle::<0, 4, 1, 5>(v02_lower, v13_lower);
+        let out1 = u32x4_shuffle::<2, 6, 3, 7>(v02_lower, v13_lower);
+        let out2 = u32x4_shuffle::<0, 4, 1, 5>(v02_upper, v13_upper);
+        let out3 = u32x4_shuffle::<2, 6, 3, 7>(v02_upper, v13_upper);
+        let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self> {
@@ -2494,6 +2892,48 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn load_four_interleaved_f64x2(self, src: &[f64; 8usize]) -> [f64x2<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<2usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[f64; 2usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[f64; 2usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[f64; 2usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[f64; 2usize], v128>(&chunks[3]);
+        let out0 = u64x2_shuffle::<0, 2>(v0, v2);
+        let out1 = u64x2_shuffle::<1, 3>(v0, v2);
+        let out2 = u64x2_shuffle::<0, 2>(v1, v3);
+        let out3 = u64x2_shuffle::<1, 3>(v1, v3);
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_f64x2(
+        self,
+        vectors: [f64x2<Self>; 4usize],
+        dest: &mut [f64; 8usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let out0 = u64x2_shuffle::<0, 2>(v0, v1);
+        let out1 = u64x2_shuffle::<0, 2>(v2, v3);
+        let out2 = u64x2_shuffle::<1, 3>(v0, v1);
+        let out3 = u64x2_shuffle::<1, 3>(v2, v3);
+        let (chunks, []) = dest.as_chunks_mut::<2usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [f64; 2usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [f64; 2usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [f64; 2usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [f64; 2usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
         i64x2_splat(val).simd_into(self)
     }
@@ -2713,6 +3153,48 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn neg_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
         i64x2_neg(a.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn load_four_interleaved_i64x2(self, src: &[i64; 8usize]) -> [i64x2<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<2usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[i64; 2usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[i64; 2usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[i64; 2usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[i64; 2usize], v128>(&chunks[3]);
+        let out0 = u64x2_shuffle::<0, 2>(v0, v2);
+        let out1 = u64x2_shuffle::<1, 3>(v0, v2);
+        let out2 = u64x2_shuffle::<0, 2>(v1, v3);
+        let out3 = u64x2_shuffle::<1, 3>(v1, v3);
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i64x2(
+        self,
+        vectors: [i64x2<Self>; 4usize],
+        dest: &mut [i64; 8usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let out0 = u64x2_shuffle::<0, 2>(v0, v1);
+        let out1 = u64x2_shuffle::<0, 2>(v2, v3);
+        let out2 = u64x2_shuffle::<1, 3>(v0, v1);
+        let out3 = u64x2_shuffle::<1, 3>(v2, v3);
+        let (chunks, []) = dest.as_chunks_mut::<2usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [i64; 2usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [i64; 2usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [i64; 2usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [i64; 2usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
@@ -2950,6 +3432,48 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256([a.val.0, b.val.0]),
             simd: self,
         }
+    }
+    #[inline(always)]
+    fn load_four_interleaved_u64x2(self, src: &[u64; 8usize]) -> [u64x2<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<2usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[u64; 2usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[u64; 2usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[u64; 2usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[u64; 2usize], v128>(&chunks[3]);
+        let out0 = u64x2_shuffle::<0, 2>(v0, v2);
+        let out1 = u64x2_shuffle::<1, 3>(v0, v2);
+        let out2 = u64x2_shuffle::<0, 2>(v1, v3);
+        let out3 = u64x2_shuffle::<1, 3>(v1, v3);
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u64x2(
+        self,
+        vectors: [u64x2<Self>; 4usize],
+        dest: &mut [u64; 8usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let out0 = u64x2_shuffle::<0, 2>(v0, v1);
+        let out1 = u64x2_shuffle::<0, 2>(v2, v3);
+        let out2 = u64x2_shuffle::<1, 3>(v0, v1);
+        let out3 = u64x2_shuffle::<1, 3>(v2, v3);
+        let (chunks, []) = dest.as_chunks_mut::<2usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
@@ -7361,52 +7885,6 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
-        let (chunks, []) = src.as_chunks::<4usize>() else {
-            unreachable!()
-        };
-        let v0: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[0]);
-        let v1: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[1]);
-        let v2: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[2]);
-        let v3: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[3]);
-        let v01_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v1);
-        let v23_lower = u32x4_shuffle::<0, 4, 1, 5>(v2, v3);
-        let v01_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v1);
-        let v23_upper = u32x4_shuffle::<2, 6, 3, 7>(v2, v3);
-        let out0 = u32x4_shuffle::<0, 1, 4, 5>(v01_lower, v23_lower);
-        let out1 = u32x4_shuffle::<2, 3, 6, 7>(v01_lower, v23_lower);
-        let out2 = u32x4_shuffle::<0, 1, 4, 5>(v01_upper, v23_upper);
-        let out3 = u32x4_shuffle::<2, 3, 6, 7>(v01_upper, v23_upper);
-        let combined_lower = self.combine_f32x4(out0.simd_into(self), out1.simd_into(self));
-        let combined_upper = self.combine_f32x4(out2.simd_into(self), out3.simd_into(self));
-        self.combine_f32x8(combined_lower, combined_upper)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
-        let (lower, upper) = self.split_f32x16(a);
-        let (v0_vec, v1_vec) = self.split_f32x8(lower);
-        let (v2_vec, v3_vec) = self.split_f32x8(upper);
-        let v0: v128 = v0_vec.into();
-        let v1: v128 = v1_vec.into();
-        let v2: v128 = v2_vec.into();
-        let v3: v128 = v3_vec.into();
-        let v02_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v2);
-        let v13_lower = u32x4_shuffle::<0, 4, 1, 5>(v1, v3);
-        let v02_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v2);
-        let v13_upper = u32x4_shuffle::<2, 6, 3, 7>(v1, v3);
-        let out0 = u32x4_shuffle::<0, 4, 1, 5>(v02_lower, v13_lower);
-        let out1 = u32x4_shuffle::<2, 6, 3, 7>(v02_lower, v13_lower);
-        let out2 = u32x4_shuffle::<0, 4, 1, 5>(v02_upper, v13_upper);
-        let out3 = u32x4_shuffle::<2, 6, 3, 7>(v02_upper, v13_upper);
-        let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
-            unreachable!()
-        };
-        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out0, &mut chunks[0]);
-        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out1, &mut chunks[1]);
-        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out2, &mut chunks[2]);
-        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out3, &mut chunks[3]);
-    }
-    #[inline(always)]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
         self.combine_u32x8(self.cvt_u32_f32x8(a0), self.cvt_u32_f32x8(a1))
@@ -8474,76 +8952,6 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self> {
-        let (chunks, []) = src.as_chunks::<16usize>() else {
-            unreachable!()
-        };
-        let v0: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[0]);
-        let v1: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[1]);
-        let v2: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[2]);
-        let v3: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[3]);
-        let v01_lower =
-            u8x16_shuffle::<0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29>(v0, v1);
-        let v23_lower =
-            u8x16_shuffle::<0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29>(v2, v3);
-        let v01_upper =
-            u8x16_shuffle::<2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31>(v0, v1);
-        let v23_upper =
-            u8x16_shuffle::<2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31>(v2, v3);
-        let out0 = u8x16_shuffle::<0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23>(
-            v01_lower, v23_lower,
-        );
-        let out1 = u8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31>(
-            v01_lower, v23_lower,
-        );
-        let out2 = u8x16_shuffle::<0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23>(
-            v01_upper, v23_upper,
-        );
-        let out3 = u8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31>(
-            v01_upper, v23_upper,
-        );
-        let combined_lower = self.combine_u8x16(out0.simd_into(self), out1.simd_into(self));
-        let combined_upper = self.combine_u8x16(out2.simd_into(self), out3.simd_into(self));
-        self.combine_u8x32(combined_lower, combined_upper)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
-        let (lower, upper) = self.split_u8x64(a);
-        let (v0_vec, v1_vec) = self.split_u8x32(lower);
-        let (v2_vec, v3_vec) = self.split_u8x32(upper);
-        let v0: v128 = v0_vec.into();
-        let v1: v128 = v1_vec.into();
-        let v2: v128 = v2_vec.into();
-        let v3: v128 = v3_vec.into();
-        let v02_lower =
-            u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(v0, v2);
-        let v13_lower =
-            u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(v1, v3);
-        let v02_upper =
-            u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(v0, v2);
-        let v13_upper =
-            u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(v1, v3);
-        let out0 = u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(
-            v02_lower, v13_lower,
-        );
-        let out1 = u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(
-            v02_lower, v13_lower,
-        );
-        let out2 = u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(
-            v02_upper, v13_upper,
-        );
-        let out3 = u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(
-            v02_upper, v13_upper,
-        );
-        let (chunks, []) = dest.as_chunks_mut::<16usize>() else {
-            unreachable!()
-        };
-        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out0, &mut chunks[0]);
-        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out1, &mut chunks[1]);
-        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out2, &mut chunks[2]);
-        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out3, &mut chunks[3]);
-    }
-    #[inline(always)]
     fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
         let half = self.splat_mask8x32(val);
         self.combine_mask8x32(half, half)
@@ -9461,52 +9869,6 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self> {
-        let (chunks, []) = src.as_chunks::<8usize>() else {
-            unreachable!()
-        };
-        let v0: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[0]);
-        let v1: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[1]);
-        let v2: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[2]);
-        let v3: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[3]);
-        let v01_lower = u16x8_shuffle::<0, 4, 8, 12, 1, 5, 9, 13>(v0, v1);
-        let v23_lower = u16x8_shuffle::<0, 4, 8, 12, 1, 5, 9, 13>(v2, v3);
-        let v01_upper = u16x8_shuffle::<2, 6, 10, 14, 3, 7, 11, 15>(v0, v1);
-        let v23_upper = u16x8_shuffle::<2, 6, 10, 14, 3, 7, 11, 15>(v2, v3);
-        let out0 = u16x8_shuffle::<0, 1, 2, 3, 8, 9, 10, 11>(v01_lower, v23_lower);
-        let out1 = u16x8_shuffle::<4, 5, 6, 7, 12, 13, 14, 15>(v01_lower, v23_lower);
-        let out2 = u16x8_shuffle::<0, 1, 2, 3, 8, 9, 10, 11>(v01_upper, v23_upper);
-        let out3 = u16x8_shuffle::<4, 5, 6, 7, 12, 13, 14, 15>(v01_upper, v23_upper);
-        let combined_lower = self.combine_u16x8(out0.simd_into(self), out1.simd_into(self));
-        let combined_upper = self.combine_u16x8(out2.simd_into(self), out3.simd_into(self));
-        self.combine_u16x16(combined_lower, combined_upper)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
-        let (lower, upper) = self.split_u16x32(a);
-        let (v0_vec, v1_vec) = self.split_u16x16(lower);
-        let (v2_vec, v3_vec) = self.split_u16x16(upper);
-        let v0: v128 = v0_vec.into();
-        let v1: v128 = v1_vec.into();
-        let v2: v128 = v2_vec.into();
-        let v3: v128 = v3_vec.into();
-        let v02_lower = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v0, v2);
-        let v13_lower = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v1, v3);
-        let v02_upper = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v0, v2);
-        let v13_upper = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v1, v3);
-        let out0 = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v02_lower, v13_lower);
-        let out1 = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v02_lower, v13_lower);
-        let out2 = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v02_upper, v13_upper);
-        let out3 = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v02_upper, v13_upper);
-        let (chunks, []) = dest.as_chunks_mut::<8usize>() else {
-            unreachable!()
-        };
-        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out0, &mut chunks[0]);
-        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out1, &mut chunks[1]);
-        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out2, &mut chunks[2]);
-        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out3, &mut chunks[3]);
-    }
-    #[inline(always)]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
         let (a0, a1) = self.split_u16x32(a);
         self.combine_u8x16(self.narrow_u16x16(a0), self.narrow_u16x16(a1))
@@ -10295,52 +10657,6 @@ impl Simd for WasmSimd128 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self> {
-        let (chunks, []) = src.as_chunks::<4usize>() else {
-            unreachable!()
-        };
-        let v0: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[0]);
-        let v1: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[1]);
-        let v2: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[2]);
-        let v3: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[3]);
-        let v01_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v1);
-        let v23_lower = u32x4_shuffle::<0, 4, 1, 5>(v2, v3);
-        let v01_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v1);
-        let v23_upper = u32x4_shuffle::<2, 6, 3, 7>(v2, v3);
-        let out0 = u32x4_shuffle::<0, 1, 4, 5>(v01_lower, v23_lower);
-        let out1 = u32x4_shuffle::<2, 3, 6, 7>(v01_lower, v23_lower);
-        let out2 = u32x4_shuffle::<0, 1, 4, 5>(v01_upper, v23_upper);
-        let out3 = u32x4_shuffle::<2, 3, 6, 7>(v01_upper, v23_upper);
-        let combined_lower = self.combine_u32x4(out0.simd_into(self), out1.simd_into(self));
-        let combined_upper = self.combine_u32x4(out2.simd_into(self), out3.simd_into(self));
-        self.combine_u32x8(combined_lower, combined_upper)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
-        let (lower, upper) = self.split_u32x16(a);
-        let (v0_vec, v1_vec) = self.split_u32x8(lower);
-        let (v2_vec, v3_vec) = self.split_u32x8(upper);
-        let v0: v128 = v0_vec.into();
-        let v1: v128 = v1_vec.into();
-        let v2: v128 = v2_vec.into();
-        let v3: v128 = v3_vec.into();
-        let v02_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v2);
-        let v13_lower = u32x4_shuffle::<0, 4, 1, 5>(v1, v3);
-        let v02_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v2);
-        let v13_upper = u32x4_shuffle::<2, 6, 3, 7>(v1, v3);
-        let out0 = u32x4_shuffle::<0, 4, 1, 5>(v02_lower, v13_lower);
-        let out1 = u32x4_shuffle::<2, 6, 3, 7>(v02_lower, v13_lower);
-        let out2 = u32x4_shuffle::<0, 4, 1, 5>(v02_upper, v13_upper);
-        let out3 = u32x4_shuffle::<2, 6, 3, 7>(v02_upper, v13_upper);
-        let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
-            unreachable!()
-        };
-        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out0, &mut chunks[0]);
-        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out1, &mut chunks[1]);
-        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out2, &mut chunks[2]);
-        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self> {
@@ -11404,44 +11720,6 @@ impl Simd for WasmSimd128 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn load_interleaved_128_u64x8(self, src: &[u64; 8usize]) -> u64x8<Self> {
-        let (chunks, []) = src.as_chunks::<2usize>() else {
-            unreachable!()
-        };
-        let v0: v128 = crate::transmute::checked_transmute_copy::<[u64; 2usize], v128>(&chunks[0]);
-        let v1: v128 = crate::transmute::checked_transmute_copy::<[u64; 2usize], v128>(&chunks[1]);
-        let v2: v128 = crate::transmute::checked_transmute_copy::<[u64; 2usize], v128>(&chunks[2]);
-        let v3: v128 = crate::transmute::checked_transmute_copy::<[u64; 2usize], v128>(&chunks[3]);
-        let out0 = u64x2_shuffle::<0, 2>(v0, v2);
-        let out1 = u64x2_shuffle::<1, 3>(v0, v2);
-        let out2 = u64x2_shuffle::<0, 2>(v1, v3);
-        let out3 = u64x2_shuffle::<1, 3>(v1, v3);
-        let combined_lower = self.combine_u64x2(out0.simd_into(self), out1.simd_into(self));
-        let combined_upper = self.combine_u64x2(out2.simd_into(self), out3.simd_into(self));
-        self.combine_u64x4(combined_lower, combined_upper)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> () {
-        let (lower, upper) = self.split_u64x8(a);
-        let (v0_vec, v1_vec) = self.split_u64x4(lower);
-        let (v2_vec, v3_vec) = self.split_u64x4(upper);
-        let v0: v128 = v0_vec.into();
-        let v1: v128 = v1_vec.into();
-        let v2: v128 = v2_vec.into();
-        let v3: v128 = v3_vec.into();
-        let out0 = u64x2_shuffle::<0, 2>(v0, v1);
-        let out1 = u64x2_shuffle::<0, 2>(v2, v3);
-        let out2 = u64x2_shuffle::<1, 3>(v0, v1);
-        let out3 = u64x2_shuffle::<1, 3>(v2, v3);
-        let (chunks, []) = dest.as_chunks_mut::<2usize>() else {
-            unreachable!()
-        };
-        crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out0, &mut chunks[0]);
-        crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out1, &mut chunks[1]);
-        crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out2, &mut chunks[2]);
-        crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
     fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {

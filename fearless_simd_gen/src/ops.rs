@@ -107,14 +107,15 @@ pub(crate) enum OpSig {
     /// Takes a mutable mask vector, a lane index, and a boolean, and updates the lane in place.
     MaskSet,
     /// Takes an argument of an array of a certain scalar type, with the length (`block_size` * `block_count`) / [scalar
-    /// type's byte size]. Returns a vector type of that scalar type and length.
+    /// type's byte size]. Returns `block_count` vectors whose width is `block_size`.
     ///
     /// First argument is the base block size (i.e. 128), second argument is how many blocks. For example,
     /// `LoadInterleaved(128, 4)` would correspond to the NEON instructions `vld4q_f32`, while `LoadInterleaved(64, 4)`
     /// would correspond to `vld4_f32`.
     LoadInterleaved { block_size: u16, block_count: u16 },
-    /// The inverse of [`OpSig::LoadInterleaved`]. Takes a vector argument with the length (`block_size` * `block_count`) /
-    /// [scalar type's byte size], and a mutable reference to a scalar array of the same length, and returns nothing.
+    /// The inverse of [`OpSig::LoadInterleaved`]. Takes `block_count` vectors whose width is `block_size` and a mutable
+    /// reference to a scalar array with the length (`block_size` * `block_count`) / [scalar type's byte size], and
+    /// returns nothing.
     StoreInterleaved { block_size: u16, block_count: u16 },
 }
 
@@ -172,6 +173,14 @@ impl Op {
             kind,
             sig,
             doc,
+        }
+    }
+
+    pub(crate) fn doc_alias(&self) -> Option<&'static str> {
+        match self.method {
+            "load_four_interleaved" => Some("load_interleaved"),
+            "store_four_interleaved" => Some("store_interleaved"),
+            _ => None,
         }
     }
 
@@ -257,14 +266,16 @@ impl Op {
                 block_count,
             } => {
                 let arg_ty = load_interleaved_arg_ty(*block_size, *block_count, vec_ty);
-                (vec![arg_ty], vec)
+                let block_count = *block_count as usize;
+                (vec![arg_ty], quote! { [#vec; #block_count] })
             }
             OpSig::StoreInterleaved {
                 block_size,
                 block_count,
             } => {
                 let arg_ty = store_interleaved_arg_ty(*block_size, *block_count, vec_ty);
-                (vec![vec.clone(), arg_ty], quote! { () })
+                let block_count = *block_count as usize;
+                (vec![quote! { [#vec; #block_count] }, arg_ty], quote! { () })
             }
             OpSig::Compare => {
                 let result = vec_ty.mask_ty().rust();
@@ -1264,44 +1275,49 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ops.push(NEGATE_INT);
     }
 
-    if ty.scalar == ScalarType::Float && ty.scalar_bits == 64 {
-        return ops;
-    }
-
-    if matches!(ty.scalar, ScalarType::Unsigned | ScalarType::Float) && ty.n_bits() == 512 {
+    if matches!(
+        ty.scalar,
+        ScalarType::Int | ScalarType::Unsigned | ScalarType::Float
+    ) && ty.n_bits() == 128
+    {
         ops.push(Op::new(
-            "load_interleaved_128",
+            "load_four_interleaved",
             OpKind::AssociatedOnly,
             OpSig::LoadInterleaved {
                 block_size: 128,
                 block_count: 4,
             },
-            "Load elements from an array with 4-way interleaving.\n\n\
-            This is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded \
-            vectors, while this operation treats memory as four interleaved 128-bit vectors and deinterleaves them \
-            into one vector.\n\n\
-            For example, with 32-bit lanes, memory laid out as \
-            `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` loads as \
-            `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`.",
+            "Load four 128-bit vectors from an array with 4-way interleaving.\n\n\
+            This is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\n\
+            For example, with 32-bit lanes, memory laid out as\
+            `[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as\
+            `[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`.",
         ));
     }
 
-    if matches!(ty.scalar, ScalarType::Unsigned | ScalarType::Float) && ty.n_bits() == 512 {
+    if matches!(
+        ty.scalar,
+        ScalarType::Int | ScalarType::Unsigned | ScalarType::Float
+    ) && ty.n_bits() == 128
+    {
         ops.push(Op::new(
-            "store_interleaved_128",
+            "store_four_interleaved",
             OpKind::AssociatedOnly,
             OpSig::StoreInterleaved {
                 block_size: 128,
                 block_count: 4,
             },
-            "Store elements to an array with 4-way interleaving.\n\n\
-            This is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: \
-            `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit \
-            vectors into lane-interleaved memory.\n\n\
-            For example, with 32-bit lanes, a vector containing \
-            `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as \
-            `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`.",
+            "Store four 128-bit vectors to an array with 4-way interleaving.\n\n\
+            This is the inverse of `load_four_interleaved`.\n\n\
+            This is useful e.g. in image processing to turn vectors of each color component into interleaved RGBA pixels.\n\n\
+            For example, with 32-bit lanes, vectors containing \
+            `[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]` get stored as \
+            `[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]`.",
         ));
+    }
+
+    if ty.scalar == ScalarType::Float && ty.scalar_bits == 64 {
+        return ops;
     }
 
     if matches!(ty.scalar, ScalarType::Unsigned) {
@@ -1510,7 +1526,7 @@ impl OpSig {
             Self::Ternary | Self::Select => &["a", "b", "c"],
             Self::Shift => &["a", "shift"],
             Self::LoadInterleaved { .. } => &["src"],
-            Self::StoreInterleaved { .. } => &["a", "dest"],
+            Self::StoreInterleaved { .. } => &["vectors", "dest"],
         }
     }
     fn vec_trait_arg_names(&self) -> &'static [&'static str] {
