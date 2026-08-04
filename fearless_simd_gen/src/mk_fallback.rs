@@ -440,6 +440,28 @@ impl Level for Fallback {
                     }
                 }
             }
+            OpSig::SwizzleDynPrecise => {
+                let bytes_ty = vec_ty.bytes_ty();
+                let bytes_rust = bytes_ty.rust();
+                let byte_count = bytes_ty.len;
+                // This formulation lowers into one cmov per element on SSE2/SSE4.2
+                // and autovectorizes on RISC-V.
+                quote! {
+                    #method_sig {
+                        let bytes = Bytes::to_bytes(a);
+                        let mut output = [0u8; #byte_count];
+                        for lane in 0..#byte_count {
+                            // Keep the load unconditionally in bounds so LLVM can always execute it,
+                            // and select zero afterwards. This avoids a branch that could be mispredicted.
+                            let index = indices[lane] as usize;
+                            let value = bytes[index % #byte_count];
+                            output[lane] = if index < #byte_count { value } else { 0 };
+                        }
+                        let result: #bytes_rust<Self> = output.simd_into(self);
+                        Bytes::from_bytes(result)
+                    }
+                }
+            }
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
