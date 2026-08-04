@@ -2860,14 +2860,20 @@ impl X86 {
                 (Self::Avx2, 256) => quote! {
                     let bytes = Bytes::to_bytes(a).val.0;
                     let indices = indices.into();
-                    let lolo = _mm256_permute2x128_si256::<0x00>(bytes, bytes);
-                    let hihi = _mm256_permute2x128_si256::<0x11>(bytes, bytes);
+                    let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
+                    let local = _mm256_shuffle_epi8(bytes, indices);
+                    let remote = _mm256_shuffle_epi8(swapped, indices);
 
                     // Move index bit 4 into each byte's sign bit for VPBLENDVB.
-                    let select_high = _mm256_slli_epi16::<3>(indices);
-                    let from_low = _mm256_shuffle_epi8(lolo, indices);
-                    let from_high = _mm256_shuffle_epi8(hihi, indices);
-                    let result = _mm256_blendv_epi8(from_low, from_high, select_high);
+                    // The high output lane has the opposite local/remote mapping,
+                    // so invert its blend controls.
+                    let select_remote = _mm256_slli_epi16::<3>(indices);
+                    let flip_high_lane = _mm256_set_m128i(
+                        _mm_set1_epi8(i8::MIN),
+                        _mm_setzero_si128(),
+                    );
+                    let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
+                    let result = _mm256_blendv_epi8(local, remote, select_remote);
                 },
                 (Self::Avx512, 128 | 256 | 512) => {
                     let permute = intrinsic_ident("permutexvar", "epi8", vec_ty.n_bits());

@@ -5623,12 +5623,13 @@ impl Simd for Avx2 {
             fn kernel(token: Avx2, a: f32x8<Avx2>, indices: u8x32<Avx2>) -> f32x8<Avx2> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes, bytes);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes, bytes);
-                let select_high = _mm256_slli_epi16::<3>(indices);
-                let from_low = _mm256_shuffle_epi8(lolo, indices);
-                let from_high = _mm256_shuffle_epi8(hihi, indices);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
+                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
+                let local = _mm256_shuffle_epi8(bytes, indices);
+                let remote = _mm256_shuffle_epi8(swapped, indices);
+                let select_remote = _mm256_slli_epi16::<3>(indices);
+                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
+                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
+                let result = _mm256_blendv_epi8(local, remote, select_remote);
                 Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -6376,12 +6377,13 @@ impl Simd for Avx2 {
             fn kernel(token: Avx2, a: i8x32<Avx2>, indices: u8x32<Avx2>) -> i8x32<Avx2> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes, bytes);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes, bytes);
-                let select_high = _mm256_slli_epi16::<3>(indices);
-                let from_low = _mm256_shuffle_epi8(lolo, indices);
-                let from_high = _mm256_shuffle_epi8(hihi, indices);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
+                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
+                let local = _mm256_shuffle_epi8(bytes, indices);
+                let remote = _mm256_shuffle_epi8(swapped, indices);
+                let select_remote = _mm256_slli_epi16::<3>(indices);
+                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
+                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
+                let result = _mm256_blendv_epi8(local, remote, select_remote);
                 Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -7088,12 +7090,13 @@ impl Simd for Avx2 {
             fn kernel(token: Avx2, a: u8x32<Avx2>, indices: u8x32<Avx2>) -> u8x32<Avx2> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes, bytes);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes, bytes);
-                let select_high = _mm256_slli_epi16::<3>(indices);
-                let from_low = _mm256_shuffle_epi8(lolo, indices);
-                let from_high = _mm256_shuffle_epi8(hihi, indices);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
+                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
+                let local = _mm256_shuffle_epi8(bytes, indices);
+                let remote = _mm256_shuffle_epi8(swapped, indices);
+                let select_remote = _mm256_slli_epi16::<3>(indices);
+                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
+                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
+                let result = _mm256_blendv_epi8(local, remote, select_remote);
                 Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -7941,12 +7944,13 @@ impl Simd for Avx2 {
             fn kernel(token: Avx2, a: i16x16<Avx2>, indices: u8x32<Avx2>) -> i16x16<Avx2> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes, bytes);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes, bytes);
-                let select_high = _mm256_slli_epi16::<3>(indices);
-                let from_low = _mm256_shuffle_epi8(lolo, indices);
-                let from_high = _mm256_shuffle_epi8(hihi, indices);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
+                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
+                let local = _mm256_shuffle_epi8(bytes, indices);
+                let remote = _mm256_shuffle_epi8(swapped, indices);
+                let select_remote = _mm256_slli_epi16::<3>(indices);
+                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
+                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
+                let result = _mm256_blendv_epi8(local, remote, select_remote);
                 Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -8544,12 +8548,13 @@ impl Simd for Avx2 {
             fn kernel(token: Avx2, a: u16x16<Avx2>, indices: u8x32<Avx2>) -> u16x16<Avx2> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes, bytes);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes, bytes);
-                let select_high = _mm256_slli_epi16::<3>(indices);
-                let from_low = _mm256_shuffle_epi8(lolo, indices);
-                let from_high = _mm256_shuffle_epi8(hihi, indices);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
+                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
+                let local = _mm256_shuffle_epi8(bytes, indices);
+                let remote = _mm256_shuffle_epi8(swapped, indices);
+                let select_remote = _mm256_slli_epi16::<3>(indices);
+                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
+                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
+                let result = _mm256_blendv_epi8(local, remote, select_remote);
                 Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -9319,12 +9324,13 @@ impl Simd for Avx2 {
             fn kernel(token: Avx2, a: i32x8<Avx2>, indices: u8x32<Avx2>) -> i32x8<Avx2> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes, bytes);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes, bytes);
-                let select_high = _mm256_slli_epi16::<3>(indices);
-                let from_low = _mm256_shuffle_epi8(lolo, indices);
-                let from_high = _mm256_shuffle_epi8(hihi, indices);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
+                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
+                let local = _mm256_shuffle_epi8(bytes, indices);
+                let remote = _mm256_shuffle_epi8(swapped, indices);
+                let select_remote = _mm256_slli_epi16::<3>(indices);
+                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
+                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
+                let result = _mm256_blendv_epi8(local, remote, select_remote);
                 Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -9846,12 +9852,13 @@ impl Simd for Avx2 {
             fn kernel(token: Avx2, a: u32x8<Avx2>, indices: u8x32<Avx2>) -> u32x8<Avx2> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes, bytes);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes, bytes);
-                let select_high = _mm256_slli_epi16::<3>(indices);
-                let from_low = _mm256_shuffle_epi8(lolo, indices);
-                let from_high = _mm256_shuffle_epi8(hihi, indices);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
+                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
+                let local = _mm256_shuffle_epi8(bytes, indices);
+                let remote = _mm256_shuffle_epi8(swapped, indices);
+                let select_remote = _mm256_slli_epi16::<3>(indices);
+                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
+                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
+                let result = _mm256_blendv_epi8(local, remote, select_remote);
                 Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -10552,12 +10559,13 @@ impl Simd for Avx2 {
             fn kernel(token: Avx2, a: f64x4<Avx2>, indices: u8x32<Avx2>) -> f64x4<Avx2> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes, bytes);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes, bytes);
-                let select_high = _mm256_slli_epi16::<3>(indices);
-                let from_low = _mm256_shuffle_epi8(lolo, indices);
-                let from_high = _mm256_shuffle_epi8(hihi, indices);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
+                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
+                let local = _mm256_shuffle_epi8(bytes, indices);
+                let remote = _mm256_shuffle_epi8(swapped, indices);
+                let select_remote = _mm256_slli_epi16::<3>(indices);
+                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
+                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
+                let result = _mm256_blendv_epi8(local, remote, select_remote);
                 Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -11102,12 +11110,13 @@ impl Simd for Avx2 {
             fn kernel(token: Avx2, a: i64x4<Avx2>, indices: u8x32<Avx2>) -> i64x4<Avx2> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes, bytes);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes, bytes);
-                let select_high = _mm256_slli_epi16::<3>(indices);
-                let from_low = _mm256_shuffle_epi8(lolo, indices);
-                let from_high = _mm256_shuffle_epi8(hihi, indices);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
+                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
+                let local = _mm256_shuffle_epi8(bytes, indices);
+                let remote = _mm256_shuffle_epi8(swapped, indices);
+                let select_remote = _mm256_slli_epi16::<3>(indices);
+                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
+                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
+                let result = _mm256_blendv_epi8(local, remote, select_remote);
                 Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -11591,12 +11600,13 @@ impl Simd for Avx2 {
             fn kernel(token: Avx2, a: u64x4<Avx2>, indices: u8x32<Avx2>) -> u64x4<Avx2> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes, bytes);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes, bytes);
-                let select_high = _mm256_slli_epi16::<3>(indices);
-                let from_low = _mm256_shuffle_epi8(lolo, indices);
-                let from_high = _mm256_shuffle_epi8(hihi, indices);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
+                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
+                let local = _mm256_shuffle_epi8(bytes, indices);
+                let remote = _mm256_shuffle_epi8(swapped, indices);
+                let select_remote = _mm256_slli_epi16::<3>(indices);
+                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
+                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
+                let result = _mm256_blendv_epi8(local, remote, select_remote);
                 Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
