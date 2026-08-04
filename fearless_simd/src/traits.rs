@@ -18,22 +18,6 @@ pub trait Select<T: Seal>: Seal {
     fn select(self, if_true: T, if_false: T) -> T;
 }
 
-// Same as pulp
-pub trait WithSimd {
-    type Output;
-
-    fn with_simd<S: Simd>(self, simd: S) -> Self::Output;
-}
-
-impl<R, F: FnOnce(Level) -> R> WithSimd for F {
-    type Output = R;
-
-    #[inline(always)]
-    fn with_simd<S: Simd>(self, simd: S) -> Self::Output {
-        self(simd.level())
-    }
-}
-
 /// Conversion of SIMD vectors to and from same-width vectors of `u8` lanes.
 ///
 /// [`Bytes::bitcast`] uses this byte representation to reinterpret any two
