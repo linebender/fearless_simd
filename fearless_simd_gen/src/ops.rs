@@ -100,7 +100,7 @@ pub(crate) enum OpSig {
     /// dynamically swizzled across the whole vector. Out-of-range indices produce implementation-defined bytes.
     SwizzleDyn,
     /// Takes a vector and a same-width byte-index vector, and returns the original vector type with its bytes
-    /// dynamically swizzled across the whole vector. Out-of-range indices produce zero bytes.
+    /// dynamically swizzled across the whole vector. Out-of-range indices produce zero.
     SwizzleDynPrecise,
     /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
     /// same length.
@@ -646,7 +646,7 @@ const BASE_OPS: &[Op] = &[
         OpKind::BaseTraitMethod,
         OpSig::SwizzleDynPrecise,
         "Dynamically swizzle this vector's bytes across the whole vector.\n\n\
-        The `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero bytes.",
+        The `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero.",
     ),
 ];
 
