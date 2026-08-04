@@ -120,36 +120,6 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_f32x4(self, val: [f32; 4usize]) -> f32x4<Self> {
-        f32x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f32x4(self, val: &[f32; 4usize]) -> f32x4<Self> {
-        f32x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f32x4(self, a: f32x4<Self>) -> [f32; 4usize] {
-        crate::transmute::checked_transmute_copy::<__m128, [f32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f32x4(self, a: &f32x4<Self>) -> &[f32; 4usize] {
-        crate::transmute::checked_cast_ref::<__m128, [f32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f32x4(self, a: &mut f32x4<Self>) -> &mut [f32; 4usize] {
-        crate::transmute::checked_cast_mut::<__m128, [f32; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f32x4(self, a: f32x4<Self>, dest: &mut [f32; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         if SHIFT >= 4usize {
             return b;
@@ -235,6 +205,24 @@ impl Simd for Sse4_2 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: f32x4<Sse4_2>, indices: u8x16<Sse4_2>) -> f32x4<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -722,36 +710,6 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_i8x16(self, val: [i8; 16usize]) -> i8x16<Self> {
-        i8x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i8x16(self, val: &[i8; 16usize]) -> i8x16<Self> {
-        i8x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i8x16(self, a: i8x16<Self>) -> [i8; 16usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [i8; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i8x16(self, a: &i8x16<Self>) -> &[i8; 16usize] {
-        crate::transmute::checked_cast_ref::<__m128i, [i8; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i8x16(self, a: &mut i8x16<Self>) -> &mut [i8; 16usize] {
-        crate::transmute::checked_cast_mut::<__m128i, [i8; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i8x16(self, a: i8x16<Self>, dest: &mut [i8; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         if SHIFT >= 16usize {
             return b;
@@ -885,6 +843,24 @@ impl Simd for Sse4_2 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i8x16<Sse4_2>, indices: u8x16<Sse4_2>) -> i8x16<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -1300,36 +1276,6 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_u8x16(self, val: [u8; 16usize]) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u8x16(self, val: &[u8; 16usize]) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u8x16(self, a: u8x16<Self>) -> [u8; 16usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [u8; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u8x16(self, a: &u8x16<Self>) -> &[u8; 16usize] {
-        crate::transmute::checked_cast_ref::<__m128i, [u8; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u8x16(self, a: &mut u8x16<Self>) -> &mut [u8; 16usize] {
-        crate::transmute::checked_cast_mut::<__m128i, [u8; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u8x16(self, a: u8x16<Self>, dest: &mut [u8; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
         if SHIFT >= 16usize {
             return b;
@@ -1463,6 +1409,24 @@ impl Simd for Sse4_2 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u8x16(self, a: u8x16<Self>, indices: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u8x16<Sse4_2>, indices: u8x16<Sse4_2>) -> u8x16<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -1888,17 +1852,6 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_mask8x16(self, val: [i8; 16usize]) -> mask8x16<Self> {
-        mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask8x16(self, a: mask8x16<Self>) -> [i8; 16usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [i8; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask8x16(self, bits: u64) -> mask8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1935,9 +1888,9 @@ impl Simd for Sse4_2 {
             "mask lane index {index} is out of bounds for {} lanes",
             16usize
         );
-        let mut lanes = self.as_array_mask8x16(*a);
+        let mut lanes: [i8; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask8x16(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
@@ -2061,36 +2014,6 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_i16x8(self, val: [i16; 8usize]) -> i16x8<Self> {
-        i16x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i16x8(self, val: &[i16; 8usize]) -> i16x8<Self> {
-        i16x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i16x8(self, a: i16x8<Self>) -> [i16; 8usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [i16; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i16x8(self, a: &i16x8<Self>) -> &[i16; 8usize] {
-        crate::transmute::checked_cast_ref::<__m128i, [i16; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i16x8(self, a: &mut i16x8<Self>) -> &mut [i16; 8usize] {
-        crate::transmute::checked_cast_mut::<__m128i, [i16; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i16x8(self, a: i16x8<Self>, dest: &mut [i16; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         if SHIFT >= 8usize {
             return b;
@@ -2192,6 +2115,24 @@ impl Simd for Sse4_2 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i16x8<Sse4_2>, indices: u8x16<Sse4_2>) -> i16x8<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -2568,36 +2509,6 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_u16x8(self, val: [u16; 8usize]) -> u16x8<Self> {
-        u16x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u16x8(self, val: &[u16; 8usize]) -> u16x8<Self> {
-        u16x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u16x8(self, a: u16x8<Self>) -> [u16; 8usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [u16; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u16x8(self, a: &u16x8<Self>) -> &[u16; 8usize] {
-        crate::transmute::checked_cast_ref::<__m128i, [u16; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u16x8(self, a: &mut u16x8<Self>) -> &mut [u16; 8usize] {
-        crate::transmute::checked_cast_mut::<__m128i, [u16; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u16x8(self, a: u16x8<Self>, dest: &mut [u16; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         if SHIFT >= 8usize {
             return b;
@@ -2699,6 +2610,24 @@ impl Simd for Sse4_2 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u16x8<Sse4_2>, indices: u8x16<Sse4_2>) -> u16x8<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -3078,17 +3007,6 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_mask16x8(self, val: [i16; 8usize]) -> mask16x8<Self> {
-        mask16x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask16x8(self, a: mask16x8<Self>) -> [i16; 8usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [i16; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask16x8(self, bits: u64) -> mask16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3123,9 +3041,9 @@ impl Simd for Sse4_2 {
             "mask lane index {index} is out of bounds for {} lanes",
             8usize
         );
-        let mut lanes = self.as_array_mask16x8(*a);
+        let mut lanes: [i16; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask16x8(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
@@ -3249,36 +3167,6 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_i32x4(self, val: [i32; 4usize]) -> i32x4<Self> {
-        i32x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i32x4(self, val: &[i32; 4usize]) -> i32x4<Self> {
-        i32x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i32x4(self, a: i32x4<Self>) -> [i32; 4usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [i32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i32x4(self, a: &i32x4<Self>) -> &[i32; 4usize] {
-        crate::transmute::checked_cast_ref::<__m128i, [i32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i32x4(self, a: &mut i32x4<Self>) -> &mut [i32; 4usize] {
-        crate::transmute::checked_cast_mut::<__m128i, [i32; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i32x4(self, a: i32x4<Self>, dest: &mut [i32; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         if SHIFT >= 4usize {
             return b;
@@ -3364,6 +3252,24 @@ impl Simd for Sse4_2 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i32x4<Sse4_2>, indices: u8x16<Sse4_2>) -> i32x4<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -3730,36 +3636,6 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_u32x4(self, val: [u32; 4usize]) -> u32x4<Self> {
-        u32x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u32x4(self, val: &[u32; 4usize]) -> u32x4<Self> {
-        u32x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u32x4(self, a: u32x4<Self>) -> [u32; 4usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [u32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u32x4(self, a: &u32x4<Self>) -> &[u32; 4usize] {
-        crate::transmute::checked_cast_ref::<__m128i, [u32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u32x4(self, a: &mut u32x4<Self>) -> &mut [u32; 4usize] {
-        crate::transmute::checked_cast_mut::<__m128i, [u32; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u32x4(self, a: u32x4<Self>, dest: &mut [u32; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         if SHIFT >= 4usize {
             return b;
@@ -3845,6 +3721,24 @@ impl Simd for Sse4_2 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u32x4<Sse4_2>, indices: u8x16<Sse4_2>) -> u32x4<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -4223,17 +4117,6 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_mask32x4(self, val: [i32; 4usize]) -> mask32x4<Self> {
-        mask32x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask32x4(self, a: mask32x4<Self>) -> [i32; 4usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [i32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask32x4(self, bits: u64) -> mask32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4265,9 +4148,9 @@ impl Simd for Sse4_2 {
             "mask lane index {index} is out of bounds for {} lanes",
             4usize
         );
-        let mut lanes = self.as_array_mask32x4(*a);
+        let mut lanes: [i32; 4usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask32x4(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
@@ -4391,36 +4274,6 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_f64x2(self, val: [f64; 2usize]) -> f64x2<Self> {
-        f64x2 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f64x2(self, val: &[f64; 2usize]) -> f64x2<Self> {
-        f64x2 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f64x2(self, a: f64x2<Self>) -> [f64; 2usize] {
-        crate::transmute::checked_transmute_copy::<__m128d, [f64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f64x2(self, a: &f64x2<Self>) -> &[f64; 2usize] {
-        crate::transmute::checked_cast_ref::<__m128d, [f64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f64x2(self, a: &mut f64x2<Self>) -> &mut [f64; 2usize] {
-        crate::transmute::checked_cast_mut::<__m128d, [f64; 2usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f64x2(self, a: f64x2<Self>, dest: &mut [f64; 2usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         if SHIFT >= 2usize {
             return b;
@@ -4498,6 +4351,24 @@ impl Simd for Sse4_2 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: f64x2<Sse4_2>, indices: u8x16<Sse4_2>) -> f64x2<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -4894,36 +4765,6 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_i64x2(self, val: [i64; 2usize]) -> i64x2<Self> {
-        i64x2 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i64x2(self, val: &[i64; 2usize]) -> i64x2<Self> {
-        i64x2 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i64x2(self, a: i64x2<Self>) -> [i64; 2usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [i64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i64x2(self, a: &i64x2<Self>) -> &[i64; 2usize] {
-        crate::transmute::checked_cast_ref::<__m128i, [i64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i64x2(self, a: &mut i64x2<Self>) -> &mut [i64; 2usize] {
-        crate::transmute::checked_cast_mut::<__m128i, [i64; 2usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i64x2(self, a: i64x2<Self>, dest: &mut [i64; 2usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         if SHIFT >= 2usize {
             return b;
@@ -5001,6 +4842,24 @@ impl Simd for Sse4_2 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i64x2<Sse4_2>, indices: u8x16<Sse4_2>) -> i64x2<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -5325,36 +5184,6 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_u64x2(self, val: [u64; 2usize]) -> u64x2<Self> {
-        u64x2 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u64x2(self, val: &[u64; 2usize]) -> u64x2<Self> {
-        u64x2 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u64x2(self, a: u64x2<Self>) -> [u64; 2usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [u64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u64x2(self, a: &u64x2<Self>) -> &[u64; 2usize] {
-        crate::transmute::checked_cast_ref::<__m128i, [u64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u64x2(self, a: &mut u64x2<Self>) -> &mut [u64; 2usize] {
-        crate::transmute::checked_cast_mut::<__m128i, [u64; 2usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u64x2(self, a: u64x2<Self>, dest: &mut [u64; 2usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
         if SHIFT >= 2usize {
             return b;
@@ -5432,6 +5261,24 @@ impl Simd for Sse4_2 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u64x2<Sse4_2>, indices: u8x16<Sse4_2>) -> u64x2<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -5749,17 +5596,6 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_mask64x2(self, val: [i64; 2usize]) -> mask64x2<Self> {
-        mask64x2 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask64x2(self, a: mask64x2<Self>) -> [i64; 2usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [i64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask64x2(self, bits: u64) -> mask64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5791,9 +5627,9 @@ impl Simd for Sse4_2 {
             "mask lane index {index} is out of bounds for {} lanes",
             2usize
         );
-        let mut lanes = self.as_array_mask64x2(*a);
+        let mut lanes: [i64; 2usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask64x2(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
@@ -5912,36 +5748,6 @@ impl Simd for Sse4_2 {
         self.combine_f32x4(half, half)
     }
     #[inline(always)]
-    fn load_array_f32x8(self, val: [f32; 8usize]) -> f32x8<Self> {
-        f32x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f32x8(self, val: &[f32; 8usize]) -> f32x8<Self> {
-        f32x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f32x8(self, a: f32x8<Self>) -> [f32; 8usize] {
-        crate::transmute::checked_transmute_copy::<[__m128; 2usize], [f32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f32x8(self, a: &f32x8<Self>) -> &[f32; 8usize] {
-        crate::transmute::checked_cast_ref::<[__m128; 2usize], [f32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f32x8(self, a: &mut f32x8<Self>) -> &mut [f32; 8usize] {
-        crate::transmute::checked_cast_mut::<[__m128; 2usize], [f32; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f32x8(self, a: f32x8<Self>, dest: &mut [f32; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
         if SHIFT >= 8usize {
             return b;
@@ -6046,6 +5852,33 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_f32x4(a0, indices0),
             self.swizzle_dyn_within_blocks_f32x4(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: f32x8<Sse4_2>, indices: u8x32<Sse4_2>) -> f32x8<Sse4_2> {
+                let bytes = Bytes::to_bytes(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                Bytes::from_bytes(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
     }
     #[inline(always)]
     fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
@@ -6317,36 +6150,6 @@ impl Simd for Sse4_2 {
         self.combine_i8x16(half, half)
     }
     #[inline(always)]
-    fn load_array_i8x32(self, val: [i8; 32usize]) -> i8x32<Self> {
-        i8x32 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i8x32(self, val: &[i8; 32usize]) -> i8x32<Self> {
-        i8x32 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i8x32(self, a: i8x32<Self>) -> [i8; 32usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 2usize], [i8; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i8x32(self, a: &i8x32<Self>) -> &[i8; 32usize] {
-        crate::transmute::checked_cast_ref::<[__m128i; 2usize], [i8; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i8x32(self, a: &mut i8x32<Self>) -> &mut [i8; 32usize] {
-        crate::transmute::checked_cast_mut::<[__m128i; 2usize], [i8; 32usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i8x32(self, a: i8x32<Self>, dest: &mut [i8; 32usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         if SHIFT >= 32usize {
             return b;
@@ -6549,6 +6352,33 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i8x32<Sse4_2>, indices: u8x32<Sse4_2>) -> i8x32<Sse4_2> {
+                let bytes = Bytes::to_bytes(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                Bytes::from_bytes(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         let (a0, a1) = self.split_i8x32(a);
         let (b0, b1) = self.split_i8x32(b);
@@ -6739,36 +6569,6 @@ impl Simd for Sse4_2 {
     fn splat_u8x32(self, val: u8) -> u8x32<Self> {
         let half = self.splat_u8x16(val);
         self.combine_u8x16(half, half)
-    }
-    #[inline(always)]
-    fn load_array_u8x32(self, val: [u8; 32usize]) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u8x32(self, val: &[u8; 32usize]) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u8x32(self, a: u8x32<Self>) -> [u8; 32usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 2usize], [u8; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u8x32(self, a: &u8x32<Self>) -> &[u8; 32usize] {
-        crate::transmute::checked_cast_ref::<[__m128i; 2usize], [u8; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u8x32(self, a: &mut u8x32<Self>) -> &mut [u8; 32usize] {
-        crate::transmute::checked_cast_mut::<[__m128i; 2usize], [u8; 32usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u8x32(self, a: u8x32<Self>, dest: &mut [u8; 32usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
@@ -6973,6 +6773,33 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_u8x32(self, a: u8x32<Self>, indices: u8x32<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u8x32<Sse4_2>, indices: u8x32<Sse4_2>) -> u8x32<Sse4_2> {
+                let bytes = Bytes::to_bytes(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                Bytes::from_bytes(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
         let (a0, a1) = self.split_u8x32(a);
         let (b0, b1) = self.split_u8x32(b);
@@ -7165,17 +6992,6 @@ impl Simd for Sse4_2 {
         self.combine_mask8x16(half, half)
     }
     #[inline(always)]
-    fn load_array_mask8x32(self, val: [i8; 32usize]) -> mask8x32<Self> {
-        mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask8x32(self, a: mask8x32<Self>) -> [i8; 32usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 2usize], [i8; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask8x32(self, bits: u64) -> mask8x32<Self> {
         let lo = self.from_bitmask_mask8x16(bits);
         let hi = self.from_bitmask_mask8x16(bits >> 16usize);
@@ -7195,9 +7011,9 @@ impl Simd for Sse4_2 {
             "mask lane index {index} is out of bounds for {} lanes",
             32usize
         );
-        let mut lanes = self.as_array_mask8x32(*a);
+        let mut lanes: [i8; 32usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask8x32(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
@@ -7287,36 +7103,6 @@ impl Simd for Sse4_2 {
     fn splat_i16x16(self, val: i16) -> i16x16<Self> {
         let half = self.splat_i16x8(val);
         self.combine_i16x8(half, half)
-    }
-    #[inline(always)]
-    fn load_array_i16x16(self, val: [i16; 16usize]) -> i16x16<Self> {
-        i16x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i16x16(self, val: &[i16; 16usize]) -> i16x16<Self> {
-        i16x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i16x16(self, a: i16x16<Self>) -> [i16; 16usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 2usize], [i16; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i16x16(self, a: &i16x16<Self>) -> &[i16; 16usize] {
-        crate::transmute::checked_cast_ref::<[__m128i; 2usize], [i16; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i16x16(self, a: &mut i16x16<Self>) -> &mut [i16; 16usize] {
-        crate::transmute::checked_cast_mut::<[__m128i; 2usize], [i16; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i16x16(self, a: i16x16<Self>, dest: &mut [i16; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
@@ -7459,6 +7245,33 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_i16x8(a0, indices0),
             self.swizzle_dyn_within_blocks_i16x8(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_i16x16(self, a: i16x16<Self>, indices: u8x32<Self>) -> i16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i16x16<Sse4_2>, indices: u8x32<Sse4_2>) -> i16x16<Sse4_2> {
+                let bytes = Bytes::to_bytes(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                Bytes::from_bytes(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
@@ -7653,36 +7466,6 @@ impl Simd for Sse4_2 {
         self.combine_u16x8(half, half)
     }
     #[inline(always)]
-    fn load_array_u16x16(self, val: [u16; 16usize]) -> u16x16<Self> {
-        u16x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u16x16(self, val: &[u16; 16usize]) -> u16x16<Self> {
-        u16x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u16x16(self, a: u16x16<Self>) -> [u16; 16usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 2usize], [u16; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u16x16(self, a: &u16x16<Self>) -> &[u16; 16usize] {
-        crate::transmute::checked_cast_ref::<[__m128i; 2usize], [u16; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u16x16(self, a: &mut u16x16<Self>) -> &mut [u16; 16usize] {
-        crate::transmute::checked_cast_mut::<[__m128i; 2usize], [u16; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u16x16(self, a: u16x16<Self>, dest: &mut [u16; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
         if SHIFT >= 16usize {
             return b;
@@ -7823,6 +7606,33 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_u16x8(a0, indices0),
             self.swizzle_dyn_within_blocks_u16x8(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u16x16(self, a: u16x16<Self>, indices: u8x32<Self>) -> u16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u16x16<Sse4_2>, indices: u8x32<Sse4_2>) -> u16x16<Sse4_2> {
+                let bytes = Bytes::to_bytes(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                Bytes::from_bytes(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
@@ -8027,17 +7837,6 @@ impl Simd for Sse4_2 {
         self.combine_mask16x8(half, half)
     }
     #[inline(always)]
-    fn load_array_mask16x16(self, val: [i16; 16usize]) -> mask16x16<Self> {
-        mask16x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask16x16(self, a: mask16x16<Self>) -> [i16; 16usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 2usize], [i16; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask16x16(self, bits: u64) -> mask16x16<Self> {
         let lo = self.from_bitmask_mask16x8(bits);
         let hi = self.from_bitmask_mask16x8(bits >> 8usize);
@@ -8063,9 +7862,9 @@ impl Simd for Sse4_2 {
             "mask lane index {index} is out of bounds for {} lanes",
             16usize
         );
-        let mut lanes = self.as_array_mask16x16(*a);
+        let mut lanes: [i16; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask16x16(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
@@ -8155,36 +7954,6 @@ impl Simd for Sse4_2 {
     fn splat_i32x8(self, val: i32) -> i32x8<Self> {
         let half = self.splat_i32x4(val);
         self.combine_i32x4(half, half)
-    }
-    #[inline(always)]
-    fn load_array_i32x8(self, val: [i32; 8usize]) -> i32x8<Self> {
-        i32x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i32x8(self, val: &[i32; 8usize]) -> i32x8<Self> {
-        i32x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i32x8(self, a: i32x8<Self>) -> [i32; 8usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 2usize], [i32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i32x8(self, a: &i32x8<Self>) -> &[i32; 8usize] {
-        crate::transmute::checked_cast_ref::<[__m128i; 2usize], [i32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i32x8(self, a: &mut i32x8<Self>) -> &mut [i32; 8usize] {
-        crate::transmute::checked_cast_mut::<[__m128i; 2usize], [i32; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i32x8(self, a: i32x8<Self>, dest: &mut [i32; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
@@ -8291,6 +8060,33 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_i32x4(a0, indices0),
             self.swizzle_dyn_within_blocks_i32x4(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i32x8<Sse4_2>, indices: u8x32<Sse4_2>) -> i32x8<Sse4_2> {
+                let bytes = Bytes::to_bytes(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                Bytes::from_bytes(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
@@ -8490,36 +8286,6 @@ impl Simd for Sse4_2 {
         self.combine_u32x4(half, half)
     }
     #[inline(always)]
-    fn load_array_u32x8(self, val: [u32; 8usize]) -> u32x8<Self> {
-        u32x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u32x8(self, val: &[u32; 8usize]) -> u32x8<Self> {
-        u32x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u32x8(self, a: u32x8<Self>) -> [u32; 8usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 2usize], [u32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u32x8(self, a: &u32x8<Self>) -> &[u32; 8usize] {
-        crate::transmute::checked_cast_ref::<[__m128i; 2usize], [u32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u32x8(self, a: &mut u32x8<Self>) -> &mut [u32; 8usize] {
-        crate::transmute::checked_cast_mut::<[__m128i; 2usize], [u32; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u32x8(self, a: u32x8<Self>, dest: &mut [u32; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
         if SHIFT >= 8usize {
             return b;
@@ -8624,6 +8390,33 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_u32x4(a0, indices0),
             self.swizzle_dyn_within_blocks_u32x4(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u32x8<Sse4_2>, indices: u8x32<Sse4_2>) -> u32x8<Sse4_2> {
+                let bytes = Bytes::to_bytes(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                Bytes::from_bytes(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
@@ -8818,17 +8611,6 @@ impl Simd for Sse4_2 {
         self.combine_mask32x4(half, half)
     }
     #[inline(always)]
-    fn load_array_mask32x8(self, val: [i32; 8usize]) -> mask32x8<Self> {
-        mask32x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask32x8(self, a: mask32x8<Self>) -> [i32; 8usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 2usize], [i32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask32x8(self, bits: u64) -> mask32x8<Self> {
         let lo = self.from_bitmask_mask32x4(bits);
         let hi = self.from_bitmask_mask32x4(bits >> 4usize);
@@ -8848,9 +8630,9 @@ impl Simd for Sse4_2 {
             "mask lane index {index} is out of bounds for {} lanes",
             8usize
         );
-        let mut lanes = self.as_array_mask32x8(*a);
+        let mut lanes: [i32; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask32x8(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
@@ -8942,36 +8724,6 @@ impl Simd for Sse4_2 {
         self.combine_f64x2(half, half)
     }
     #[inline(always)]
-    fn load_array_f64x4(self, val: [f64; 4usize]) -> f64x4<Self> {
-        f64x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f64x4(self, val: &[f64; 4usize]) -> f64x4<Self> {
-        f64x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f64x4(self, a: f64x4<Self>) -> [f64; 4usize] {
-        crate::transmute::checked_transmute_copy::<[__m128d; 2usize], [f64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f64x4(self, a: &f64x4<Self>) -> &[f64; 4usize] {
-        crate::transmute::checked_cast_ref::<[__m128d; 2usize], [f64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f64x4(self, a: &mut f64x4<Self>) -> &mut [f64; 4usize] {
-        crate::transmute::checked_cast_mut::<[__m128d; 2usize], [f64; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f64x4(self, a: f64x4<Self>, dest: &mut [f64; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
         if SHIFT >= 4usize {
             return b;
@@ -9060,6 +8812,33 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_f64x2(a0, indices0),
             self.swizzle_dyn_within_blocks_f64x2(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: f64x4<Sse4_2>, indices: u8x32<Sse4_2>) -> f64x4<Sse4_2> {
+                let bytes = Bytes::to_bytes(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                Bytes::from_bytes(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
     }
     #[inline(always)]
     fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
@@ -9305,36 +9084,6 @@ impl Simd for Sse4_2 {
         self.combine_i64x2(half, half)
     }
     #[inline(always)]
-    fn load_array_i64x4(self, val: [i64; 4usize]) -> i64x4<Self> {
-        i64x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i64x4(self, val: &[i64; 4usize]) -> i64x4<Self> {
-        i64x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i64x4(self, a: i64x4<Self>) -> [i64; 4usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 2usize], [i64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i64x4(self, a: &i64x4<Self>) -> &[i64; 4usize] {
-        crate::transmute::checked_cast_ref::<[__m128i; 2usize], [i64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i64x4(self, a: &mut i64x4<Self>) -> &mut [i64; 4usize] {
-        crate::transmute::checked_cast_mut::<[__m128i; 2usize], [i64; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i64x4(self, a: i64x4<Self>, dest: &mut [i64; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_i64x4<const SHIFT: usize>(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         if SHIFT >= 4usize {
             return b;
@@ -9423,6 +9172,33 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_i64x2(a0, indices0),
             self.swizzle_dyn_within_blocks_i64x2(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i64x4<Sse4_2>, indices: u8x32<Sse4_2>) -> i64x4<Sse4_2> {
+                let bytes = Bytes::to_bytes(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                Bytes::from_bytes(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
@@ -9617,36 +9393,6 @@ impl Simd for Sse4_2 {
         self.combine_u64x2(half, half)
     }
     #[inline(always)]
-    fn load_array_u64x4(self, val: [u64; 4usize]) -> u64x4<Self> {
-        u64x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u64x4(self, val: &[u64; 4usize]) -> u64x4<Self> {
-        u64x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u64x4(self, a: u64x4<Self>) -> [u64; 4usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 2usize], [u64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u64x4(self, a: &u64x4<Self>) -> &[u64; 4usize] {
-        crate::transmute::checked_cast_ref::<[__m128i; 2usize], [u64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u64x4(self, a: &mut u64x4<Self>) -> &mut [u64; 4usize] {
-        crate::transmute::checked_cast_mut::<[__m128i; 2usize], [u64; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u64x4(self, a: u64x4<Self>, dest: &mut [u64; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u64x4<const SHIFT: usize>(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
         if SHIFT >= 4usize {
             return b;
@@ -9735,6 +9481,33 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_u64x2(a0, indices0),
             self.swizzle_dyn_within_blocks_u64x2(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u64x4<Sse4_2>, indices: u8x32<Sse4_2>) -> u64x4<Sse4_2> {
+                let bytes = Bytes::to_bytes(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                Bytes::from_bytes(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
@@ -9924,17 +9697,6 @@ impl Simd for Sse4_2 {
         self.combine_mask64x2(half, half)
     }
     #[inline(always)]
-    fn load_array_mask64x4(self, val: [i64; 4usize]) -> mask64x4<Self> {
-        mask64x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask64x4(self, a: mask64x4<Self>) -> [i64; 4usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 2usize], [i64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask64x4(self, bits: u64) -> mask64x4<Self> {
         let lo = self.from_bitmask_mask64x2(bits);
         let hi = self.from_bitmask_mask64x2(bits >> 2usize);
@@ -9954,9 +9716,9 @@ impl Simd for Sse4_2 {
             "mask lane index {index} is out of bounds for {} lanes",
             4usize
         );
-        let mut lanes = self.as_array_mask64x4(*a);
+        let mut lanes: [i64; 4usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask64x4(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
@@ -10046,36 +9808,6 @@ impl Simd for Sse4_2 {
     fn splat_f32x16(self, val: f32) -> f32x16<Self> {
         let half = self.splat_f32x8(val);
         self.combine_f32x8(half, half)
-    }
-    #[inline(always)]
-    fn load_array_f32x16(self, val: [f32; 16usize]) -> f32x16<Self> {
-        f32x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f32x16(self, val: &[f32; 16usize]) -> f32x16<Self> {
-        f32x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f32x16(self, a: f32x16<Self>) -> [f32; 16usize] {
-        crate::transmute::checked_transmute_copy::<[__m128; 4usize], [f32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f32x16(self, a: &f32x16<Self>) -> &[f32; 16usize] {
-        crate::transmute::checked_cast_ref::<[__m128; 4usize], [f32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f32x16(self, a: &mut f32x16<Self>) -> &mut [f32; 16usize] {
-        crate::transmute::checked_cast_mut::<[__m128; 4usize], [f32; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
@@ -10218,6 +9950,18 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_f32x8(a0, indices0),
             self.swizzle_dyn_within_blocks_f32x8(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self> {
+        let bytes = Bytes::to_bytes(a);
+        let mut output = [0u8; 64usize];
+        for lane in 0..64usize {
+            let index = indices[lane] as usize;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
+        }
+        let result: u8x64<Self> = output.simd_into(self);
+        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -10480,36 +10224,6 @@ impl Simd for Sse4_2 {
     fn splat_i8x64(self, val: i8) -> i8x64<Self> {
         let half = self.splat_i8x32(val);
         self.combine_i8x32(half, half)
-    }
-    #[inline(always)]
-    fn load_array_i8x64(self, val: [i8; 64usize]) -> i8x64<Self> {
-        i8x64 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i8x64(self, val: &[i8; 64usize]) -> i8x64<Self> {
-        i8x64 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i8x64(self, a: i8x64<Self>) -> [i8; 64usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 4usize], [i8; 64usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i8x64(self, a: &i8x64<Self>) -> &[i8; 64usize] {
-        crate::transmute::checked_cast_ref::<[__m128i; 4usize], [i8; 64usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i8x64(self, a: &mut i8x64<Self>) -> &mut [i8; 64usize] {
-        crate::transmute::checked_cast_mut::<[__m128i; 4usize], [i8; 64usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -10842,6 +10556,18 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
+        let bytes = Bytes::to_bytes(a);
+        let mut output = [0u8; 64usize];
+        for lane in 0..64usize {
+            let index = indices[lane] as usize;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
+        }
+        let result: u8x64<Self> = output.simd_into(self);
+        Bytes::from_bytes(result)
+    }
+    #[inline(always)]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
         let (a0, a1) = self.split_i8x64(a);
         let (b0, b1) = self.split_i8x64(b);
@@ -11025,36 +10751,6 @@ impl Simd for Sse4_2 {
     fn splat_u8x64(self, val: u8) -> u8x64<Self> {
         let half = self.splat_u8x32(val);
         self.combine_u8x32(half, half)
-    }
-    #[inline(always)]
-    fn load_array_u8x64(self, val: [u8; 64usize]) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u8x64(self, val: &[u8; 64usize]) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u8x64(self, a: u8x64<Self>) -> [u8; 64usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 4usize], [u8; 64usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u8x64(self, a: &u8x64<Self>) -> &[u8; 64usize] {
-        crate::transmute::checked_cast_ref::<[__m128i; 4usize], [u8; 64usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u8x64(self, a: &mut u8x64<Self>) -> &mut [u8; 64usize] {
-        crate::transmute::checked_cast_mut::<[__m128i; 4usize], [u8; 64usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
@@ -11387,6 +11083,18 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_u8x64(self, a: u8x64<Self>, indices: u8x64<Self>) -> u8x64<Self> {
+        let bytes = Bytes::to_bytes(a);
+        let mut output = [0u8; 64usize];
+        for lane in 0..64usize {
+            let index = indices[lane] as usize;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
+        }
+        let result: u8x64<Self> = output.simd_into(self);
+        Bytes::from_bytes(result)
+    }
+    #[inline(always)]
     fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
         let (a0, a1) = self.split_u8x64(a);
         let (b0, b1) = self.split_u8x64(b);
@@ -11567,17 +11275,6 @@ impl Simd for Sse4_2 {
         self.combine_mask8x32(half, half)
     }
     #[inline(always)]
-    fn load_array_mask8x64(self, val: [i8; 64usize]) -> mask8x64<Self> {
-        mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask8x64(self, a: mask8x64<Self>) -> [i8; 64usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 4usize], [i8; 64usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask8x64(self, bits: u64) -> mask8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11638,9 +11335,9 @@ impl Simd for Sse4_2 {
             "mask lane index {index} is out of bounds for {} lanes",
             64usize
         );
-        let mut lanes = self.as_array_mask8x64(*a);
+        let mut lanes: [i8; 64usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask8x64(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
@@ -11723,36 +11420,6 @@ impl Simd for Sse4_2 {
     fn splat_i16x32(self, val: i16) -> i16x32<Self> {
         let half = self.splat_i16x16(val);
         self.combine_i16x16(half, half)
-    }
-    #[inline(always)]
-    fn load_array_i16x32(self, val: [i16; 32usize]) -> i16x32<Self> {
-        i16x32 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i16x32(self, val: &[i16; 32usize]) -> i16x32<Self> {
-        i16x32 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i16x32(self, a: i16x32<Self>) -> [i16; 32usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 4usize], [i16; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i16x32(self, a: &i16x32<Self>) -> &[i16; 32usize] {
-        crate::transmute::checked_cast_ref::<[__m128i; 4usize], [i16; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i16x32(self, a: &mut i16x32<Self>) -> &mut [i16; 32usize] {
-        crate::transmute::checked_cast_mut::<[__m128i; 4usize], [i16; 32usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -11961,6 +11628,18 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i16x32(self, a: i16x32<Self>, indices: u8x64<Self>) -> i16x32<Self> {
+        let bytes = Bytes::to_bytes(a);
+        let mut output = [0u8; 64usize];
+        for lane in 0..64usize {
+            let index = indices[lane] as usize;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
+        }
+        let result: u8x64<Self> = output.simd_into(self);
+        Bytes::from_bytes(result)
+    }
+    #[inline(always)]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
         let (a0, a1) = self.split_i16x32(a);
         let (b0, b1) = self.split_i16x32(b);
@@ -12150,36 +11829,6 @@ impl Simd for Sse4_2 {
     fn splat_u16x32(self, val: u16) -> u16x32<Self> {
         let half = self.splat_u16x16(val);
         self.combine_u16x16(half, half)
-    }
-    #[inline(always)]
-    fn load_array_u16x32(self, val: [u16; 32usize]) -> u16x32<Self> {
-        u16x32 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u16x32(self, val: &[u16; 32usize]) -> u16x32<Self> {
-        u16x32 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u16x32(self, a: u16x32<Self>) -> [u16; 32usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 4usize], [u16; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u16x32(self, a: &u16x32<Self>) -> &[u16; 32usize] {
-        crate::transmute::checked_cast_ref::<[__m128i; 4usize], [u16; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u16x32(self, a: &mut u16x32<Self>) -> &mut [u16; 32usize] {
-        crate::transmute::checked_cast_mut::<[__m128i; 4usize], [u16; 32usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -12388,6 +12037,18 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_u16x32(self, a: u16x32<Self>, indices: u8x64<Self>) -> u16x32<Self> {
+        let bytes = Bytes::to_bytes(a);
+        let mut output = [0u8; 64usize];
+        for lane in 0..64usize {
+            let index = indices[lane] as usize;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
+        }
+        let result: u8x64<Self> = output.simd_into(self);
+        Bytes::from_bytes(result)
+    }
+    #[inline(always)]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
         let (a0, a1) = self.split_u16x32(a);
         let (b0, b1) = self.split_u16x32(b);
@@ -12579,17 +12240,6 @@ impl Simd for Sse4_2 {
         self.combine_mask16x16(half, half)
     }
     #[inline(always)]
-    fn load_array_mask16x32(self, val: [i16; 32usize]) -> mask16x32<Self> {
-        mask16x32 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask16x32(self, a: mask16x32<Self>) -> [i16; 32usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 4usize], [i16; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask16x32(self, bits: u64) -> mask16x32<Self> {
         let lo = self.from_bitmask_mask16x16(bits);
         let hi = self.from_bitmask_mask16x16(bits >> 16usize);
@@ -12618,9 +12268,9 @@ impl Simd for Sse4_2 {
             "mask lane index {index} is out of bounds for {} lanes",
             32usize
         );
-        let mut lanes = self.as_array_mask16x32(*a);
+        let mut lanes: [i16; 32usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask16x32(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
@@ -12706,36 +12356,6 @@ impl Simd for Sse4_2 {
     fn splat_i32x16(self, val: i32) -> i32x16<Self> {
         let half = self.splat_i32x8(val);
         self.combine_i32x8(half, half)
-    }
-    #[inline(always)]
-    fn load_array_i32x16(self, val: [i32; 16usize]) -> i32x16<Self> {
-        i32x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i32x16(self, val: &[i32; 16usize]) -> i32x16<Self> {
-        i32x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i32x16(self, a: i32x16<Self>) -> [i32; 16usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 4usize], [i32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i32x16(self, a: &i32x16<Self>) -> &[i32; 16usize] {
-        crate::transmute::checked_cast_ref::<[__m128i; 4usize], [i32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i32x16(self, a: &mut i32x16<Self>) -> &mut [i32; 16usize] {
-        crate::transmute::checked_cast_mut::<[__m128i; 4usize], [i32; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -12878,6 +12498,18 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_i32x8(a0, indices0),
             self.swizzle_dyn_within_blocks_i32x8(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_i32x16(self, a: i32x16<Self>, indices: u8x64<Self>) -> i32x16<Self> {
+        let bytes = Bytes::to_bytes(a);
+        let mut output = [0u8; 64usize];
+        for lane in 0..64usize {
+            let index = indices[lane] as usize;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
+        }
+        let result: u8x64<Self> = output.simd_into(self);
+        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -13070,36 +12702,6 @@ impl Simd for Sse4_2 {
         self.combine_u32x8(half, half)
     }
     #[inline(always)]
-    fn load_array_u32x16(self, val: [u32; 16usize]) -> u32x16<Self> {
-        u32x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u32x16(self, val: &[u32; 16usize]) -> u32x16<Self> {
-        u32x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u32x16(self, a: u32x16<Self>) -> [u32; 16usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 4usize], [u32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u32x16(self, a: &u32x16<Self>) -> &[u32; 16usize] {
-        crate::transmute::checked_cast_ref::<[__m128i; 4usize], [u32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u32x16(self, a: &mut u32x16<Self>) -> &mut [u32; 16usize] {
-        crate::transmute::checked_cast_mut::<[__m128i; 4usize], [u32; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
         if SHIFT >= 16usize {
             return b;
@@ -13240,6 +12842,18 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_u32x8(a0, indices0),
             self.swizzle_dyn_within_blocks_u32x8(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u32x16(self, a: u32x16<Self>, indices: u8x64<Self>) -> u32x16<Self> {
+        let bytes = Bytes::to_bytes(a);
+        let mut output = [0u8; 64usize];
+        for lane in 0..64usize {
+            let index = indices[lane] as usize;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
+        }
+        let result: u8x64<Self> = output.simd_into(self);
+        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
@@ -13427,17 +13041,6 @@ impl Simd for Sse4_2 {
         self.combine_mask32x8(half, half)
     }
     #[inline(always)]
-    fn load_array_mask32x16(self, val: [i32; 16usize]) -> mask32x16<Self> {
-        mask32x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask32x16(self, a: mask32x16<Self>) -> [i32; 16usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 4usize], [i32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask32x16(self, bits: u64) -> mask32x16<Self> {
         let lo = self.from_bitmask_mask32x8(bits);
         let hi = self.from_bitmask_mask32x8(bits >> 8usize);
@@ -13457,9 +13060,9 @@ impl Simd for Sse4_2 {
             "mask lane index {index} is out of bounds for {} lanes",
             16usize
         );
-        let mut lanes = self.as_array_mask32x16(*a);
+        let mut lanes: [i32; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask32x16(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
@@ -13542,36 +13145,6 @@ impl Simd for Sse4_2 {
     fn splat_f64x8(self, val: f64) -> f64x8<Self> {
         let half = self.splat_f64x4(val);
         self.combine_f64x4(half, half)
-    }
-    #[inline(always)]
-    fn load_array_f64x8(self, val: [f64; 8usize]) -> f64x8<Self> {
-        f64x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f64x8(self, val: &[f64; 8usize]) -> f64x8<Self> {
-        f64x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f64x8(self, a: f64x8<Self>) -> [f64; 8usize] {
-        crate::transmute::checked_transmute_copy::<[__m128d; 4usize], [f64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f64x8(self, a: &f64x8<Self>) -> &[f64; 8usize] {
-        crate::transmute::checked_cast_ref::<[__m128d; 4usize], [f64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f64x8(self, a: &mut f64x8<Self>) -> &mut [f64; 8usize] {
-        crate::transmute::checked_cast_mut::<[__m128d; 4usize], [f64; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
@@ -13678,6 +13251,18 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_f64x4(a0, indices0),
             self.swizzle_dyn_within_blocks_f64x4(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
+        let bytes = Bytes::to_bytes(a);
+        let mut output = [0u8; 64usize];
+        for lane in 0..64usize {
+            let index = indices[lane] as usize;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
+        }
+        let result: u8x64<Self> = output.simd_into(self);
+        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
@@ -13916,36 +13501,6 @@ impl Simd for Sse4_2 {
         self.combine_i64x4(half, half)
     }
     #[inline(always)]
-    fn load_array_i64x8(self, val: [i64; 8usize]) -> i64x8<Self> {
-        i64x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i64x8(self, val: &[i64; 8usize]) -> i64x8<Self> {
-        i64x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i64x8(self, a: i64x8<Self>) -> [i64; 8usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 4usize], [i64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i64x8(self, a: &i64x8<Self>) -> &[i64; 8usize] {
-        crate::transmute::checked_cast_ref::<[__m128i; 4usize], [i64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i64x8(self, a: &mut i64x8<Self>) -> &mut [i64; 8usize] {
-        crate::transmute::checked_cast_mut::<[__m128i; 4usize], [i64; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i64x8(self, a: i64x8<Self>, dest: &mut [i64; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_i64x8<const SHIFT: usize>(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
         if SHIFT >= 8usize {
             return b;
@@ -14050,6 +13605,18 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_i64x4(a0, indices0),
             self.swizzle_dyn_within_blocks_i64x4(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
+        let bytes = Bytes::to_bytes(a);
+        let mut output = [0u8; 64usize];
+        for lane in 0..64usize {
+            let index = indices[lane] as usize;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
+        }
+        let result: u8x64<Self> = output.simd_into(self);
+        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn add_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
@@ -14237,36 +13804,6 @@ impl Simd for Sse4_2 {
         self.combine_u64x4(half, half)
     }
     #[inline(always)]
-    fn load_array_u64x8(self, val: [u64; 8usize]) -> u64x8<Self> {
-        u64x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u64x8(self, val: &[u64; 8usize]) -> u64x8<Self> {
-        u64x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u64x8(self, a: u64x8<Self>) -> [u64; 8usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 4usize], [u64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u64x8(self, a: &u64x8<Self>) -> &[u64; 8usize] {
-        crate::transmute::checked_cast_ref::<[__m128i; 4usize], [u64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u64x8(self, a: &mut u64x8<Self>) -> &mut [u64; 8usize] {
-        crate::transmute::checked_cast_mut::<[__m128i; 4usize], [u64; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u64x8<const SHIFT: usize>(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
         if SHIFT >= 8usize {
             return b;
@@ -14371,6 +13908,18 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_u64x4(a0, indices0),
             self.swizzle_dyn_within_blocks_u64x4(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
+        let bytes = Bytes::to_bytes(a);
+        let mut output = [0u8; 64usize];
+        for lane in 0..64usize {
+            let index = indices[lane] as usize;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
+        }
+        let result: u8x64<Self> = output.simd_into(self);
+        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn add_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
@@ -14553,17 +14102,6 @@ impl Simd for Sse4_2 {
         self.combine_mask64x4(half, half)
     }
     #[inline(always)]
-    fn load_array_mask64x8(self, val: [i64; 8usize]) -> mask64x8<Self> {
-        mask64x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask64x8(self, a: mask64x8<Self>) -> [i64; 8usize] {
-        crate::transmute::checked_transmute_copy::<[__m128i; 4usize], [i64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask64x8(self, bits: u64) -> mask64x8<Self> {
         let lo = self.from_bitmask_mask64x4(bits);
         let hi = self.from_bitmask_mask64x4(bits >> 4usize);
@@ -14583,9 +14121,9 @@ impl Simd for Sse4_2 {
             "mask lane index {index} is out of bounds for {} lanes",
             8usize
         );
-        let mut lanes = self.as_array_mask64x8(*a);
+        let mut lanes: [i64; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask64x8(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {

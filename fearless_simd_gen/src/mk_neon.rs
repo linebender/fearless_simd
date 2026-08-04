@@ -5,8 +5,7 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
-    fallback_method, generic_as_array, generic_from_array, generic_mask_set, generic_op_name,
-    generic_store_array, integer_lane_mask_splat_arg,
+    fallback_method, generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{Op, SlideGranularity};
@@ -495,6 +494,43 @@ impl Level for Neon {
                     }
                 })
             }
+            OpSig::SwizzleDynPrecise => {
+                let bytes_ty = vec_ty.bytes_ty();
+                let bytes = bytes_ty.rust();
+                let wrapper = bytes_ty.aligned_wrapper();
+
+                self.kernel_method(op, vec_ty, |token| {
+                    let body = match vec_ty.n_bits() {
+                        128 => quote! {
+                            let result = vqtbl1q_u8(Bytes::to_bytes(a).val.0, indices.into());
+                        },
+                        256 => quote! {
+                            let table = Bytes::to_bytes(a).val.0;
+                            let indices: uint8x16x2_t = indices.into();
+                            let result = uint8x16x2_t(
+                                vqtbl2q_u8(table, indices.0),
+                                vqtbl2q_u8(table, indices.1),
+                            );
+                        },
+                        512 => quote! {
+                            let table = Bytes::to_bytes(a).val.0;
+                            let indices: uint8x16x4_t = indices.into();
+                            let result = uint8x16x4_t(
+                                vqtbl4q_u8(table, indices.0),
+                                vqtbl4q_u8(table, indices.1),
+                                vqtbl4q_u8(table, indices.2),
+                                vqtbl4q_u8(table, indices.3),
+                            );
+                        },
+                        _ => unreachable!(),
+                    };
+
+                    quote! {
+                        #body
+                        Bytes::from_bytes(#bytes { val: #wrapper(result), simd: #token })
+                    }
+                })
+            }
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
@@ -541,13 +577,6 @@ impl Level for Neon {
             OpSig::MaskFromBitmask => self.handle_mask_from_bitmask(op, vec_ty),
             OpSig::MaskToBitmask => self.handle_mask_to_bitmask(op, vec_ty),
             OpSig::MaskSet => generic_mask_set(method_sig, vec_ty),
-            OpSig::FromArray { kind } => generic_from_array(method_sig, vec_ty, kind),
-            OpSig::AsArray { kind } => {
-                generic_as_array(method_sig, vec_ty, kind, self.max_block_size(), |vec_ty| {
-                    self.arch_ty(vec_ty)
-                })
-            }
-            OpSig::StoreArray => generic_store_array(method_sig, vec_ty),
             OpSig::Interleave => {
                 let zip_low = generic_op_name("zip_low", vec_ty);
                 let zip_high = generic_op_name("zip_high", vec_ty);

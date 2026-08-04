@@ -27,23 +27,6 @@ impl Quantifier {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub(crate) enum RefKind {
-    Value,
-    Ref,
-    Mut,
-}
-
-impl RefKind {
-    pub(crate) fn token(&self) -> Option<TokenStream> {
-        match self {
-            Self::Value => None,
-            Self::Ref => Some(quote! { & }),
-            Self::Mut => Some(quote! { &mut }),
-        }
-    }
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum SlideGranularity {
     WithinBlocks,
     AcrossBlocks,
@@ -96,6 +79,9 @@ pub(crate) enum OpSig {
     /// Takes a vector and a same-width byte-index vector, and returns the original vector type with its bytes
     /// dynamically swizzled within each 128-bit block.
     SwizzleDynWithinBlocks,
+    /// Takes a vector and a same-width byte-index vector, and returns the original vector type with its bytes
+    /// dynamically swizzled across the whole vector. Out-of-range indices produce zero bytes.
+    SwizzleDynPrecise,
     /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
     /// same length.
     Cvt {
@@ -131,14 +117,6 @@ pub(crate) enum OpSig {
     /// reference to a scalar array with the length (`block_size` * `block_count`) / [scalar type's byte size], and
     /// returns nothing.
     StoreInterleaved { block_size: u16, block_count: u16 },
-    /// Takes a single argument of the array type corresponding to the vector type (e.g. `[f32; 4]` for `f32x4<S>`), or
-    /// a reference to it, and returns that vector type.
-    FromArray { kind: RefKind },
-    /// Takes a single argument of the vector type, or a reference to it, and returns the corresponding array type (e.g.
-    /// `[f32; 4]` for `f32x4<S>`) or a reference to it.
-    AsArray { kind: RefKind },
-    /// Takes a vector and a mutable reference to an array, and stores the vector elements into the array.
-    StoreArray,
 }
 
 /// Where this operation is defined, and how it is called.
@@ -241,8 +219,7 @@ impl Op {
         let arg_decls = sig.arg_decls();
         let call_args = &sig.arg_names;
         let ret = &sig.ret;
-        let kernel_call = if matches!(self.sig, OpSig::StoreInterleaved { .. } | OpSig::StoreArray)
-        {
+        let kernel_call = if matches!(self.sig, OpSig::StoreInterleaved { .. }) {
             quote! { kernel(self #(, #call_args)*); }
         } else {
             quote! { kernel(self #(, #call_args)*) }
@@ -322,7 +299,7 @@ impl Op {
             OpSig::ElementRotate { .. } => (vec![vec.clone()], vec),
             OpSig::ElementShift { .. } => (vec![vec.clone(), splat_arg_ty(vec_ty)], vec),
             OpSig::Slide { .. } => (vec![vec.clone(), vec.clone()], vec),
-            OpSig::SwizzleDynWithinBlocks => {
+            OpSig::SwizzleDynWithinBlocks | OpSig::SwizzleDynPrecise => {
                 let bytes_ty = vec_ty.bytes_ty().rust();
                 (vec![vec.clone(), quote! { #bytes_ty<#simd_ty> }], vec)
             }
@@ -354,29 +331,6 @@ impl Op {
                     vec,
                 )
             }
-            OpSig::FromArray { kind } => {
-                let ref_tok = kind.token();
-                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                let len = vec_ty.len;
-                let array_ty = quote! { [#rust_scalar; #len] };
-                (vec![quote! { #ref_tok #array_ty }], vec)
-            }
-            OpSig::AsArray { kind } => {
-                let ref_tok = kind.token();
-                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                let len = vec_ty.len;
-                let array_ty = quote! { [#rust_scalar; #len] };
-                (
-                    vec![quote! { #ref_tok #vec }],
-                    quote! { #ref_tok #array_ty },
-                )
-            }
-            OpSig::StoreArray => {
-                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                let len = vec_ty.len;
-                let array_ty = quote! { [#rust_scalar; #len] };
-                (vec![vec, quote! { &mut #array_ty }], quote! { () })
-            }
         };
 
         SimdTraitSigParts {
@@ -401,7 +355,7 @@ impl Op {
                 let arg1 = &arg_names[1];
                 quote! { (#arg0: S, #arg1: Self::Element) -> Self }
             }
-            OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } | OpSig::StoreArray => {
+            OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } => {
                 return None;
             }
             OpSig::MaskFromBitmask | OpSig::MaskToBitmask | OpSig::MaskSet => return None,
@@ -437,7 +391,7 @@ impl Op {
                 let arg1 = &arg_names[1];
                 quote! { <const SHIFT: usize>(#arg0, #arg1: impl SimdInto<Self, S>) -> Self }
             }
-            OpSig::SwizzleDynWithinBlocks => {
+            OpSig::SwizzleDynWithinBlocks | OpSig::SwizzleDynPrecise => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
                 quote! { (#arg0, #arg1: impl SimdInto<Self::Bytes, S>) -> Self }
@@ -462,10 +416,7 @@ impl Op {
             // masks.
             OpSig::Select => return None,
             // These signatures involve types not in the Simd trait
-            OpSig::Split { .. }
-            | OpSig::Combine { .. }
-            | OpSig::FromArray { .. }
-            | OpSig::AsArray { .. } => return None,
+            OpSig::Split { .. } | OpSig::Combine { .. } => return None,
         };
         Some(quote! { fn #method_ident #sig_inner })
     }
@@ -533,46 +484,6 @@ const BASE_OPS: &[Op] = &[
         "Create a SIMD vector with all elements set to the given value.",
     ),
     Op::new(
-        "load_array",
-        OpKind::AssociatedOnly,
-        OpSig::FromArray {
-            kind: RefKind::Value,
-        },
-        "Create a SIMD vector from an array of the same length.",
-    ),
-    Op::new(
-        "load_array_ref",
-        OpKind::AssociatedOnly,
-        OpSig::FromArray { kind: RefKind::Ref },
-        "Create a SIMD vector from an array of the same length.",
-    ),
-    Op::new(
-        "as_array",
-        OpKind::AssociatedOnly,
-        OpSig::AsArray {
-            kind: RefKind::Value,
-        },
-        "Convert a SIMD vector to an array.",
-    ),
-    Op::new(
-        "as_array_ref",
-        OpKind::AssociatedOnly,
-        OpSig::AsArray { kind: RefKind::Ref },
-        "Project a reference to a SIMD vector to a reference to the equivalent array.",
-    ),
-    Op::new(
-        "as_array_mut",
-        OpKind::AssociatedOnly,
-        OpSig::AsArray { kind: RefKind::Mut },
-        "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array.",
-    ),
-    Op::new(
-        "store_array",
-        OpKind::AssociatedOnly,
-        OpSig::StoreArray,
-        "Store a SIMD vector into an array of the same length.",
-    ),
-    Op::new(
         "slide",
         OpKind::BaseTraitMethod,
         OpSig::Slide {
@@ -638,6 +549,13 @@ const BASE_OPS: &[Op] = &[
         The `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\n\
         Out-of-range index behavior varies by platform.",
     ),
+    Op::new(
+        "swizzle_dyn_precise",
+        OpKind::BaseTraitMethod,
+        OpSig::SwizzleDynPrecise,
+        "Dynamically swizzle this vector's bytes across the whole vector.\n\n\
+        The `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero bytes.",
+    ),
 ];
 
 const MASK_REPRESENTATION_OPS: &[Op] = &[
@@ -646,22 +564,6 @@ const MASK_REPRESENTATION_OPS: &[Op] = &[
         OpKind::BaseTraitMethod,
         OpSig::Splat,
         "Create a SIMD mask with all lanes set from the given boolean value.",
-    ),
-    Op::new(
-        "load_array",
-        OpKind::AssociatedOnly,
-        OpSig::FromArray {
-            kind: RefKind::Value,
-        },
-        "Create a SIMD mask from signed integer mask lanes.",
-    ),
-    Op::new(
-        "as_array",
-        OpKind::AssociatedOnly,
-        OpSig::AsArray {
-            kind: RefKind::Value,
-        },
-        "Convert a SIMD mask to signed integer mask lanes.",
     ),
     Op::new(
         "from_bitmask",
@@ -1572,10 +1474,8 @@ impl OpSig {
                 | Self::Combine { .. }
                 | Self::LoadInterleaved { .. }
                 | Self::StoreInterleaved { .. }
-                | Self::FromArray { .. }
-                | Self::AsArray { .. }
-                | Self::StoreArray
                 | Self::MaskSet
+                | Self::SwizzleDynPrecise
                 | Self::Slide {
                     granularity: SlideGranularity::AcrossBlocks,
                     ..
@@ -1603,7 +1503,7 @@ impl OpSig {
 
     fn simd_trait_arg_names(&self) -> &'static [&'static str] {
         match self {
-            Self::Splat | Self::FromArray { .. } => &["val"],
+            Self::Splat => &["val"],
             Self::MaskFromBitmask => &["bits"],
             Self::MaskSet => &["a", "index", "value"],
             Self::Unary
@@ -1611,9 +1511,8 @@ impl OpSig {
             | Self::Cvt { .. }
             | Self::WidenNarrow { .. }
             | Self::MaskReduce { .. }
-            | Self::MaskToBitmask
-            | Self::AsArray { .. } => &["a"],
-            Self::SwizzleDynWithinBlocks => &["a", "indices"],
+            | Self::MaskToBitmask => &["a"],
+            Self::SwizzleDynWithinBlocks | Self::SwizzleDynPrecise => &["a", "indices"],
             Self::Binary
             | Self::Compare
             | Self::Combine { .. }
@@ -1628,7 +1527,6 @@ impl OpSig {
             Self::Shift => &["a", "shift"],
             Self::LoadInterleaved { .. } => &["src"],
             Self::StoreInterleaved { .. } => &["vectors", "dest"],
-            Self::StoreArray => &["a", "dest"],
         }
     }
     fn vec_trait_arg_names(&self) -> &'static [&'static str] {
@@ -1636,17 +1534,13 @@ impl OpSig {
             Self::Splat => &["simd", "val"],
             Self::LoadInterleaved { .. }
             | Self::StoreInterleaved { .. }
-            | Self::FromArray { .. }
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
-            | Self::MaskSet
-            | Self::StoreArray => &[],
-            Self::Unary
-            | Self::Cvt { .. }
-            | Self::WidenNarrow { .. }
-            | Self::MaskReduce { .. }
-            | Self::AsArray { .. } => &["self"],
-            Self::SwizzleDynWithinBlocks => &["self", "indices"],
+            | Self::MaskSet => &[],
+            Self::Unary | Self::Cvt { .. } | Self::WidenNarrow { .. } | Self::MaskReduce { .. } => {
+                &["self"]
+            }
+            Self::SwizzleDynWithinBlocks | Self::SwizzleDynPrecise => &["self", "indices"],
             Self::Binary
             | Self::Compare
             | Self::Zip { .. }
@@ -1706,10 +1600,8 @@ impl OpSig {
             | Self::MaskSet
             | Self::LoadInterleaved { .. }
             | Self::StoreInterleaved { .. }
-            | Self::FromArray { .. }
-            | Self::AsArray { .. }
-            | Self::StoreArray
             | Self::SwizzleDynWithinBlocks
+            | Self::SwizzleDynPrecise
             | Self::Slide { .. } => return None,
         };
         Some(args)

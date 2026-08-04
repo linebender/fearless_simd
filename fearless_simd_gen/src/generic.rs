@@ -6,7 +6,7 @@ use quote::{ToTokens, quote};
 
 use crate::{
     level::Level,
-    ops::{ElementDirection, Op, OpSig, RefKind, SlideGranularity},
+    ops::{ElementDirection, Op, OpSig, SlideGranularity},
     types::{ScalarType, VecType},
 };
 
@@ -16,6 +16,54 @@ pub(crate) fn generic_op_name(op: &str, ty: &VecType) -> Ident {
 
 pub(crate) fn fallback_method(op: Op, vec_ty: &VecType) -> TokenStream {
     crate::mk_fallback::Fallback.make_method(op, vec_ty)
+}
+
+pub(crate) fn recursive_swizzle_dyn_precise_body<T: ToTokens + ?Sized>(
+    vec_ty: &VecType,
+    token: &T,
+) -> TokenStream {
+    // We can take advantage of the "precise" property (out-of-range is 0)
+    // to assemble a double-vector-width arbitrary shuffle.
+    // The trick is to split the input into two, then run for each half of output indices J:
+    // ```
+    // from_low  = swizzle_H(low_table,  J);
+    // from_high = swizzle_H(high_table, J.wrapping_sub(H));
+    // result    = from_low | from_high;
+    // ```
+    // Since each element is out-of-range for at least one half,
+    // the final combine is very cheap: a bitwise or.
+    let bytes_ty = vec_ty.bytes_ty();
+    let half_bytes_ty = VecType::new(ScalarType::Unsigned, 8, bytes_ty.len / 2);
+    let split_bytes = generic_op_name("split", &bytes_ty);
+    let combine_half_bytes = generic_op_name("combine", &half_bytes_ty);
+    let swizzle_half = generic_op_name("swizzle_dyn_precise", &half_bytes_ty);
+    let splat_half = generic_op_name("splat", &half_bytes_ty);
+    let sub_half = generic_op_name("sub", &half_bytes_ty);
+    let or_half = generic_op_name("or", &half_bytes_ty);
+    let half_len = Literal::u8_unsuffixed(u8::try_from(bytes_ty.len / 2).unwrap());
+
+    quote! {
+        let bytes = Bytes::to_bytes(a);
+        let (table_low, table_high) = #token.#split_bytes(bytes);
+        let (indices_low, indices_high) = #token.#split_bytes(indices);
+        let high_table_offset = #token.#splat_half(#half_len);
+
+        let output_low_from_low = #token.#swizzle_half(table_low, indices_low);
+        let output_low_from_high = #token.#swizzle_half(
+            table_high,
+            #token.#sub_half(indices_low, high_table_offset),
+        );
+        let output_low = #token.#or_half(output_low_from_low, output_low_from_high);
+
+        let output_high_from_low = #token.#swizzle_half(table_low, indices_high);
+        let output_high_from_high = #token.#swizzle_half(
+            table_high,
+            #token.#sub_half(indices_high, high_table_offset),
+        );
+        let output_high = #token.#or_half(output_high_from_low, output_high_from_high);
+
+        let result_bytes = #token.#combine_half_bytes(output_low, output_high);
+    }
 }
 
 /// For backends that store masks as all-zero/all-one integer lanes, convert the public
@@ -87,6 +135,9 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                     )
                 }
             }
+        }
+        OpSig::SwizzleDynPrecise => {
+            panic!("whole-vector swizzles cannot be done via split/combine");
         }
         OpSig::Ternary => {
             quote! {
@@ -229,11 +280,7 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
         OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } => {
             panic!("Interleaved memory operations must operate on full 128-bit vectors")
         }
-        OpSig::Split { .. }
-        | OpSig::Combine { .. }
-        | OpSig::AsArray { .. }
-        | OpSig::FromArray { .. }
-        | OpSig::StoreArray => {
+        OpSig::Split { .. } | OpSig::Combine { .. } => {
             panic!("These operations require more information about the target platform");
         }
         OpSig::Interleave => {
@@ -469,71 +516,6 @@ pub(crate) fn generic_block_combine(
     }
 }
 
-pub(crate) fn generic_from_array(
-    method_sig: TokenStream,
-    vec_ty: &VecType,
-    kind: RefKind,
-) -> TokenStream {
-    let inner_ref = if kind == RefKind::Value {
-        quote! { &val }
-    } else {
-        quote! { val }
-    };
-    // There are architecture-specific "load" intrinsics, but they can actually be *worse* for performance. If they
-    // lower to LLVM intrinsics, they will likely not be optimized until much later in the pipeline (if at all),
-    // resulting in substantially worse codegen. See https://github.com/linebender/fearless_simd/pull/185.
-    let expr = quote! {
-        crate::transmute::checked_transmute_copy(#inner_ref)
-    };
-    let vec_rust = vec_ty.rust();
-
-    quote! {
-        #method_sig {
-            #vec_rust { val: #expr, simd: self }
-        }
-    }
-}
-
-pub(crate) fn generic_as_array<T: ToTokens>(
-    method_sig: TokenStream,
-    vec_ty: &VecType,
-    kind: RefKind,
-    max_block_size: usize,
-    arch_ty: impl Fn(&VecType) -> T,
-) -> TokenStream {
-    let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-    let num_scalars = vec_ty.len;
-
-    let native_ty =
-        vec_ty.wrapped_native_ty(|vec_ty| arch_ty(vec_ty).into_token_stream(), max_block_size);
-
-    match kind {
-        RefKind::Value => quote! {
-            #method_sig {
-                crate::transmute::checked_transmute_copy::<#native_ty, [#rust_scalar; #num_scalars]>(&a.val.0)
-            }
-        },
-        RefKind::Ref => quote! {
-            #method_sig {
-                crate::transmute::checked_cast_ref::<#native_ty, [#rust_scalar; #num_scalars]>(&a.val.0)
-            }
-        },
-        RefKind::Mut => quote! {
-            #method_sig {
-                crate::transmute::checked_cast_mut::<#native_ty, [#rust_scalar; #num_scalars]>(&mut a.val.0)
-            }
-        },
-    }
-}
-
-pub(crate) fn generic_store_array(method_sig: TokenStream, _vec_ty: &VecType) -> TokenStream {
-    quote! {
-        #method_sig {
-            crate::transmute::checked_transmute_store(a.val.0, dest);
-        }
-    }
-}
-
 pub(crate) fn generic_mask_from_bitmask(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
     let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
     let len = vec_ty.len;
@@ -555,12 +537,12 @@ pub(crate) fn generic_mask_from_bitmask(method_sig: TokenStream, vec_ty: &VecTyp
 }
 
 pub(crate) fn generic_mask_to_bitmask(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
-    let as_array = generic_op_name("as_array", vec_ty);
+    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
     let len = vec_ty.len;
 
     quote! {
         #method_sig {
-            let lanes = self.#as_array(a);
+            let lanes: [#scalar; #len] = a.into();
             let mut bits = 0u64;
             let mut i = 0;
             while i < #len {
@@ -575,8 +557,7 @@ pub(crate) fn generic_mask_to_bitmask(method_sig: TokenStream, vec_ty: &VecType)
 }
 
 pub(crate) fn generic_mask_set(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
-    let from_array = generic_op_name("load_array", vec_ty);
-    let as_array = generic_op_name("as_array", vec_ty);
+    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
     let len = vec_ty.len;
 
     quote! {
@@ -586,9 +567,9 @@ pub(crate) fn generic_mask_set(method_sig: TokenStream, vec_ty: &VecType) -> Tok
                 "mask lane index {index} is out of bounds for {} lanes",
                 #len
             );
-            let mut lanes = self.#as_array(*a);
+            let mut lanes: [#scalar; #len] = (*a).into();
             lanes[index] = if value { !0 } else { 0 };
-            *a = self.#from_array(lanes);
+            *a = lanes.simd_into(self);
         }
     }
 }
