@@ -1100,9 +1100,9 @@ pub trait Simd:
     fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x4<Self>;
-    #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nValues are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nValues are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity.This is the same as the `as` operator, and follows the IEEE 754 narrowing behavior in round-to-even mode.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self>;
-    #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i64x2(self, val: i64) -> i64x2<Self>;
@@ -2296,9 +2296,9 @@ pub trait Simd:
     fn combine_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f64x4(self, a: f64x4<Self>) -> (f64x2<Self>, f64x2<Self>);
-    #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nValues are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nValues are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity.This is the same as the `as` operator, and follows the IEEE 754 narrowing behavior in round-to-even mode.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self>;
-    #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i64x4(self, val: i64) -> i64x4<Self>;
@@ -3504,9 +3504,9 @@ pub trait Simd:
     fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>);
-    #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nValues are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nValues are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity.This is the same as the `as` operator, and follows the IEEE 754 narrowing behavior in round-to-even mode.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self>;
-    #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i64x8(self, val: i64) -> i64x8<Self>;

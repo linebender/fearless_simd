@@ -1380,7 +1380,10 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 target_ty,
                 saturating: false,
             },
-            "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nValues are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity. `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+            "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\n\
+            Values are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity.\
+            This is the same as the `as` operator, and follows the IEEE 754 narrowing behavior in round-to-even mode.\n\n\
+            `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
         ));
         ops.push(Op::new(
             "saturating_narrow",
@@ -1389,7 +1392,9 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 target_ty,
                 saturating: true,
             },
-            "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior. `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+            "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\n\
+            For floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n\
+            `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
         ));
         return ops;
     }
