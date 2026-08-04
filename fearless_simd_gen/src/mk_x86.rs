@@ -1496,84 +1496,119 @@ impl X86 {
     }
 
     fn handle_widen(&self, op: Op, vec_ty: &VecType, target_ty: VecType) -> TokenStream {
-        if vec_ty.scalar == ScalarType::Float {
-            return self.kernel_method(op, vec_ty, |token| {
-                let (low, high) = match vec_ty.n_bits() {
-                    128 => (
-                        quote! { _mm_cvtps_pd(raw) },
-                        quote! { _mm_cvtps_pd(_mm_movehl_ps(raw, raw)) },
-                    ),
-                    256 => (
-                        quote! { _mm256_cvtps_pd(_mm256_castps256_ps128(raw)) },
-                        quote! { _mm256_cvtps_pd(_mm256_extractf128_ps::<1>(raw)) },
-                    ),
-                    512 => (
-                        quote! { _mm512_cvtps_pd(_mm512_castps512_ps256(raw)) },
-                        quote! { _mm512_cvtps_pd(_mm512_extractf32x8_ps::<1>(raw)) },
-                    ),
-                    _ => unreachable!(),
-                };
-                quote! {
-                    let raw = a.into();
-                    (
-                        #low.simd_into(#token),
-                        #high.simd_into(#token),
-                    )
-                }
-            });
-        }
-
-        if *self == Self::Sse2 {
-            let unpack_low =
-                unpack_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, true, vec_ty.n_bits());
-            let unpack_high =
-                unpack_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, false, vec_ty.n_bits());
-            let sign = match (vec_ty.scalar, vec_ty.scalar_bits) {
-                (ScalarType::Unsigned, _) => quote! { _mm_setzero_si128() },
-                (ScalarType::Int, 8) => {
-                    quote! { _mm_cmpgt_epi8(_mm_setzero_si128(), raw) }
-                }
-                (ScalarType::Int, 16) => quote! { _mm_srai_epi16::<15>(raw) },
-                (ScalarType::Int, 32) => quote! { _mm_srai_epi32::<31>(raw) },
-                _ => unreachable!(),
-            };
-            return self.kernel_method(op, vec_ty, |token| {
-                quote! {
-                    let raw = a.into();
-                    let sign = #sign;
-                    (
-                        #unpack_low(raw, sign).simd_into(#token),
-                        #unpack_high(raw, sign).simd_into(#token),
-                    )
-                }
-            });
-        }
-
-        let extend = extend_intrinsic(
-            vec_ty.scalar,
-            vec_ty.scalar_bits,
-            target_ty.scalar_bits,
-            target_ty.n_bits(),
-        );
-        let (low, high) = match vec_ty.n_bits() {
-            128 => (quote! { raw }, quote! { _mm_srli_si128::<8>(raw) }),
-            256 => (
-                quote! { _mm256_castsi256_si128(raw) },
-                quote! { _mm256_extracti128_si256::<1>(raw) },
-            ),
-            512 => (
-                quote! { _mm512_castsi512_si256(raw) },
-                quote! { _mm512_extracti64x4_epi64::<1>(raw) },
-            ),
-            _ => unreachable!(),
-        };
         self.kernel_method(op, vec_ty, |token| {
-            quote! {
-                let raw = a.into();
+            match (*self, vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits()) {
+                (_, ScalarType::Float, 32, 128) => quote! {
+                    let raw = a.into();
+                    (
+                        _mm_cvtps_pd(raw).simd_into(#token),
+                        _mm_cvtps_pd(_mm_movehl_ps(raw, raw)).simd_into(#token),
+                    )
+                },
+                (_, ScalarType::Float, 32, 256) => quote! {
+                    let raw = a.into();
+                    (
+                        _mm256_cvtps_pd(_mm256_castps256_ps128(raw)).simd_into(#token),
+                        _mm256_cvtps_pd(_mm256_extractf128_ps::<1>(raw)).simd_into(#token),
+                    )
+                },
+                (_, ScalarType::Float, 32, 512) => quote! {
+                    let raw = a.into();
+                    (
+                        _mm512_cvtps_pd(_mm512_castps512_ps256(raw)).simd_into(#token),
+                        _mm512_cvtps_pd(_mm512_extractf32x8_ps::<1>(raw)).simd_into(#token),
+                    )
+                },
+                (Self::Sse2, ScalarType::Unsigned, 8 | 16 | 32, 128) => {
+                    let unpack_low =
+                        unpack_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, true, vec_ty.n_bits());
+                    let unpack_high =
+                        unpack_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, false, vec_ty.n_bits());
+                    quote! {
+                        let raw = a.into();
+                        let sign = _mm_setzero_si128();
+                        (
+                            #unpack_low(raw, sign).simd_into(#token),
+                            #unpack_high(raw, sign).simd_into(#token),
+                        )
+                    }
+                }
+                (Self::Sse2, ScalarType::Int, scalar_bits @ (8 | 16 | 32), 128) => {
+                    let unpack_low =
+                        unpack_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, true, vec_ty.n_bits());
+                    let unpack_high =
+                        unpack_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, false, vec_ty.n_bits());
+                    let sign = match scalar_bits {
+                        8 => quote! { _mm_cmpgt_epi8(_mm_setzero_si128(), raw) },
+                        16 => quote! { _mm_srai_epi16::<15>(raw) },
+                        32 => quote! { _mm_srai_epi32::<31>(raw) },
+                        _ => unreachable!(),
+                    };
+                    quote! {
+                        let raw = a.into();
+                        let sign = #sign;
+                        (
+                            #unpack_low(raw, sign).simd_into(#token),
+                            #unpack_high(raw, sign).simd_into(#token),
+                        )
+                    }
+                }
                 (
-                    #extend(#low).simd_into(#token),
-                    #extend(#high).simd_into(#token),
-                )
+                    Self::Sse4_2 | Self::Avx2 | Self::Avx512,
+                    ScalarType::Unsigned | ScalarType::Int,
+                    8 | 16 | 32,
+                    128,
+                ) => {
+                    let extend = extend_intrinsic(
+                        vec_ty.scalar,
+                        vec_ty.scalar_bits,
+                        target_ty.scalar_bits,
+                        target_ty.n_bits(),
+                    );
+                    quote! {
+                        let raw = a.into();
+                        (
+                            #extend(raw).simd_into(#token),
+                            #extend(_mm_srli_si128::<8>(raw)).simd_into(#token),
+                        )
+                    }
+                }
+                (
+                    Self::Avx2 | Self::Avx512,
+                    ScalarType::Unsigned | ScalarType::Int,
+                    8 | 16 | 32,
+                    256,
+                ) => {
+                    let extend = extend_intrinsic(
+                        vec_ty.scalar,
+                        vec_ty.scalar_bits,
+                        target_ty.scalar_bits,
+                        target_ty.n_bits(),
+                    );
+                    quote! {
+                        let raw = a.into();
+                        (
+                            #extend(_mm256_castsi256_si128(raw)).simd_into(#token),
+                            #extend(_mm256_extracti128_si256::<1>(raw)).simd_into(#token),
+                        )
+                    }
+                }
+                (Self::Avx512, ScalarType::Unsigned | ScalarType::Int, 8 | 16 | 32, 512) => {
+                    let extend = extend_intrinsic(
+                        vec_ty.scalar,
+                        vec_ty.scalar_bits,
+                        target_ty.scalar_bits,
+                        target_ty.n_bits(),
+                    );
+                    quote! {
+                        let raw = a.into();
+                        (
+                            #extend(_mm512_castsi512_si256(raw)).simd_into(#token),
+                            #extend(_mm512_extracti64x4_epi64::<1>(raw)).simd_into(#token),
+                        )
+                    }
+                }
+                _ => unreachable!(),
             }
         })
     }
