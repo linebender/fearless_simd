@@ -25,6 +25,12 @@ pub(crate) enum X86 {
     Avx512,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum NarrowingMode {
+    Saturate,
+    Wrap,
+}
+
 pub(crate) const SSE2_FEATURES: &str = "fxsr,sse,sse2";
 pub(crate) const SSE4_2_FEATURES: &str = "fxsr,sse4.2,cmpxchg16b,popcnt";
 pub(crate) const AVX2_FEATURES: &str =
@@ -1620,233 +1626,247 @@ impl X86 {
         target_ty: VecType,
         saturating: bool,
     ) -> TokenStream {
-        // Floats are easy: we have hardware instructions for everything.
-        if vec_ty.scalar == ScalarType::Float {
-            if saturating {
-                // Saturating conversion for floats doesn't make sense, floats always follow IEEE rounding.
-                // Pass through to the regular conversion.
-                let method_sig = op.simd_trait_method_sig(vec_ty);
-                let narrow = generic_op_name("narrow", vec_ty);
-                return quote! {
-                    #method_sig {
-                        self.#narrow(a, b)
-                    }
-                };
+        use NarrowingMode::{Saturate, Wrap};
+
+        let mode = if saturating { Saturate } else { Wrap };
+
+        // Restore sequential lane order after AVX2 pack instructions interleave results within
+        // their two 128-bit lanes.
+        let reorder_avx2 = |packed: TokenStream, token: &Ident| {
+            quote! {
+                _mm256_permute4x64_epi64::<0xd8>(#packed).simd_into(#token)
             }
+        };
 
-            return self.kernel_method(op, vec_ty, |token| {
-                let (low, high, combine) = match vec_ty.n_bits() {
-                    128 => (
-                        quote! { _mm_cvtpd_ps(a.into()) },
-                        quote! { _mm_cvtpd_ps(b.into()) },
-                        quote! { _mm_movelh_ps(low, high) },
-                    ),
-                    256 => (
-                        quote! { _mm256_cvtpd_ps(a.into()) },
-                        quote! { _mm256_cvtpd_ps(b.into()) },
-                        quote! {
-                            _mm256_insertf128_ps::<1>(_mm256_castps128_ps256(low), high)
-                        },
-                    ),
-                    512 => (
-                        quote! { _mm512_cvtpd_ps(a.into()) },
-                        quote! { _mm512_cvtpd_ps(b.into()) },
-                        quote! {
-                            _mm512_insertf32x8::<1>(_mm512_castps256_ps512(low), high)
-                        },
-                    ),
-                    _ => unreachable!(),
-                };
-                quote! {
-                    let low = #low;
-                    let high = #high;
-                    #combine.simd_into(#token)
-                }
-            });
-        }
-
-        // AVX-512 is easy: we have hardware instructions for everything.
-        if *self == Self::Avx512 {
-            let conversion = match (saturating, vec_ty.scalar) {
-                (false, _) => format!("cvtepi{}", vec_ty.scalar_bits),
-                (true, ScalarType::Int) => format!("cvtsepi{}", vec_ty.scalar_bits),
-                (true, ScalarType::Unsigned) => format!("cvtusepi{}", vec_ty.scalar_bits),
-                _ => unreachable!(),
-            };
-            let suffix = format!("epi{}", target_ty.scalar_bits);
-            let narrow = intrinsic_ident(&conversion, &suffix, vec_ty.n_bits());
-            let combine = match vec_ty.n_bits() {
-                128 => quote! { _mm_unpacklo_epi64(low, high) },
-                256 => quote! {
-                    _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high)
-                },
-                512 => quote! {
-                    _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high)
-                },
-                _ => unreachable!(),
-            };
-            return self.kernel_method(op, vec_ty, |token| {
-                quote! {
-                    let low = #narrow(a.into());
-                    let high = #narrow(b.into());
-                    #combine.simd_into(#token)
-                }
-            });
-        }
-
-        // From here on out we need emulation for many of the ops. Isn't AVX2 fun?!
-        if *self == Self::Avx2 && vec_ty.n_bits() == 256 {
-            return self.kernel_method(op, vec_ty, |token| {
-                let reorder = |packed| {
-                    quote! {
-                        _mm256_permute4x64_epi64::<0xd8>(#packed).simd_into(#token)
-                    }
-                };
-                let compact_dwords = |high, a, b| {
-                    let shuffle = if high {
-                        quote! { 0xdd }
-                    } else {
-                        quote! { 0x88 }
-                    };
-                    quote! {
-                        _mm256_permute4x64_epi64::<0xd8>(
-                            _mm256_castps_si256(_mm256_shuffle_ps::<#shuffle>(
-                                _mm256_castsi256_ps(#a),
-                                _mm256_castsi256_ps(#b),
-                            )),
-                        )
-                    }
-                };
-
-                match vec_ty.scalar_bits {
-                    16 | 32 => {
-                        // AVX2 has native instructions for narrowing 16 and 32-bit integers
-                        let pack = pack_intrinsic(
-                            vec_ty.scalar_bits,
-                            saturating && vec_ty.scalar == ScalarType::Int,
-                            vec_ty.n_bits(),
-                        );
-                        let packed = if saturating && vec_ty.scalar == ScalarType::Int {
-                            // AVX2 has a native signed integer narrowing instruction
-                            quote! { #pack(a.into(), b.into()) }
-                        } else {
-                            // Everything else needs to be emulated on top of signed integer narrowing via masking
-                            let set1 = set1_intrinsic(vec_ty);
-                            let limit = match vec_ty.scalar_bits {
-                                16 => quote! { 0xff },
-                                32 => quote! { 0xffff },
-                                _ => unreachable!(),
-                            };
-                            let (prepare, limit_name) = if saturating {
-                                (simple_intrinsic("min", vec_ty), format_ident!("max"))
-                            } else {
-                                (intrinsic_ident("and", "si256", 256), format_ident!("mask"))
-                            };
-                            quote! {{
-                                let #limit_name = #set1(#limit);
-                                #pack(
-                                    #prepare(a.into(), #limit_name),
-                                    #prepare(b.into(), #limit_name),
-                                )
-                            }}
-                        };
-                        reorder(packed)
-                    }
-                    64 => {
-                        if !saturating {
-                            // non-saturating narrowing is just a shuffle
-                            let low =
-                                compact_dwords(false, quote! { a.into() }, quote! { b.into() });
-                            return quote! {
-                                #low.simd_into(#token)
-                            };
-                        }
-                        // saturating narrowing needs to be emulated for lack of hardware instructions
-                        let low = compact_dwords(false, quote! { a }, quote! { b });
-                        match vec_ty.scalar {
-                            ScalarType::Int => {
-                                let high = compact_dwords(true, quote! { a }, quote! { b });
-                                quote! {
-                                    let a = a.into();
-                                    let b = b.into();
-                                    let low = #low;
-                                    let high = #high;
-                                    let low_sign = _mm256_srai_epi32::<31>(low);
-                                    let fits = _mm256_cmpeq_epi32(high, low_sign);
-                                    let high_sign = _mm256_srai_epi32::<31>(high);
-                                    let bound = _mm256_xor_si256(
-                                        high_sign,
-                                        _mm256_set1_epi32(i32::MAX),
-                                    );
-                                    _mm256_blendv_epi8(bound, low, fits).simd_into(#token)
-                                }
-                            }
-                            ScalarType::Unsigned => quote! {
-                                let zero = _mm256_setzero_si256();
-                                let ones = _mm256_cmpeq_epi64(zero, zero);
-                                let a = a.into();
-                                let b = b.into();
-                                let a_fits = _mm256_cmpeq_epi64(
-                                    _mm256_srli_epi64::<32>(a),
-                                    zero,
-                                );
-                                let b_fits = _mm256_cmpeq_epi64(
-                                    _mm256_srli_epi64::<32>(b),
-                                    zero,
-                                );
-                                let a = _mm256_or_si256(a, _mm256_xor_si256(a_fits, ones));
-                                let b = _mm256_or_si256(b, _mm256_xor_si256(b_fits, ones));
-                                #low.simd_into(#token)
-                            },
-                            _ => unreachable!(),
-                        }
-                    }
-                    _ => unreachable!(),
-                }
-            });
-        }
-
-        let token = Ident::new("token", Span::call_site());
-        let compact_dwords = |high, a, b| {
+        // Select the low or high 32-bit half of each 64-bit lane and compact those halves from
+        // both inputs, using the instruction sequence appropriate for the vector width.
+        let compact_dwords = |high: bool, a: TokenStream, b: TokenStream| {
             let shuffle = if high {
                 quote! { 0xdd }
             } else {
                 quote! { 0x88 }
             };
-            quote! {
-                _mm_castps_si128(_mm_shuffle_ps::<#shuffle>(
-                    _mm_castsi128_ps(#a),
-                    _mm_castsi128_ps(#b),
-                ))
+            match vec_ty.n_bits() {
+                128 => quote! {
+                    _mm_castps_si128(_mm_shuffle_ps::<#shuffle>(
+                        _mm_castsi128_ps(#a),
+                        _mm_castsi128_ps(#b),
+                    ))
+                },
+                256 => quote! {
+                    _mm256_permute4x64_epi64::<0xd8>(
+                        _mm256_castps_si256(_mm256_shuffle_ps::<#shuffle>(
+                            _mm256_castsi256_ps(#a),
+                            _mm256_castsi256_ps(#b),
+                        )),
+                    )
+                },
+                _ => unreachable!(),
             }
         };
-        let body = match (saturating, vec_ty.scalar, vec_ty.scalar_bits) {
-            (true, ScalarType::Unsigned, 16) => {
-                let pack = pack_intrinsic(16, false, vec_ty.n_bits());
+
+        match (
+            *self,
+            mode,
+            vec_ty.scalar,
+            vec_ty.scalar_bits,
+            vec_ty.n_bits(),
+        ) {
+            (_, Saturate, ScalarType::Float, 64, 128 | 256 | 512) => {
+                // Saturating conversion for floats doesn't make sense, floats always follow IEEE rounding.
+                // Pass through to the regular conversion.
+                let method_sig = op.simd_trait_method_sig(vec_ty);
+                let narrow = generic_op_name("narrow", vec_ty);
                 quote! {
-                    let max = _mm_set1_epi16(u8::MAX as i16);
-                    let a = a.into();
-                    let b = b.into();
-                    let a = _mm_sub_epi16(a, _mm_subs_epu16(a, max));
-                    let b = _mm_sub_epi16(b, _mm_subs_epu16(b, max));
-                    #pack(a, b).simd_into(#token)
+                    #method_sig {
+                        self.#narrow(a, b)
+                    }
                 }
             }
-            (true, ScalarType::Unsigned, 32) if *self != Self::Sse2 => {
-                let pack = pack_intrinsic(32, false, vec_ty.n_bits());
+            (_, Wrap, ScalarType::Float, 64, 128) => self.kernel_method(op, vec_ty, |token| {
                 quote! {
-                    let max = _mm_set1_epi32(u16::MAX as i32);
-                    #pack(
-                        _mm_min_epu32(a.into(), max),
-                        _mm_min_epu32(b.into(), max),
-                    ).simd_into(#token)
+                    let low = _mm_cvtpd_ps(a.into());
+                    let high = _mm_cvtpd_ps(b.into());
+                    _mm_movelh_ps(low, high).simd_into(#token)
                 }
+            }),
+            // This function is amenable to split/combine lowering,
+            // so this generator is only invoked for e.g. 256-bit vectors on AVX2 and higher
+            (_, Wrap, ScalarType::Float, 64, 256) => self.kernel_method(op, vec_ty, |token| {
+                quote! {
+                    let low = _mm256_cvtpd_ps(a.into());
+                    let high = _mm256_cvtpd_ps(b.into());
+                    _mm256_insertf128_ps::<1>(_mm256_castps128_ps256(low), high)
+                        .simd_into(#token)
+                }
+            }),
+            (_, Wrap, ScalarType::Float, 64, 512) => self.kernel_method(op, vec_ty, |token| {
+                quote! {
+                    let low = _mm512_cvtpd_ps(a.into());
+                    let high = _mm512_cvtpd_ps(b.into());
+                    _mm512_insertf32x8::<1>(_mm512_castps256_ps512(low), high)
+                        .simd_into(#token)
+                }
+            }),
+            (
+                Self::Avx512,
+                mode,
+                scalar @ (ScalarType::Int | ScalarType::Unsigned),
+                scalar_bits @ (16 | 32 | 64),
+                n_bits @ (128 | 256 | 512),
+            ) => {
+                // AVX-512 has hardware instructions for all integer narrowing operations.
+                let conversion = match (mode, scalar) {
+                    (Wrap, _) => format!("cvtepi{scalar_bits}"),
+                    (Saturate, ScalarType::Int) => format!("cvtsepi{}", vec_ty.scalar_bits),
+                    (Saturate, ScalarType::Unsigned) => {
+                        format!("cvtusepi{}", vec_ty.scalar_bits)
+                    }
+                    _ => unreachable!(),
+                };
+                let suffix = format!("epi{}", target_ty.scalar_bits);
+                let narrow = intrinsic_ident(&conversion, &suffix, n_bits);
+                let combine = match n_bits {
+                    128 => quote! { _mm_unpacklo_epi64(low, high) },
+                    256 => quote! {
+                        _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high)
+                    },
+                    512 => quote! {
+                        _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high)
+                    },
+                    _ => unreachable!(),
+                };
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        let low = #narrow(a.into());
+                        let high = #narrow(b.into());
+                        #combine.simd_into(#token)
+                    }
+                })
             }
-            (true, ScalarType::Int, 16 | 32) => {
-                let pack = pack_intrinsic(vec_ty.scalar_bits, true, vec_ty.n_bits());
-                quote! { #pack(a.into(), b.into()).simd_into(#token) }
+            (
+                Self::Avx2,
+                mode,
+                scalar @ (ScalarType::Int | ScalarType::Unsigned),
+                scalar_bits @ (16 | 32),
+                256,
+            ) => self.kernel_method(op, vec_ty, |token| {
+                // AVX2 has native instructions for narrowing 16 and 32-bit integers.
+                let signed_saturation = mode == Saturate && scalar == ScalarType::Int;
+                let pack = pack_intrinsic(scalar_bits, signed_saturation, 256);
+                let packed = if signed_saturation {
+                    // AVX2 has a native signed integer narrowing instruction.
+                    quote! { #pack(a.into(), b.into()) }
+                } else {
+                    // Everything else needs to be emulated on top of signed integer narrowing via masking.
+                    let set1 = set1_intrinsic(vec_ty);
+                    let limit = match scalar_bits {
+                        16 => quote! { 0xff },
+                        32 => quote! { 0xffff },
+                        _ => unreachable!(),
+                    };
+                    let (prepare, limit_name) = match mode {
+                        Saturate => (simple_intrinsic("min", vec_ty), format_ident!("max")),
+                        Wrap => (intrinsic_ident("and", "si256", 256), format_ident!("mask")),
+                    };
+                    quote! {{
+                        let #limit_name = #set1(#limit);
+                        #pack(
+                            #prepare(a.into(), #limit_name),
+                            #prepare(b.into(), #limit_name),
+                        )
+                    }}
+                };
+                reorder_avx2(packed, token)
+            }),
+            (Self::Avx2, Wrap, ScalarType::Int | ScalarType::Unsigned, 64, 256) => self
+                .kernel_method(op, vec_ty, |token| {
+                    // Non-saturating narrowing is just a shuffle.
+                    let low = compact_dwords(false, quote! { a.into() }, quote! { b.into() });
+                    quote! {
+                        #low.simd_into(#token)
+                    }
+                }),
+            (Self::Avx2, Saturate, ScalarType::Int, 64, 256) => {
+                self.kernel_method(op, vec_ty, |token| {
+                    // Saturating narrowing needs to be emulated for lack of hardware instructions.
+                    let low = compact_dwords(false, quote! { a }, quote! { b });
+                    let high = compact_dwords(true, quote! { a }, quote! { b });
+                    quote! {
+                        let a = a.into();
+                        let b = b.into();
+                        let low = #low;
+                        let high = #high;
+                        let low_sign = _mm256_srai_epi32::<31>(low);
+                        let fits = _mm256_cmpeq_epi32(high, low_sign);
+                        let high_sign = _mm256_srai_epi32::<31>(high);
+                        let bound = _mm256_xor_si256(
+                            high_sign,
+                            _mm256_set1_epi32(i32::MAX),
+                        );
+                        _mm256_blendv_epi8(bound, low, fits).simd_into(#token)
+                    }
+                })
             }
-            (true, scalar, 64) if *self != Self::Sse2 => {
+            (Self::Avx2, Saturate, ScalarType::Unsigned, 64, 256) => {
+                self.kernel_method(op, vec_ty, |token| {
+                    let low = compact_dwords(false, quote! { a }, quote! { b });
+                    quote! {
+                        let zero = _mm256_setzero_si256();
+                        let ones = _mm256_cmpeq_epi64(zero, zero);
+                        let a = a.into();
+                        let b = b.into();
+                        let a_fits = _mm256_cmpeq_epi64(
+                            _mm256_srli_epi64::<32>(a),
+                            zero,
+                        );
+                        let b_fits = _mm256_cmpeq_epi64(
+                            _mm256_srli_epi64::<32>(b),
+                            zero,
+                        );
+                        let a = _mm256_or_si256(a, _mm256_xor_si256(a_fits, ones));
+                        let b = _mm256_or_si256(b, _mm256_xor_si256(b_fits, ones));
+                        #low.simd_into(#token)
+                    }
+                })
+            }
+            (Self::Sse2 | Self::Sse4_2 | Self::Avx2, Saturate, ScalarType::Unsigned, 16, 128) => {
+                self.kernel_method(op, vec_ty, |token| {
+                    let pack = pack_intrinsic(16, false, vec_ty.n_bits());
+                    quote! {
+                        let max = _mm_set1_epi16(u8::MAX as i16);
+                        let a = a.into();
+                        let b = b.into();
+                        let a = _mm_sub_epi16(a, _mm_subs_epu16(a, max));
+                        let b = _mm_sub_epi16(b, _mm_subs_epu16(b, max));
+                        #pack(a, b).simd_into(#token)
+                    }
+                })
+            }
+            (Self::Sse4_2 | Self::Avx2, Saturate, ScalarType::Unsigned, 32, 128) => self
+                .kernel_method(op, vec_ty, |token| {
+                    let pack = pack_intrinsic(32, false, vec_ty.n_bits());
+                    quote! {
+                        let max = _mm_set1_epi32(u16::MAX as i32);
+                        #pack(
+                            _mm_min_epu32(a.into(), max),
+                            _mm_min_epu32(b.into(), max),
+                        ).simd_into(#token)
+                    }
+                }),
+            (Self::Sse2 | Self::Sse4_2 | Self::Avx2, Saturate, ScalarType::Int, 16 | 32, 128) => {
+                self.kernel_method(op, vec_ty, |token| {
+                    let pack = pack_intrinsic(vec_ty.scalar_bits, true, vec_ty.n_bits());
+                    quote! { #pack(a.into(), b.into()).simd_into(#token) }
+                })
+            }
+            (
+                Self::Sse4_2 | Self::Avx2,
+                Saturate,
+                scalar @ (ScalarType::Int | ScalarType::Unsigned),
+                64,
+                128,
+            ) => self.kernel_method(op, vec_ty, |token| {
                 let low = compact_dwords(false, quote! { a }, quote! { b });
                 let high = compact_dwords(true, quote! { a }, quote! { b });
                 let saturate = match scalar {
@@ -1872,8 +1892,14 @@ impl X86 {
                     let high = #high;
                     #saturate.simd_into(#token)
                 }
-            }
-            (false, _, 16) => {
+            }),
+            (
+                Self::Sse2 | Self::Sse4_2 | Self::Avx2,
+                Wrap,
+                ScalarType::Int | ScalarType::Unsigned,
+                16,
+                128,
+            ) => self.kernel_method(op, vec_ty, |token| {
                 let set1 = set1_intrinsic(vec_ty);
                 let pack = pack_intrinsic(16, false, vec_ty.n_bits());
                 quote! {
@@ -1883,27 +1909,39 @@ impl X86 {
                         _mm_and_si128(b.into(), mask),
                     ).simd_into(#token)
                 }
+            }),
+            (Self::Sse4_2 | Self::Avx2, Wrap, ScalarType::Int | ScalarType::Unsigned, 32, 128) => {
+                self.kernel_method(op, vec_ty, |token| {
+                    let pack = pack_intrinsic(32, false, vec_ty.n_bits());
+                    quote! {
+                        let mask = _mm_set1_epi32(0xffff);
+                        #pack(
+                            _mm_and_si128(a.into(), mask),
+                            _mm_and_si128(b.into(), mask),
+                        ).simd_into(#token)
+                    }
+                })
             }
-            (false, _, 32) if *self != Self::Sse2 => {
-                let pack = pack_intrinsic(32, false, vec_ty.n_bits());
-                quote! {
-                    let mask = _mm_set1_epi32(0xffff);
-                    #pack(
-                        _mm_and_si128(a.into(), mask),
-                        _mm_and_si128(b.into(), mask),
-                    ).simd_into(#token)
-                }
-            }
-            (false, _, 64) => {
+            (
+                Self::Sse2 | Self::Sse4_2 | Self::Avx2,
+                Wrap,
+                ScalarType::Int | ScalarType::Unsigned,
+                64,
+                128,
+            ) => self.kernel_method(op, vec_ty, |token| {
                 let low = compact_dwords(false, quote! { a.into() }, quote! { b.into() });
                 quote! {
                     #low.simd_into(#token)
                 }
-            }
+            }),
             // SSE2 autovectorizes acceptably and we don't care to spend the complexity budget optimizing it
-            _ => return fallback_method(op, vec_ty),
-        };
-        self.kernel_method(op, vec_ty, |_| body)
+            (Self::Sse2, Saturate, ScalarType::Unsigned, 32, 128)
+            | (Self::Sse2, Saturate, ScalarType::Int | ScalarType::Unsigned, 64, 128)
+            | (Self::Sse2, Wrap, ScalarType::Int | ScalarType::Unsigned, 32, 128) => {
+                fallback_method(op, vec_ty)
+            }
+            _ => unreachable!(),
+        }
     }
 
     pub(crate) fn handle_binary(&self, op: Op, method: &str, vec_ty: &VecType) -> TokenStream {
