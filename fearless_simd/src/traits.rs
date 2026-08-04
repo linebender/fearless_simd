@@ -5,7 +5,7 @@
     missing_docs,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
-use crate::{Level, Simd, SimdBase, seal::Seal};
+use crate::{Simd, SimdBase, seal::Seal};
 
 /// Element-wise selection between two SIMD vectors using `self`.
 pub trait Select<T: Seal>: Seal {
@@ -16,22 +16,6 @@ pub trait Select<T: Seal>: Seal {
     /// conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).
     /// If a mask is constructed from any other integer bit pattern, the result of this operation is unspecified.
     fn select(self, if_true: T, if_false: T) -> T;
-}
-
-// Same as pulp
-pub trait WithSimd {
-    type Output;
-
-    fn with_simd<S: Simd>(self, simd: S) -> Self::Output;
-}
-
-impl<R, F: FnOnce(Level) -> R> WithSimd for F {
-    type Output = R;
-
-    #[inline(always)]
-    fn with_simd<S: Simd>(self, simd: S) -> Self::Output {
-        self(simd.level())
-    }
 }
 
 /// Conversion of SIMD vectors to and from same-width vectors of `u8` lanes.
