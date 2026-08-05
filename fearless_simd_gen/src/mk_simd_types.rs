@@ -443,6 +443,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let shift_elements_left_op = generic_op_name("shift_elements_left", ty);
     let shift_elements_right_op = generic_op_name("shift_elements_right", ty);
     let swizzle_dyn_within_blocks_op = generic_op_name("swizzle_dyn_within_blocks", ty);
+    let swizzle_dyn_op = generic_op_name("swizzle_dyn", ty);
     let swizzle_dyn_precise_op = generic_op_name("swizzle_dyn_precise", ty);
     quote! {
         impl<S: Simd> SimdBase<S> for #name<S> {
@@ -526,6 +527,11 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
             #[inline(always)]
             fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
                 self.simd.#swizzle_dyn_within_blocks_op(self, indices.simd_into(self.simd))
+            }
+
+            #[inline(always)]
+            fn swizzle_dyn(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
+                self.simd.#swizzle_dyn_op(self, indices.simd_into(self.simd))
             }
 
             #[inline(always)]

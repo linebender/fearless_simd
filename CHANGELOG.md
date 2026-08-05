@@ -14,6 +14,7 @@ You can find its changes [documented below](#060-2026-07-10).
 ### Added
 
 - Added an `Sse2` level. This is the new baseline for i686-* and x86_64-* targets, replacing `Fallback`. ([#270][] by [@Shnatsel][])
+- Added full-vector `swizzle_dyn` and `swizzle_dyn_precise` byte swizzles. `swizzle_dyn` permits implementation-defined results for out-of-range indices, while `swizzle_dyn_precise` always returns zero for them.
 - Added trait bounds on `SimdElement`, and introduced the `SimdIntElement` and `SimdFloatElement` subtraits. These allow generic code to access many math and utility operations on the elements of SIMD vector types. ([#302][] by [@danderson][])
 
 ### Changed
