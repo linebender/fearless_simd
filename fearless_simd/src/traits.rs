@@ -150,27 +150,27 @@ pub trait SimdElement:
     + ToPrimitive
     + FromBytes
     + ToBytes
-    + Add<Self>
+    + Add<Self, Output = Self>
     + AddAssign<Self>
-    + Sub<Self>
+    + Sub<Self, Output = Self>
     + SubAssign<Self>
-    + Mul<Self>
+    + Mul<Self, Output = Self>
     + MulAssign<Self>
-    + Div<Self>
+    + Div<Self, Output = Self>
     + DivAssign<Self>
-    + Rem<Self>
+    + Rem<Self, Output = Self>
     + RemAssign<Self>
     + Sum<Self>
     + Product<Self>
-    + for<'a> Add<&'a Self>
+    + for<'a> Add<&'a Self, Output = Self>
     + for<'a> AddAssign<&'a Self>
-    + for<'a> Sub<&'a Self>
+    + for<'a> Sub<&'a Self, Output = Self>
     + for<'a> SubAssign<&'a Self>
-    + for<'a> Mul<&'a Self>
+    + for<'a> Mul<&'a Self, Output = Self>
     + for<'a> MulAssign<&'a Self>
-    + for<'a> Div<&'a Self>
+    + for<'a> Div<&'a Self, Output = Self>
     + for<'a> DivAssign<&'a Self>
-    + for<'a> Rem<&'a Self>
+    + for<'a> Rem<&'a Self, Output = Self>
     + for<'a> RemAssign<&'a Self>
     + for<'a> Sum<&'a Self>
     + for<'a> Product<&'a Self>
@@ -197,27 +197,27 @@ pub trait SimdElement:
     + PartialOrd
     + PartialEq
     + From<bool>
-    + Add<Self>
+    + Add<Self, Output = Self>
     + AddAssign<Self>
-    + Sub<Self>
+    + Sub<Self, Output = Self>
     + SubAssign<Self>
-    + Mul<Self>
+    + Mul<Self, Output = Self>
     + MulAssign<Self>
-    + Div<Self>
+    + Div<Self, Output = Self>
     + DivAssign<Self>
-    + Rem<Self>
+    + Rem<Self, Output = Self>
     + RemAssign<Self>
     + Sum<Self>
     + Product<Self>
-    + for<'a> Add<&'a Self>
+    + for<'a> Add<&'a Self, Output = Self>
     + for<'a> AddAssign<&'a Self>
-    + for<'a> Sub<&'a Self>
+    + for<'a> Sub<&'a Self, Output = Self>
     + for<'a> SubAssign<&'a Self>
-    + for<'a> Mul<&'a Self>
+    + for<'a> Mul<&'a Self, Output = Self>
     + for<'a> MulAssign<&'a Self>
-    + for<'a> Div<&'a Self>
+    + for<'a> Div<&'a Self, Output = Self>
     + for<'a> DivAssign<&'a Self>
-    + for<'a> Rem<&'a Self>
+    + for<'a> Rem<&'a Self, Output = Self>
     + for<'a> RemAssign<&'a Self>
     + for<'a> Sum<&'a Self>
     + for<'a> Product<&'a Self>
@@ -274,25 +274,25 @@ impl SimdElement for i64 {
 pub trait SimdIntElement:
     SimdElement
     + Binary
-    + Shl<usize>
+    + Shl<usize, Output = Self>
     + ShlAssign<usize>
-    + Shr<usize>
+    + Shr<usize, Output = Self>
     + ShrAssign<usize>
-    + BitAnd<Self>
+    + BitAnd<Self, Output = Self>
     + BitAndAssign<Self>
-    + BitOr<Self>
+    + BitOr<Self, Output = Self>
     + BitOrAssign<Self>
-    + BitXor<Self>
+    + BitXor<Self, Output = Self>
     + BitXorAssign<Self>
-    + for<'a> Shl<&'a usize>
+    + for<'a> Shl<&'a usize, Output = Self>
     + for<'a> ShlAssign<&'a usize>
-    + for<'a> Shr<&'a usize>
+    + for<'a> Shr<&'a usize, Output = Self>
     + for<'a> ShrAssign<&'a usize>
-    + for<'a> BitAnd<&'a Self>
+    + for<'a> BitAnd<&'a Self, Output = Self>
     + for<'a> BitAndAssign<&'a Self>
-    + for<'a> BitOr<&'a Self>
+    + for<'a> BitOr<&'a Self, Output = Self>
     + for<'a> BitOrAssign<&'a Self>
-    + for<'a> BitXor<&'a Self>
+    + for<'a> BitXor<&'a Self, Output = Self>
     + for<'a> BitXorAssign<&'a Self>
 {
 }
@@ -323,15 +323,15 @@ pub trait SimdIntElement:
     + BitAndAssign<Self>
     + BitOrAssign<Self>
     + BitXorAssign<Self>
-    + for<'a> Shl<&'a usize>
+    + for<'a> Shl<&'a usize, Output = Self>
     + for<'a> ShlAssign<&'a usize>
-    + for<'a> Shr<&'a usize>
+    + for<'a> Shr<&'a usize, Output = Self>
     + for<'a> ShrAssign<&'a usize>
-    + for<'a> BitAnd<&'a Self>
+    + for<'a> BitAnd<&'a Self, Output = Self>
     + for<'a> BitAndAssign<&'a Self>
-    + for<'a> BitOr<&'a Self>
+    + for<'a> BitOr<&'a Self, Output = Self>
     + for<'a> BitOrAssign<&'a Self>
-    + for<'a> BitXor<&'a Self>
+    + for<'a> BitXor<&'a Self, Output = Self>
     + for<'a> BitXorAssign<&'a Self>
 {
 }
@@ -348,7 +348,7 @@ impl SimdIntElement for i64 {}
 /// Types that can be used as elements in float SIMD vectors.
 #[cfg(not(feature = "num-traits"))]
 pub trait SimdFloatElement:
-    SimdElement + Neg + From<f32> + From<i8> + From<u8> + From<i16> + From<u16>
+    SimdElement + Neg<Output = Self> + From<f32> + From<i8> + From<u8> + From<i16> + From<u16>
 {
 }
 
