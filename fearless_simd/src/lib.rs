@@ -839,31 +839,6 @@ impl Level {
     pub const fn fallback() -> Self {
         Self::Fallback(Fallback::new())
     }
-
-    /// Dispatch `f` to a context where the target features which this `Level` proves are available are [enabled].
-    ///
-    /// Most users of Fearless SIMD should prefer to use [`dispatch`] to
-    /// explicitly vectorize a function. That has a better developer experience
-    /// than an implementation of `WithSimd`, and is less likely to miss a vectorization
-    /// opportunity.
-    ///
-    /// This has two use cases:
-    /// 1) To call a manually written implementation of [`WithSimd`].
-    /// 2) To ask the compiler to auto-vectorize scalar code.
-    ///
-    /// For the second case to work, the provided function *must* be attributed with `#[inline(always)]`.
-    /// Note also that any calls that function makes to other functions will likely not be auto-vectorized,
-    /// unless they are also `#[inline(always)]`.
-    ///
-    /// [enabled]: https://doc.rust-lang.org/reference/attributes/codegen.html#the-target_feature-attribute
-    #[inline]
-    #[expect(
-        unreachable_patterns,
-        reason = "Level is `non_exhaustive`, but we are in the crate it's defined."
-    )]
-    pub fn dispatch<W: WithSimd>(self, f: W) -> W::Output {
-        dispatch!(self, simd => f.with_simd(simd))
-    }
 }
 
 #[cfg(test)]
