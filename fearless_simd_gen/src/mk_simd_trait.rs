@@ -32,7 +32,7 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
     }
     let mut code = quote! {
         use core::fmt::Debug;
-        use crate::{seal::Seal, Level, SimdElement, SimdFrom, SimdInto, SimdCvtTruncate, SimdCvtFloat, Select, Bytes};
+        use crate::{seal::Seal, Level, SimdElement, SimdIntElement, SimdFloatElement, SimdFrom, SimdInto, SimdCvtTruncate, SimdCvtFloat, Select, Bytes};
         #imports
         /// The main SIMD trait, implemented by all SIMD token types.
         ///
@@ -282,7 +282,7 @@ fn mk_simd_float() -> TokenStream {
         .flat_map(|core_op| core_op.trait_bounds());
     quote! {
         /// Functionality implemented by floating-point SIMD vectors.
-        pub trait SimdFloat<S: Simd>: SimdBase<S> + Seal
+        pub trait SimdFloat<S: Simd>: SimdBase<S, Element: SimdFloatElement> + Seal
             #(+ #op_traits)*
         {
             /// Convert this floating-point type to an integer. This is a convenience method that
@@ -322,7 +322,7 @@ fn mk_simd_int() -> TokenStream {
         .flat_map(|core_op| core_op.trait_bounds());
     quote! {
         /// Functionality implemented by (signed and unsigned) integer SIMD vectors.
-        pub trait SimdInt<S: Simd>: SimdBase<S> + Seal
+        pub trait SimdInt<S: Simd>: SimdBase<S, Element: SimdIntElement> + Seal
             #(+ #op_traits)*
         {
             /// Convert this integer type to a floating-point type. This is a convenience method
