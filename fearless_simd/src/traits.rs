@@ -351,8 +351,19 @@ pub trait SimdNarrow<S: Simd>: SimdBase<S> + Seal {
     /// Narrow every lane.
     ///
     /// This conversion behaves identically to the `as` operator:
-    /// Integers are truncated. Floating-point values follow IEEE 754 narrowing behavior in round-to-even mode:
-    /// they are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity.
+    ///  - Integers are truncated.
+    ///  - Floating-point values follow IEEE 754 narrowing behavior in round-to-even mode:
+    ///    they are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity.
+    ///
+    /// # Performance
+    ///
+    /// When you're confident that the conversion won't overflow and so the distinction between `narrow`
+    /// and [`saturating_narrow`](Self::saturating_narrow) doesn't matter, use:
+    ///
+    /// - `saturating_narrow` for narrowing `i32`→`i16` or `i16`→`i8`
+    /// - `narrow` for narrowing `u32`→`u16`, `u16`→`u8`, `i64`→`i32`, `u64`→`u32`
+    ///
+    /// This advice applies to SSE4.2, AVX2 and WASM. On AVX-512 and NEON there is no performance difference.
     fn narrow(self, high: Self) -> Self::Narrowed;
 
     /// Narrow with saturation for integers. Floats behave identically to [`narrow`](Self::narrow).
