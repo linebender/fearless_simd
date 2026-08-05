@@ -6,6 +6,13 @@
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 use crate::{Simd, SimdBase, seal::Seal};
+use core::fmt::{Binary, Debug, Display, LowerExp, UpperExp};
+use core::iter::{Product, Sum};
+use core::ops::{
+    Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Div, DivAssign,
+    Mul, MulAssign, Neg, Not, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, SubAssign,
+};
+use core::str::FromStr;
 
 /// Element-wise selection between two SIMD vectors using `self`.
 pub trait Select<T: Seal>: Seal {
@@ -110,7 +117,44 @@ impl<T, S: Simd> SimdFrom<T, S> for T {
 }
 
 /// Types that can be used as elements in SIMD vectors.
-pub trait SimdElement: Copy + Seal {
+pub trait SimdElement:
+    Copy
+    + Clone
+    + Seal
+    + Default
+    + Debug
+    + Display
+    + FromStr
+    + LowerExp
+    + UpperExp
+    + PartialOrd
+    + PartialEq
+    + From<bool>
+    + Add<Self, Output = Self>
+    + AddAssign<Self>
+    + Sub<Self, Output = Self>
+    + SubAssign<Self>
+    + Mul<Self, Output = Self>
+    + MulAssign<Self>
+    + Div<Self, Output = Self>
+    + DivAssign<Self>
+    + Rem<Self, Output = Self>
+    + RemAssign<Self>
+    + Sum<Self>
+    + Product<Self>
+    + for<'a> Add<&'a Self, Output = Self>
+    + for<'a> AddAssign<&'a Self>
+    + for<'a> Sub<&'a Self, Output = Self>
+    + for<'a> SubAssign<&'a Self>
+    + for<'a> Mul<&'a Self, Output = Self>
+    + for<'a> MulAssign<&'a Self>
+    + for<'a> Div<&'a Self, Output = Self>
+    + for<'a> DivAssign<&'a Self>
+    + for<'a> Rem<&'a Self, Output = Self>
+    + for<'a> RemAssign<&'a Self>
+    + for<'a> Sum<&'a Self>
+    + for<'a> Product<&'a Self>
+{
     /// The associated mask lane type. This will be a signed integer of the same size as this type.
     type Mask: SimdElement<Mask = Self::Mask>;
 
@@ -157,6 +201,54 @@ impl SimdElement for u64 {
 impl SimdElement for i64 {
     type Mask = Self;
 }
+
+/// Types that can be used as elements in integer SIMD vectors.
+pub trait SimdIntElement:
+    SimdElement
+    + Eq
+    + Ord
+    + Binary
+    + Not<Output = Self>
+    + Shl<usize, Output = Self>
+    + ShlAssign<usize>
+    + Shr<usize, Output = Self>
+    + ShrAssign<usize>
+    + BitAnd<Self, Output = Self>
+    + BitAndAssign<Self>
+    + BitOr<Self, Output = Self>
+    + BitOrAssign<Self>
+    + BitXor<Self, Output = Self>
+    + BitXorAssign<Self>
+    + for<'a> Shl<&'a usize, Output = Self>
+    + for<'a> ShlAssign<&'a usize>
+    + for<'a> Shr<&'a usize, Output = Self>
+    + for<'a> ShrAssign<&'a usize>
+    + for<'a> BitAnd<&'a Self, Output = Self>
+    + for<'a> BitAndAssign<&'a Self>
+    + for<'a> BitOr<&'a Self, Output = Self>
+    + for<'a> BitOrAssign<&'a Self>
+    + for<'a> BitXor<&'a Self, Output = Self>
+    + for<'a> BitXorAssign<&'a Self>
+{
+}
+
+impl SimdIntElement for u8 {}
+impl SimdIntElement for u16 {}
+impl SimdIntElement for u32 {}
+impl SimdIntElement for u64 {}
+impl SimdIntElement for i8 {}
+impl SimdIntElement for i16 {}
+impl SimdIntElement for i32 {}
+impl SimdIntElement for i64 {}
+
+/// Types that can be used as elements in float SIMD vectors.
+///
+/// The scalar conversion bounds are limited to types that every floating-point
+/// element can represent losslessly, including f16 for forward-compatibility.
+pub trait SimdFloatElement: SimdElement + Neg<Output = Self> + From<i8> + From<u8> {}
+
+impl SimdFloatElement for f32 {}
+impl SimdFloatElement for f64 {}
 
 /// Construction of integer vectors from floats by truncation
 pub trait SimdCvtTruncate<T: Seal>: Seal {

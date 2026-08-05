@@ -440,6 +440,24 @@ impl Level for Fallback {
                     }
                 }
             }
+            OpSig::SwizzleDyn => {
+                let bytes_ty = vec_ty.bytes_ty();
+                let bytes_rust = bytes_ty.rust();
+                let byte_count = bytes_ty.len;
+
+                quote! {
+                    #method_sig {
+                        let bytes = Bytes::to_bytes(a);
+                        let mut output = [0u8; #byte_count];
+                        for lane in 0..#byte_count {
+                            let index = indices[lane] as usize;
+                            output[lane] = bytes[index % #byte_count];
+                        }
+                        let result: #bytes_rust<Self> = output.simd_into(self);
+                        Bytes::from_bytes(result)
+                    }
+                }
+            }
             OpSig::SwizzleDynPrecise => {
                 let bytes_ty = vec_ty.bytes_ty();
                 let bytes_rust = bytes_ty.rust();

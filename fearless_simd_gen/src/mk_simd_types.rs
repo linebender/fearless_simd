@@ -9,7 +9,7 @@ use crate::{
     ops::{
         F32_TO_I32, F32_TO_I32_PRECISE, F32_TO_U32, F32_TO_U32_PRECISE, F64_TO_I64,
         F64_TO_I64_PRECISE, F64_TO_U64, F64_TO_U64_PRECISE, I32_TO_F32, I64_TO_F64, Op, OpSig,
-        TyFlavor, U32_TO_F32, U64_TO_F64, vec_trait_ops_for,
+        TyFlavor, U32_TO_F32, U64_TO_F64, base_trait_ops, vec_trait_ops_for,
     },
     types::{SIMD_TYPES, ScalarType, VecType},
 };
@@ -401,6 +401,26 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     };
     let vec_trait_id = Ident::new(vec_trait, Span::call_site());
     let splat = generic_op_name("splat", ty);
+    let mut base_methods = vec![];
+    for op in base_trait_ops() {
+        let Op { sig, method, .. } = op;
+        if matches!(sig, OpSig::Splat) {
+            continue;
+        }
+        let Some(call_args) = sig.forwarding_call_args() else {
+            continue;
+        };
+        let trait_method = generic_op_name(method, ty);
+        let method_sig = op
+            .vec_trait_method_sig()
+            .expect("base trait operation must have a vector method signature");
+        base_methods.push(quote! {
+            #[inline(always)]
+            #method_sig {
+                self.simd.#trait_method(#call_args)
+            }
+        });
+    }
     let mut methods = vec![];
     for op in vec_trait_ops_for(ty.scalar) {
         let Op { sig, method, .. } = op;
@@ -449,6 +469,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let shift_elements_left_op = generic_op_name("shift_elements_left", ty);
     let shift_elements_right_op = generic_op_name("shift_elements_right", ty);
     let swizzle_dyn_within_blocks_op = generic_op_name("swizzle_dyn_within_blocks", ty);
+    let swizzle_dyn_op = generic_op_name("swizzle_dyn", ty);
     let swizzle_dyn_precise_op = generic_op_name("swizzle_dyn_precise", ty);
     quote! {
         impl<S: Simd> SimdBase<S> for #name<S> {
@@ -535,9 +556,16 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
             }
 
             #[inline(always)]
+            fn swizzle_dyn(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
+                self.simd.#swizzle_dyn_op(self, indices.simd_into(self.simd))
+            }
+
+            #[inline(always)]
             fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
                 self.simd.#swizzle_dyn_precise_op(self, indices.simd_into(self.simd))
             }
+
+            #( #base_methods )*
         }
         impl<S: Simd> crate::#vec_trait_id<S> for #name<S> {
             #( #methods )*

@@ -106,3 +106,16 @@ fn generic_array_roundtrip<S: Simd, V: SimdBase<S>>(vector: V) -> V {
     vector.store_array(&mut array);
     V::load_array(simd, array)
 }
+
+// Ensure that `SimdInt` exposes scalar arithmetic on its element type without
+// requiring a repeated `T::Element: SimdIntElement` bound.
+#[expect(clippy::op_ref, reason = "Deliberately test operations by reference")]
+fn generic_int_element_arithmetic<S: Simd, T: SimdInt<S>>(
+    value: T::Element,
+    shift: usize,
+) -> T::Element {
+    let one = T::Element::from(true);
+    let by_value = ((value + one) << shift) - one;
+    let by_reference = ((value + &one) << &shift) - &one;
+    (by_value & value) | (by_reference ^ &value)
+}
