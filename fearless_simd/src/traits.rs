@@ -12,7 +12,7 @@ use core::iter::{Product, Sum};
 use core::ops::Neg;
 use core::ops::{
     Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Div, DivAssign,
-    Mul, MulAssign, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, SubAssign,
+    Mul, MulAssign, Not, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, SubAssign,
 };
 use core::str::FromStr;
 #[cfg(all(feature = "num-traits", any(feature = "std", feature = "libm")))]
@@ -273,7 +273,10 @@ impl SimdElement for i64 {
 #[cfg(not(feature = "num-traits"))]
 pub trait SimdIntElement:
     SimdElement
+    + Eq
+    + Ord
     + Binary
+    + Not<Output = Self>
     + Shl<usize, Output = Self>
     + ShlAssign<usize>
     + Shr<usize, Output = Self>
@@ -302,7 +305,10 @@ pub trait SimdIntElement:
 pub trait SimdIntElement:
     SimdElement
     + PrimInt
+    + Eq
+    + Ord
     + Binary
+    + Not<Output = Self>
     + WrappingAdd
     + WrappingSub
     + WrappingMul
