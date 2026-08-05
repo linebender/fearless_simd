@@ -148,8 +148,8 @@ pub trait SimdElement:
     + Bounded
     + FromPrimitive
     + ToPrimitive
-    + FromBytes
     + ToBytes
+    + FromBytes<Bytes = <Self as ToBytes>::Bytes>
     + Add<Self, Output = Self>
     + AddAssign<Self>
     + Sub<Self, Output = Self>
@@ -316,7 +316,7 @@ pub trait SimdIntElement:
     + CheckedShl
     + CheckedShr
     + CheckedRem
-    + MulAdd
+    + MulAdd<Output = Self>
     + MulAddAssign
     + ShlAssign<usize>
     + ShrAssign<usize>
@@ -358,8 +358,8 @@ pub trait SimdFloatElement:
     SimdElement
     + Float
     + FloatConst
-    + Inv
-    + MulAdd
+    + Inv<Output = Self>
+    + MulAdd<Output = Self>
     + MulAddAssign
     + From<f32>
     + From<i8>
@@ -372,7 +372,15 @@ pub trait SimdFloatElement:
 /// Types that can be used as elements in float SIMD vectors.
 #[cfg(all(feature = "num-traits", not(any(feature = "std", feature = "libm"))))]
 pub trait SimdFloatElement:
-    SimdElement + FloatCore + Floatconst + Inv + From<f32> + From<i8> + From<u8> + From<i16> + From<u16>
+    SimdElement
+    + FloatCore
+    + Floatconst
+    + Inv<Output = Self>
+    + From<f32>
+    + From<i8>
+    + From<u8>
+    + From<i16>
+    + From<u16>
 {
 }
 
