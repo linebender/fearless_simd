@@ -173,6 +173,10 @@ fn mk_simd_base() -> TokenStream {
             });
         }
     }
+    let overloaded_ops = [CoreOpTrait::Add, CoreOpTrait::Sub, CoreOpTrait::Mul];
+    let op_traits = overloaded_ops
+        .iter()
+        .flat_map(|core_op| core_op.trait_bounds());
 
     quote! {
         /// Base functionality implemented by all SIMD vectors.
@@ -182,6 +186,7 @@ fn mk_simd_base() -> TokenStream {
             + Bytes<Bytes = Self::ByteVector> + SimdFrom<Self::Element, S> + SimdFrom<Self::Array, S>
             + core::ops::Index<usize, Output = Self::Element> + core::ops::IndexMut<usize, Output = Self::Element>
             + core::ops::Deref<Target = Self::Array>+ core::ops::DerefMut<Target = Self::Array>
+            #(+ #op_traits)*
         {
             /// The type of this vector's elements.
             type Element: SimdElement;
@@ -279,6 +284,7 @@ fn mk_simd_float() -> TokenStream {
             OpKind::Overloaded(core_op) => Some(core_op),
             _ => None,
         })
+        .filter(|core_op| !is_base_arithmetic(core_op))
         .flat_map(|core_op| core_op.trait_bounds());
     quote! {
         /// Functionality implemented by floating-point SIMD vectors.
@@ -319,6 +325,7 @@ fn mk_simd_int() -> TokenStream {
             OpKind::Overloaded(core_op) => Some(core_op),
             _ => None,
         })
+        .filter(|core_op| !is_base_arithmetic(core_op))
         .flat_map(|core_op| core_op.trait_bounds());
     quote! {
         /// Functionality implemented by (signed and unsigned) integer SIMD vectors.
@@ -334,6 +341,13 @@ fn mk_simd_int() -> TokenStream {
             #( #methods )*
         }
     }
+}
+
+fn is_base_arithmetic(core_op: &CoreOpTrait) -> bool {
+    matches!(
+        core_op,
+        CoreOpTrait::Add | CoreOpTrait::Sub | CoreOpTrait::Mul
+    )
 }
 
 fn mk_simd_mask() -> TokenStream {
