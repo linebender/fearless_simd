@@ -346,13 +346,16 @@ impl SimdIntElement for i32 {}
 impl SimdIntElement for i64 {}
 
 /// Types that can be used as elements in float SIMD vectors.
+///
+/// The scalar conversion bounds are limited to types that every floating-point
+/// element can represent losslessly, including f16 for forward-compatibility.
 #[cfg(not(feature = "num-traits"))]
-pub trait SimdFloatElement:
-    SimdElement + Neg<Output = Self> + From<f32> + From<i8> + From<u8> + From<i16> + From<u16>
-{
-}
+pub trait SimdFloatElement: SimdElement + Neg<Output = Self> + From<i8> + From<u8> {}
 
 /// Types that can be used as elements in float SIMD vectors.
+///
+/// The scalar conversion bounds are limited to types that every floating-point
+/// element can represent losslessly, including f16 for forward-compatibility.
 #[cfg(all(feature = "num-traits", any(feature = "std", feature = "libm")))]
 pub trait SimdFloatElement:
     SimdElement
@@ -361,26 +364,18 @@ pub trait SimdFloatElement:
     + Inv<Output = Self>
     + MulAdd<Output = Self>
     + MulAddAssign
-    + From<f32>
     + From<i8>
     + From<u8>
-    + From<i16>
-    + From<u16>
 {
 }
 
 /// Types that can be used as elements in float SIMD vectors.
+///
+/// The scalar conversion bounds are limited to types that every floating-point
+/// element can represent losslessly, including f16 for forward-compatibility.
 #[cfg(all(feature = "num-traits", not(any(feature = "std", feature = "libm"))))]
 pub trait SimdFloatElement:
-    SimdElement
-    + FloatCore
-    + Floatconst
-    + Inv<Output = Self>
-    + From<f32>
-    + From<i8>
-    + From<u8>
-    + From<i16>
-    + From<u16>
+    SimdElement + FloatCore + Floatconst + Inv<Output = Self> + From<i8> + From<u8>
 {
 }
 
