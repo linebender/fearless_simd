@@ -14,8 +14,8 @@ You can find its changes [documented below](#060-2026-07-10).
 ### Added
 
 - Added an `Sse2` level. This is the new baseline for i686-* and x86_64-* targets, replacing `Fallback`. ([#270][] by [@Shnatsel][])
-- Added trait bounds on `SimdElement`, and introduced the `SimdIntElement` and `SimdFloatElement` subtraits. These allow generic code to access many math and utility operations on the elements of SIMD vector types. ([#301][] by [@danderson][])
-- Added optional feature `num-traits`. When enabled, the `SimdElement`, `SimdIntElement` and `SimdFloatElement` traits acquire additional trait bounds for operations not covered by Rust core traits, for example wrapping and saturating arithmetic on integers. The `num-traits` feature is `no_std` compatible when the `libm` feature is enabled. ([#301][] by [@danderson][])
+- Added trait bounds on `SimdElement`, and introduced the `SimdIntElement` and `SimdFloatElement` subtraits. These allow generic code to access many math and utility operations on the elements of SIMD vector types. ([#302][] by [@danderson][])
+- Added optional feature `num-traits`. When enabled, the `SimdElement`, `SimdIntElement` and `SimdFloatElement` traits acquire additional trait bounds for operations not covered by Rust core traits, for example wrapping and saturating arithmetic on integers. The `num-traits` feature is `no_std` compatible when the `libm` feature is enabled. ([#302][] by [@danderson][])
 
 ### Changed
 
@@ -213,6 +213,7 @@ No changelog was kept for this release.
 [@valadaptive]: https://github.com/valadaptive
 [@LaurenzV]: https://github.com/LaurenzV
 [@Shnatsel]: https://github.com/Shnatsel
+[@danderson]: https://github.com/danderson
 
 [#75]: https://github.com/linebender/fearless_simd/pull/75
 [#76]: https://github.com/linebender/fearless_simd/pull/76
@@ -291,7 +292,8 @@ No changelog was kept for this release.
 [#264]: https://github.com/linebender/fearless_simd/pull/264
 [#266]: https://github.com/linebender/fearless_simd/pull/266
 [#270]: https://github.com/linebender/fearless_simd/pull/270
-[#270]: https://github.com/linebender/fearless_simd/pull/293
+[#293]: https://github.com/linebender/fearless_simd/pull/293
+[#302]: https://github.com/linebender/fearless_simd/pull/302
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.6.0...HEAD
 [0.6.0]: https://github.com/linebender/fearless_simd/compare/v0.5.0...v0.6.0
