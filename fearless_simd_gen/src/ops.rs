@@ -493,13 +493,16 @@ pub(crate) fn relaxed_narrow_method(
     target_ty: VecType,
     implementation: &'static str,
 ) -> TokenStream {
-    debug_assert!(matches!(
-        op.sig,
-        OpSig::Narrow {
-            mode: NarrowingMode::Relaxed,
-            ..
-        }
-    ));
+    assert!(
+        matches!(
+            op.sig,
+            OpSig::Narrow {
+                mode: NarrowingMode::Relaxed,
+                ..
+            }
+        ),
+        "This method only handles Relaxed mode"
+    );
 
     let method_sig = op.simd_trait_method_sig(vec_ty);
     let implementation = generic_op_name(implementation, vec_ty);
