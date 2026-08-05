@@ -67,7 +67,8 @@ pub trait Simd:
             Block = f64x2<Self>,
             Mask = Self::mask64s,
             ByteVector = Self::u8s,
-        >;
+        > + SimdCvtFloat<Self::u64s>
+        + SimdCvtFloat<Self::i64s>;
     #[doc = r" A native-width SIMD vector of [`u8`]s."]
     type u8s: SimdInt<
             Self,
@@ -124,7 +125,7 @@ pub trait Simd:
             Block = u64x2<Self>,
             Mask = Self::mask64s,
             ByteVector = Self::u8s,
-        >;
+        > + SimdCvtTruncate<Self::f64s>;
     #[doc = r" A native-width SIMD vector of [`i64`]s."]
     type i64s: SimdInt<
             Self,
@@ -132,7 +133,8 @@ pub trait Simd:
             Block = i64x2<Self>,
             Mask = Self::mask64s,
             ByteVector = Self::u8s,
-        > + core::ops::Neg<Output = Self::i64s>;
+        > + SimdCvtTruncate<Self::f64s>
+        + core::ops::Neg<Output = Self::i64s>;
     #[doc = r" A native-width SIMD mask with 8-bit lanes."]
     type mask8s: SimdMask<Self, Element = i8>
         + Select<Self::u8s>
@@ -1050,6 +1052,14 @@ pub trait Simd:
         vectors: [f64x2<Self>; 4usize],
         dest: &mut [f64; 8usize],
     ) -> ();
+    #[doc = "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
+    fn cvt_u64_f64x2(self, a: f64x2<Self>) -> u64x2<Self>;
+    #[doc = "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_u64_precise_f64x2(self, a: f64x2<Self>) -> u64x2<Self>;
+    #[doc = "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
+    fn cvt_i64_f64x2(self, a: f64x2<Self>) -> i64x2<Self>;
+    #[doc = "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_i64_precise_f64x2(self, a: f64x2<Self>) -> i64x2<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i64x2(self, val: i64) -> i64x2<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
@@ -1144,6 +1154,8 @@ pub trait Simd:
         vectors: [i64x2<Self>; 4usize],
         dest: &mut [i64; 8usize],
     ) -> ();
+    #[doc = "Convert each signed 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
+    fn cvt_f64_i64x2(self, a: i64x2<Self>) -> f64x2<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u64x2(self, val: u64) -> u64x2<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
@@ -1236,6 +1248,8 @@ pub trait Simd:
         vectors: [u64x2<Self>; 4usize],
         dest: &mut [u64; 8usize],
     ) -> ();
+    #[doc = "Convert each unsigned 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
+    fn cvt_f64_u64x2(self, a: u64x2<Self>) -> f64x2<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self>;
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
@@ -2112,6 +2126,14 @@ pub trait Simd:
     fn combine_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f64x4(self, a: f64x4<Self>) -> (f64x2<Self>, f64x2<Self>);
+    #[doc = "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
+    fn cvt_u64_f64x4(self, a: f64x4<Self>) -> u64x4<Self>;
+    #[doc = "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_u64_precise_f64x4(self, a: f64x4<Self>) -> u64x4<Self>;
+    #[doc = "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
+    fn cvt_i64_f64x4(self, a: f64x4<Self>) -> i64x4<Self>;
+    #[doc = "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_i64_precise_f64x4(self, a: f64x4<Self>) -> i64x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i64x4(self, val: i64) -> i64x4<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
@@ -2198,6 +2220,8 @@ pub trait Simd:
     fn split_i64x4(self, a: i64x4<Self>) -> (i64x2<Self>, i64x2<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i64x4(self, a: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Convert each signed 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
+    fn cvt_f64_i64x4(self, a: i64x4<Self>) -> f64x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u64x4(self, val: u64) -> u64x4<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
@@ -2282,6 +2306,8 @@ pub trait Simd:
     fn combine_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u64x4(self, a: u64x4<Self>) -> (u64x2<Self>, u64x2<Self>);
+    #[doc = "Convert each unsigned 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
+    fn cvt_f64_u64x4(self, a: u64x4<Self>) -> f64x4<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask64x4(self, val: bool) -> mask64x4<Self>;
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
@@ -3148,6 +3174,14 @@ pub trait Simd:
     fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>);
+    #[doc = "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
+    fn cvt_u64_f64x8(self, a: f64x8<Self>) -> u64x8<Self>;
+    #[doc = "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_u64_precise_f64x8(self, a: f64x8<Self>) -> u64x8<Self>;
+    #[doc = "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
+    fn cvt_i64_f64x8(self, a: f64x8<Self>) -> i64x8<Self>;
+    #[doc = "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_i64_precise_f64x8(self, a: f64x8<Self>) -> i64x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i64x8(self, val: i64) -> i64x8<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
@@ -3232,6 +3266,8 @@ pub trait Simd:
     fn split_i64x8(self, a: i64x8<Self>) -> (i64x4<Self>, i64x4<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i64x8(self, a: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Convert each signed 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
+    fn cvt_f64_i64x8(self, a: i64x8<Self>) -> f64x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u64x8(self, val: u64) -> u64x8<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
@@ -3314,6 +3350,8 @@ pub trait Simd:
     fn max_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u64x8(self, a: u64x8<Self>) -> (u64x4<Self>, u64x4<Self>);
+    #[doc = "Convert each unsigned 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
+    fn cvt_f64_u64x8(self, a: u64x8<Self>) -> f64x8<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask64x8(self, val: bool) -> mask64x8<Self>;
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
@@ -3636,8 +3674,8 @@ pub trait SimdFloat<S: Simd>:
 {
     #[doc = r" Convert this floating-point type to an integer. This is a convenience method that"]
     #[doc = r" delegates to [`SimdCvtTruncate::truncate_from`], and can only be called if there"]
-    #[doc = r" actually exists a target type of the same bit width (currently, only `u32` and"]
-    #[doc = r" `i32`)."]
+    #[doc = r" actually exists a target type of the same bit width (`u32`/`i32` for `f32`, or"]
+    #[doc = r" `u64`/`i64` for `f64`)."]
     #[doc = r""]
     #[doc = r" For more information about the semantics of this specific conversion, see the"]
     #[doc = r" concrete `SimdCvtTruncate` implementations for integer types."]
@@ -3648,7 +3686,8 @@ pub trait SimdFloat<S: Simd>:
     #[doc = r" Convert this floating-point type to an integer, saturating on overflow and returning"]
     #[doc = r" 0 for NaN. This is a convenience method that delegates to"]
     #[doc = r" [`SimdCvtTruncate::truncate_from_precise`], and can only be called if there actually"]
-    #[doc = r" exists a target type of the same bit width (currently, only `u32` and `i32`)."]
+    #[doc = r" exists a target type of the same bit width (`u32`/`i32` for `f32`, or `u64`/`i64`"]
+    #[doc = r" for `f64`)."]
     #[doc = r""]
     #[doc = r" For more information about the semantics of this specific conversion, see the"]
     #[doc = r" concrete `SimdCvtTruncate` implementations for integer types."]
@@ -3749,7 +3788,7 @@ pub trait SimdInt<S: Simd>:
 {
     #[doc = r" Convert this integer type to a floating-point type. This is a convenience method"]
     #[doc = r" that delegates to [`SimdCvtFloat::float_from`], and can only be called if there"]
-    #[doc = r" actually exists a target type of the same bit width (currently, only `f32`)."]
+    #[doc = r" actually exists a target type of the same bit width (`f32` or `f64`)."]
     #[inline(always)]
     fn to_float<T: SimdCvtFloat<Self>>(self) -> T {
         T::float_from(self)

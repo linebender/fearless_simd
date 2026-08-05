@@ -2260,6 +2260,20 @@ impl<S: Simd> crate::SimdFloat<S> for f64x2<S> {
         self.simd.trunc_f64x2(self)
     }
 }
+impl<S: Simd> SimdCvtFloat<u64x2<S>> for f64x2<S> {
+    #[doc = "Convert each unsigned 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
+    #[inline(always)]
+    fn float_from(x: u64x2<S>) -> Self {
+        x.simd.cvt_f64_u64x2(x)
+    }
+}
+impl<S: Simd> SimdCvtFloat<i64x2<S>> for f64x2<S> {
+    #[doc = "Convert each signed 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
+    #[inline(always)]
+    fn float_from(x: i64x2<S>) -> Self {
+        x.simd.cvt_f64_i64x2(x)
+    }
+}
 impl<S: Simd> crate::SimdCombine<S> for f64x2<S> {
     type Combined = f64x4<S>;
     #[inline(always)]
@@ -2481,6 +2495,18 @@ impl<S: Simd> crate::SimdInt<S> for i64x2<S> {
         self.simd.max_i64x2(self, rhs.simd_into(self.simd))
     }
 }
+impl<S: Simd> SimdCvtTruncate<f64x2<S>> for i64x2<S> {
+    #[doc = "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
+    #[inline(always)]
+    fn truncate_from(x: f64x2<S>) -> Self {
+        x.simd.cvt_i64_f64x2(x)
+    }
+    #[doc = "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[inline(always)]
+    fn truncate_from_precise(x: f64x2<S>) -> Self {
+        x.simd.cvt_i64_precise_f64x2(x)
+    }
+}
 impl<S: Simd> crate::SimdCombine<S> for i64x2<S> {
     type Combined = i64x4<S>;
     #[inline(always)]
@@ -2700,6 +2726,18 @@ impl<S: Simd> crate::SimdInt<S> for u64x2<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_u64x2(self, rhs.simd_into(self.simd))
+    }
+}
+impl<S: Simd> SimdCvtTruncate<f64x2<S>> for u64x2<S> {
+    #[doc = "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
+    #[inline(always)]
+    fn truncate_from(x: f64x2<S>) -> Self {
+        x.simd.cvt_u64_f64x2(x)
+    }
+    #[doc = "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[inline(always)]
+    fn truncate_from_precise(x: f64x2<S>) -> Self {
+        x.simd.cvt_u64_precise_f64x2(x)
     }
 }
 impl<S: Simd> crate::SimdCombine<S> for u64x2<S> {
@@ -5193,6 +5231,20 @@ impl<S: Simd> crate::SimdFloat<S> for f64x4<S> {
         self.simd.trunc_f64x4(self)
     }
 }
+impl<S: Simd> SimdCvtFloat<u64x4<S>> for f64x4<S> {
+    #[doc = "Convert each unsigned 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
+    #[inline(always)]
+    fn float_from(x: u64x4<S>) -> Self {
+        x.simd.cvt_f64_u64x4(x)
+    }
+}
+impl<S: Simd> SimdCvtFloat<i64x4<S>> for f64x4<S> {
+    #[doc = "Convert each signed 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
+    #[inline(always)]
+    fn float_from(x: i64x4<S>) -> Self {
+        x.simd.cvt_f64_i64x4(x)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for f64x4<S> {
     type Split = f64x2<S>;
     #[inline(always)]
@@ -5421,6 +5473,18 @@ impl<S: Simd> crate::SimdInt<S> for i64x4<S> {
         self.simd.max_i64x4(self, rhs.simd_into(self.simd))
     }
 }
+impl<S: Simd> SimdCvtTruncate<f64x4<S>> for i64x4<S> {
+    #[doc = "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
+    #[inline(always)]
+    fn truncate_from(x: f64x4<S>) -> Self {
+        x.simd.cvt_i64_f64x4(x)
+    }
+    #[doc = "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[inline(always)]
+    fn truncate_from_precise(x: f64x4<S>) -> Self {
+        x.simd.cvt_i64_precise_f64x4(x)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for i64x4<S> {
     type Split = i64x2<S>;
     #[inline(always)]
@@ -5647,6 +5711,18 @@ impl<S: Simd> crate::SimdInt<S> for u64x4<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_u64x4(self, rhs.simd_into(self.simd))
+    }
+}
+impl<S: Simd> SimdCvtTruncate<f64x4<S>> for u64x4<S> {
+    #[doc = "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
+    #[inline(always)]
+    fn truncate_from(x: f64x4<S>) -> Self {
+        x.simd.cvt_u64_f64x4(x)
+    }
+    #[doc = "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[inline(always)]
+    fn truncate_from_precise(x: f64x4<S>) -> Self {
+        x.simd.cvt_u64_precise_f64x4(x)
     }
 }
 impl<S: Simd> crate::SimdSplit<S> for u64x4<S> {
@@ -8244,6 +8320,20 @@ impl<S: Simd> crate::SimdFloat<S> for f64x8<S> {
         self.simd.trunc_f64x8(self)
     }
 }
+impl<S: Simd> SimdCvtFloat<u64x8<S>> for f64x8<S> {
+    #[doc = "Convert each unsigned 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
+    #[inline(always)]
+    fn float_from(x: u64x8<S>) -> Self {
+        x.simd.cvt_f64_u64x8(x)
+    }
+}
+impl<S: Simd> SimdCvtFloat<i64x8<S>> for f64x8<S> {
+    #[doc = "Convert each signed 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
+    #[inline(always)]
+    fn float_from(x: i64x8<S>) -> Self {
+        x.simd.cvt_f64_i64x8(x)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for f64x8<S> {
     type Split = f64x4<S>;
     #[inline(always)]
@@ -8478,6 +8568,18 @@ impl<S: Simd> crate::SimdInt<S> for i64x8<S> {
         self.simd.max_i64x8(self, rhs.simd_into(self.simd))
     }
 }
+impl<S: Simd> SimdCvtTruncate<f64x8<S>> for i64x8<S> {
+    #[doc = "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
+    #[inline(always)]
+    fn truncate_from(x: f64x8<S>) -> Self {
+        x.simd.cvt_i64_f64x8(x)
+    }
+    #[doc = "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[inline(always)]
+    fn truncate_from_precise(x: f64x8<S>) -> Self {
+        x.simd.cvt_i64_precise_f64x8(x)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for i64x8<S> {
     type Split = i64x4<S>;
     #[inline(always)]
@@ -8710,6 +8812,18 @@ impl<S: Simd> crate::SimdInt<S> for u64x8<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_u64x8(self, rhs.simd_into(self.simd))
+    }
+}
+impl<S: Simd> SimdCvtTruncate<f64x8<S>> for u64x8<S> {
+    #[doc = "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
+    #[inline(always)]
+    fn truncate_from(x: f64x8<S>) -> Self {
+        x.simd.cvt_u64_f64x8(x)
+    }
+    #[doc = "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[inline(always)]
+    fn truncate_from_precise(x: f64x8<S>) -> Self {
+        x.simd.cvt_u64_precise_f64x8(x)
     }
 }
 impl<S: Simd> crate::SimdSplit<S> for u64x8<S> {

@@ -4851,6 +4851,60 @@ impl Simd for Avx512 {
         kernel(self, vectors, dest);
     }
     #[inline(always)]
+    fn cvt_u64_f64x2(self, a: f64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> u64x2<Avx512> {
+                _mm_cvttpd_epu64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn cvt_u64_precise_f64x2(self, a: f64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> u64x2<Avx512> {
+                let a = _mm_max_pd(a.into(), _mm_setzero_pd());
+                let mut converted = _mm_cvttpd_epu64(a);
+                let exceeds_unsigned_range =
+                    _mm_cmp_pd_mask::<17i32>(_mm_set1_pd(18446744073709549568.0), a);
+                converted = _mm_mask_blend_epi64(
+                    exceeds_unsigned_range,
+                    converted,
+                    _mm_set1_epi64x(u64::MAX.cast_signed()),
+                );
+                converted.simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn cvt_i64_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> i64x2<Avx512> {
+                _mm_cvttpd_epi64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn cvt_i64_precise_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> i64x2<Avx512> {
+                let a = a.into();
+                let in_range = _mm_cmp_pd_mask::<17i32>(a, _mm_set1_pd(9223372036854775808.0));
+                let mut converted = _mm_mask_cvttpd_epi64(_mm_set1_epi64x(i64::MAX), in_range, a);
+                let is_not_nan = _mm_cmp_pd_mask::<7i32>(a, a);
+                converted = _mm_mask_blend_epi64(is_not_nan, _mm_setzero_si128(), converted);
+                converted.simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5297,6 +5351,16 @@ impl Simd for Avx512 {
         kernel(self, vectors, dest);
     }
     #[inline(always)]
+    fn cvt_f64_i64x2(self, a: i64x2<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_cvtepi64_pd(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5731,6 +5795,16 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, vectors, dest);
+    }
+    #[inline(always)]
+    fn cvt_f64_u64x2(self, a: u64x2<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_cvtepu64_pd(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
@@ -10908,6 +10982,62 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn cvt_u64_f64x4(self, a: f64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> u64x4<Avx512> {
+                _mm256_cvttpd_epu64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn cvt_u64_precise_f64x4(self, a: f64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> u64x4<Avx512> {
+                let a = _mm256_max_pd(a.into(), _mm256_setzero_pd());
+                let mut converted = _mm256_cvttpd_epu64(a);
+                let exceeds_unsigned_range =
+                    _mm256_cmp_pd_mask::<17i32>(_mm256_set1_pd(18446744073709549568.0), a);
+                converted = _mm256_mask_blend_epi64(
+                    exceeds_unsigned_range,
+                    converted,
+                    _mm256_set1_epi64x(u64::MAX.cast_signed()),
+                );
+                converted.simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn cvt_i64_f64x4(self, a: f64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> i64x4<Avx512> {
+                _mm256_cvttpd_epi64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn cvt_i64_precise_f64x4(self, a: f64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> i64x4<Avx512> {
+                let a = a.into();
+                let in_range =
+                    _mm256_cmp_pd_mask::<17i32>(a, _mm256_set1_pd(9223372036854775808.0));
+                let mut converted =
+                    _mm256_mask_cvttpd_epi64(_mm256_set1_epi64x(i64::MAX), in_range, a);
+                let is_not_nan = _mm256_cmp_pd_mask::<7i32>(a, a);
+                converted = _mm256_mask_blend_epi64(is_not_nan, _mm256_setzero_si256(), converted);
+                converted.simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_i64x4(self, val: i64) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11379,6 +11509,16 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn cvt_f64_i64x4(self, a: i64x4<Self>) -> f64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_cvtepi64_pd(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_u64x4(self, val: u64) -> u64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11835,6 +11975,16 @@ impl Simd for Avx512 {
                     _mm256_extracti128_si256::<0>(a.into()).simd_into(token),
                     _mm256_extracti128_si256::<1>(a.into()).simd_into(token),
                 )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn cvt_f64_u64x4(self, a: u64x4<Self>) -> f64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_cvtepu64_pd(a.into()).simd_into(token)
             }
         );
         kernel(self, a)
@@ -17585,6 +17735,62 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn cvt_u64_f64x8(self, a: f64x8<Self>) -> u64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>) -> u64x8<Avx512> {
+                _mm512_cvttpd_epu64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn cvt_u64_precise_f64x8(self, a: f64x8<Self>) -> u64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>) -> u64x8<Avx512> {
+                let a = _mm512_max_pd(a.into(), _mm512_setzero_pd());
+                let mut converted = _mm512_cvttpd_epu64(a);
+                let exceeds_unsigned_range =
+                    _mm512_cmp_pd_mask::<17i32>(_mm512_set1_pd(18446744073709549568.0), a);
+                converted = _mm512_mask_blend_epi64(
+                    exceeds_unsigned_range,
+                    converted,
+                    _mm512_set1_epi64(u64::MAX.cast_signed()),
+                );
+                converted.simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn cvt_i64_f64x8(self, a: f64x8<Self>) -> i64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>) -> i64x8<Avx512> {
+                _mm512_cvttpd_epi64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn cvt_i64_precise_f64x8(self, a: f64x8<Self>) -> i64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>) -> i64x8<Avx512> {
+                let a = a.into();
+                let in_range =
+                    _mm512_cmp_pd_mask::<17i32>(a, _mm512_set1_pd(9223372036854775808.0));
+                let mut converted =
+                    _mm512_mask_cvttpd_epi64(_mm512_set1_epi64(i64::MAX), in_range, a);
+                let is_not_nan = _mm512_cmp_pd_mask::<7i32>(a, a);
+                converted = _mm512_mask_blend_epi64(is_not_nan, _mm512_setzero_si512(), converted);
+                converted.simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_i64x8(self, val: i64) -> i64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -18079,6 +18285,16 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn cvt_f64_i64x8(self, a: i64x8<Self>) -> f64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x8<Avx512>) -> f64x8<Avx512> {
+                _mm512_cvtepi64_pd(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_u64x8(self, val: u64) -> u64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -18558,6 +18774,16 @@ impl Simd for Avx512 {
                     _mm512_castsi512_si256(a.into()).simd_into(token),
                     _mm512_extracti64x4_epi64::<1>(a.into()).simd_into(token),
                 )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn cvt_f64_u64x8(self, a: u64x8<Self>) -> f64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x8<Avx512>) -> f64x8<Avx512> {
+                _mm512_cvtepu64_pd(a.into()).simd_into(token)
             }
         );
         kernel(self, a)

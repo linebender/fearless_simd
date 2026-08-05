@@ -12,6 +12,30 @@ fn generic_cast<S: Simd>(x: S::f32s) -> S::u32s {
     x.to_int()
 }
 
+fn generic_f64_to_u64<S: Simd>(x: S::f64s) -> S::u64s {
+    x.to_int()
+}
+
+fn generic_f64_to_i64<S: Simd>(x: S::f64s) -> S::i64s {
+    x.to_int()
+}
+
+fn generic_f64_to_u64_precise<S: Simd>(x: S::f64s) -> S::u64s {
+    x.to_int_precise()
+}
+
+fn generic_f64_to_i64_precise<S: Simd>(x: S::f64s) -> S::i64s {
+    x.to_int_precise()
+}
+
+fn generic_u64_to_f64<S: Simd>(x: S::u64s) -> S::f64s {
+    x.to_float()
+}
+
+fn generic_i64_to_f64<S: Simd>(x: S::i64s) -> S::f64s {
+    x.to_float()
+}
+
 // Ensure that a generic vector's byte representation is itself a same-token
 // byte vector whose byte representation is idempotent.
 fn generic_bytes<S: Simd, V: SimdBase<S>>(value: V) -> V {

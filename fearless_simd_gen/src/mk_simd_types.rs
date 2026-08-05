@@ -7,8 +7,9 @@ use quote::{format_ident, quote};
 use crate::{
     generic::{generic_op_name, unrolled_array},
     ops::{
-        F32_TO_I32, F32_TO_I32_PRECISE, F32_TO_U32, F32_TO_U32_PRECISE, I32_TO_F32, Op, OpSig,
-        TyFlavor, U32_TO_F32, vec_trait_ops_for,
+        F32_TO_I32, F32_TO_I32_PRECISE, F32_TO_U32, F32_TO_U32_PRECISE, F64_TO_I64,
+        F64_TO_I64_PRECISE, F64_TO_U64, F64_TO_U64_PRECISE, I32_TO_F32, I64_TO_F64, Op, OpSig,
+        TyFlavor, U32_TO_F32, U64_TO_F64, vec_trait_ops_for,
     },
     types::{SIMD_TYPES, ScalarType, VecType},
 };
@@ -118,9 +119,8 @@ pub(crate) fn mk_simd_types() -> TokenStream {
         };
         let impl_block = simd_vec_impl(ty);
         let mut conditional_impls = Vec::new();
-        // TODO: Relax `if` clauses once 64-bit integer or 16-bit floats vectors are implemented
         match ty.scalar {
-            ScalarType::Float if ty.scalar_bits == 32 => {
+            ScalarType::Float if matches!(ty.scalar_bits, 32 | 64) => {
                 for src_scalar in [ScalarType::Unsigned, ScalarType::Int] {
                     let src_ty = ty.cast(src_scalar);
                     let method = format_ident!(
@@ -129,9 +129,11 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                         src_ty.rust_name()
                     );
                     let src_ty = src_ty.rust();
-                    let op = match src_scalar {
-                        ScalarType::Unsigned => U32_TO_F32,
-                        ScalarType::Int => I32_TO_F32,
+                    let op = match (src_scalar, ty.scalar_bits) {
+                        (ScalarType::Unsigned, 32) => U32_TO_F32,
+                        (ScalarType::Int, 32) => I32_TO_F32,
+                        (ScalarType::Unsigned, 64) => U64_TO_F64,
+                        (ScalarType::Int, 64) => I64_TO_F64,
                         _ => unreachable!(),
                     };
                     let doc = op.format_docstring(TyFlavor::VecImpl);
@@ -146,16 +148,18 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     });
                 }
             }
-            ScalarType::Int | ScalarType::Unsigned if ty.scalar_bits == 32 => {
+            ScalarType::Int | ScalarType::Unsigned if matches!(ty.scalar_bits, 32 | 64) => {
                 let src_ty = ty.cast(ScalarType::Float);
                 let method = format_ident!(
                     "cvt_{}_{}",
                     ty.scalar.rust_name(ty.scalar_bits),
                     src_ty.rust_name()
                 );
-                let op = match ty.scalar {
-                    ScalarType::Unsigned => F32_TO_U32,
-                    ScalarType::Int => F32_TO_I32,
+                let op = match (ty.scalar, ty.scalar_bits) {
+                    (ScalarType::Unsigned, 32) => F32_TO_U32,
+                    (ScalarType::Int, 32) => F32_TO_I32,
+                    (ScalarType::Unsigned, 64) => F64_TO_U64,
+                    (ScalarType::Int, 64) => F64_TO_I64,
                     _ => unreachable!(),
                 };
                 let doc = op.format_docstring(TyFlavor::VecImpl);
@@ -164,9 +168,11 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     ty.scalar.rust_name(ty.scalar_bits),
                     src_ty.rust_name()
                 );
-                let op_precise = match ty.scalar {
-                    ScalarType::Unsigned => F32_TO_U32_PRECISE,
-                    ScalarType::Int => F32_TO_I32_PRECISE,
+                let op_precise = match (ty.scalar, ty.scalar_bits) {
+                    (ScalarType::Unsigned, 32) => F32_TO_U32_PRECISE,
+                    (ScalarType::Int, 32) => F32_TO_I32_PRECISE,
+                    (ScalarType::Unsigned, 64) => F64_TO_U64_PRECISE,
+                    (ScalarType::Int, 64) => F64_TO_I64_PRECISE,
                     _ => unreachable!(),
                 };
                 let doc_precise = op_precise.format_docstring(TyFlavor::VecImpl);

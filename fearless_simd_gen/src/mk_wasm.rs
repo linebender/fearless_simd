@@ -551,6 +551,9 @@ impl Level for WasmSimd128 {
                 scalar_bits,
                 precise,
             } => {
+                if scalar_bits == 64 {
+                    return fallback_method(op, vec_ty);
+                }
                 let (op, uses_relaxed) = match (vec_ty.scalar, target_ty, precise) {
                     (ScalarType::Float, ScalarType::Int | ScalarType::Unsigned, false) => {
                         ("relaxed_trunc", true)

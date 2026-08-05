@@ -2885,6 +2885,85 @@ impl X86 {
             "we currently only support converting between types of the same width"
         );
 
+        if vec_ty.scalar_bits == 64 && *self != Self::Avx512 {
+            return fallback_method(op, vec_ty);
+        }
+
+        if vec_ty.scalar_bits == 64 {
+            let target_ty = vec_ty.reinterpret(target_scalar, target_scalar_bits);
+            return self.kernel_method(op, vec_ty, |token| match (vec_ty.scalar, target_scalar) {
+                (ScalarType::Int, ScalarType::Float) => {
+                    let convert = simple_intrinsic("cvtepi64", &target_ty);
+                    quote! {
+                        #convert(a.into()).simd_into(#token)
+                    }
+                }
+                (ScalarType::Unsigned, ScalarType::Float) => {
+                    let convert = simple_intrinsic("cvtepu64", &target_ty);
+                    quote! {
+                        #convert(a.into()).simd_into(#token)
+                    }
+                }
+                (ScalarType::Float, ScalarType::Int) => {
+                    let convert = simple_intrinsic("cvttpd", &target_ty);
+                    if precise {
+                        let masked_convert =
+                            intrinsic_ident("mask_cvttpd", "epi64", vec_ty.n_bits());
+                        let cmp = intrinsic_ident("cmp", "pd_mask", vec_ty.n_bits());
+                        let blend = avx512_mask_blend_intrinsic(&target_ty);
+                        let set1_float = set1_intrinsic(vec_ty);
+                        let set1_int = set1_intrinsic(&target_ty);
+                        let set0_int =
+                            intrinsic_ident("setzero", coarse_type(&target_ty), target_ty.n_bits());
+                        let lt = avx512_float_compare_predicate("simd_lt");
+                        let ord = avx512_float_compare_predicate("ord");
+                        quote! {
+                            let a = a.into();
+                            let in_range = #cmp::<#lt>(a, #set1_float(9223372036854775808.0));
+                            let mut converted = #masked_convert(#set1_int(i64::MAX), in_range, a);
+                            let is_not_nan = #cmp::<#ord>(a, a);
+                            converted = #blend(is_not_nan, #set0_int(), converted);
+                            converted.simd_into(#token)
+                        }
+                    } else {
+                        quote! {
+                            #convert(a.into()).simd_into(#token)
+                        }
+                    }
+                }
+                (ScalarType::Float, ScalarType::Unsigned) => {
+                    let convert = simple_intrinsic("cvttpd", &target_ty);
+                    if precise {
+                        let max = simple_intrinsic("max", vec_ty);
+                        let cmp = intrinsic_ident("cmp", "pd_mask", vec_ty.n_bits());
+                        let blend = avx512_mask_blend_intrinsic(&target_ty);
+                        let set1_float = set1_intrinsic(vec_ty);
+                        let set1_int = set1_intrinsic(&target_ty);
+                        let set0_float =
+                            intrinsic_ident("setzero", coarse_type(vec_ty), vec_ty.n_bits());
+                        let lt = avx512_float_compare_predicate("simd_lt");
+                        quote! {
+                            let a = #max(a.into(), #set0_float());
+                            let mut converted = #convert(a);
+                            let exceeds_unsigned_range =
+                                #cmp::<#lt>(#set1_float(18446744073709549568.0), a);
+                            converted = #blend(
+                                exceeds_unsigned_range,
+                                converted,
+                                #set1_int(u64::MAX.cast_signed()),
+                            );
+                            converted.simd_into(#token)
+                        }
+                    } else {
+                        quote! {
+                            #convert(a.into()).simd_into(#token)
+                        }
+                    }
+                }
+                _ => unimplemented!(),
+            });
+        }
+
         if *self == Self::Sse2
             && (precise
                 || vec_ty.scalar == ScalarType::Unsigned

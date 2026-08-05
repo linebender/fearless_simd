@@ -72,7 +72,7 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
             /// A native-width SIMD vector of [`f32`]s.
             type f32s: SimdFloat<Self, Element = f32, Block = f32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s> + SimdCvtFloat<Self::u32s> + SimdCvtFloat<Self::i32s>;
             /// A native-width SIMD vector of [`f64`]s.
-            type f64s: SimdFloat<Self, Element = f64, Block = f64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>;
+            type f64s: SimdFloat<Self, Element = f64, Block = f64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s> + SimdCvtFloat<Self::u64s> + SimdCvtFloat<Self::i64s>;
             /// A native-width SIMD vector of [`u8`]s.
             type u8s: SimdInt<Self, Element = u8, Block = u8x16<Self>, Mask = Self::mask8s, ByteVector = Self::u8s>;
             /// A native-width SIMD vector of [`i8`]s.
@@ -87,9 +87,9 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
             type i32s: SimdInt<Self, Element = i32, Block = i32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s> + SimdCvtTruncate<Self::f32s>
                 + core::ops::Neg<Output = Self::i32s>;
             /// A native-width SIMD vector of [`u64`]s.
-            type u64s: SimdInt<Self, Element = u64, Block = u64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>;
+            type u64s: SimdInt<Self, Element = u64, Block = u64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s> + SimdCvtTruncate<Self::f64s>;
             /// A native-width SIMD vector of [`i64`]s.
-            type i64s: SimdInt<Self, Element = i64, Block = i64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>
+            type i64s: SimdInt<Self, Element = i64, Block = i64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s> + SimdCvtTruncate<Self::f64s>
                 + core::ops::Neg<Output = Self::i64s>;
             /// A native-width SIMD mask with 8-bit lanes.
             type mask8s: SimdMask<Self, Element = i8> + Select<Self::u8s> + Select<Self::i8s> + Select<Self::mask8s>;
@@ -286,8 +286,8 @@ fn mk_simd_float() -> TokenStream {
         {
             /// Convert this floating-point type to an integer. This is a convenience method that
             /// delegates to [`SimdCvtTruncate::truncate_from`], and can only be called if there
-            /// actually exists a target type of the same bit width (currently, only `u32` and
-            /// `i32`).
+            /// actually exists a target type of the same bit width (`u32`/`i32` for `f32`, or
+            /// `u64`/`i64` for `f64`).
             ///
             /// For more information about the semantics of this specific conversion, see the
             /// concrete `SimdCvtTruncate` implementations for integer types.
@@ -297,7 +297,8 @@ fn mk_simd_float() -> TokenStream {
             /// Convert this floating-point type to an integer, saturating on overflow and returning
             /// 0 for NaN. This is a convenience method that delegates to
             /// [`SimdCvtTruncate::truncate_from_precise`], and can only be called if there actually
-            /// exists a target type of the same bit width (currently, only `u32` and `i32`).
+            /// exists a target type of the same bit width (`u32`/`i32` for `f32`, or `u64`/`i64`
+            /// for `f64`).
             ///
             /// For more information about the semantics of this specific conversion, see the
             /// concrete `SimdCvtTruncate` implementations for integer types.
@@ -326,7 +327,7 @@ fn mk_simd_int() -> TokenStream {
         {
             /// Convert this integer type to a floating-point type. This is a convenience method
             /// that delegates to [`SimdCvtFloat::float_from`], and can only be called if there
-            /// actually exists a target type of the same bit width (currently, only `f32`).
+            /// actually exists a target type of the same bit width (`f32` or `f64`).
             #[inline(always)]
             fn to_float<T: SimdCvtFloat<Self>>(self) -> T { T::float_from(self) }
 

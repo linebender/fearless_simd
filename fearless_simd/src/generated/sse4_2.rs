@@ -4755,6 +4755,22 @@ impl Simd for Sse4_2 {
         kernel(self, vectors, dest);
     }
     #[inline(always)]
+    fn cvt_u64_f64x2(self, a: f64x2<Self>) -> u64x2<Self> {
+        [a[0usize] as u64, a[1usize] as u64].simd_into(self)
+    }
+    #[inline(always)]
+    fn cvt_u64_precise_f64x2(self, a: f64x2<Self>) -> u64x2<Self> {
+        [a[0usize] as u64, a[1usize] as u64].simd_into(self)
+    }
+    #[inline(always)]
+    fn cvt_i64_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
+        [a[0usize] as i64, a[1usize] as i64].simd_into(self)
+    }
+    #[inline(always)]
+    fn cvt_i64_precise_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
+        [a[0usize] as i64, a[1usize] as i64].simd_into(self)
+    }
+    #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5174,6 +5190,10 @@ impl Simd for Sse4_2 {
         kernel(self, vectors, dest);
     }
     #[inline(always)]
+    fn cvt_f64_i64x2(self, a: i64x2<Self>) -> f64x2<Self> {
+        [a[0usize] as f64, a[1usize] as f64].simd_into(self)
+    }
+    #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5583,6 +5603,10 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, vectors, dest);
+    }
+    #[inline(always)]
+    fn cvt_f64_u64x2(self, a: u64x2<Self>) -> f64x2<Self> {
+        [a[0usize] as f64, a[1usize] as f64].simd_into(self)
     }
     #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
@@ -9079,6 +9103,32 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn cvt_u64_f64x4(self, a: f64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_u64x2(self.cvt_u64_f64x2(a0), self.cvt_u64_f64x2(a1))
+    }
+    #[inline(always)]
+    fn cvt_u64_precise_f64x4(self, a: f64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_u64x2(
+            self.cvt_u64_precise_f64x2(a0),
+            self.cvt_u64_precise_f64x2(a1),
+        )
+    }
+    #[inline(always)]
+    fn cvt_i64_f64x4(self, a: f64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_i64x2(self.cvt_i64_f64x2(a0), self.cvt_i64_f64x2(a1))
+    }
+    #[inline(always)]
+    fn cvt_i64_precise_f64x4(self, a: f64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_i64x2(
+            self.cvt_i64_precise_f64x2(a0),
+            self.cvt_i64_precise_f64x2(a1),
+        )
+    }
+    #[inline(always)]
     fn splat_i64x4(self, val: i64) -> i64x4<Self> {
         let half = self.splat_i64x2(val);
         self.combine_i64x2(half, half)
@@ -9388,6 +9438,11 @@ impl Simd for Sse4_2 {
         self.combine_i64x2(self.neg_i64x2(a0), self.neg_i64x2(a1))
     }
     #[inline(always)]
+    fn cvt_f64_i64x4(self, a: i64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        self.combine_f64x2(self.cvt_f64_i64x2(a0), self.cvt_f64_i64x2(a1))
+    }
+    #[inline(always)]
     fn splat_u64x4(self, val: u64) -> u64x4<Self> {
         let half = self.splat_u64x2(val);
         self.combine_u64x2(half, half)
@@ -9690,6 +9745,11 @@ impl Simd for Sse4_2 {
                 simd: self,
             },
         )
+    }
+    #[inline(always)]
+    fn cvt_f64_u64x4(self, a: u64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        self.combine_f64x2(self.cvt_f64_u64x2(a0), self.cvt_f64_u64x2(a1))
     }
     #[inline(always)]
     fn splat_mask64x4(self, val: bool) -> mask64x4<Self> {
@@ -13496,6 +13556,32 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn cvt_u64_f64x8(self, a: f64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_u64x4(self.cvt_u64_f64x4(a0), self.cvt_u64_f64x4(a1))
+    }
+    #[inline(always)]
+    fn cvt_u64_precise_f64x8(self, a: f64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_u64x4(
+            self.cvt_u64_precise_f64x4(a0),
+            self.cvt_u64_precise_f64x4(a1),
+        )
+    }
+    #[inline(always)]
+    fn cvt_i64_f64x8(self, a: f64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_i64x4(self.cvt_i64_f64x4(a0), self.cvt_i64_f64x4(a1))
+    }
+    #[inline(always)]
+    fn cvt_i64_precise_f64x8(self, a: f64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_i64x4(
+            self.cvt_i64_precise_f64x4(a0),
+            self.cvt_i64_precise_f64x4(a1),
+        )
+    }
+    #[inline(always)]
     fn splat_i64x8(self, val: i64) -> i64x8<Self> {
         let half = self.splat_i64x4(val);
         self.combine_i64x4(half, half)
@@ -13799,6 +13885,11 @@ impl Simd for Sse4_2 {
         self.combine_i64x4(self.neg_i64x4(a0), self.neg_i64x4(a1))
     }
     #[inline(always)]
+    fn cvt_f64_i64x8(self, a: i64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        self.combine_f64x4(self.cvt_f64_i64x4(a0), self.cvt_f64_i64x4(a1))
+    }
+    #[inline(always)]
     fn splat_u64x8(self, val: u64) -> u64x8<Self> {
         let half = self.splat_u64x4(val);
         self.combine_u64x4(half, half)
@@ -14095,6 +14186,11 @@ impl Simd for Sse4_2 {
                 simd: self,
             },
         )
+    }
+    #[inline(always)]
+    fn cvt_f64_u64x8(self, a: u64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        self.combine_f64x4(self.cvt_f64_u64x4(a0), self.cvt_f64_u64x4(a1))
     }
     #[inline(always)]
     fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {
