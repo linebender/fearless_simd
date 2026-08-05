@@ -13,6 +13,7 @@ use crate::{
     mask16x32, mask32x4, mask32x8, mask32x16, mask64x2, mask64x4, mask64x8, u8x16, u8x32, u8x64,
     u16x8, u16x16, u16x32, u32x4, u32x8, u32x16, u64x2, u64x4, u64x8,
 };
+use core::fmt::Debug;
 #[doc = r" The main SIMD trait, implemented by all SIMD token types."]
 #[doc = r""]
 #[doc = r#" Each implementor of this trait (e.g. `Avx2`, `Sse4_2`, `Sse2`, `Neon`, `Fallback`) is a zero-sized "token" type"#]
@@ -49,7 +50,7 @@ use crate::{
 #[doc = r" });"]
 #[doc = r" ```"]
 pub trait Simd:
-    Sized + Clone + Copy + Send + Sync + Seal + arch_types::ArchTypes + 'static
+    Sized + Clone + Copy + Send + Sync + Debug + Seal + arch_types::ArchTypes + 'static
 {
     #[doc = r" A native-width SIMD vector of [`f32`]s."]
     type f32s: SimdFloat<
@@ -3502,6 +3503,7 @@ pub trait SimdBase<S: Simd>:
     Copy
     + Sync
     + Send
+    + Debug
     + 'static
     + Seal
     + Bytes<Bytes = Self::ByteVector>
@@ -3539,7 +3541,7 @@ pub trait SimdBase<S: Simd>:
     #[doc = r" always be `[Self::Element; Self::N]`. It has the same layout as"]
     #[doc = r" this vector type, but likely has a lower alignment."]
     type Array: Copy
-        + core::fmt::Debug
+        + Debug
         + IntoIterator<Item = Self::Element>
         + AsRef<[Self::Element]>
         + AsMut<[Self::Element]>
