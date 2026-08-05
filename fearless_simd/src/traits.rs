@@ -367,7 +367,7 @@ pub trait SimdNarrow<S: Simd>: SimdBase<S> + Seal {
     /// Narrow using the cheapest operation for the active SIMD backend, assuming no overflow.
     ///
     /// This is useful when you're sure the result fits into the destination type,
-    /// so the distinction between [narrow](Self::narrow) and [saturating_narrow](Self::saturating_narrow)
+    /// so the distinction between [`narrow`](Self::narrow) and [`saturating_narrow`](Self::saturating_narrow)
     /// doesn't matter.
     ///
     /// This method will panic in debug mode if any of the inputs do not fit into the narrower type.
