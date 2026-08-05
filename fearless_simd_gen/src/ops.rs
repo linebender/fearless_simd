@@ -1158,7 +1158,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ScalarType::Mask => MASK_REPRESENTATION_OPS,
         _ => BASE_OPS,
     };
-    let mut ops: Vec<Op> = representation_ops.iter().copied().collect();
+    let mut ops: Vec<Op> = representation_ops.to_vec();
     for op in base {
         ops.push(*op);
         let common_ops_follow = match ty.scalar {
