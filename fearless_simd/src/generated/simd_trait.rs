@@ -3511,6 +3511,18 @@ pub trait SimdBase<S: Simd>:
     + core::ops::IndexMut<usize, Output = Self::Element>
     + core::ops::Deref<Target = Self::Array>
     + core::ops::DerefMut<Target = Self::Array>
+    + core::ops::Add<Output = Self>
+    + core::ops::AddAssign
+    + core::ops::Add<Self::Element, Output = Self>
+    + core::ops::AddAssign<Self::Element>
+    + core::ops::Sub<Output = Self>
+    + core::ops::SubAssign
+    + core::ops::Sub<Self::Element, Output = Self>
+    + core::ops::SubAssign<Self::Element>
+    + core::ops::Mul<Output = Self>
+    + core::ops::MulAssign
+    + core::ops::Mul<Self::Element, Output = Self>
+    + core::ops::MulAssign<Self::Element>
 {
     #[doc = r" The type of this vector's elements."]
     type Element: SimdElement;
@@ -3639,18 +3651,6 @@ pub trait SimdFloat<S: Simd>:
     SimdBase<S>
     + Seal
     + core::ops::Neg<Output = Self>
-    + core::ops::Add<Output = Self>
-    + core::ops::AddAssign
-    + core::ops::Add<Self::Element, Output = Self>
-    + core::ops::AddAssign<Self::Element>
-    + core::ops::Sub<Output = Self>
-    + core::ops::SubAssign
-    + core::ops::Sub<Self::Element, Output = Self>
-    + core::ops::SubAssign<Self::Element>
-    + core::ops::Mul<Output = Self>
-    + core::ops::MulAssign
-    + core::ops::Mul<Self::Element, Output = Self>
-    + core::ops::MulAssign<Self::Element>
     + core::ops::Div<Output = Self>
     + core::ops::DivAssign
     + core::ops::Div<Self::Element, Output = Self>
@@ -3713,18 +3713,6 @@ pub trait SimdFloat<S: Simd>:
 pub trait SimdInt<S: Simd>:
     SimdBase<S>
     + Seal
-    + core::ops::Add<Output = Self>
-    + core::ops::AddAssign
-    + core::ops::Add<Self::Element, Output = Self>
-    + core::ops::AddAssign<Self::Element>
-    + core::ops::Sub<Output = Self>
-    + core::ops::SubAssign
-    + core::ops::Sub<Self::Element, Output = Self>
-    + core::ops::SubAssign<Self::Element>
-    + core::ops::Mul<Output = Self>
-    + core::ops::MulAssign
-    + core::ops::Mul<Self::Element, Output = Self>
-    + core::ops::MulAssign<Self::Element>
     + core::ops::BitAnd<Output = Self>
     + core::ops::BitAndAssign
     + core::ops::BitAnd<Self::Element, Output = Self>
