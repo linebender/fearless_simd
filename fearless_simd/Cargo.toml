@@ -29,10 +29,9 @@ rustdoc-args = [
 default = ["std"]
 # Get floating point functions from the standard library (likely using your targets libc).
 # Also allows using `Level::new` on all platforms, to detect which target features are enabled
-std = ["num-traits?/std"]
+std = []
 # Use floating point implementations from libm
-libm = ["dep:libm", "num-traits?/libm"]
-num-traits = ["dep:num-traits"]
+libm = ["dep:libm"]
 
 # Force the "fallback" SIMD level to be supported, even if SIMD is always available.
 # This is primarily used for tests
@@ -43,4 +42,3 @@ workspace = true
 
 [dependencies]
 libm = { version = "0.2.15", optional = true }
-num-traits = { version = "0.2.19", default-features = false, optional = true }
