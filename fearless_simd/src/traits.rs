@@ -17,8 +17,6 @@ use core::ops::{
 use core::str::FromStr;
 #[cfg(all(feature = "num-traits", any(feature = "std", feature = "libm")))]
 use num_traits::Float;
-#[cfg(all(feature = "num-traits", not(any(feature = "std", feature = "libm"))))]
-use num_traits::float::FloatCore;
 #[cfg(feature = "num-traits")]
 use num_traits::{
     Bounded, CheckedNeg, CheckedRem, CheckedShl, CheckedShr, FloatConst, FromBytes, FromPrimitive,
@@ -372,16 +370,6 @@ pub trait SimdFloatElement:
     + MulAddAssign
     + From<i8>
     + From<u8>
-{
-}
-
-/// Types that can be used as elements in float SIMD vectors.
-///
-/// The scalar conversion bounds are limited to types that every floating-point
-/// element can represent losslessly, including f16 for forward-compatibility.
-#[cfg(all(feature = "num-traits", not(any(feature = "std", feature = "libm"))))]
-pub trait SimdFloatElement:
-    SimdElement + FloatCore + Floatconst + Inv<Output = Self> + From<i8> + From<u8>
 {
 }
 
