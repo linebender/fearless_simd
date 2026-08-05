@@ -1606,12 +1606,14 @@ impl X86 {
         use NarrowingMode::{Relaxed, Saturate, Wrap};
 
         if mode == Relaxed {
+            // SSE4.2 and AVX2 only have saturating narrowing instructions for i32 and i16
             let implementation = if *self != Self::Avx512
                 && vec_ty.scalar == ScalarType::Int
                 && matches!(vec_ty.scalar_bits, 16 | 32)
             {
                 "saturating_narrow"
             } else {
+                // for everything else (SSE2, AVX-512, unsigned values) truncation is cheaper
                 "narrow"
             };
             return relaxed_narrow_method(op, vec_ty, target_ty, implementation);
