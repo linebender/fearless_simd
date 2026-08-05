@@ -4732,23 +4732,26 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, src: &[f64; 8usize]) -> [f64x2<Avx2>; 4usize] {
-                let (chunks, []) = src.as_chunks::<4>() else {
+                let (chunks, []) = src.as_chunks::<2usize>() else {
                     unreachable!()
                 };
-                let v0: __m256d =
-                    crate::transmute::checked_transmute_copy::<[f64; 4], __m256d>(&chunks[0]);
-                let v1: __m256d =
-                    crate::transmute::checked_transmute_copy::<[f64; 4], __m256d>(&chunks[1]);
-                let lo = _mm256_unpacklo_pd(v0, v1);
-                let hi = _mm256_unpackhi_pd(v0, v1);
-                let out0 = _mm256_permute2f128_pd::<0x20>(lo, hi);
-                let out1 = _mm256_permute2f128_pd::<0x31>(lo, hi);
-                let outputs: [__m128d; 4] = crate::transmute::checked_transmute_copy(&[out0, out1]);
+                let v0: __m128d =
+                    crate::transmute::checked_transmute_copy::<[f64; 2usize], __m128d>(&chunks[0]);
+                let v1: __m128d =
+                    crate::transmute::checked_transmute_copy::<[f64; 2usize], __m128d>(&chunks[1]);
+                let v2: __m128d =
+                    crate::transmute::checked_transmute_copy::<[f64; 2usize], __m128d>(&chunks[2]);
+                let v3: __m128d =
+                    crate::transmute::checked_transmute_copy::<[f64; 2usize], __m128d>(&chunks[3]);
+                let out0 = _mm_unpacklo_pd(v0, v2);
+                let out1 = _mm_unpackhi_pd(v0, v2);
+                let out2 = _mm_unpacklo_pd(v1, v3);
+                let out3 = _mm_unpackhi_pd(v1, v3);
                 [
-                    outputs[0].simd_into(token),
-                    outputs[1].simd_into(token),
-                    outputs[2].simd_into(token),
-                    outputs[3].simd_into(token),
+                    out0.simd_into(token),
+                    out1.simd_into(token),
+                    out2.simd_into(token),
+                    out3.simd_into(token),
                 ]
             }
         );
@@ -5153,23 +5156,26 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, src: &[i64; 8usize]) -> [i64x2<Avx2>; 4usize] {
-                let (chunks, []) = src.as_chunks::<4>() else {
+                let (chunks, []) = src.as_chunks::<2usize>() else {
                     unreachable!()
                 };
-                let v0: __m256i =
-                    crate::transmute::checked_transmute_copy::<[i64; 4], __m256i>(&chunks[0]);
-                let v1: __m256i =
-                    crate::transmute::checked_transmute_copy::<[i64; 4], __m256i>(&chunks[1]);
-                let lo = _mm256_unpacklo_epi64(v0, v1);
-                let hi = _mm256_unpackhi_epi64(v0, v1);
-                let out0 = _mm256_permute2x128_si256::<0x20>(lo, hi);
-                let out1 = _mm256_permute2x128_si256::<0x31>(lo, hi);
-                let outputs: [__m128i; 4] = crate::transmute::checked_transmute_copy(&[out0, out1]);
+                let v0: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i64; 2usize], __m128i>(&chunks[0]);
+                let v1: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i64; 2usize], __m128i>(&chunks[1]);
+                let v2: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i64; 2usize], __m128i>(&chunks[2]);
+                let v3: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i64; 2usize], __m128i>(&chunks[3]);
+                let out0 = _mm_unpacklo_epi64(v0, v2);
+                let out1 = _mm_unpackhi_epi64(v0, v2);
+                let out2 = _mm_unpacklo_epi64(v1, v3);
+                let out3 = _mm_unpackhi_epi64(v1, v3);
                 [
-                    outputs[0].simd_into(token),
-                    outputs[1].simd_into(token),
-                    outputs[2].simd_into(token),
-                    outputs[3].simd_into(token),
+                    out0.simd_into(token),
+                    out1.simd_into(token),
+                    out2.simd_into(token),
+                    out3.simd_into(token),
                 ]
             }
         );
@@ -5561,23 +5567,26 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, src: &[u64; 8usize]) -> [u64x2<Avx2>; 4usize] {
-                let (chunks, []) = src.as_chunks::<4>() else {
+                let (chunks, []) = src.as_chunks::<2usize>() else {
                     unreachable!()
                 };
-                let v0: __m256i =
-                    crate::transmute::checked_transmute_copy::<[u64; 4], __m256i>(&chunks[0]);
-                let v1: __m256i =
-                    crate::transmute::checked_transmute_copy::<[u64; 4], __m256i>(&chunks[1]);
-                let lo = _mm256_unpacklo_epi64(v0, v1);
-                let hi = _mm256_unpackhi_epi64(v0, v1);
-                let out0 = _mm256_permute2x128_si256::<0x20>(lo, hi);
-                let out1 = _mm256_permute2x128_si256::<0x31>(lo, hi);
-                let outputs: [__m128i; 4] = crate::transmute::checked_transmute_copy(&[out0, out1]);
+                let v0: __m128i =
+                    crate::transmute::checked_transmute_copy::<[u64; 2usize], __m128i>(&chunks[0]);
+                let v1: __m128i =
+                    crate::transmute::checked_transmute_copy::<[u64; 2usize], __m128i>(&chunks[1]);
+                let v2: __m128i =
+                    crate::transmute::checked_transmute_copy::<[u64; 2usize], __m128i>(&chunks[2]);
+                let v3: __m128i =
+                    crate::transmute::checked_transmute_copy::<[u64; 2usize], __m128i>(&chunks[3]);
+                let out0 = _mm_unpacklo_epi64(v0, v2);
+                let out1 = _mm_unpackhi_epi64(v0, v2);
+                let out2 = _mm_unpacklo_epi64(v1, v3);
+                let out3 = _mm_unpackhi_epi64(v1, v3);
                 [
-                    outputs[0].simd_into(token),
-                    outputs[1].simd_into(token),
-                    outputs[2].simd_into(token),
-                    outputs[3].simd_into(token),
+                    out0.simd_into(token),
+                    out1.simd_into(token),
+                    out2.simd_into(token),
+                    out3.simd_into(token),
                 ]
             }
         );
