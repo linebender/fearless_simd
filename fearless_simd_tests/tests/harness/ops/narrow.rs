@@ -1074,6 +1074,473 @@ fn saturating_narrow_f64x8<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn relaxed_narrow_u16x8<S: Simd>(simd: S) {
+    let low = u16x8::from_slice(simd, &[0, 1, 2, 3, 252, 253, 254, 255]);
+    let high = u16x8::from_slice(simd, &[4, 5, 6, 7, 248, 249, 250, 251]);
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [
+            0, 1, 2, 3, 252, 253, 254, 255, 4, 5, 6, 7, 248, 249, 250, 251
+        ]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_u16x16<S: Simd>(simd: S) {
+    let low = u16x16::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 252, 253, 254, 255, 4, 5, 6, 7, 248, 249, 250, 251,
+        ],
+    );
+    let high = u16x16::from_slice(
+        simd,
+        &[
+            8, 9, 10, 11, 244, 245, 246, 247, 12, 13, 14, 15, 240, 241, 242, 243,
+        ],
+    );
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [
+            0, 1, 2, 3, 252, 253, 254, 255, 4, 5, 6, 7, 248, 249, 250, 251, 8, 9, 10, 11, 244, 245,
+            246, 247, 12, 13, 14, 15, 240, 241, 242, 243
+        ]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_u16x32<S: Simd>(simd: S) {
+    let low = u16x32::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 252, 253, 254, 255, 4, 5, 6, 7, 248, 249, 250, 251, 8, 9, 10, 11, 244, 245,
+            246, 247, 12, 13, 14, 15, 240, 241, 242, 243,
+        ],
+    );
+    let high = u16x32::from_slice(
+        simd,
+        &[
+            16, 17, 18, 19, 236, 237, 238, 239, 20, 21, 22, 23, 232, 233, 234, 235, 24, 25, 26, 27,
+            228, 229, 230, 231, 28, 29, 30, 31, 224, 225, 226, 227,
+        ],
+    );
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [
+            0, 1, 2, 3, 252, 253, 254, 255, 4, 5, 6, 7, 248, 249, 250, 251, 8, 9, 10, 11, 244, 245,
+            246, 247, 12, 13, 14, 15, 240, 241, 242, 243, 16, 17, 18, 19, 236, 237, 238, 239, 20,
+            21, 22, 23, 232, 233, 234, 235, 24, 25, 26, 27, 228, 229, 230, 231, 28, 29, 30, 31,
+            224, 225, 226, 227
+        ]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_i16x8<S: Simd>(simd: S) {
+    let low = i16x8::from_slice(simd, &[-128, -100, -64, -1, 0, 1, 64, 127]);
+    let high = i16x8::from_slice(simd, &[-127, -99, -63, -2, 2, 63, 99, 126]);
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [
+            -128, -100, -64, -1, 0, 1, 64, 127, -127, -99, -63, -2, 2, 63, 99, 126
+        ]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_i16x16<S: Simd>(simd: S) {
+    let low = i16x16::from_slice(
+        simd,
+        &[
+            -128, -100, -64, -1, 0, 1, 64, 127, -127, -99, -63, -2, 2, 63, 99, 126,
+        ],
+    );
+    let high = i16x16::from_slice(
+        simd,
+        &[
+            -126, -98, -62, -3, 3, 62, 98, 125, -125, -97, -61, -4, 4, 61, 97, 124,
+        ],
+    );
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [
+            -128, -100, -64, -1, 0, 1, 64, 127, -127, -99, -63, -2, 2, 63, 99, 126, -126, -98, -62,
+            -3, 3, 62, 98, 125, -125, -97, -61, -4, 4, 61, 97, 124
+        ]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_i16x32<S: Simd>(simd: S) {
+    let low = i16x32::from_slice(
+        simd,
+        &[
+            -128, -100, -64, -1, 0, 1, 64, 127, -127, -99, -63, -2, 2, 63, 99, 126, -126, -98, -62,
+            -3, 3, 62, 98, 125, -125, -97, -61, -4, 4, 61, 97, 124,
+        ],
+    );
+    let high = i16x32::from_slice(
+        simd,
+        &[
+            -124, -96, -60, -5, 5, 60, 96, 123, -123, -95, -59, -6, 6, 59, 95, 122, -122, -94, -58,
+            -7, 7, 58, 94, 121, -121, -93, -57, -8, 8, 57, 93, 120,
+        ],
+    );
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [
+            -128, -100, -64, -1, 0, 1, 64, 127, -127, -99, -63, -2, 2, 63, 99, 126, -126, -98, -62,
+            -3, 3, 62, 98, 125, -125, -97, -61, -4, 4, 61, 97, 124, -124, -96, -60, -5, 5, 60, 96,
+            123, -123, -95, -59, -6, 6, 59, 95, 122, -122, -94, -58, -7, 7, 58, 94, 121, -121, -93,
+            -57, -8, 8, 57, 93, 120
+        ]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_u32x4<S: Simd>(simd: S) {
+    let low = u32x4::from_slice(simd, &[0, 1, 65_534, 65_535]);
+    let high = u32x4::from_slice(simd, &[2, 3, 65_532, 65_533]);
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [0, 1, 65_534, 65_535, 2, 3, 65_532, 65_533]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_u32x8<S: Simd>(simd: S) {
+    let low = u32x8::from_slice(simd, &[0, 1, 65_534, 65_535, 2, 3, 65_532, 65_533]);
+    let high = u32x8::from_slice(simd, &[4, 5, 65_530, 65_531, 6, 7, 65_528, 65_529]);
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [
+            0, 1, 65_534, 65_535, 2, 3, 65_532, 65_533, 4, 5, 65_530, 65_531, 6, 7, 65_528, 65_529
+        ]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_u32x16<S: Simd>(simd: S) {
+    let low = u32x16::from_slice(
+        simd,
+        &[
+            0, 1, 65_534, 65_535, 2, 3, 65_532, 65_533, 4, 5, 65_530, 65_531, 6, 7, 65_528, 65_529,
+        ],
+    );
+    let high = u32x16::from_slice(
+        simd,
+        &[
+            8, 9, 65_526, 65_527, 10, 11, 65_524, 65_525, 12, 13, 65_522, 65_523, 14, 15, 65_520,
+            65_521,
+        ],
+    );
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [
+            0, 1, 65_534, 65_535, 2, 3, 65_532, 65_533, 4, 5, 65_530, 65_531, 6, 7, 65_528, 65_529,
+            8, 9, 65_526, 65_527, 10, 11, 65_524, 65_525, 12, 13, 65_522, 65_523, 14, 15, 65_520,
+            65_521
+        ]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_i32x4<S: Simd>(simd: S) {
+    let low = i32x4::from_slice(simd, &[-32_768, -1, 0, 32_767]);
+    let high = i32x4::from_slice(simd, &[-32_767, -2, 1, 32_766]);
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [-32_768, -1, 0, 32_767, -32_767, -2, 1, 32_766]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_i32x8<S: Simd>(simd: S) {
+    let low = i32x8::from_slice(simd, &[-32_768, -1, 0, 32_767, -32_767, -2, 1, 32_766]);
+    let high = i32x8::from_slice(simd, &[-32_766, -3, 2, 32_765, -32_765, -4, 3, 32_764]);
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [
+            -32_768, -1, 0, 32_767, -32_767, -2, 1, 32_766, -32_766, -3, 2, 32_765, -32_765, -4, 3,
+            32_764
+        ]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_i32x16<S: Simd>(simd: S) {
+    let low = i32x16::from_slice(
+        simd,
+        &[
+            -32_768, -1, 0, 32_767, -32_767, -2, 1, 32_766, -32_766, -3, 2, 32_765, -32_765, -4, 3,
+            32_764,
+        ],
+    );
+    let high = i32x16::from_slice(
+        simd,
+        &[
+            -32_764, -5, 4, 32_763, -32_763, -6, 5, 32_762, -32_762, -7, 6, 32_761, -32_761, -8, 7,
+            32_760,
+        ],
+    );
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [
+            -32_768, -1, 0, 32_767, -32_767, -2, 1, 32_766, -32_766, -3, 2, 32_765, -32_765, -4, 3,
+            32_764, -32_764, -5, 4, 32_763, -32_763, -6, 5, 32_762, -32_762, -7, 6, 32_761,
+            -32_761, -8, 7, 32_760
+        ]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_u64x2<S: Simd>(simd: S) {
+    let low = u64x2::from_slice(simd, &[0, 4_294_967_295]);
+    let high = u64x2::from_slice(simd, &[1, 4_294_967_294]);
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [0, 4_294_967_295, 1, 4_294_967_294]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_u64x4<S: Simd>(simd: S) {
+    let low = u64x4::from_slice(simd, &[0, 4_294_967_295, 1, 4_294_967_294]);
+    let high = u64x4::from_slice(simd, &[2, 4_294_967_293, 3, 4_294_967_292]);
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [
+            0,
+            4_294_967_295,
+            1,
+            4_294_967_294,
+            2,
+            4_294_967_293,
+            3,
+            4_294_967_292
+        ]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_u64x8<S: Simd>(simd: S) {
+    let low = u64x8::from_slice(
+        simd,
+        &[
+            0,
+            4_294_967_295,
+            1,
+            4_294_967_294,
+            2,
+            4_294_967_293,
+            3,
+            4_294_967_292,
+        ],
+    );
+    let high = u64x8::from_slice(
+        simd,
+        &[
+            4,
+            4_294_967_291,
+            5,
+            4_294_967_290,
+            6,
+            4_294_967_289,
+            7,
+            4_294_967_288,
+        ],
+    );
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [
+            0,
+            4_294_967_295,
+            1,
+            4_294_967_294,
+            2,
+            4_294_967_293,
+            3,
+            4_294_967_292,
+            4,
+            4_294_967_291,
+            5,
+            4_294_967_290,
+            6,
+            4_294_967_289,
+            7,
+            4_294_967_288
+        ]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_i64x2<S: Simd>(simd: S) {
+    let low = i64x2::from_slice(simd, &[-2_147_483_648, 2_147_483_647]);
+    let high = i64x2::from_slice(simd, &[-2_147_483_647, 2_147_483_646]);
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [-2_147_483_648, 2_147_483_647, -2_147_483_647, 2_147_483_646]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_i64x4<S: Simd>(simd: S) {
+    let low = i64x4::from_slice(simd, &[-2_147_483_648, -1, 0, 2_147_483_647]);
+    let high = i64x4::from_slice(simd, &[-2_147_483_647, -2, 1, 2_147_483_646]);
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [
+            -2_147_483_648,
+            -1,
+            0,
+            2_147_483_647,
+            -2_147_483_647,
+            -2,
+            1,
+            2_147_483_646
+        ]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_i64x8<S: Simd>(simd: S) {
+    let low = i64x8::from_slice(
+        simd,
+        &[
+            -2_147_483_648,
+            -1,
+            0,
+            2_147_483_647,
+            -2_147_483_647,
+            -2,
+            1,
+            2_147_483_646,
+        ],
+    );
+    let high = i64x8::from_slice(
+        simd,
+        &[
+            -2_147_483_646,
+            -3,
+            2,
+            2_147_483_645,
+            -2_147_483_645,
+            -4,
+            3,
+            2_147_483_644,
+        ],
+    );
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [
+            -2_147_483_648,
+            -1,
+            0,
+            2_147_483_647,
+            -2_147_483_647,
+            -2,
+            1,
+            2_147_483_646,
+            -2_147_483_646,
+            -3,
+            2,
+            2_147_483_645,
+            -2_147_483_645,
+            -4,
+            3,
+            2_147_483_644
+        ]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_f64x2<S: Simd>(simd: S) {
+    let low = f64x2::from_slice(simd, &[-2.25, -0.5]);
+    let high = f64x2::from_slice(simd, &[0.5, 1.5]);
+
+    assert_eq!(*low.relaxed_narrow(high), [-2.25, -0.5, 0.5, 1.5]);
+}
+
+#[simd_test]
+fn relaxed_narrow_f64x4<S: Simd>(simd: S) {
+    let low = f64x4::from_slice(simd, &[-1_000.0, -42.5, -2.25, -0.5]);
+    let high = f64x4::from_slice(simd, &[0.5, 1.5, 42.5, 1_000.0]);
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [-1_000.0, -42.5, -2.25, -0.5, 0.5, 1.5, 42.5, 1_000.0]
+    );
+}
+
+#[simd_test]
+fn relaxed_narrow_f64x8<S: Simd>(simd: S) {
+    let low = f64x8::from_slice(
+        simd,
+        &[-65_536.0, -1_000.0, -42.5, -2.25, -1.5, -1.0, -0.5, -0.25],
+    );
+    let high = f64x8::from_slice(simd, &[0.25, 0.5, 1.0, 1.5, 2.25, 42.5, 1_000.0, 65_536.0]);
+
+    assert_eq!(
+        *low.relaxed_narrow(high),
+        [
+            -65_536.0, -1_000.0, -42.5, -2.25, -1.5, -1.0, -0.5, -0.25, 0.25, 0.5, 1.0, 1.5, 2.25,
+            42.5, 1_000.0, 65_536.0
+        ]
+    );
+}
+
+#[cfg(debug_assertions)]
+#[test]
+#[should_panic(expected = "relaxed_narrow inputs must fit in the destination type")]
+fn relaxed_narrow_signed_lower_bound_debug_asserts() {
+    let simd = Fallback::new();
+    let low = i16x8::from_slice(simd, &[-129, 0, 0, 0, 0, 0, 0, 0]);
+    let high = i16x8::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0]);
+
+    simd.relaxed_narrow_i16x8(low, high);
+}
+
+#[cfg(debug_assertions)]
+#[test]
+#[should_panic(expected = "relaxed_narrow inputs must fit in the destination type")]
+fn relaxed_narrow_signed_upper_bound_debug_asserts() {
+    let simd = Fallback::new();
+    let low = i16x8::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0]);
+    let high = i16x8::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 128]);
+
+    simd.relaxed_narrow_i16x8(low, high);
+}
+
+#[cfg(debug_assertions)]
+#[test]
+#[should_panic(expected = "relaxed_narrow inputs must fit in the destination type")]
+fn relaxed_narrow_unsigned_upper_bound_debug_asserts() {
+    let simd = Fallback::new();
+    let low = u16x8::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0]);
+    let high = u16x8::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 256]);
+
+    simd.relaxed_narrow_u16x8(low, high);
+}
+
+#[simd_test]
 #[ignore] // slow: run with `cargo test --release widen_narrow_random -- --ignored`.
 fn widen_narrow_random<S: Simd>(simd: S) {
     let mut rng = fastrand::Rng::with_seed(0x243f_6a88_85a3_08d3);
@@ -1096,6 +1563,11 @@ fn widen_narrow_random<S: Simd>(simd: S) {
             *input_u8,
             "u8 saturating roundtrip iteration {iteration}",
         );
+        assert_eq!(
+            *low.relaxed_narrow(high),
+            *input_u8,
+            "u8 relaxed roundtrip iteration {iteration}",
+        );
 
         let input_i8: [i8; 32] = core::array::from_fn(|_| rng.i8(..));
         let input_i8 = i8x32::from_slice(simd, &input_i8);
@@ -1113,6 +1585,11 @@ fn widen_narrow_random<S: Simd>(simd: S) {
             *low.saturating_narrow(high),
             *input_i8,
             "i8 saturating roundtrip iteration {iteration}",
+        );
+        assert_eq!(
+            *low.relaxed_narrow(high),
+            *input_i8,
+            "i8 relaxed roundtrip iteration {iteration}",
         );
 
         let a_u16: [u16; 16] = core::array::from_fn(|_| rng.u16(..));
@@ -1133,6 +1610,11 @@ fn widen_narrow_random<S: Simd>(simd: S) {
             *low.saturating_narrow(high),
             *a_u16,
             "u16 saturating roundtrip iteration {iteration}",
+        );
+        assert_eq!(
+            *low.relaxed_narrow(high),
+            *a_u16,
+            "u16 relaxed roundtrip iteration {iteration}",
         );
         let truncated = a_u16.narrow(b_u16);
         let saturated = a_u16.saturating_narrow(b_u16);
@@ -1172,6 +1654,11 @@ fn widen_narrow_random<S: Simd>(simd: S) {
             *a_i16,
             "i16 saturating roundtrip iteration {iteration}",
         );
+        assert_eq!(
+            *low.relaxed_narrow(high),
+            *a_i16,
+            "i16 relaxed roundtrip iteration {iteration}",
+        );
         let truncated = a_i16.narrow(b_i16);
         let saturated = a_i16.saturating_narrow(b_i16);
         let expected_truncated: [i8; 32] = core::array::from_fn(|i| {
@@ -1210,6 +1697,11 @@ fn widen_narrow_random<S: Simd>(simd: S) {
             *a_u32,
             "u32 saturating roundtrip iteration {iteration}",
         );
+        assert_eq!(
+            *low.relaxed_narrow(high),
+            *a_u32,
+            "u32 relaxed roundtrip iteration {iteration}",
+        );
         let truncated = a_u32.narrow(b_u32);
         let saturated = a_u32.saturating_narrow(b_u32);
         let expected_truncated: [u16; 16] = core::array::from_fn(|i| {
@@ -1247,6 +1739,11 @@ fn widen_narrow_random<S: Simd>(simd: S) {
             *low.saturating_narrow(high),
             *a_i32,
             "i32 saturating roundtrip iteration {iteration}",
+        );
+        assert_eq!(
+            *low.relaxed_narrow(high),
+            *a_i32,
+            "i32 relaxed roundtrip iteration {iteration}",
         );
         let truncated = a_i32.narrow(b_i32);
         let saturated = a_i32.saturating_narrow(b_i32);
@@ -1340,12 +1837,17 @@ fn widen_narrow_random<S: Simd>(simd: S) {
         }
         let roundtrip = low.narrow(high);
         let saturated_roundtrip = low.saturating_narrow(high);
+        let relaxed_roundtrip = low.relaxed_narrow(high);
         for i in 0..f32x8::<S>::N {
             if input_f32[i].is_nan() {
                 assert!(roundtrip[i].is_nan(), "f32 roundtrip iteration {iteration}");
                 assert!(
                     saturated_roundtrip[i].is_nan(),
                     "f32 saturating roundtrip iteration {iteration}",
+                );
+                assert!(
+                    relaxed_roundtrip[i].is_nan(),
+                    "f32 relaxed roundtrip iteration {iteration}",
                 );
             } else {
                 assert_eq!(
@@ -1358,6 +1860,11 @@ fn widen_narrow_random<S: Simd>(simd: S) {
                     input_f32[i].to_bits(),
                     "f32 saturating roundtrip iteration {iteration}",
                 );
+                assert_eq!(
+                    relaxed_roundtrip[i].to_bits(),
+                    input_f32[i].to_bits(),
+                    "f32 relaxed roundtrip iteration {iteration}",
+                );
             }
         }
 
@@ -1367,6 +1874,7 @@ fn widen_narrow_random<S: Simd>(simd: S) {
         let b_f64 = f64x4::from_slice(simd, &b_f64);
         let narrowed = a_f64.narrow(b_f64);
         let saturated = a_f64.saturating_narrow(b_f64);
+        let relaxed = a_f64.relaxed_narrow(b_f64);
         for i in 0..f32x8::<S>::N {
             let source = if i < 4 { a_f64[i] } else { b_f64[i - 4] };
             let expected = source as f32;
@@ -1375,6 +1883,10 @@ fn widen_narrow_random<S: Simd>(simd: S) {
                 assert!(
                     saturated[i].is_nan(),
                     "f64 saturating narrowing iteration {iteration}",
+                );
+                assert!(
+                    relaxed[i].is_nan(),
+                    "f64 relaxed narrowing iteration {iteration}",
                 );
             } else {
                 assert_eq!(
@@ -1386,6 +1898,11 @@ fn widen_narrow_random<S: Simd>(simd: S) {
                     saturated[i].to_bits(),
                     expected.to_bits(),
                     "f64 saturating narrowing iteration {iteration}",
+                );
+                assert_eq!(
+                    relaxed[i].to_bits(),
+                    expected.to_bits(),
+                    "f64 relaxed narrowing iteration {iteration}",
                 );
             }
         }

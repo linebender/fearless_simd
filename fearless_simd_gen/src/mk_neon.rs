@@ -8,7 +8,7 @@ use crate::generic::{
     fallback_method, generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
-use crate::ops::{Op, SlideGranularity};
+use crate::ops::{NarrowingMode, Op, SlideGranularity, relaxed_narrow_method};
 use crate::{
     arch::neon::{self, cvt_intrinsic, simple_intrinsic, split_intrinsic},
     ops::OpSig,
@@ -221,12 +221,13 @@ impl Level for Neon {
                     }
                 })
             }
-            OpSig::Narrow {
-                target_ty,
-                saturating,
-            } => {
+            OpSig::Narrow { target_ty, mode } => {
+                if mode == NarrowingMode::Relaxed {
+                    return relaxed_narrow_method(op, vec_ty, target_ty, "narrow");
+                }
+
                 if vec_ty.scalar == ScalarType::Float {
-                    if saturating {
+                    if mode == NarrowingMode::Saturate {
                         let narrow = generic_op_name("narrow", vec_ty);
                         return quote! {
                             #method_sig {
@@ -249,7 +250,11 @@ impl Level for Neon {
                 };
                 let src_scalar = format!("{prefix}{}", vec_ty.scalar_bits);
                 let target_scalar = format!("{prefix}{}", target_ty.scalar_bits);
-                let method_prefix = if saturating { "vqmovn" } else { "vmovn" };
+                let method_prefix = if mode == NarrowingMode::Saturate {
+                    "vqmovn"
+                } else {
+                    "vmovn"
+                };
                 let narrow =
                     Ident::new(&format!("{method_prefix}_{src_scalar}"), Span::call_site());
                 let combine = Ident::new(&format!("vcombine_{target_scalar}"), Span::call_site());

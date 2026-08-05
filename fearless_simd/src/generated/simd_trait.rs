@@ -621,6 +621,8 @@ pub trait Simd:
     fn narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u16x8(self, val: u16) -> u16x8<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
@@ -721,6 +723,8 @@ pub trait Simd:
     fn narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self>;
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
@@ -858,6 +862,8 @@ pub trait Simd:
     fn narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self>;
     #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
@@ -960,6 +966,8 @@ pub trait Simd:
     fn narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self>;
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
@@ -1109,6 +1117,8 @@ pub trait Simd:
     fn narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self>;
     #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self>;
+    #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i64x2(self, val: i64) -> i64x2<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
@@ -1209,6 +1219,8 @@ pub trait Simd:
     fn narrow_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i32x4<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i32x4<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u64x2(self, val: u64) -> u64x2<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
@@ -1307,6 +1319,8 @@ pub trait Simd:
     fn narrow_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u32x4<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u32x4<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u32x4<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self>;
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
@@ -1765,6 +1779,8 @@ pub trait Simd:
     fn narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u16x16(self, val: u16) -> u16x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
@@ -1861,6 +1877,8 @@ pub trait Simd:
     fn narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask16x16(self, val: bool) -> mask16x16<Self>;
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
@@ -1992,6 +2010,8 @@ pub trait Simd:
     fn narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self>;
     #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
@@ -2086,6 +2106,8 @@ pub trait Simd:
     fn narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self>;
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
@@ -2229,6 +2251,8 @@ pub trait Simd:
     fn narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self>;
     #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self>;
+    #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i64x4(self, val: i64) -> i64x4<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
@@ -2321,6 +2345,8 @@ pub trait Simd:
     fn narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u64x4(self, val: u64) -> u64x4<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
@@ -2411,6 +2437,8 @@ pub trait Simd:
     fn narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask64x4(self, val: bool) -> mask64x4<Self>;
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
@@ -2865,6 +2893,8 @@ pub trait Simd:
     fn narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u16x32(self, val: u16) -> u16x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
@@ -2959,6 +2989,8 @@ pub trait Simd:
     fn narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self>;
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
@@ -3090,6 +3122,8 @@ pub trait Simd:
     fn narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self>;
     #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
@@ -3186,6 +3220,8 @@ pub trait Simd:
     fn narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self>;
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
@@ -3325,6 +3361,8 @@ pub trait Simd:
     fn narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self>;
     #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self>;
+    #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i64x8(self, val: i64) -> i64x8<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
@@ -3415,6 +3453,8 @@ pub trait Simd:
     fn narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u64x8(self, val: u64) -> u64x8<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
@@ -3503,6 +3543,8 @@ pub trait Simd:
     fn narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn saturating_narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self>;
+    #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn relaxed_narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask64x8(self, val: bool) -> mask64x8<Self>;
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]

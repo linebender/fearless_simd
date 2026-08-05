@@ -206,6 +206,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
             let narrowed_ty = narrowed_ty.rust();
             let narrow = generic_op_name("narrow", ty);
             let saturating_narrow = generic_op_name("saturating_narrow", ty);
+            let relaxed_narrow = generic_op_name("relaxed_narrow", ty);
             conditional_impls.push(quote! {
                 impl<S: Simd> SimdNarrow<S> for #name<S> {
                     type Narrowed = #narrowed_ty<S>;
@@ -218,6 +219,11 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     #[inline(always)]
                     fn saturating_narrow(self, high: Self) -> Self::Narrowed {
                         self.simd.#saturating_narrow(self, high)
+                    }
+
+                    #[inline(always)]
+                    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+                        self.simd.#relaxed_narrow(self, high)
                     }
                 }
             });

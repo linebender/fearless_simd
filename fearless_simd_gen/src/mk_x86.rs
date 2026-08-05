@@ -12,7 +12,7 @@ use crate::generic::{
     recursive_swizzle_dyn_precise_body,
 };
 use crate::level::Level;
-use crate::ops::{Op, OpSig, Quantifier, SlideGranularity};
+use crate::ops::{NarrowingMode, Op, OpSig, Quantifier, SlideGranularity, relaxed_narrow_method};
 use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
@@ -23,12 +23,6 @@ pub(crate) enum X86 {
     Sse4_2,
     Avx2,
     Avx512,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum NarrowingMode {
-    Saturate,
-    Wrap,
 }
 
 pub(crate) const SSE2_FEATURES: &str = "fxsr,sse,sse2";
@@ -301,10 +295,7 @@ impl Level for X86 {
             OpSig::Compare => self.handle_compare(op, method, vec_ty),
             OpSig::Unary => self.handle_unary(op, method_sig, method, vec_ty),
             OpSig::Widen { target_ty } => self.handle_widen(op, vec_ty, target_ty),
-            OpSig::Narrow {
-                target_ty,
-                saturating,
-            } => self.handle_narrow(op, vec_ty, target_ty, saturating),
+            OpSig::Narrow { target_ty, mode } => self.handle_narrow(op, vec_ty, target_ty, mode),
             OpSig::Binary => self.handle_binary(op, method, vec_ty),
             OpSig::Shift => self.handle_shift(op, method, vec_ty),
             OpSig::Ternary => self.handle_ternary(op, method_sig, method, vec_ty),
@@ -1610,11 +1601,21 @@ impl X86 {
         op: Op,
         vec_ty: &VecType,
         target_ty: VecType,
-        saturating: bool,
+        mode: NarrowingMode,
     ) -> TokenStream {
-        use NarrowingMode::{Saturate, Wrap};
+        use NarrowingMode::{Relaxed, Saturate, Wrap};
 
-        let mode = if saturating { Saturate } else { Wrap };
+        if mode == Relaxed {
+            let implementation = if *self != Self::Avx512
+                && vec_ty.scalar == ScalarType::Int
+                && matches!(vec_ty.scalar_bits, 16 | 32)
+            {
+                "saturating_narrow"
+            } else {
+                "narrow"
+            };
+            return relaxed_narrow_method(op, vec_ty, target_ty, implementation);
+        }
 
         // Restore sequential lane order after AVX2 pack instructions interleave results within
         // their two 128-bit lanes.
@@ -1754,6 +1755,7 @@ impl X86 {
                     let (prepare, limit_name) = match mode {
                         Saturate => (simple_intrinsic("min", vec_ty), format_ident!("max")),
                         Wrap => (intrinsic_ident("and", "si256", 256), format_ident!("mask")),
+                        Relaxed => unreachable!(),
                     };
                     quote! {{
                         let #limit_name = #set1(#limit);

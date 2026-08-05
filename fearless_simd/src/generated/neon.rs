@@ -2186,6 +2186,17 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn relaxed_narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= i8::MIN as i16 && value <= i8::MAX as i16 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_i16x8(a, b)
+    }
+    #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2633,6 +2644,17 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= u8::MIN as u16 && value <= u8::MAX as u16 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_u16x8(a, b)
     }
     #[inline(always)]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {
@@ -3246,6 +3268,17 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn relaxed_narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= i16::MIN as i32 && value <= i16::MAX as i32 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_i32x4(a, b)
+    }
+    #[inline(always)]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3687,6 +3720,17 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= u16::MIN as u32 && value <= u16::MAX as u32 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_u32x4(a, b)
     }
     #[inline(always)]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self> {
@@ -4345,6 +4389,10 @@ impl Simd for Neon {
         self.narrow_f64x2(a, b)
     }
     #[inline(always)]
+    fn relaxed_narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self> {
+        self.narrow_f64x2(a, b)
+    }
+    #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4761,6 +4809,17 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn relaxed_narrow_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i32x4<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= i32::MIN as i64 && value <= i32::MAX as i64 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_i64x2(a, b)
+    }
+    #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5165,6 +5224,17 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u32x4<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= u32::MIN as u64 && value <= u32::MAX as u64 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_u64x2(a, b)
     }
     #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
@@ -7159,6 +7229,15 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
+    fn relaxed_narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i8x16(
+            self.relaxed_narrow_i16x8(a0, a1),
+            self.relaxed_narrow_i16x8(b0, b1),
+        )
+    }
+    #[inline(always)]
     fn splat_u16x16(self, val: u16) -> u16x16<Self> {
         let half = self.splat_u16x8(val);
         self.combine_u16x8(half, half)
@@ -7551,6 +7630,15 @@ impl Simd for Neon {
         self.combine_u8x16(
             self.saturating_narrow_u16x8(a0, a1),
             self.saturating_narrow_u16x8(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u8x16(
+            self.relaxed_narrow_u16x8(a0, a1),
+            self.relaxed_narrow_u16x8(b0, b1),
         )
     }
     #[inline(always)]
@@ -8033,6 +8121,15 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
+    fn relaxed_narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i16x8(
+            self.relaxed_narrow_i32x4(a0, a1),
+            self.relaxed_narrow_i32x4(b0, b1),
+        )
+    }
+    #[inline(always)]
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_i32x8(a);
         self.combine_f32x4(self.cvt_f32_i32x4(a0), self.cvt_f32_i32x4(a1))
@@ -8394,6 +8491,15 @@ impl Simd for Neon {
         self.combine_u16x8(
             self.saturating_narrow_u32x4(a0, a1),
             self.saturating_narrow_u32x4(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u16x8(
+            self.relaxed_narrow_u32x4(a0, a1),
+            self.relaxed_narrow_u32x4(b0, b1),
         )
     }
     #[inline(always)]
@@ -8909,6 +9015,15 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
+    fn relaxed_narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f32x4(
+            self.relaxed_narrow_f64x2(a0, a1),
+            self.relaxed_narrow_f64x2(b0, b1),
+        )
+    }
+    #[inline(always)]
     fn splat_i64x4(self, val: i64) -> i64x4<Self> {
         let half = self.splat_i64x2(val);
         self.combine_i64x2(half, half)
@@ -9250,6 +9365,15 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
+    fn relaxed_narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i32x4(
+            self.relaxed_narrow_i64x2(a0, a1),
+            self.relaxed_narrow_i64x2(b0, b1),
+        )
+    }
+    #[inline(always)]
     fn splat_u64x4(self, val: u64) -> u64x4<Self> {
         let half = self.splat_u64x2(val);
         self.combine_u64x2(half, half)
@@ -9583,6 +9707,15 @@ impl Simd for Neon {
         self.combine_u32x4(
             self.saturating_narrow_u64x2(a0, a1),
             self.saturating_narrow_u64x2(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u32x4(
+            self.relaxed_narrow_u64x2(a0, a1),
+            self.relaxed_narrow_u64x2(b0, b1),
         )
     }
     #[inline(always)]
@@ -11932,6 +12065,15 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
+    fn relaxed_narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i8x32(
+            self.relaxed_narrow_i16x16(a0, a1),
+            self.relaxed_narrow_i16x16(b0, b1),
+        )
+    }
+    #[inline(always)]
     fn splat_u16x32(self, val: u16) -> u16x32<Self> {
         let half = self.splat_u16x16(val);
         self.combine_u16x16(half, half)
@@ -12407,6 +12549,15 @@ impl Simd for Neon {
         self.combine_u8x32(
             self.saturating_narrow_u16x16(a0, a1),
             self.saturating_narrow_u16x16(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u8x32(
+            self.relaxed_narrow_u16x16(a0, a1),
+            self.relaxed_narrow_u16x16(b0, b1),
         )
     }
     #[inline(always)]
@@ -12932,6 +13083,15 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
+    fn relaxed_narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i16x16(
+            self.relaxed_narrow_i32x8(a0, a1),
+            self.relaxed_narrow_i32x8(b0, b1),
+        )
+    }
+    #[inline(always)]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_i32x16(a);
         self.combine_f32x8(self.cvt_f32_i32x8(a0), self.cvt_f32_i32x8(a1))
@@ -13342,6 +13502,15 @@ impl Simd for Neon {
         self.combine_u16x16(
             self.saturating_narrow_u32x8(a0, a1),
             self.saturating_narrow_u32x8(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u16x16(
+            self.relaxed_narrow_u32x8(a0, a1),
+            self.relaxed_narrow_u32x8(b0, b1),
         )
     }
     #[inline(always)]
@@ -13877,6 +14046,15 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
+    fn relaxed_narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f32x8(
+            self.relaxed_narrow_f64x4(a0, a1),
+            self.relaxed_narrow_f64x4(b0, b1),
+        )
+    }
+    #[inline(always)]
     fn splat_i64x8(self, val: i64) -> i64x8<Self> {
         let half = self.splat_i64x4(val);
         self.combine_i64x4(half, half)
@@ -14247,6 +14425,15 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
+    fn relaxed_narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i32x8(
+            self.relaxed_narrow_i64x4(a0, a1),
+            self.relaxed_narrow_i64x4(b0, b1),
+        )
+    }
+    #[inline(always)]
     fn splat_u64x8(self, val: u64) -> u64x8<Self> {
         let half = self.splat_u64x4(val);
         self.combine_u64x4(half, half)
@@ -14609,6 +14796,15 @@ impl Simd for Neon {
         self.combine_u32x8(
             self.saturating_narrow_u64x4(a0, a1),
             self.saturating_narrow_u64x4(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u32x8(
+            self.relaxed_narrow_u64x4(a0, a1),
+            self.relaxed_narrow_u64x4(b0, b1),
         )
     }
     #[inline(always)]

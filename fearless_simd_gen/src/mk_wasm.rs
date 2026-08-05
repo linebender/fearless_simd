@@ -10,7 +10,7 @@ use crate::generic::{
     integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
 };
 use crate::level::Level;
-use crate::ops::{Op, Quantifier, SlideGranularity};
+use crate::ops::{NarrowingMode, Op, Quantifier, SlideGranularity, relaxed_narrow_method};
 use crate::{
     arch::wasm::{self, simple_intrinsic},
     ops::OpSig,
@@ -221,11 +221,10 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
-            OpSig::Narrow {
-                target_ty: _,
-                saturating,
-            } if vec_ty.scalar == ScalarType::Float => {
-                if saturating {
+            OpSig::Narrow { target_ty, mode } if vec_ty.scalar == ScalarType::Float => {
+                if mode == NarrowingMode::Relaxed {
+                    relaxed_narrow_method(op, vec_ty, target_ty, "narrow")
+                } else if mode == NarrowingMode::Saturate {
                     let narrow = generic_op_name("narrow", vec_ty);
                     quote! {
                         #method_sig {
@@ -242,10 +241,17 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
-            OpSig::Narrow {
-                target_ty,
-                saturating,
-            } if target_ty.scalar_bits <= 16 => {
+            OpSig::Narrow { target_ty, mode } if target_ty.scalar_bits <= 16 => {
+                if mode == NarrowingMode::Relaxed {
+                    let implementation = if vec_ty.scalar == ScalarType::Int {
+                        "saturating_narrow"
+                    } else {
+                        "narrow"
+                    };
+                    return relaxed_narrow_method(op, vec_ty, target_ty, implementation);
+                }
+
+                let saturating = mode == NarrowingMode::Saturate;
                 let target = if saturating {
                     target_ty.rust_name()
                 } else {
@@ -292,7 +298,7 @@ impl Level for WasmSimd128 {
             }
             OpSig::Narrow {
                 target_ty,
-                saturating: false,
+                mode: NarrowingMode::Wrap,
             } => {
                 assert_eq!(
                     target_ty.scalar_bits, 32,
@@ -308,8 +314,13 @@ impl Level for WasmSimd128 {
                 }
             }
             OpSig::Narrow {
-                saturating: true, ..
+                mode: NarrowingMode::Saturate,
+                ..
             } => fallback_method(op, vec_ty),
+            OpSig::Narrow {
+                target_ty,
+                mode: NarrowingMode::Relaxed,
+            } => relaxed_narrow_method(op, vec_ty, target_ty, "narrow"),
             OpSig::Binary => {
                 if matches!(method, "shlv" | "shrv")
                     || (matches!(method, "min" | "max")

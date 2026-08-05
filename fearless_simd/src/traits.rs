@@ -323,7 +323,8 @@ pub trait SimdWiden<S: Simd>: SimdBase<S> + Seal {
 /// lanes and the second input supplies the upper result lanes. Integer narrowing either retains
 /// the low destination-width bits or saturates, depending on the method. Floating-point narrowing
 /// converts `f64` to `f32` using Rust's `as` semantics; for floats,
-/// [`saturating_narrow`](Self::saturating_narrow) is identical to [`narrow`](Self::narrow).
+/// [`saturating_narrow`](Self::saturating_narrow) and
+/// [`relaxed_narrow`](Self::relaxed_narrow) are identical to [`narrow`](Self::narrow).
 ///
 /// ```
 /// use fearless_simd::{f32x4, f64x2, prelude::*, i16x8, i8x16};
@@ -355,15 +356,6 @@ pub trait SimdNarrow<S: Simd>: SimdBase<S> + Seal {
     ///  - Floating-point values follow IEEE 754 narrowing behavior in round-to-even mode:
     ///    they are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity.
     ///
-    /// # Performance
-    ///
-    /// When you're confident that the conversion won't overflow and so the distinction between `narrow`
-    /// and [`saturating_narrow`](Self::saturating_narrow) doesn't matter, use:
-    ///
-    /// - `saturating_narrow` for narrowing `i32`→`i16` or `i16`→`i8`
-    /// - `narrow` for narrowing `u32`→`u16`, `u16`→`u8`, `i64`→`i32`, `u64`→`u32`
-    ///
-    /// This advice applies to SSE4.2, AVX2 and WASM. On AVX-512 and NEON there is no performance difference.
     fn narrow(self, high: Self) -> Self::Narrowed;
 
     /// Narrow with saturation for integers. Floats behave identically to [`narrow`](Self::narrow).
@@ -371,4 +363,17 @@ pub trait SimdNarrow<S: Simd>: SimdBase<S> + Seal {
     /// Integer values that overflow the narrowed type become the closest possible value for the narrowed type.
     /// For example, `1234u16` becomes `u8::MAX` after narrowing, and `-1234i16` becomes `i8::MIN`.
     fn saturating_narrow(self, high: Self) -> Self::Narrowed;
+
+    /// Narrow using the cheapest operation for the active SIMD backend, assuming no overflow.
+    ///
+    /// This is useful when you're sure the result fits into the destination type,
+    /// so the distinction between [narrow](Self::narrow) and [saturating_narrow](Self::saturating_narrow)
+    /// doesn't matter.
+    ///
+    /// This method will panic in debug mode if any of the inputs do not fit into the narrower type.
+    /// This operation remains memory-safe and never causes undefined behavior,
+    /// but will produce arbitrary values on overflow in release mode.
+    ///
+    /// Floats behave identically to [`narrow`](Self::narrow), with no additional precondition.
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed;
 }

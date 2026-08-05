@@ -7,7 +7,7 @@ use crate::generic::{
     integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
-use crate::ops::{Op, OpSig};
+use crate::ops::{NarrowingMode, Op, OpSig, relaxed_narrow_method};
 use crate::types::{ScalarType, VecType};
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -207,14 +207,15 @@ impl Level for Fallback {
                     }
                 }
             }
-            OpSig::Narrow {
-                target_ty,
-                saturating,
-            } => {
+            OpSig::Narrow { target_ty, mode } => {
+                if mode == NarrowingMode::Relaxed {
+                    return relaxed_narrow_method(op, vec_ty, target_ty, "narrow");
+                }
+
                 let scalar = target_ty.scalar.rust(target_ty.scalar_bits);
                 let src_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
                 let convert = |value: TokenStream| {
-                    if vec_ty.scalar == ScalarType::Float || !saturating {
+                    if vec_ty.scalar == ScalarType::Float || mode == NarrowingMode::Wrap {
                         quote! { #value as #scalar }
                     } else {
                         quote! {

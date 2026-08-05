@@ -38,6 +38,13 @@ pub(crate) enum ElementDirection {
     Right,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum NarrowingMode {
+    Wrap,
+    Saturate,
+    Relaxed,
+}
+
 #[derive(Clone, Copy)]
 pub(crate) enum OpSig {
     /// Takes a single scalar argument, and returns the corresponding vector type.
@@ -97,7 +104,7 @@ pub(crate) enum OpSig {
     /// Narrows two vectors and concatenates them into one same-width vector.
     Narrow {
         target_ty: VecType,
-        saturating: bool,
+        mode: NarrowingMode,
     },
     /// Takes an argument of a vector type and another u32 argument (the shift amount), and returns that same vector
     /// type.
@@ -477,6 +484,46 @@ impl Op {
         }
 
         dest
+    }
+}
+
+pub(crate) fn relaxed_narrow_method(
+    op: Op,
+    vec_ty: &VecType,
+    target_ty: VecType,
+    implementation: &'static str,
+) -> TokenStream {
+    debug_assert!(matches!(
+        op.sig,
+        OpSig::Narrow {
+            mode: NarrowingMode::Relaxed,
+            ..
+        }
+    ));
+
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let implementation = generic_op_name(implementation, vec_ty);
+    let bounds_assertion = if vec_ty.scalar == ScalarType::Float {
+        TokenStream::new()
+    } else {
+        let source_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+        let target_scalar = target_ty.scalar.rust(target_ty.scalar_bits);
+        quote! {
+            debug_assert!(
+                a.as_slice().iter().chain(b.as_slice()).all(|&value| {
+                    value >= #target_scalar::MIN as #source_scalar
+                        && value <= #target_scalar::MAX as #source_scalar
+                }),
+                "relaxed_narrow inputs must fit in the destination type",
+            );
+        }
+    };
+
+    quote! {
+        #method_sig {
+            #bounds_assertion
+            self.#implementation(a, b)
+        }
     }
 }
 
@@ -1259,7 +1306,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
             OpKind::OwnTrait,
             OpSig::Narrow {
                 target_ty,
-                saturating: false,
+                mode: NarrowingMode::Wrap,
             },
             "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\n\
             Values are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity.\
@@ -1271,7 +1318,18 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
             OpKind::OwnTrait,
             OpSig::Narrow {
                 target_ty,
-                saturating: true,
+                mode: NarrowingMode::Saturate,
+            },
+            "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\n\
+            For floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n\
+            `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+        ));
+        ops.push(Op::new(
+            "relaxed_narrow",
+            OpKind::OwnTrait,
+            OpSig::Narrow {
+                target_ty,
+                mode: NarrowingMode::Relaxed,
             },
             "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\n\
             For floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n\
@@ -1300,7 +1358,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 OpKind::OwnTrait,
                 OpSig::Narrow {
                     target_ty,
-                    saturating: false,
+                    mode: NarrowingMode::Wrap,
                 },
                 "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
             ));
@@ -1309,9 +1367,20 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 OpKind::OwnTrait,
                 OpSig::Narrow {
                     target_ty,
-                    saturating: true,
+                    mode: NarrowingMode::Saturate,
                 },
                 "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+            ));
+        ops.push(Op::new(
+                "relaxed_narrow",
+                OpKind::OwnTrait,
+                OpSig::Narrow {
+                    target_ty,
+                    mode: NarrowingMode::Relaxed,
+                },
+                "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\n\
+                Inputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n\
+                `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
             ));
     }
 
