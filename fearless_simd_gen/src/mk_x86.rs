@@ -2887,6 +2887,7 @@ impl X86 {
         precise: bool,
     ) -> TokenStream {
         use Precision::{Approx, Precise};
+        use ScalarType::{Float, Int, Unsigned};
 
         assert_eq!(
             vec_ty.scalar_bits, target_scalar_bits,
@@ -2909,8 +2910,8 @@ impl X86 {
             (Self::Sse2 | Self::Sse4_2, _, _, 64, 128, _)
                 | (Self::Avx2, _, _, 64, 128 | 256, _)
                 | (Self::Sse2, _, _, 32, 128, Precise)
-                | (Self::Sse2, ScalarType::Unsigned, _, 32, 128, _)
-                | (Self::Sse2, _, ScalarType::Unsigned, 32, 128, _)
+                | (Self::Sse2, Unsigned, _, 32, 128, _)
+                | (Self::Sse2, _, Unsigned, 32, 128, _)
         ) {
             // These conversions have no hardware support, or their native implementation is
             // slower than the scalar fallback.
@@ -2918,7 +2919,7 @@ impl X86 {
         }
 
         self.kernel_method(op, vec_ty, |token| match conversion {
-            (Self::Avx512, ScalarType::Unsigned, ScalarType::Float, 32, bits @ (128 | 256), _) => {
+            (Self::Avx512, Unsigned, Float, 32, bits @ (128 | 256), _) => {
                 // We cannot emit the intrinsics for the conversion instructions
                 // because the required intrinsics are mysteriously absent from stdarch:
                 // https://github.com/rust-lang/rust/issues/158196
@@ -2933,8 +2934,8 @@ impl X86 {
             }
             (
                 Self::Avx512,
-                source @ (ScalarType::Int | ScalarType::Unsigned),
-                ScalarType::Float,
+                source @ (Int | Unsigned),
+                Float,
                 scalar_bits @ (32 | 64),
                 128 | 256 | 512,
                 _,
@@ -2949,7 +2950,7 @@ impl X86 {
                     #convert(a.into()).simd_into(#token)
                 }
             }
-            (Self::Avx512, ScalarType::Float, ScalarType::Int, 64, 128 | 256 | 512, Precise) => {
+            (Self::Avx512, Float, Int, 64, 128 | 256 | 512, Precise) => {
                 let target_ty = vec_ty.cast(target_scalar);
                 let masked_convert = intrinsic_ident("mask_cvttpd", "epi64", vec_ty.n_bits());
                 let cmp = intrinsic_ident("cmp", "pd_mask", vec_ty.n_bits());
@@ -2969,7 +2970,7 @@ impl X86 {
                     converted.simd_into(#token)
                 }
             }
-            (Self::Avx512, ScalarType::Float, ScalarType::Int, 64, 128 | 256 | 512, Approx) => {
+            (Self::Avx512, Float, Int, 64, 128 | 256 | 512, Approx) => {
                 let target_ty = vec_ty.cast(target_scalar);
                 let convert = simple_intrinsic("cvttpd", &target_ty);
                 quote! {
@@ -2978,8 +2979,8 @@ impl X86 {
             }
             (
                 Self::Avx512,
-                ScalarType::Float,
-                ScalarType::Unsigned,
+                Float,
+                Unsigned,
                 64,
                 128 | 256 | 512,
                 Precise,
@@ -3000,8 +3001,8 @@ impl X86 {
             }
             (
                 Self::Avx512,
-                ScalarType::Float,
-                ScalarType::Unsigned,
+                Float,
+                Unsigned,
                 64,
                 128 | 256 | 512,
                 Approx,
@@ -3014,8 +3015,8 @@ impl X86 {
             }
             (
                 Self::Avx512,
-                ScalarType::Float,
-                ScalarType::Unsigned,
+                Float,
+                Unsigned,
                 32,
                 128 | 256 | 512,
                 Precise,
@@ -3037,8 +3038,8 @@ impl X86 {
             }
             (
                 Self::Avx512,
-                ScalarType::Float,
-                ScalarType::Unsigned,
+                Float,
+                Unsigned,
                 32,
                 128 | 256 | 512,
                 Approx,
@@ -3048,7 +3049,7 @@ impl X86 {
                     #convert(a.into()).simd_into(#token)
                 }
             }
-            (Self::Avx512, ScalarType::Float, ScalarType::Int, 32, 128 | 256 | 512, Precise) => {
+            (Self::Avx512, Float, Int, 32, 128 | 256 | 512, Precise) => {
                 let target_ty = vec_ty.cast(target_scalar);
                 let masked_convert = intrinsic_ident("mask_cvttps", "epi32", vec_ty.n_bits());
                 let cmp = intrinsic_ident("cmp", "ps_mask", vec_ty.n_bits());
@@ -3068,7 +3069,7 @@ impl X86 {
                     converted.simd_into(#token)
                 }
             }
-            (Self::Avx512, ScalarType::Float, ScalarType::Int, 32, 128 | 256 | 512, Approx) => {
+            (Self::Avx512, Float, Int, 32, 128 | 256 | 512, Approx) => {
                 let convert = intrinsic_ident("cvttps", "epi32", vec_ty.n_bits());
                 quote! {
                     #convert(a.into()).simd_into(#token)
@@ -3076,16 +3077,16 @@ impl X86 {
             }
             (
                 Self::Sse2 | Self::Sse4_2,
-                ScalarType::Float,
-                target @ (ScalarType::Int | ScalarType::Unsigned),
+                Float,
+                target @ (Int | Unsigned),
                 32,
                 128,
                 precision,
             )
             | (
                 Self::Avx2,
-                ScalarType::Float,
-                target @ (ScalarType::Int | ScalarType::Unsigned),
+                Float,
+                target @ (Int | Unsigned),
                 32,
                 128 | 256,
                 precision,
@@ -3118,12 +3119,12 @@ impl X86 {
                 let sub_float = simple_intrinsic("sub", vec_ty);
 
                 match (target, precision) {
-                    (ScalarType::Int, Approx) => {
+                    (Int, Approx) => {
                         quote! {
                             #convert(a.into()).simd_into(#token)
                         }
                     }
-                    (ScalarType::Unsigned, Approx) => {
+                    (Unsigned, Approx) => {
                         quote! {
                             let mut converted = #convert(a.into());
 
@@ -3141,7 +3142,7 @@ impl X86 {
                             converted.simd_into(#token)
                         }
                     }
-                    (ScalarType::Int, Precise) => {
+                    (Int, Precise) => {
                         quote! {
                             let a = a.into();
 
@@ -3164,7 +3165,7 @@ impl X86 {
                             converted.simd_into(#token)
                         }
                     }
-                    (ScalarType::Unsigned, Precise) => {
+                    (Unsigned, Precise) => {
                         quote! {
                             // Clamp out-of-range values (and NaN) to 0. Intel's `_mm_max_ps` always takes the second
                             // operand if the first is NaN.
@@ -3192,16 +3193,16 @@ impl X86 {
                     _ => unreachable!(),
                 }
             }
-            (Self::Sse2 | Self::Sse4_2, ScalarType::Int, ScalarType::Float, 32, 128, _)
-            | (Self::Avx2, ScalarType::Int, ScalarType::Float, 32, 128 | 256, _) => {
+            (Self::Sse2 | Self::Sse4_2, Int, Float, 32, 128, _)
+            | (Self::Avx2, Int, Float, 32, 128 | 256, _) => {
                 let target_ty = vec_ty.cast(target_scalar);
                 let intrinsic = simple_intrinsic("cvtepi32", &target_ty);
                 quote! {
                     #intrinsic(a.into()).simd_into(#token)
                 }
             }
-            (Self::Sse4_2, ScalarType::Unsigned, ScalarType::Float, 32, 128, _)
-            | (Self::Avx2, ScalarType::Unsigned, ScalarType::Float, 32, 128 | 256, _) => {
+            (Self::Sse4_2, Unsigned, Float, 32, 128, _)
+            | (Self::Avx2, Unsigned, Float, 32, 128 | 256, _) => {
                 let target_ty = vec_ty.cast(target_scalar);
                 let set1_int = set1_intrinsic(vec_ty);
                 let set1_float = set1_intrinsic(&target_ty);
