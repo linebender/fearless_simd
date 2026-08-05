@@ -357,7 +357,7 @@ pub trait SimdNarrow<S: Simd>: SimdBase<S> + Seal {
 
     /// Narrow with saturation for integers. Floats behave identically to [`narrow`](Self::narrow).
     ///
-    /// Integer values that overflow the narrowed type become the maximum possible value for the narrowed type.
+    /// Integer values that overflow the narrowed type become the closest possible value for the narrowed type.
     /// For example, `1234u16` becomes `u8::MAX` after narrowing, and `-1234i16` becomes `i8::MIN`.
     fn saturating_narrow(self, high: Self) -> Self::Narrowed;
 }
