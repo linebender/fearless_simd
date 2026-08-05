@@ -558,6 +558,104 @@ const BASE_OPS: &[Op] = &[
     ),
 ];
 
+const COMMON_BASE_OPS: &[Op] = &[
+    Op::new(
+        "simd_eq",
+        OpKind::BaseTraitMethod,
+        OpSig::Compare,
+        "Compare two vectors element-wise for equality.\n\n\
+        Returns a mask where each logical lane is true if the corresponding elements are equal, and false if not.",
+    ),
+    Op::new(
+        "simd_lt",
+        OpKind::BaseTraitMethod,
+        OpSig::Compare,
+        "Compare two vectors element-wise for less than.\n\n\
+        Returns a mask where each logical lane is true if `{arg0}` is less than `{arg1}`, and false if not.",
+    ),
+    Op::new(
+        "simd_le",
+        OpKind::BaseTraitMethod,
+        OpSig::Compare,
+        "Compare two vectors element-wise for less than or equal.\n\n\
+        Returns a mask where each logical lane is true if `{arg0}` is less than or equal to `{arg1}`, and false if not.",
+    ),
+    Op::new(
+        "simd_ge",
+        OpKind::BaseTraitMethod,
+        OpSig::Compare,
+        "Compare two vectors element-wise for greater than or equal.\n\n\
+        Returns a mask where each logical lane is true if `{arg0}` is greater than or equal to `{arg1}`, and false if not.",
+    ),
+    Op::new(
+        "simd_gt",
+        OpKind::BaseTraitMethod,
+        OpSig::Compare,
+        "Compare two vectors element-wise for greater than.\n\n\
+        Returns a mask where each logical lane is true if `{arg0}` is greater than `{arg1}`, and false if not.",
+    ),
+    Op::new(
+        "zip_low",
+        OpKind::BaseTraitMethod,
+        OpSig::Zip { select_low: true },
+        "Interleave the lower half elements of two vectors.\n\n\
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.
+        For fully interleaving two vectors prefer `interleave`,
+        which is faster than `zip_low` followed by `zip_high` on some platforms.",
+    ),
+    Op::new(
+        "zip_high",
+        OpKind::BaseTraitMethod,
+        OpSig::Zip { select_low: false },
+        "Interleave the upper half elements of two vectors.\n\n\
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.\
+        For fully interleaving two vectors prefer `interleave`,
+        which is faster than `zip_low` followed by `zip_high` on some platforms.",
+    ),
+    Op::new(
+        "unzip_low",
+        OpKind::BaseTraitMethod,
+        OpSig::Unzip { select_even: true },
+        "Extract even-indexed elements from two vectors.\n\n\
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.\
+        For fully deinterleaving two vectors prefer `deinterleave`,
+        which is faster than `unzip_low` followed by `unzip_high` on some platforms.",
+    ),
+    Op::new(
+        "unzip_high",
+        OpKind::BaseTraitMethod,
+        OpSig::Unzip { select_even: false },
+        "Extract odd-indexed elements from two vectors.\n\n\
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.\
+        For fully deinterleaving two vectors prefer `deinterleave`,
+        which is faster than `unzip_low` followed by `unzip_high` on some platforms.",
+    ),
+    Op::new(
+        "interleave",
+        OpKind::BaseTraitMethod,
+        OpSig::Interleave,
+        "Interleave two vectors.\n\n\
+        The resulting vectors contain elements taken alternately from `{arg0}` and `{arg1}`, \
+        first filling the first result, and then the second.\n\n\
+        The reverse of this operation is `deinterleave`.\n\n\
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`.",
+    ),
+    Op::new(
+        "deinterleave",
+        OpKind::BaseTraitMethod,
+        OpSig::Deinterleave,
+        "Deinterleave two vectors.\n\n\
+        The first result contains all even-indexed elements from `{arg0}` followed by all even-indexed elements from `{arg1}`. \
+        The second result contains all odd-indexed elements from `{arg0}` followed by all odd-indexed elements from `{arg1}`.\n\n\
+        The reverse of this operation is `interleave`.\n\n\
+        For vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`.",
+    ),
+];
+
 const MASK_REPRESENTATION_OPS: &[Op] = &[
     Op::new(
         "splat",
@@ -645,101 +743,6 @@ const FLOAT_OPS: &[Op] = &[
         OpSig::Binary,
         "Return a vector with the magnitude of `{arg0}` and the sign of `{arg1}` for each element.\n\n\
         This operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit.",
-    ),
-    Op::new(
-        "simd_eq",
-        OpKind::VecTraitMethod,
-        OpSig::Compare,
-        "Compare two vectors element-wise for equality.\n\n\
-        Returns a mask where each logical lane is true if the corresponding elements are equal, and false if not.",
-    ),
-    Op::new(
-        "simd_lt",
-        OpKind::VecTraitMethod,
-        OpSig::Compare,
-        "Compare two vectors element-wise for less than.\n\n\
-        Returns a mask where each logical lane is true if `{arg0}` is less than `{arg1}`, and false if not.",
-    ),
-    Op::new(
-        "simd_le",
-        OpKind::VecTraitMethod,
-        OpSig::Compare,
-        "Compare two vectors element-wise for less than or equal.\n\n\
-        Returns a mask where each logical lane is true if `{arg0}` is less than or equal to `{arg1}`, and false if not.",
-    ),
-    Op::new(
-        "simd_ge",
-        OpKind::VecTraitMethod,
-        OpSig::Compare,
-        "Compare two vectors element-wise for greater than or equal.\n\n\
-        Returns a mask where each logical lane is true if `{arg0}` is greater than or equal to `{arg1}`, and false if not.",
-    ),
-    Op::new(
-        "simd_gt",
-        OpKind::VecTraitMethod,
-        OpSig::Compare,
-        "Compare two vectors element-wise for greater than.\n\n\
-        Returns a mask where each logical lane is true if `{arg0}` is greater than `{arg1}`, and false if not.",
-    ),
-    Op::new(
-        "zip_low",
-        OpKind::VecTraitMethod,
-        OpSig::Zip { select_low: true },
-        "Interleave the lower half elements of two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n\
-        **Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.
-        For fully interleaving two vectors prefer `interleave`,
-        which is faster than `zip_low` followed by `zip_high` on some platforms.",
-    ),
-    Op::new(
-        "zip_high",
-        OpKind::VecTraitMethod,
-        OpSig::Zip { select_low: false },
-        "Interleave the upper half elements of two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n\
-        **Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.\
-        For fully interleaving two vectors prefer `interleave`,
-        which is faster than `zip_low` followed by `zip_high` on some platforms.",
-    ),
-    Op::new(
-        "unzip_low",
-        OpKind::VecTraitMethod,
-        OpSig::Unzip { select_even: true },
-        "Extract even-indexed elements from two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n\
-        **Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.\
-        For fully deinterleaving two vectors prefer `deinterleave`,
-        which is faster than `unzip_low` followed by `unzip_high` on some platforms.",
-    ),
-    Op::new(
-        "unzip_high",
-        OpKind::VecTraitMethod,
-        OpSig::Unzip { select_even: false },
-        "Extract odd-indexed elements from two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n\
-        **Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.\
-        For fully deinterleaving two vectors prefer `deinterleave`,
-        which is faster than `unzip_low` followed by `unzip_high` on some platforms.",
-    ),
-    Op::new(
-        "interleave",
-        OpKind::VecTraitMethod,
-        OpSig::Interleave,
-        "Interleave two vectors.\n\n\
-        The resulting vectors contain elements taken alternately from `{arg0}` and `{arg1}`, \
-        first filling the first result, and then the second.\n\n\
-        The reverse of this operation is `deinterleave`.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`.",
-    ),
-    Op::new(
-        "deinterleave",
-        OpKind::VecTraitMethod,
-        OpSig::Deinterleave,
-        "Deinterleave two vectors.\n\n\
-        The first result contains all even-indexed elements from `{arg0}` followed by all even-indexed elements from `{arg1}`. \
-        The second result contains all odd-indexed elements from `{arg0}` followed by all odd-indexed elements from `{arg1}`.\n\n\
-        The reverse of this operation is `interleave`.\n\n\
-        For vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`.",
     ),
     Op::new(
         "max",
@@ -909,101 +912,6 @@ const INT_OPS: &[Op] = &[
         This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation.",
     ),
     Op::new(
-        "simd_eq",
-        OpKind::VecTraitMethod,
-        OpSig::Compare,
-        "Compare two vectors element-wise for equality.\n\n\
-        Returns a mask where each logical lane is true if the corresponding elements are equal, and false if not.",
-    ),
-    Op::new(
-        "simd_lt",
-        OpKind::VecTraitMethod,
-        OpSig::Compare,
-        "Compare two vectors element-wise for less than.\n\n\
-        Returns a mask where each logical lane is true if `{arg0}` is less than `{arg1}`, and false if not.",
-    ),
-    Op::new(
-        "simd_le",
-        OpKind::VecTraitMethod,
-        OpSig::Compare,
-        "Compare two vectors element-wise for less than or equal.\n\n\
-        Returns a mask where each logical lane is true if `{arg0}` is less than or equal to `{arg1}`, and false if not.",
-    ),
-    Op::new(
-        "simd_ge",
-        OpKind::VecTraitMethod,
-        OpSig::Compare,
-        "Compare two vectors element-wise for greater than or equal.\n\n\
-        Returns a mask where each logical lane is true if `{arg0}` is greater than or equal to `{arg1}`, and false if not.",
-    ),
-    Op::new(
-        "simd_gt",
-        OpKind::VecTraitMethod,
-        OpSig::Compare,
-        "Compare two vectors element-wise for greater than.\n\n\
-        Returns a mask where each logical lane is true if `{arg0}` is greater than `{arg1}`, and false if not.",
-    ),
-    Op::new(
-        "zip_low",
-        OpKind::VecTraitMethod,
-        OpSig::Zip { select_low: true },
-        "Interleave the lower half elements of two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n\
-        **Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.
-        For fully interleaving two vectors prefer `interleave`,
-        which is faster than `zip_low` followed by `zip_high` on some platforms.",
-    ),
-    Op::new(
-        "zip_high",
-        OpKind::VecTraitMethod,
-        OpSig::Zip { select_low: false },
-        "Interleave the upper half elements of two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n\
-        **Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.\
-        For fully interleaving two vectors prefer `interleave`,
-        which is faster than `zip_low` followed by `zip_high` on some platforms.",
-    ),
-    Op::new(
-        "unzip_low",
-        OpKind::VecTraitMethod,
-        OpSig::Unzip { select_even: true },
-        "Extract even-indexed elements from two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n\
-        **Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.\
-        For fully deinterleaving two vectors prefer `deinterleave`,
-        which is faster than `unzip_low` followed by `unzip_high` on some platforms.",
-    ),
-    Op::new(
-        "unzip_high",
-        OpKind::VecTraitMethod,
-        OpSig::Unzip { select_even: false },
-        "Extract odd-indexed elements from two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n\
-        **Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.\
-        For fully deinterleaving two vectors prefer `deinterleave`,
-        which is faster than `unzip_low` followed by `unzip_high` on some platforms.",
-    ),
-    Op::new(
-        "interleave",
-        OpKind::VecTraitMethod,
-        OpSig::Interleave,
-        "Interleave two vectors.\n\n\
-        The resulting vectors contain elements taken alternately from `{arg0}` and `{arg1}`, \
-        first filling the first result, and then the second.\n\n\
-        The reverse of this operation is `deinterleave`.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`.",
-    ),
-    Op::new(
-        "deinterleave",
-        OpKind::VecTraitMethod,
-        OpSig::Deinterleave,
-        "Deinterleave two vectors.\n\n\
-        The first result contains all even-indexed elements from `{arg0}` followed by all even-indexed elements from `{arg1}`. \
-        The second result contains all odd-indexed elements from `{arg0}` followed by all odd-indexed elements from `{arg1}`.\n\n\
-        The reverse of this operation is `interleave`.\n\n\
-        For vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`.",
-    ),
-    Op::new(
         "select",
         OpKind::OwnTrait,
         OpSig::Select,
@@ -1129,6 +1037,7 @@ const MASK_OPS: &[Op] = &[
 pub(crate) fn base_trait_ops() -> Vec<Op> {
     BASE_OPS
         .iter()
+        .chain(COMMON_BASE_OPS.iter())
         .filter(|op| matches!(op.kind, OpKind::BaseTraitMethod))
         .copied()
         .collect()
@@ -1249,11 +1158,18 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ScalarType::Mask => MASK_REPRESENTATION_OPS,
         _ => BASE_OPS,
     };
-    let mut ops: Vec<Op> = representation_ops
-        .iter()
-        .chain(base.iter())
-        .copied()
-        .collect();
+    let mut ops: Vec<Op> = representation_ops.iter().copied().collect();
+    for op in base {
+        ops.push(*op);
+        let common_ops_follow = match ty.scalar {
+            ScalarType::Float => op.method == "copysign",
+            ScalarType::Int | ScalarType::Unsigned => op.method == "shrv",
+            ScalarType::Mask => false,
+        };
+        if common_ops_follow {
+            ops.extend_from_slice(COMMON_BASE_OPS);
+        }
+    }
 
     if let Some(combined_ty) = ty.combine_operand() {
         ops.push(Op::new(
