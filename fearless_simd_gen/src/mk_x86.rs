@@ -2950,29 +2950,64 @@ impl X86 {
                     #convert(a.into()).simd_into(#token)
                 }
             }
-            (Self::Avx512, Float, Int, 64, 128 | 256 | 512, Precise) => {
+            (
+                Self::Avx512,
+                Float,
+                Int,
+                scalar_bits @ (32 | 64),
+                128 | 256 | 512,
+                Precise,
+            ) => {
                 let target_ty = vec_ty.cast(target_scalar);
-                let masked_convert = intrinsic_ident("mask_cvttpd", "epi64", vec_ty.n_bits());
-                let cmp = intrinsic_ident("cmp", "pd_mask", vec_ty.n_bits());
+                let float_suffix = op_suffix(Float, scalar_bits, true);
+                let int_suffix = op_suffix(Int, scalar_bits, true);
+                let masked_convert = intrinsic_ident(
+                    &format!("mask_cvtt{float_suffix}"),
+                    int_suffix,
+                    vec_ty.n_bits(),
+                );
+                let cmp = intrinsic_ident(
+                    "cmp",
+                    &format!("{float_suffix}_mask"),
+                    vec_ty.n_bits(),
+                );
                 let blend = avx512_mask_blend_intrinsic(&target_ty);
                 let set1_float = set1_intrinsic(vec_ty);
                 let set1_int = set1_intrinsic(&target_ty);
                 let set0_int =
                     intrinsic_ident("setzero", coarse_type(&target_ty), target_ty.n_bits());
+                let upper_bound = match scalar_bits {
+                    32 => quote! { 2147483648.0 },
+                    64 => quote! { 9223372036854775808.0 },
+                    _ => unreachable!(),
+                };
+                let int_max = match scalar_bits {
+                    32 => quote! { i32::MAX },
+                    64 => quote! { i64::MAX },
+                    _ => unreachable!(),
+                };
                 let lt = avx512_float_compare_predicate("simd_lt");
                 let ord = avx512_float_compare_predicate("ord");
                 quote! {
                     let a = a.into();
-                    let in_range = #cmp::<#lt>(a, #set1_float(9223372036854775808.0));
-                    let mut converted = #masked_convert(#set1_int(i64::MAX), in_range, a);
+                    let in_range = #cmp::<#lt>(a, #set1_float(#upper_bound));
+                    let mut converted = #masked_convert(#set1_int(#int_max), in_range, a);
                     let is_not_nan = #cmp::<#ord>(a, a);
                     converted = #blend(is_not_nan, #set0_int(), converted);
                     converted.simd_into(#token)
                 }
             }
-            (Self::Avx512, Float, Int, 64, 128 | 256 | 512, Approx) => {
+            (
+                Self::Avx512,
+                Float,
+                Int,
+                scalar_bits @ (32 | 64),
+                128 | 256 | 512,
+                Approx,
+            ) => {
                 let target_ty = vec_ty.cast(target_scalar);
-                let convert = simple_intrinsic("cvttpd", &target_ty);
+                let float_suffix = op_suffix(Float, scalar_bits, true);
+                let convert = simple_intrinsic(&format!("cvtt{float_suffix}"), &target_ty);
                 quote! {
                     #convert(a.into()).simd_into(#token)
                 }
@@ -2981,16 +3016,26 @@ impl X86 {
                 Self::Avx512,
                 Float,
                 Unsigned,
-                64,
+                scalar_bits @ (32 | 64),
                 128 | 256 | 512,
                 Precise,
             ) => {
                 // The ordered `0 < a` comparison excludes negative values, both zeroes, and NaN,
                 // so zero-masking supplies the result required by Rust casts for those lanes.
-                // Positive overflow stays active: VCVTTPD2UQQ's unsigned indefinite result is
-                // `u64::MAX`, which is also the required saturating result.
-                let cmp = intrinsic_ident("cmp", "pd_mask", vec_ty.n_bits());
-                let convert = intrinsic_ident("maskz_cvttpd", "epu64", vec_ty.n_bits());
+                // Positive overflow stays active: AVX-512's unsigned indefinite result is the
+                // destination type's maximum, which is also the required saturating result.
+                let float_suffix = op_suffix(Float, scalar_bits, true);
+                let int_suffix = op_suffix(Unsigned, scalar_bits, true);
+                let cmp = intrinsic_ident(
+                    "cmp",
+                    &format!("{float_suffix}_mask"),
+                    vec_ty.n_bits(),
+                );
+                let convert = intrinsic_ident(
+                    &format!("maskz_cvtt{float_suffix}"),
+                    int_suffix,
+                    vec_ty.n_bits(),
+                );
                 let set0_float = intrinsic_ident("setzero", coarse_type(vec_ty), vec_ty.n_bits());
                 let lt = avx512_float_compare_predicate("simd_lt");
                 quote! {
@@ -3003,74 +3048,13 @@ impl X86 {
                 Self::Avx512,
                 Float,
                 Unsigned,
-                64,
+                scalar_bits @ (32 | 64),
                 128 | 256 | 512,
                 Approx,
             ) => {
                 let target_ty = vec_ty.cast(target_scalar);
-                let convert = simple_intrinsic("cvttpd", &target_ty);
-                quote! {
-                    #convert(a.into()).simd_into(#token)
-                }
-            }
-            (
-                Self::Avx512,
-                Float,
-                Unsigned,
-                32,
-                128 | 256 | 512,
-                Precise,
-            ) => {
-                // The ordered `0 < a` comparison excludes negative values, both zeroes, and NaN,
-                // so zero-masking supplies the result required by Rust casts for those lanes.
-                // Positive overflow stays active: VCVTTPS2UDQ's unsigned indefinite result is
-                // `u32::MAX`, which is also the required saturating result.
-                let cmp = intrinsic_ident("cmp", "ps_mask", vec_ty.n_bits());
-                let convert = intrinsic_ident("maskz_cvttps", "epu32", vec_ty.n_bits());
-                let set0_float =
-                    intrinsic_ident("setzero", coarse_type(vec_ty), vec_ty.n_bits());
-                let lt = avx512_float_compare_predicate("simd_lt");
-                quote! {
-                    let a = a.into();
-                    let positive = #cmp::<#lt>(#set0_float(), a);
-                    #convert(positive, a).simd_into(#token)
-                }
-            }
-            (
-                Self::Avx512,
-                Float,
-                Unsigned,
-                32,
-                128 | 256 | 512,
-                Approx,
-            ) => {
-                let convert = intrinsic_ident("cvttps", "epu32", vec_ty.n_bits());
-                quote! {
-                    #convert(a.into()).simd_into(#token)
-                }
-            }
-            (Self::Avx512, Float, Int, 32, 128 | 256 | 512, Precise) => {
-                let target_ty = vec_ty.cast(target_scalar);
-                let masked_convert = intrinsic_ident("mask_cvttps", "epi32", vec_ty.n_bits());
-                let cmp = intrinsic_ident("cmp", "ps_mask", vec_ty.n_bits());
-                let blend = avx512_mask_blend_intrinsic(&target_ty);
-                let set1_float = set1_intrinsic(vec_ty);
-                let set1_int = set1_intrinsic(&target_ty);
-                let set0_int =
-                    intrinsic_ident("setzero", coarse_type(&target_ty), target_ty.n_bits());
-                let lt = avx512_float_compare_predicate("simd_lt");
-                let ord = avx512_float_compare_predicate("ord");
-                quote! {
-                    let a = a.into();
-                    let in_range = #cmp::<#lt>(a, #set1_float(2147483648.0));
-                    let mut converted = #masked_convert(#set1_int(i32::MAX), in_range, a);
-                    let is_not_nan = #cmp::<#ord>(a, a);
-                    converted = #blend(is_not_nan, #set0_int(), converted);
-                    converted.simd_into(#token)
-                }
-            }
-            (Self::Avx512, Float, Int, 32, 128 | 256 | 512, Approx) => {
-                let convert = intrinsic_ident("cvttps", "epi32", vec_ty.n_bits());
+                let float_suffix = op_suffix(Float, scalar_bits, true);
+                let convert = simple_intrinsic(&format!("cvtt{float_suffix}"), &target_ty);
                 quote! {
                     #convert(a.into()).simd_into(#token)
                 }
