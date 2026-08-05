@@ -919,15 +919,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: f32x4<Avx512>) -> u32x4<Avx512> {
-                let a = _mm_max_ps(a.into(), _mm_setzero_ps());
-                let mut converted = _mm_cvttps_epu32(a);
-                let exceeds_unsigned_range = _mm_cmp_ps_mask::<17i32>(_mm_set1_ps(4294967040.0), a);
-                converted = _mm_mask_blend_epi32(
-                    exceeds_unsigned_range,
-                    converted,
-                    _mm_set1_epi32(u32::MAX.cast_signed()),
-                );
-                converted.simd_into(token)
+                let a = a.into();
+                let positive = _mm_cmp_ps_mask::<17i32>(_mm_setzero_ps(), a);
+                _mm_maskz_cvttps_epu32(positive, a).simd_into(token)
             }
         );
         kernel(self, a)
@@ -4865,16 +4859,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: f64x2<Avx512>) -> u64x2<Avx512> {
-                let a = _mm_max_pd(a.into(), _mm_setzero_pd());
-                let mut converted = _mm_cvttpd_epu64(a);
-                let exceeds_unsigned_range =
-                    _mm_cmp_pd_mask::<17i32>(_mm_set1_pd(18446744073709549568.0), a);
-                converted = _mm_mask_blend_epi64(
-                    exceeds_unsigned_range,
-                    converted,
-                    _mm_set1_epi64x(u64::MAX.cast_signed()),
-                );
-                converted.simd_into(token)
+                let a = a.into();
+                let positive = _mm_cmp_pd_mask::<17i32>(_mm_setzero_pd(), a);
+                _mm_maskz_cvttpd_epu64(positive, a).simd_into(token)
             }
         );
         kernel(self, a)
@@ -6513,16 +6500,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: f32x8<Avx512>) -> u32x8<Avx512> {
-                let a = _mm256_max_ps(a.into(), _mm256_setzero_ps());
-                let mut converted = _mm256_cvttps_epu32(a);
-                let exceeds_unsigned_range =
-                    _mm256_cmp_ps_mask::<17i32>(_mm256_set1_ps(4294967040.0), a);
-                converted = _mm256_mask_blend_epi32(
-                    exceeds_unsigned_range,
-                    converted,
-                    _mm256_set1_epi32(u32::MAX.cast_signed()),
-                );
-                converted.simd_into(token)
+                let a = a.into();
+                let positive = _mm256_cmp_ps_mask::<17i32>(_mm256_setzero_ps(), a);
+                _mm256_maskz_cvttps_epu32(positive, a).simd_into(token)
             }
         );
         kernel(self, a)
@@ -10996,16 +10976,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: f64x4<Avx512>) -> u64x4<Avx512> {
-                let a = _mm256_max_pd(a.into(), _mm256_setzero_pd());
-                let mut converted = _mm256_cvttpd_epu64(a);
-                let exceeds_unsigned_range =
-                    _mm256_cmp_pd_mask::<17i32>(_mm256_set1_pd(18446744073709549568.0), a);
-                converted = _mm256_mask_blend_epi64(
-                    exceeds_unsigned_range,
-                    converted,
-                    _mm256_set1_epi64x(u64::MAX.cast_signed()),
-                );
-                converted.simd_into(token)
+                let a = a.into();
+                let positive = _mm256_cmp_pd_mask::<17i32>(_mm256_setzero_pd(), a);
+                _mm256_maskz_cvttpd_epu64(positive, a).simd_into(token)
             }
         );
         kernel(self, a)
@@ -12759,16 +12732,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: f32x16<Avx512>) -> u32x16<Avx512> {
-                let a = _mm512_max_ps(a.into(), _mm512_setzero_ps());
-                let mut converted = _mm512_cvttps_epu32(a);
-                let exceeds_unsigned_range =
-                    _mm512_cmp_ps_mask::<17i32>(_mm512_set1_ps(4294967040.0), a);
-                converted = _mm512_mask_blend_epi32(
-                    exceeds_unsigned_range,
-                    converted,
-                    _mm512_set1_epi32(u32::MAX.cast_signed()),
-                );
-                converted.simd_into(token)
+                let a = a.into();
+                let positive = _mm512_cmp_ps_mask::<17i32>(_mm512_setzero_ps(), a);
+                _mm512_maskz_cvttps_epu32(positive, a).simd_into(token)
             }
         );
         kernel(self, a)
@@ -17749,16 +17715,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: f64x8<Avx512>) -> u64x8<Avx512> {
-                let a = _mm512_max_pd(a.into(), _mm512_setzero_pd());
-                let mut converted = _mm512_cvttpd_epu64(a);
-                let exceeds_unsigned_range =
-                    _mm512_cmp_pd_mask::<17i32>(_mm512_set1_pd(18446744073709549568.0), a);
-                converted = _mm512_mask_blend_epi64(
-                    exceeds_unsigned_range,
-                    converted,
-                    _mm512_set1_epi64(u64::MAX.cast_signed()),
-                );
-                converted.simd_into(token)
+                let a = a.into();
+                let positive = _mm512_cmp_pd_mask::<17i32>(_mm512_setzero_pd(), a);
+                _mm512_maskz_cvttpd_epu64(positive, a).simd_into(token)
             }
         );
         kernel(self, a)

@@ -2984,26 +2984,18 @@ impl X86 {
                 128 | 256 | 512,
                 Precise,
             ) => {
-                let target_ty = vec_ty.cast(target_scalar);
-                let convert = simple_intrinsic("cvttpd", &target_ty);
-                let max = simple_intrinsic("max", vec_ty);
+                // The ordered `0 < a` comparison excludes negative values, both zeroes, and NaN,
+                // so zero-masking supplies the result required by Rust casts for those lanes.
+                // Positive overflow stays active: VCVTTPD2UQQ's unsigned indefinite result is
+                // `u64::MAX`, which is also the required saturating result.
                 let cmp = intrinsic_ident("cmp", "pd_mask", vec_ty.n_bits());
-                let blend = avx512_mask_blend_intrinsic(&target_ty);
-                let set1_float = set1_intrinsic(vec_ty);
-                let set1_int = set1_intrinsic(&target_ty);
+                let convert = intrinsic_ident("maskz_cvttpd", "epu64", vec_ty.n_bits());
                 let set0_float = intrinsic_ident("setzero", coarse_type(vec_ty), vec_ty.n_bits());
                 let lt = avx512_float_compare_predicate("simd_lt");
                 quote! {
-                    let a = #max(a.into(), #set0_float());
-                    let mut converted = #convert(a);
-                    let exceeds_unsigned_range =
-                        #cmp::<#lt>(#set1_float(18446744073709549568.0), a);
-                    converted = #blend(
-                        exceeds_unsigned_range,
-                        converted,
-                        #set1_int(u64::MAX.cast_signed()),
-                    );
-                    converted.simd_into(#token)
+                    let a = a.into();
+                    let positive = #cmp::<#lt>(#set0_float(), a);
+                    #convert(positive, a).simd_into(#token)
                 }
             }
             (
@@ -3028,26 +3020,19 @@ impl X86 {
                 128 | 256 | 512,
                 Precise,
             ) => {
-                let target_ty = vec_ty.cast(target_scalar);
-                let convert = intrinsic_ident("cvttps", "epu32", vec_ty.n_bits());
-                let max = simple_intrinsic("max", vec_ty);
+                // The ordered `0 < a` comparison excludes negative values, both zeroes, and NaN,
+                // so zero-masking supplies the result required by Rust casts for those lanes.
+                // Positive overflow stays active: VCVTTPS2UDQ's unsigned indefinite result is
+                // `u32::MAX`, which is also the required saturating result.
                 let cmp = intrinsic_ident("cmp", "ps_mask", vec_ty.n_bits());
-                let blend = avx512_mask_blend_intrinsic(&target_ty);
-                let set1_float = set1_intrinsic(vec_ty);
-                let set1_int = set1_intrinsic(&target_ty);
+                let convert = intrinsic_ident("maskz_cvttps", "epu32", vec_ty.n_bits());
                 let set0_float =
                     intrinsic_ident("setzero", coarse_type(vec_ty), vec_ty.n_bits());
                 let lt = avx512_float_compare_predicate("simd_lt");
                 quote! {
-                    let a = #max(a.into(), #set0_float());
-                    let mut converted = #convert(a);
-                    let exceeds_unsigned_range = #cmp::<#lt>(#set1_float(4294967040.0), a);
-                    converted = #blend(
-                        exceeds_unsigned_range,
-                        converted,
-                        #set1_int(u32::MAX.cast_signed()),
-                    );
-                    converted.simd_into(#token)
+                    let a = a.into();
+                    let positive = #cmp::<#lt>(#set0_float(), a);
+                    #convert(positive, a).simd_into(#token)
                 }
             }
             (
