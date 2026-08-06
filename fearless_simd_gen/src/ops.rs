@@ -186,6 +186,15 @@ impl Op {
         }
     }
 
+    /// Return the comparison with equivalent semantics when its arguments are reversed.
+    pub(crate) fn reversed_compare_method(&self) -> Option<&'static str> {
+        match self.method {
+            "simd_gt" => Some("simd_lt"),
+            "simd_ge" => Some("simd_le"),
+            _ => None,
+        }
+    }
+
     pub(crate) fn simd_trait_method_sig(&self, vec_ty: &VecType) -> TokenStream {
         let method_ident = generic_op_name(self.method, vec_ty);
         let sig = self.simd_trait_sig_parts(vec_ty, quote! { Self });

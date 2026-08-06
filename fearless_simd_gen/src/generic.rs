@@ -31,6 +31,17 @@ pub(crate) fn byte_swizzle_op(op: &Op, vec_ty: &VecType) -> TokenStream {
     }
 }
 
+/// Implement a greater-than comparison by reversing the corresponding less-than comparison.
+pub(crate) fn reversed_compare_op(op: &Op, vec_ty: &VecType) -> Option<TokenStream> {
+    let reversed_method = generic_op_name(op.reversed_compare_method()?, vec_ty);
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    Some(quote! {
+        #method_sig {
+            self.#reversed_method(b, a)
+        }
+    })
+}
+
 pub(crate) fn recursive_swizzle_dyn_precise_body<T: ToTokens + ?Sized>(
     vec_ty: &VecType,
     token: &T,

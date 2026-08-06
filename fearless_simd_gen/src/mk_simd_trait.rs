@@ -5,7 +5,7 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
-    generic::{byte_swizzle_op, generic_op},
+    generic::{byte_swizzle_op, generic_op, reversed_compare_op},
     ops::{
         CoreOpTrait, OpKind, OpSig, TyFlavor, base_trait_ops, ops_for_type, overloaded_ops_for,
         vec_trait_ops_for,
@@ -26,6 +26,13 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
                 .map(|alias| quote! { #[doc(alias = #alias)] });
             if op.sig.should_route_swizzle_through_bytes(vec_ty) {
                 let method = byte_swizzle_op(&op, vec_ty);
+                methods.extend(quote! {
+                    #[doc = #doc]
+                    #doc_alias
+                    #[inline(always)]
+                    #method
+                });
+            } else if let Some(method) = reversed_compare_op(&op, vec_ty) {
                 methods.extend(quote! {
                     #[doc = #doc]
                     #doc_alias

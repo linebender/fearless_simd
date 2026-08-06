@@ -170,14 +170,6 @@ impl Simd for WasmSimd128 {
         f32x4_le(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
-    fn simd_ge_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        f32x4_ge(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        f32x4_gt(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
     fn zip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         u32x4_shuffle::<0, 4, 1, 5>(a.into(), b.into()).simd_into(self)
     }
@@ -494,14 +486,6 @@ impl Simd for WasmSimd128 {
         i8x16_le(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
-    fn simd_ge_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        i8x16_ge(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        i8x16_gt(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
     fn zip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(a.into(), b.into())
             .simd_into(self)
@@ -778,14 +762,6 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn simd_le_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
         u8x16_le(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_ge_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        u8x16_ge(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        u8x16_gt(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
     fn zip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -1115,14 +1091,6 @@ impl Simd for WasmSimd128 {
         i16x8_le(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
-    fn simd_ge_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        i16x8_ge(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        i16x8_gt(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
     fn zip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(a.into(), b.into()).simd_into(self)
     }
@@ -1347,14 +1315,6 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn simd_le_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
         u16x8_le(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_ge_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        u16x8_ge(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        u16x8_gt(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
     fn zip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -1658,14 +1618,6 @@ impl Simd for WasmSimd128 {
         i32x4_le(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
-    fn simd_ge_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        i32x4_ge(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        i32x4_gt(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
     fn zip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         u32x4_shuffle::<0, 4, 1, 5>(a.into(), b.into()).simd_into(self)
     }
@@ -1886,14 +1838,6 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn simd_le_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
         u32x4_le(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_ge_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        u32x4_ge(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        u32x4_gt(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
     fn zip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -2184,14 +2128,6 @@ impl Simd for WasmSimd128 {
         f64x2_le(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
-    fn simd_ge_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        f64x2_ge(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        f64x2_gt(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
     fn zip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         u64x2_shuffle::<0, 2>(a.into(), b.into()).simd_into(self)
     }
@@ -2449,14 +2385,6 @@ impl Simd for WasmSimd128 {
         i64x2_le(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
-    fn simd_ge_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
-        i64x2_ge(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
-        i64x2_gt(a.into(), b.into()).simd_into(self)
-    }
-    #[inline(always)]
     fn zip_low_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         u64x2_shuffle::<0, 2>(a.into(), b.into()).simd_into(self)
     }
@@ -2681,22 +2609,6 @@ impl Simd for WasmSimd128 {
         [
             -(u64::le(&a[0usize], &b[0usize]) as i64),
             -(u64::le(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_ge_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        [
-            -(u64::ge(&a[0usize], &b[0usize]) as i64),
-            -(u64::ge(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        [
-            -(u64::gt(&a[0usize], &b[0usize]) as i64),
-            -(u64::gt(&a[1usize], &b[1usize]) as i64),
         ]
         .simd_into(self)
     }

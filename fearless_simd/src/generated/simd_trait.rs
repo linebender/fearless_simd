@@ -262,9 +262,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn simd_ge_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
+        self.simd_le_f32x4(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn simd_gt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
+        self.simd_lt_f32x4(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -380,9 +386,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
+    #[inline(always)]
+    fn simd_ge_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
+        self.simd_le_i8x16(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
+    #[inline(always)]
+    fn simd_gt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
+        self.simd_lt_i8x16(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -465,9 +477,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
+    #[inline(always)]
+    fn simd_ge_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
+        self.simd_le_u8x16(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
+    #[inline(always)]
+    fn simd_gt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
+        self.simd_lt_u8x16(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -592,9 +610,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
+    #[inline(always)]
+    fn simd_ge_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
+        self.simd_le_i16x8(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
+    #[inline(always)]
+    fn simd_gt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
+        self.simd_lt_i16x8(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -692,9 +716,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
+    #[inline(always)]
+    fn simd_ge_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
+        self.simd_le_u16x8(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
+    #[inline(always)]
+    fn simd_gt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
+        self.simd_lt_u16x8(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -825,9 +855,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn simd_ge_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
+        self.simd_le_i32x4(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn simd_gt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
+        self.simd_lt_i32x4(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -927,9 +963,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn simd_ge_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
+        self.simd_le_u32x4(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn simd_gt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
+        self.simd_lt_u32x4(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -1058,9 +1100,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn simd_ge_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
+        self.simd_le_f64x2(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn simd_gt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
+        self.simd_lt_f64x2(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -1172,9 +1220,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn simd_ge_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
+        self.simd_le_i64x2(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn simd_gt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
+        self.simd_lt_i64x2(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -1270,9 +1324,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn simd_ge_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
+        self.simd_le_u64x2(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn simd_gt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
+        self.simd_lt_u64x2(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -1467,16 +1527,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_mask32x4(self.simd_ge_f32x4(a0, b0), self.simd_ge_f32x4(a1, b1))
+        self.simd_le_f32x8(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_mask32x4(self.simd_gt_f32x4(a0, b0), self.simd_gt_f32x4(a1, b1))
+        self.simd_lt_f32x8(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -1808,16 +1864,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_mask8x16(self.simd_ge_i8x16(a0, b0), self.simd_ge_i8x16(a1, b1))
+        self.simd_le_i8x32(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_mask8x16(self.simd_gt_i8x16(a0, b0), self.simd_gt_i8x16(a1, b1))
+        self.simd_lt_i8x32(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -2049,16 +2101,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_mask8x16(self.simd_ge_u8x16(a0, b0), self.simd_ge_u8x16(a1, b1))
+        self.simd_le_u8x32(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_mask8x16(self.simd_gt_u8x16(a0, b0), self.simd_gt_u8x16(a1, b1))
+        self.simd_lt_u8x32(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -2390,16 +2438,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_mask16x8(self.simd_ge_i16x8(a0, b0), self.simd_ge_i16x8(a1, b1))
+        self.simd_le_i16x16(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_mask16x8(self.simd_gt_i16x8(a0, b0), self.simd_gt_i16x8(a1, b1))
+        self.simd_lt_i16x16(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -2663,16 +2707,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_mask16x8(self.simd_ge_u16x8(a0, b0), self.simd_ge_u16x8(a1, b1))
+        self.simd_le_u16x16(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_mask16x8(self.simd_gt_u16x8(a0, b0), self.simd_gt_u16x8(a1, b1))
+        self.simd_lt_u16x16(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -3027,16 +3067,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_mask32x4(self.simd_ge_i32x4(a0, b0), self.simd_ge_i32x4(a1, b1))
+        self.simd_le_i32x8(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_mask32x4(self.simd_gt_i32x4(a0, b0), self.simd_gt_i32x4(a1, b1))
+        self.simd_lt_i32x8(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -3302,16 +3338,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_mask32x4(self.simd_ge_u32x4(a0, b0), self.simd_ge_u32x4(a1, b1))
+        self.simd_le_u32x8(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_mask32x4(self.simd_gt_u32x4(a0, b0), self.simd_gt_u32x4(a1, b1))
+        self.simd_lt_u32x8(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -3660,16 +3692,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_mask64x2(self.simd_ge_f64x2(a0, b0), self.simd_ge_f64x2(a1, b1))
+        self.simd_le_f64x4(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_mask64x2(self.simd_gt_f64x2(a0, b0), self.simd_gt_f64x2(a1, b1))
+        self.simd_lt_f64x4(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -3990,16 +4018,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        let (b0, b1) = self.split_i64x4(b);
-        self.combine_mask64x2(self.simd_ge_i64x2(a0, b0), self.simd_ge_i64x2(a1, b1))
+        self.simd_le_i64x4(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        let (b0, b1) = self.split_i64x4(b);
-        self.combine_mask64x2(self.simd_gt_i64x2(a0, b0), self.simd_gt_i64x2(a1, b1))
+        self.simd_lt_i64x4(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -4251,16 +4275,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        let (b0, b1) = self.split_u64x4(b);
-        self.combine_mask64x2(self.simd_ge_u64x2(a0, b0), self.simd_ge_u64x2(a1, b1))
+        self.simd_le_u64x4(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        let (b0, b1) = self.split_u64x4(b);
-        self.combine_mask64x2(self.simd_gt_u64x2(a0, b0), self.simd_gt_u64x2(a1, b1))
+        self.simd_lt_u64x4(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -4599,16 +4619,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_mask32x8(self.simd_ge_f32x8(a0, b0), self.simd_ge_f32x8(a1, b1))
+        self.simd_le_f32x16(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_mask32x8(self.simd_gt_f32x8(a0, b0), self.simd_gt_f32x8(a1, b1))
+        self.simd_lt_f32x16(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -4938,16 +4954,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_mask8x32(self.simd_ge_i8x32(a0, b0), self.simd_ge_i8x32(a1, b1))
+        self.simd_le_i8x64(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_mask8x32(self.simd_gt_i8x32(a0, b0), self.simd_gt_i8x32(a1, b1))
+        self.simd_lt_i8x64(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -5177,16 +5189,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_mask8x32(self.simd_ge_u8x32(a0, b0), self.simd_ge_u8x32(a1, b1))
+        self.simd_le_u8x64(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_mask8x32(self.simd_gt_u8x32(a0, b0), self.simd_gt_u8x32(a1, b1))
+        self.simd_lt_u8x64(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -5514,16 +5522,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_mask16x16(self.simd_ge_i16x16(a0, b0), self.simd_ge_i16x16(a1, b1))
+        self.simd_le_i16x32(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_mask16x16(self.simd_gt_i16x16(a0, b0), self.simd_gt_i16x16(a1, b1))
+        self.simd_lt_i16x32(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -5791,16 +5795,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_mask16x16(self.simd_ge_u16x16(a0, b0), self.simd_ge_u16x16(a1, b1))
+        self.simd_le_u16x32(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_mask16x16(self.simd_gt_u16x16(a0, b0), self.simd_gt_u16x16(a1, b1))
+        self.simd_lt_u16x32(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -6164,16 +6164,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_mask32x8(self.simd_ge_i32x8(a0, b0), self.simd_ge_i32x8(a1, b1))
+        self.simd_le_i32x16(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_mask32x8(self.simd_gt_i32x8(a0, b0), self.simd_gt_i32x8(a1, b1))
+        self.simd_lt_i32x16(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -6441,16 +6437,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_mask32x8(self.simd_ge_u32x8(a0, b0), self.simd_ge_u32x8(a1, b1))
+        self.simd_le_u32x16(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_mask32x8(self.simd_gt_u32x8(a0, b0), self.simd_gt_u32x8(a1, b1))
+        self.simd_lt_u32x16(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -6795,16 +6787,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_mask64x4(self.simd_ge_f64x4(a0, b0), self.simd_ge_f64x4(a1, b1))
+        self.simd_le_f64x8(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_mask64x4(self.simd_gt_f64x4(a0, b0), self.simd_gt_f64x4(a1, b1))
+        self.simd_lt_f64x8(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -7123,16 +7111,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_mask64x4(self.simd_ge_i64x4(a0, b0), self.simd_ge_i64x4(a1, b1))
+        self.simd_le_i64x8(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_mask64x4(self.simd_gt_i64x4(a0, b0), self.simd_gt_i64x4(a1, b1))
+        self.simd_lt_i64x8(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]
@@ -7382,16 +7366,12 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     #[inline(always)]
     fn simd_ge_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_mask64x4(self.simd_ge_u64x4(a0, b0), self.simd_ge_u64x4(a1, b1))
+        self.simd_le_u64x8(b, a)
     }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     #[inline(always)]
     fn simd_gt_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_mask64x4(self.simd_gt_u64x4(a0, b0), self.simd_gt_u64x4(a1, b1))
+        self.simd_lt_u64x8(b, a)
     }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     #[inline(always)]

@@ -260,26 +260,6 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn simd_ge_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x4<Avx2>, b: f32x4<Avx2>) -> mask32x4<Avx2> {
-                _mm_castps_si128(_mm_cmpge_ps(a.into(), b.into())).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x4<Avx2>, b: f32x4<Avx2>) -> mask32x4<Avx2> {
-                _mm_castps_si128(_mm_cmpgt_ps(a.into(), b.into())).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
     fn zip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -846,26 +826,6 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn simd_ge_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x16<Avx2>, b: i8x16<Avx2>) -> mask8x16<Avx2> {
-                _mm_cmpeq_epi8(_mm_max_epi8(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x16<Avx2>, b: i8x16<Avx2>) -> mask8x16<Avx2> {
-                _mm_cmpgt_epi8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
     fn zip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1326,32 +1286,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u8x16<Avx2>, b: u8x16<Avx2>) -> mask8x16<Avx2> {
                 _mm_cmpeq_epi8(_mm_min_epu8(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u8x16<Avx2>, b: u8x16<Avx2>) -> mask8x16<Avx2> {
-                _mm_cmpeq_epi8(_mm_max_epu8(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u8x16<Avx2>, b: u8x16<Avx2>) -> mask8x16<Avx2> {
-                {
-                    let sign_bit = _mm_set1_epi8(0x80u8.cast_signed());
-                    let lhs_signed = _mm_xor_si128(a.into(), sign_bit);
-                    let rhs_signed = _mm_xor_si128(b.into(), sign_bit);
-                    _mm_cmpgt_epi8(lhs_signed, rhs_signed)
-                }
-                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -1893,26 +1827,6 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn simd_ge_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x8<Avx2>, b: i16x8<Avx2>) -> mask16x8<Avx2> {
-                _mm_cmpeq_epi16(_mm_max_epi16(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x8<Avx2>, b: i16x8<Avx2>) -> mask16x8<Avx2> {
-                _mm_cmpgt_epi16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
     fn zip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2331,32 +2245,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u16x8<Avx2>, b: u16x8<Avx2>) -> mask16x8<Avx2> {
                 _mm_cmpeq_epi16(_mm_min_epu16(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x8<Avx2>, b: u16x8<Avx2>) -> mask16x8<Avx2> {
-                _mm_cmpeq_epi16(_mm_max_epu16(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x8<Avx2>, b: u16x8<Avx2>) -> mask16x8<Avx2> {
-                {
-                    let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
-                    let lhs_signed = _mm_xor_si128(a.into(), sign_bit);
-                    let rhs_signed = _mm_xor_si128(b.into(), sign_bit);
-                    _mm_cmpgt_epi16(lhs_signed, rhs_signed)
-                }
-                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -2930,26 +2818,6 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn simd_ge_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x4<Avx2>, b: i32x4<Avx2>) -> mask32x4<Avx2> {
-                _mm_cmpeq_epi32(_mm_max_epi32(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x4<Avx2>, b: i32x4<Avx2>) -> mask32x4<Avx2> {
-                _mm_cmpgt_epi32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
     fn zip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3358,32 +3226,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u32x4<Avx2>, b: u32x4<Avx2>) -> mask32x4<Avx2> {
                 _mm_cmpeq_epi32(_mm_min_epu32(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x4<Avx2>, b: u32x4<Avx2>) -> mask32x4<Avx2> {
-                _mm_cmpeq_epi32(_mm_max_epu32(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x4<Avx2>, b: u32x4<Avx2>) -> mask32x4<Avx2> {
-                {
-                    let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
-                    let lhs_signed = _mm_xor_si128(a.into(), sign_bit);
-                    let rhs_signed = _mm_xor_si128(b.into(), sign_bit);
-                    _mm_cmpgt_epi32(lhs_signed, rhs_signed)
-                }
-                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -3940,26 +3782,6 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn simd_ge_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x2<Avx2>, b: f64x2<Avx2>) -> mask64x2<Avx2> {
-                _mm_castpd_si128(_mm_cmpge_pd(a.into(), b.into())).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x2<Avx2>, b: f64x2<Avx2>) -> mask64x2<Avx2> {
-                _mm_castpd_si128(_mm_cmpgt_pd(a.into(), b.into())).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
     fn zip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4387,22 +4209,6 @@ impl Simd for Avx2 {
         .simd_into(self)
     }
     #[inline(always)]
-    fn simd_ge_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
-        [
-            -(i64::ge(&a[0usize], &b[0usize]) as i64),
-            -(i64::ge(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
-        [
-            -(i64::gt(&a[0usize], &b[0usize]) as i64),
-            -(i64::gt(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn zip_low_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4766,22 +4572,6 @@ impl Simd for Avx2 {
         [
             -(u64::le(&a[0usize], &b[0usize]) as i64),
             -(u64::le(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_ge_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        [
-            -(u64::ge(&a[0usize], &b[0usize]) as i64),
-            -(u64::ge(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        [
-            -(u64::gt(&a[0usize], &b[0usize]) as i64),
-            -(u64::gt(&a[1usize], &b[1usize]) as i64),
         ]
         .simd_into(self)
     }
@@ -5315,26 +5105,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: f32x8<Avx2>, b: f32x8<Avx2>) -> mask32x8<Avx2> {
                 _mm256_castps_si256(_mm256_cmp_ps::<18i32>(a.into(), b.into())).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x8<Avx2>, b: f32x8<Avx2>) -> mask32x8<Avx2> {
-                _mm256_castps_si256(_mm256_cmp_ps::<29i32>(a.into(), b.into())).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x8<Avx2>, b: f32x8<Avx2>) -> mask32x8<Avx2> {
-                _mm256_castps_si256(_mm256_cmp_ps::<30i32>(a.into(), b.into())).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -5925,26 +5695,6 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn simd_ge_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x32<Avx2>, b: i8x32<Avx2>) -> mask8x32<Avx2> {
-                _mm256_cmpeq_epi8(_mm256_max_epi8(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x32<Avx2>, b: i8x32<Avx2>) -> mask8x32<Avx2> {
-                _mm256_cmpgt_epi8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
     fn zip_low_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6453,32 +6203,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u8x32<Avx2>, b: u8x32<Avx2>) -> mask8x32<Avx2> {
                 _mm256_cmpeq_epi8(_mm256_min_epu8(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u8x32<Avx2>, b: u8x32<Avx2>) -> mask8x32<Avx2> {
-                _mm256_cmpeq_epi8(_mm256_max_epu8(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u8x32<Avx2>, b: u8x32<Avx2>) -> mask8x32<Avx2> {
-                {
-                    let sign_bit = _mm256_set1_epi8(0x80u8.cast_signed());
-                    let lhs_signed = _mm256_xor_si256(a.into(), sign_bit);
-                    let rhs_signed = _mm256_xor_si256(b.into(), sign_bit);
-                    _mm256_cmpgt_epi8(lhs_signed, rhs_signed)
-                }
-                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -7052,26 +6776,6 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn simd_ge_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x16<Avx2>, b: i16x16<Avx2>) -> mask16x16<Avx2> {
-                _mm256_cmpeq_epi16(_mm256_max_epi16(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x16<Avx2>, b: i16x16<Avx2>) -> mask16x16<Avx2> {
-                _mm256_cmpgt_epi16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
     fn zip_low_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -7517,32 +7221,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u16x16<Avx2>, b: u16x16<Avx2>) -> mask16x16<Avx2> {
                 _mm256_cmpeq_epi16(_mm256_min_epu16(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x16<Avx2>, b: u16x16<Avx2>) -> mask16x16<Avx2> {
-                _mm256_cmpeq_epi16(_mm256_max_epu16(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x16<Avx2>, b: u16x16<Avx2>) -> mask16x16<Avx2> {
-                {
-                    let sign_bit = _mm256_set1_epi16(0x8000u16.cast_signed());
-                    let lhs_signed = _mm256_xor_si256(a.into(), sign_bit);
-                    let rhs_signed = _mm256_xor_si256(b.into(), sign_bit);
-                    _mm256_cmpgt_epi16(lhs_signed, rhs_signed)
-                }
-                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -8143,26 +7821,6 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn simd_ge_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x8<Avx2>, b: i32x8<Avx2>) -> mask32x8<Avx2> {
-                _mm256_cmpeq_epi32(_mm256_max_epi32(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x8<Avx2>, b: i32x8<Avx2>) -> mask32x8<Avx2> {
-                _mm256_cmpgt_epi32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
     fn zip_low_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -8568,32 +8226,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u32x8<Avx2>, b: u32x8<Avx2>) -> mask32x8<Avx2> {
                 _mm256_cmpeq_epi32(_mm256_min_epu32(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x8<Avx2>, b: u32x8<Avx2>) -> mask32x8<Avx2> {
-                _mm256_cmpeq_epi32(_mm256_max_epu32(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x8<Avx2>, b: u32x8<Avx2>) -> mask32x8<Avx2> {
-                {
-                    let sign_bit = _mm256_set1_epi32(0x80000000u32.cast_signed());
-                    let lhs_signed = _mm256_xor_si256(a.into(), sign_bit);
-                    let rhs_signed = _mm256_xor_si256(b.into(), sign_bit);
-                    _mm256_cmpgt_epi32(lhs_signed, rhs_signed)
-                }
-                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -9166,26 +8798,6 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn simd_ge_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x4<Avx2>, b: f64x4<Avx2>) -> mask64x4<Avx2> {
-                _mm256_castpd_si256(_mm256_cmp_pd::<29i32>(a.into(), b.into())).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x4<Avx2>, b: f64x4<Avx2>) -> mask64x4<Avx2> {
-                _mm256_castpd_si256(_mm256_cmp_pd::<30i32>(a.into(), b.into())).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
     fn zip_low_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9617,26 +9229,6 @@ impl Simd for Avx2 {
         .simd_into(self)
     }
     #[inline(always)]
-    fn simd_ge_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
-        [
-            -(i64::ge(&a[0usize], &b[0usize]) as i64),
-            -(i64::ge(&a[1usize], &b[1usize]) as i64),
-            -(i64::ge(&a[2usize], &b[2usize]) as i64),
-            -(i64::ge(&a[3usize], &b[3usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
-        [
-            -(i64::gt(&a[0usize], &b[0usize]) as i64),
-            -(i64::gt(&a[1usize], &b[1usize]) as i64),
-            -(i64::gt(&a[2usize], &b[2usize]) as i64),
-            -(i64::gt(&a[3usize], &b[3usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn zip_low_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10003,26 +9595,6 @@ impl Simd for Avx2 {
             -(u64::le(&a[1usize], &b[1usize]) as i64),
             -(u64::le(&a[2usize], &b[2usize]) as i64),
             -(u64::le(&a[3usize], &b[3usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_ge_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
-        [
-            -(u64::ge(&a[0usize], &b[0usize]) as i64),
-            -(u64::ge(&a[1usize], &b[1usize]) as i64),
-            -(u64::ge(&a[2usize], &b[2usize]) as i64),
-            -(u64::ge(&a[3usize], &b[3usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
-        [
-            -(u64::gt(&a[0usize], &b[0usize]) as i64),
-            -(u64::gt(&a[1usize], &b[1usize]) as i64),
-            -(u64::gt(&a[2usize], &b[2usize]) as i64),
-            -(u64::gt(&a[3usize], &b[3usize]) as i64),
         ]
         .simd_into(self)
     }

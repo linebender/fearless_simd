@@ -290,26 +290,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn simd_ge_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        [
-            -(f32::ge(&a[0usize], &b[0usize]) as i32),
-            -(f32::ge(&a[1usize], &b[1usize]) as i32),
-            -(f32::ge(&a[2usize], &b[2usize]) as i32),
-            -(f32::ge(&a[3usize], &b[3usize]) as i32),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        [
-            -(f32::gt(&a[0usize], &b[0usize]) as i32),
-            -(f32::gt(&a[1usize], &b[1usize]) as i32),
-            -(f32::gt(&a[2usize], &b[2usize]) as i32),
-            -(f32::gt(&a[3usize], &b[3usize]) as i32),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn zip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         [a[0usize], b[0usize], a[1usize], b[1usize]].simd_into(self)
     }
@@ -861,50 +841,6 @@ impl Simd for Fallback {
             -(i8::le(&a[13usize], &b[13usize]) as i8),
             -(i8::le(&a[14usize], &b[14usize]) as i8),
             -(i8::le(&a[15usize], &b[15usize]) as i8),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_ge_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        [
-            -(i8::ge(&a[0usize], &b[0usize]) as i8),
-            -(i8::ge(&a[1usize], &b[1usize]) as i8),
-            -(i8::ge(&a[2usize], &b[2usize]) as i8),
-            -(i8::ge(&a[3usize], &b[3usize]) as i8),
-            -(i8::ge(&a[4usize], &b[4usize]) as i8),
-            -(i8::ge(&a[5usize], &b[5usize]) as i8),
-            -(i8::ge(&a[6usize], &b[6usize]) as i8),
-            -(i8::ge(&a[7usize], &b[7usize]) as i8),
-            -(i8::ge(&a[8usize], &b[8usize]) as i8),
-            -(i8::ge(&a[9usize], &b[9usize]) as i8),
-            -(i8::ge(&a[10usize], &b[10usize]) as i8),
-            -(i8::ge(&a[11usize], &b[11usize]) as i8),
-            -(i8::ge(&a[12usize], &b[12usize]) as i8),
-            -(i8::ge(&a[13usize], &b[13usize]) as i8),
-            -(i8::ge(&a[14usize], &b[14usize]) as i8),
-            -(i8::ge(&a[15usize], &b[15usize]) as i8),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        [
-            -(i8::gt(&a[0usize], &b[0usize]) as i8),
-            -(i8::gt(&a[1usize], &b[1usize]) as i8),
-            -(i8::gt(&a[2usize], &b[2usize]) as i8),
-            -(i8::gt(&a[3usize], &b[3usize]) as i8),
-            -(i8::gt(&a[4usize], &b[4usize]) as i8),
-            -(i8::gt(&a[5usize], &b[5usize]) as i8),
-            -(i8::gt(&a[6usize], &b[6usize]) as i8),
-            -(i8::gt(&a[7usize], &b[7usize]) as i8),
-            -(i8::gt(&a[8usize], &b[8usize]) as i8),
-            -(i8::gt(&a[9usize], &b[9usize]) as i8),
-            -(i8::gt(&a[10usize], &b[10usize]) as i8),
-            -(i8::gt(&a[11usize], &b[11usize]) as i8),
-            -(i8::gt(&a[12usize], &b[12usize]) as i8),
-            -(i8::gt(&a[13usize], &b[13usize]) as i8),
-            -(i8::gt(&a[14usize], &b[14usize]) as i8),
-            -(i8::gt(&a[15usize], &b[15usize]) as i8),
         ]
         .simd_into(self)
     }
@@ -1702,50 +1638,6 @@ impl Simd for Fallback {
             -(u8::le(&a[13usize], &b[13usize]) as i8),
             -(u8::le(&a[14usize], &b[14usize]) as i8),
             -(u8::le(&a[15usize], &b[15usize]) as i8),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_ge_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        [
-            -(u8::ge(&a[0usize], &b[0usize]) as i8),
-            -(u8::ge(&a[1usize], &b[1usize]) as i8),
-            -(u8::ge(&a[2usize], &b[2usize]) as i8),
-            -(u8::ge(&a[3usize], &b[3usize]) as i8),
-            -(u8::ge(&a[4usize], &b[4usize]) as i8),
-            -(u8::ge(&a[5usize], &b[5usize]) as i8),
-            -(u8::ge(&a[6usize], &b[6usize]) as i8),
-            -(u8::ge(&a[7usize], &b[7usize]) as i8),
-            -(u8::ge(&a[8usize], &b[8usize]) as i8),
-            -(u8::ge(&a[9usize], &b[9usize]) as i8),
-            -(u8::ge(&a[10usize], &b[10usize]) as i8),
-            -(u8::ge(&a[11usize], &b[11usize]) as i8),
-            -(u8::ge(&a[12usize], &b[12usize]) as i8),
-            -(u8::ge(&a[13usize], &b[13usize]) as i8),
-            -(u8::ge(&a[14usize], &b[14usize]) as i8),
-            -(u8::ge(&a[15usize], &b[15usize]) as i8),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        [
-            -(u8::gt(&a[0usize], &b[0usize]) as i8),
-            -(u8::gt(&a[1usize], &b[1usize]) as i8),
-            -(u8::gt(&a[2usize], &b[2usize]) as i8),
-            -(u8::gt(&a[3usize], &b[3usize]) as i8),
-            -(u8::gt(&a[4usize], &b[4usize]) as i8),
-            -(u8::gt(&a[5usize], &b[5usize]) as i8),
-            -(u8::gt(&a[6usize], &b[6usize]) as i8),
-            -(u8::gt(&a[7usize], &b[7usize]) as i8),
-            -(u8::gt(&a[8usize], &b[8usize]) as i8),
-            -(u8::gt(&a[9usize], &b[9usize]) as i8),
-            -(u8::gt(&a[10usize], &b[10usize]) as i8),
-            -(u8::gt(&a[11usize], &b[11usize]) as i8),
-            -(u8::gt(&a[12usize], &b[12usize]) as i8),
-            -(u8::gt(&a[13usize], &b[13usize]) as i8),
-            -(u8::gt(&a[14usize], &b[14usize]) as i8),
-            -(u8::gt(&a[15usize], &b[15usize]) as i8),
         ]
         .simd_into(self)
     }
@@ -2653,34 +2545,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn simd_ge_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        [
-            -(i16::ge(&a[0usize], &b[0usize]) as i16),
-            -(i16::ge(&a[1usize], &b[1usize]) as i16),
-            -(i16::ge(&a[2usize], &b[2usize]) as i16),
-            -(i16::ge(&a[3usize], &b[3usize]) as i16),
-            -(i16::ge(&a[4usize], &b[4usize]) as i16),
-            -(i16::ge(&a[5usize], &b[5usize]) as i16),
-            -(i16::ge(&a[6usize], &b[6usize]) as i16),
-            -(i16::ge(&a[7usize], &b[7usize]) as i16),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        [
-            -(i16::gt(&a[0usize], &b[0usize]) as i16),
-            -(i16::gt(&a[1usize], &b[1usize]) as i16),
-            -(i16::gt(&a[2usize], &b[2usize]) as i16),
-            -(i16::gt(&a[3usize], &b[3usize]) as i16),
-            -(i16::gt(&a[4usize], &b[4usize]) as i16),
-            -(i16::gt(&a[5usize], &b[5usize]) as i16),
-            -(i16::gt(&a[6usize], &b[6usize]) as i16),
-            -(i16::gt(&a[7usize], &b[7usize]) as i16),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn zip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         [
             a[0usize], b[0usize], a[1usize], b[1usize], a[2usize], b[2usize], a[3usize], b[3usize],
@@ -3179,34 +3043,6 @@ impl Simd for Fallback {
             -(u16::le(&a[5usize], &b[5usize]) as i16),
             -(u16::le(&a[6usize], &b[6usize]) as i16),
             -(u16::le(&a[7usize], &b[7usize]) as i16),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_ge_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        [
-            -(u16::ge(&a[0usize], &b[0usize]) as i16),
-            -(u16::ge(&a[1usize], &b[1usize]) as i16),
-            -(u16::ge(&a[2usize], &b[2usize]) as i16),
-            -(u16::ge(&a[3usize], &b[3usize]) as i16),
-            -(u16::ge(&a[4usize], &b[4usize]) as i16),
-            -(u16::ge(&a[5usize], &b[5usize]) as i16),
-            -(u16::ge(&a[6usize], &b[6usize]) as i16),
-            -(u16::ge(&a[7usize], &b[7usize]) as i16),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        [
-            -(u16::gt(&a[0usize], &b[0usize]) as i16),
-            -(u16::gt(&a[1usize], &b[1usize]) as i16),
-            -(u16::gt(&a[2usize], &b[2usize]) as i16),
-            -(u16::gt(&a[3usize], &b[3usize]) as i16),
-            -(u16::gt(&a[4usize], &b[4usize]) as i16),
-            -(u16::gt(&a[5usize], &b[5usize]) as i16),
-            -(u16::gt(&a[6usize], &b[6usize]) as i16),
-            -(u16::gt(&a[7usize], &b[7usize]) as i16),
         ]
         .simd_into(self)
     }
@@ -3858,26 +3694,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn simd_ge_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        [
-            -(i32::ge(&a[0usize], &b[0usize]) as i32),
-            -(i32::ge(&a[1usize], &b[1usize]) as i32),
-            -(i32::ge(&a[2usize], &b[2usize]) as i32),
-            -(i32::ge(&a[3usize], &b[3usize]) as i32),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        [
-            -(i32::gt(&a[0usize], &b[0usize]) as i32),
-            -(i32::gt(&a[1usize], &b[1usize]) as i32),
-            -(i32::gt(&a[2usize], &b[2usize]) as i32),
-            -(i32::gt(&a[3usize], &b[3usize]) as i32),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn zip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         [a[0usize], b[0usize], a[1usize], b[1usize]].simd_into(self)
     }
@@ -4202,26 +4018,6 @@ impl Simd for Fallback {
             -(u32::le(&a[1usize], &b[1usize]) as i32),
             -(u32::le(&a[2usize], &b[2usize]) as i32),
             -(u32::le(&a[3usize], &b[3usize]) as i32),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_ge_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        [
-            -(u32::ge(&a[0usize], &b[0usize]) as i32),
-            -(u32::ge(&a[1usize], &b[1usize]) as i32),
-            -(u32::ge(&a[2usize], &b[2usize]) as i32),
-            -(u32::ge(&a[3usize], &b[3usize]) as i32),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        [
-            -(u32::gt(&a[0usize], &b[0usize]) as i32),
-            -(u32::gt(&a[1usize], &b[1usize]) as i32),
-            -(u32::gt(&a[2usize], &b[2usize]) as i32),
-            -(u32::gt(&a[3usize], &b[3usize]) as i32),
         ]
         .simd_into(self)
     }
@@ -4627,22 +4423,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn simd_ge_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        [
-            -(f64::ge(&a[0usize], &b[0usize]) as i64),
-            -(f64::ge(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        [
-            -(f64::gt(&a[0usize], &b[0usize]) as i64),
-            -(f64::gt(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn zip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         [a[0usize], b[0usize]].simd_into(self)
     }
@@ -4923,22 +4703,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn simd_ge_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
-        [
-            -(i64::ge(&a[0usize], &b[0usize]) as i64),
-            -(i64::ge(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
-        [
-            -(i64::gt(&a[0usize], &b[0usize]) as i64),
-            -(i64::gt(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn zip_low_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         [a[0usize], b[0usize]].simd_into(self)
     }
@@ -5178,22 +4942,6 @@ impl Simd for Fallback {
         [
             -(u64::le(&a[0usize], &b[0usize]) as i64),
             -(u64::le(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_ge_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        [
-            -(u64::ge(&a[0usize], &b[0usize]) as i64),
-            -(u64::ge(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        [
-            -(u64::gt(&a[0usize], &b[0usize]) as i64),
-            -(u64::gt(&a[1usize], &b[1usize]) as i64),
         ]
         .simd_into(self)
     }
