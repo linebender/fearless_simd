@@ -255,6 +255,14 @@ pub trait Simd:
     fn div_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor integer vectors, this operation is the same as `max`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor integer vectors, this operation is the same as `min`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    fn min_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -283,14 +291,6 @@ pub trait Simd:
     fn interleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>);
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn min_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
     fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
@@ -379,6 +379,10 @@ pub trait Simd:
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -409,10 +413,6 @@ pub trait Simd:
     fn deinterleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x32<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
@@ -470,6 +470,10 @@ pub trait Simd:
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -500,10 +504,6 @@ pub trait Simd:
     fn deinterleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self>;
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
@@ -603,6 +603,10 @@ pub trait Simd:
     fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -633,10 +637,6 @@ pub trait Simd:
     fn deinterleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x16<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
@@ -709,6 +709,10 @@ pub trait Simd:
     fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -739,10 +743,6 @@ pub trait Simd:
     fn deinterleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x16<Self>;
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
@@ -848,6 +848,10 @@ pub trait Simd:
     fn shr_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -878,10 +882,6 @@ pub trait Simd:
     fn deinterleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x8<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
@@ -956,6 +956,10 @@ pub trait Simd:
     fn shr_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -986,10 +990,6 @@ pub trait Simd:
     fn deinterleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x8<Self>;
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
@@ -1093,6 +1093,14 @@ pub trait Simd:
     fn div_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor integer vectors, this operation is the same as `max`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor integer vectors, this operation is the same as `min`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    fn min_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -1121,14 +1129,6 @@ pub trait Simd:
     fn interleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>);
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn min_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
     fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
@@ -1213,6 +1213,10 @@ pub trait Simd:
     fn shr_i64x2(self, a: i64x2<Self>, shift: u32) -> i64x2<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -1243,10 +1247,6 @@ pub trait Simd:
     fn deinterleave_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> (i64x2<Self>, i64x2<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_i64x2(self, a: mask64x2<Self>, b: i64x2<Self>, c: i64x2<Self>) -> i64x2<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x4<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
@@ -1317,6 +1317,10 @@ pub trait Simd:
     fn shr_u64x2(self, a: u64x2<Self>, shift: u32) -> u64x2<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -1347,10 +1351,6 @@ pub trait Simd:
     fn deinterleave_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> (u64x2<Self>, u64x2<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u64x2(self, a: mask64x2<Self>, b: u64x2<Self>, c: u64x2<Self>) -> u64x2<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x4<Self>;
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
@@ -1503,6 +1503,40 @@ pub trait Simd:
         let (b0, b1) = self.split_f32x8(b);
         self.combine_f32x4(self.copysign_f32x4(a0, b0), self.copysign_f32x4(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(self.max_f32x4(a0, b0), self.max_f32x4(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(self.min_f32x4(a0, b0), self.min_f32x4(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor integer vectors, this operation is the same as `max`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    #[inline(always)]
+    fn max_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(
+            self.max_precise_f32x4(a0, b0),
+            self.max_precise_f32x4(a1, b1),
+        )
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor integer vectors, this operation is the same as `min`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    #[inline(always)]
+    fn min_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(
+            self.min_precise_f32x4(a0, b0),
+            self.min_precise_f32x4(a1, b1),
+        )
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
@@ -1588,40 +1622,6 @@ pub trait Simd:
         (
             self.combine_f32x4(lo_even, hi_even),
             self.combine_f32x4(lo_odd, hi_odd),
-        )
-    }
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    #[inline(always)]
-    fn max_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(self.max_f32x4(a0, b0), self.max_f32x4(a1, b1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    #[inline(always)]
-    fn min_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(self.min_f32x4(a0, b0), self.min_f32x4(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    #[inline(always)]
-    fn max_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(
-            self.max_precise_f32x4(a0, b0),
-            self.max_precise_f32x4(a1, b1),
-        )
-    }
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    #[inline(always)]
-    fn min_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(
-            self.min_precise_f32x4(a0, b0),
-            self.min_precise_f32x4(a1, b1),
         )
     }
     #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
@@ -1840,6 +1840,20 @@ pub trait Simd:
         let (b0, b1) = self.split_i8x32(b);
         self.combine_i8x16(self.shrv_i8x16(a0, b0), self.shrv_i8x16(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(self.max_i8x16(a0, b0), self.max_i8x16(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(self.min_i8x16(a0, b0), self.min_i8x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
@@ -1934,20 +1948,6 @@ pub trait Simd:
         let (b0, b1) = self.split_i8x32(b);
         let (c0, c1) = self.split_i8x32(c);
         self.combine_i8x16(self.select_i8x16(a0, b0, c0), self.select_i8x16(a1, b1, c1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    #[inline(always)]
-    fn min_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_i8x16(self.min_i8x16(a0, b0), self.min_i8x16(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors."]
-    #[inline(always)]
-    fn max_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_i8x16(self.max_i8x16(a0, b0), self.max_i8x16(a1, b1))
     }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x64<Self>;
@@ -2077,6 +2077,20 @@ pub trait Simd:
         let (b0, b1) = self.split_u8x32(b);
         self.combine_u8x16(self.shrv_u8x16(a0, b0), self.shrv_u8x16(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(self.max_u8x16(a0, b0), self.max_u8x16(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(self.min_u8x16(a0, b0), self.min_u8x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
@@ -2171,20 +2185,6 @@ pub trait Simd:
         let (b0, b1) = self.split_u8x32(b);
         let (c0, c1) = self.split_u8x32(c);
         self.combine_u8x16(self.select_u8x16(a0, b0, c0), self.select_u8x16(a1, b1, c1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    #[inline(always)]
-    fn min_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_u8x16(self.min_u8x16(a0, b0), self.min_u8x16(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors."]
-    #[inline(always)]
-    fn max_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_u8x16(self.max_u8x16(a0, b0), self.max_u8x16(a1, b1))
     }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self>;
@@ -2414,6 +2414,20 @@ pub trait Simd:
         let (b0, b1) = self.split_i16x16(b);
         self.combine_i16x8(self.shrv_i16x8(a0, b0), self.shrv_i16x8(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(self.max_i16x8(a0, b0), self.max_i16x8(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(self.min_i16x8(a0, b0), self.min_i16x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
@@ -2508,20 +2522,6 @@ pub trait Simd:
         let (b0, b1) = self.split_i16x16(b);
         let (c0, c1) = self.split_i16x16(c);
         self.combine_i16x8(self.select_i16x8(a0, b0, c0), self.select_i16x8(a1, b1, c1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    #[inline(always)]
-    fn min_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i16x8(self.min_i16x8(a0, b0), self.min_i16x8(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors."]
-    #[inline(always)]
-    fn max_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i16x8(self.max_i16x8(a0, b0), self.max_i16x8(a1, b1))
     }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x32<Self>;
@@ -2683,6 +2683,20 @@ pub trait Simd:
         let (b0, b1) = self.split_u16x16(b);
         self.combine_u16x8(self.shrv_u16x8(a0, b0), self.shrv_u16x8(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(self.max_u16x8(a0, b0), self.max_u16x8(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(self.min_u16x8(a0, b0), self.min_u16x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
@@ -2777,20 +2791,6 @@ pub trait Simd:
         let (b0, b1) = self.split_u16x16(b);
         let (c0, c1) = self.split_u16x16(c);
         self.combine_u16x8(self.select_u16x8(a0, b0, c0), self.select_u16x8(a1, b1, c1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    #[inline(always)]
-    fn min_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u16x8(self.min_u16x8(a0, b0), self.min_u16x8(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors."]
-    #[inline(always)]
-    fn max_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u16x8(self.max_u16x8(a0, b0), self.max_u16x8(a1, b1))
     }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x32<Self>;
@@ -3043,6 +3043,20 @@ pub trait Simd:
         let (b0, b1) = self.split_i32x8(b);
         self.combine_i32x4(self.shrv_i32x4(a0, b0), self.shrv_i32x4(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(self.max_i32x4(a0, b0), self.max_i32x4(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(self.min_i32x4(a0, b0), self.min_i32x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
@@ -3137,20 +3151,6 @@ pub trait Simd:
         let (b0, b1) = self.split_i32x8(b);
         let (c0, c1) = self.split_i32x8(c);
         self.combine_i32x4(self.select_i32x4(a0, b0, c0), self.select_i32x4(a1, b1, c1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    #[inline(always)]
-    fn min_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i32x4(self.min_i32x4(a0, b0), self.min_i32x4(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors."]
-    #[inline(always)]
-    fn max_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i32x4(self.max_i32x4(a0, b0), self.max_i32x4(a1, b1))
     }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x16<Self>;
@@ -3314,6 +3314,20 @@ pub trait Simd:
         let (b0, b1) = self.split_u32x8(b);
         self.combine_u32x4(self.shrv_u32x4(a0, b0), self.shrv_u32x4(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(self.max_u32x4(a0, b0), self.max_u32x4(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(self.min_u32x4(a0, b0), self.min_u32x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
@@ -3408,20 +3422,6 @@ pub trait Simd:
         let (b0, b1) = self.split_u32x8(b);
         let (c0, c1) = self.split_u32x8(c);
         self.combine_u32x4(self.select_u32x4(a0, b0, c0), self.select_u32x4(a1, b1, c1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    #[inline(always)]
-    fn min_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u32x4(self.min_u32x4(a0, b0), self.min_u32x4(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors."]
-    #[inline(always)]
-    fn max_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u32x4(self.max_u32x4(a0, b0), self.max_u32x4(a1, b1))
     }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x16<Self>;
@@ -3668,6 +3668,40 @@ pub trait Simd:
         let (b0, b1) = self.split_f64x4(b);
         self.combine_f64x2(self.copysign_f64x2(a0, b0), self.copysign_f64x2(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(self.max_f64x2(a0, b0), self.max_f64x2(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(self.min_f64x2(a0, b0), self.min_f64x2(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor integer vectors, this operation is the same as `max`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    #[inline(always)]
+    fn max_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(
+            self.max_precise_f64x2(a0, b0),
+            self.max_precise_f64x2(a1, b1),
+        )
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor integer vectors, this operation is the same as `min`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    #[inline(always)]
+    fn min_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(
+            self.min_precise_f64x2(a0, b0),
+            self.min_precise_f64x2(a1, b1),
+        )
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
@@ -3753,40 +3787,6 @@ pub trait Simd:
         (
             self.combine_f64x2(lo_even, hi_even),
             self.combine_f64x2(lo_odd, hi_odd),
-        )
-    }
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    #[inline(always)]
-    fn max_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(self.max_f64x2(a0, b0), self.max_f64x2(a1, b1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    #[inline(always)]
-    fn min_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(self.min_f64x2(a0, b0), self.min_f64x2(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    #[inline(always)]
-    fn max_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(
-            self.max_precise_f64x2(a0, b0),
-            self.max_precise_f64x2(a1, b1),
-        )
-    }
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    #[inline(always)]
-    fn min_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(
-            self.min_precise_f64x2(a0, b0),
-            self.min_precise_f64x2(a1, b1),
         )
     }
     #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
@@ -3994,6 +3994,20 @@ pub trait Simd:
         let (b0, b1) = self.split_i64x4(b);
         self.combine_i64x2(self.shrv_i64x2(a0, b0), self.shrv_i64x2(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i64x2(self.max_i64x2(a0, b0), self.max_i64x2(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i64x2(self.min_i64x2(a0, b0), self.min_i64x2(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
@@ -4088,20 +4102,6 @@ pub trait Simd:
         let (b0, b1) = self.split_i64x4(b);
         let (c0, c1) = self.split_i64x4(c);
         self.combine_i64x2(self.select_i64x2(a0, b0, c0), self.select_i64x2(a1, b1, c1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    #[inline(always)]
-    fn min_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        let (b0, b1) = self.split_i64x4(b);
-        self.combine_i64x2(self.min_i64x2(a0, b0), self.min_i64x2(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors."]
-    #[inline(always)]
-    fn max_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        let (b0, b1) = self.split_i64x4(b);
-        self.combine_i64x2(self.max_i64x2(a0, b0), self.max_i64x2(a1, b1))
     }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x8<Self>;
@@ -4251,6 +4251,20 @@ pub trait Simd:
         let (b0, b1) = self.split_u64x4(b);
         self.combine_u64x2(self.shrv_u64x2(a0, b0), self.shrv_u64x2(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u64x2(self.max_u64x2(a0, b0), self.max_u64x2(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u64x2(self.min_u64x2(a0, b0), self.min_u64x2(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
@@ -4345,20 +4359,6 @@ pub trait Simd:
         let (b0, b1) = self.split_u64x4(b);
         let (c0, c1) = self.split_u64x4(c);
         self.combine_u64x2(self.select_u64x2(a0, b0, c0), self.select_u64x2(a1, b1, c1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    #[inline(always)]
-    fn min_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        let (b0, b1) = self.split_u64x4(b);
-        self.combine_u64x2(self.min_u64x2(a0, b0), self.min_u64x2(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors."]
-    #[inline(always)]
-    fn max_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        let (b0, b1) = self.split_u64x4(b);
-        self.combine_u64x2(self.max_u64x2(a0, b0), self.max_u64x2(a1, b1))
     }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x8<Self>;
@@ -4595,6 +4595,40 @@ pub trait Simd:
         let (b0, b1) = self.split_f32x16(b);
         self.combine_f32x8(self.copysign_f32x8(a0, b0), self.copysign_f32x8(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(self.max_f32x8(a0, b0), self.max_f32x8(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(self.min_f32x8(a0, b0), self.min_f32x8(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor integer vectors, this operation is the same as `max`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    #[inline(always)]
+    fn max_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(
+            self.max_precise_f32x8(a0, b0),
+            self.max_precise_f32x8(a1, b1),
+        )
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor integer vectors, this operation is the same as `min`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    #[inline(always)]
+    fn min_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(
+            self.min_precise_f32x8(a0, b0),
+            self.min_precise_f32x8(a1, b1),
+        )
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
@@ -4680,40 +4714,6 @@ pub trait Simd:
         (
             self.combine_f32x8(lo_even, hi_even),
             self.combine_f32x8(lo_odd, hi_odd),
-        )
-    }
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    #[inline(always)]
-    fn max_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.max_f32x8(a0, b0), self.max_f32x8(a1, b1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    #[inline(always)]
-    fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.min_f32x8(a0, b0), self.min_f32x8(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    #[inline(always)]
-    fn max_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(
-            self.max_precise_f32x8(a0, b0),
-            self.max_precise_f32x8(a1, b1),
-        )
-    }
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    #[inline(always)]
-    fn min_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(
-            self.min_precise_f32x8(a0, b0),
-            self.min_precise_f32x8(a1, b1),
         )
     }
     #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
@@ -4930,6 +4930,20 @@ pub trait Simd:
         let (b0, b1) = self.split_i8x64(b);
         self.combine_i8x32(self.shrv_i8x32(a0, b0), self.shrv_i8x32(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(self.max_i8x32(a0, b0), self.max_i8x32(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(self.min_i8x32(a0, b0), self.min_i8x32(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
@@ -5024,20 +5038,6 @@ pub trait Simd:
         let (b0, b1) = self.split_i8x64(b);
         let (c0, c1) = self.split_i8x64(c);
         self.combine_i8x32(self.select_i8x32(a0, b0, c0), self.select_i8x32(a1, b1, c1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    #[inline(always)]
-    fn min_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.min_i8x32(a0, b0), self.min_i8x32(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors."]
-    #[inline(always)]
-    fn max_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.max_i8x32(a0, b0), self.max_i8x32(a1, b1))
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i8x64(self, a: i8x64<Self>) -> (i8x32<Self>, i8x32<Self>);
@@ -5165,6 +5165,20 @@ pub trait Simd:
         let (b0, b1) = self.split_u8x64(b);
         self.combine_u8x32(self.shrv_u8x32(a0, b0), self.shrv_u8x32(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(self.max_u8x32(a0, b0), self.max_u8x32(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(self.min_u8x32(a0, b0), self.min_u8x32(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
@@ -5259,20 +5273,6 @@ pub trait Simd:
         let (b0, b1) = self.split_u8x64(b);
         let (c0, c1) = self.split_u8x64(c);
         self.combine_u8x32(self.select_u8x32(a0, b0, c0), self.select_u8x32(a1, b1, c1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    #[inline(always)]
-    fn min_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.min_u8x32(a0, b0), self.min_u8x32(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors."]
-    #[inline(always)]
-    fn max_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.max_u8x32(a0, b0), self.max_u8x32(a1, b1))
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>);
@@ -5498,6 +5498,20 @@ pub trait Simd:
         let (b0, b1) = self.split_i16x32(b);
         self.combine_i16x16(self.shrv_i16x16(a0, b0), self.shrv_i16x16(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(self.max_i16x16(a0, b0), self.max_i16x16(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(self.min_i16x16(a0, b0), self.min_i16x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
@@ -5598,20 +5612,6 @@ pub trait Simd:
             self.select_i16x16(a0, b0, c0),
             self.select_i16x16(a1, b1, c1),
         )
-    }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    #[inline(always)]
-    fn min_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.min_i16x16(a0, b0), self.min_i16x16(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors."]
-    #[inline(always)]
-    fn max_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.max_i16x16(a0, b0), self.max_i16x16(a1, b1))
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i16x32(self, a: i16x32<Self>) -> (i16x16<Self>, i16x16<Self>);
@@ -5771,6 +5771,20 @@ pub trait Simd:
         let (b0, b1) = self.split_u16x32(b);
         self.combine_u16x16(self.shrv_u16x16(a0, b0), self.shrv_u16x16(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(self.max_u16x16(a0, b0), self.max_u16x16(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(self.min_u16x16(a0, b0), self.min_u16x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
@@ -5871,20 +5885,6 @@ pub trait Simd:
             self.select_u16x16(a0, b0, c0),
             self.select_u16x16(a1, b1, c1),
         )
-    }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    #[inline(always)]
-    fn min_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.min_u16x16(a0, b0), self.min_u16x16(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors."]
-    #[inline(always)]
-    fn max_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.max_u16x16(a0, b0), self.max_u16x16(a1, b1))
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>);
@@ -6140,6 +6140,20 @@ pub trait Simd:
         let (b0, b1) = self.split_i32x16(b);
         self.combine_i32x8(self.shrv_i32x8(a0, b0), self.shrv_i32x8(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(self.max_i32x8(a0, b0), self.max_i32x8(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(self.min_i32x8(a0, b0), self.min_i32x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
@@ -6234,20 +6248,6 @@ pub trait Simd:
         let (b0, b1) = self.split_i32x16(b);
         let (c0, c1) = self.split_i32x16(c);
         self.combine_i32x8(self.select_i32x8(a0, b0, c0), self.select_i32x8(a1, b1, c1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    #[inline(always)]
-    fn min_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.min_i32x8(a0, b0), self.min_i32x8(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors."]
-    #[inline(always)]
-    fn max_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.max_i32x8(a0, b0), self.max_i32x8(a1, b1))
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>);
@@ -6413,6 +6413,20 @@ pub trait Simd:
         let (b0, b1) = self.split_u32x16(b);
         self.combine_u32x8(self.shrv_u32x8(a0, b0), self.shrv_u32x8(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(self.max_u32x8(a0, b0), self.max_u32x8(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(self.min_u32x8(a0, b0), self.min_u32x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
@@ -6507,20 +6521,6 @@ pub trait Simd:
         let (b0, b1) = self.split_u32x16(b);
         let (c0, c1) = self.split_u32x16(c);
         self.combine_u32x8(self.select_u32x8(a0, b0, c0), self.select_u32x8(a1, b1, c1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    #[inline(always)]
-    fn min_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.min_u32x8(a0, b0), self.min_u32x8(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors."]
-    #[inline(always)]
-    fn max_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.max_u32x8(a0, b0), self.max_u32x8(a1, b1))
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>);
@@ -6763,6 +6763,40 @@ pub trait Simd:
         let (b0, b1) = self.split_f64x8(b);
         self.combine_f64x4(self.copysign_f64x4(a0, b0), self.copysign_f64x4(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(self.max_f64x4(a0, b0), self.max_f64x4(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(self.min_f64x4(a0, b0), self.min_f64x4(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor integer vectors, this operation is the same as `max`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    #[inline(always)]
+    fn max_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(
+            self.max_precise_f64x4(a0, b0),
+            self.max_precise_f64x4(a1, b1),
+        )
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor integer vectors, this operation is the same as `min`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    #[inline(always)]
+    fn min_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(
+            self.min_precise_f64x4(a0, b0),
+            self.min_precise_f64x4(a1, b1),
+        )
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
@@ -6848,40 +6882,6 @@ pub trait Simd:
         (
             self.combine_f64x4(lo_even, hi_even),
             self.combine_f64x4(lo_odd, hi_odd),
-        )
-    }
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    #[inline(always)]
-    fn max_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.max_f64x4(a0, b0), self.max_f64x4(a1, b1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    #[inline(always)]
-    fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.min_f64x4(a0, b0), self.min_f64x4(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    #[inline(always)]
-    fn max_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(
-            self.max_precise_f64x4(a0, b0),
-            self.max_precise_f64x4(a1, b1),
-        )
-    }
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    #[inline(always)]
-    fn min_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(
-            self.min_precise_f64x4(a0, b0),
-            self.min_precise_f64x4(a1, b1),
         )
     }
     #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
@@ -7087,6 +7087,20 @@ pub trait Simd:
         let (b0, b1) = self.split_i64x8(b);
         self.combine_i64x4(self.shrv_i64x4(a0, b0), self.shrv_i64x4(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.max_i64x4(a0, b0), self.max_i64x4(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.min_i64x4(a0, b0), self.min_i64x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
@@ -7181,20 +7195,6 @@ pub trait Simd:
         let (b0, b1) = self.split_i64x8(b);
         let (c0, c1) = self.split_i64x8(c);
         self.combine_i64x4(self.select_i64x4(a0, b0, c0), self.select_i64x4(a1, b1, c1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    #[inline(always)]
-    fn min_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.min_i64x4(a0, b0), self.min_i64x4(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors."]
-    #[inline(always)]
-    fn max_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.max_i64x4(a0, b0), self.max_i64x4(a1, b1))
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i64x8(self, a: i64x8<Self>) -> (i64x4<Self>, i64x4<Self>);
@@ -7342,6 +7342,20 @@ pub trait Simd:
         let (b0, b1) = self.split_u64x8(b);
         self.combine_u64x4(self.shrv_u64x4(a0, b0), self.shrv_u64x4(a1, b1))
     }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.max_u64x4(a0, b0), self.max_u64x4(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.min_u64x4(a0, b0), self.min_u64x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
@@ -7436,20 +7450,6 @@ pub trait Simd:
         let (b0, b1) = self.split_u64x8(b);
         let (c0, c1) = self.split_u64x8(c);
         self.combine_u64x4(self.select_u64x4(a0, b0, c0), self.select_u64x4(a1, b1, c1))
-    }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    #[inline(always)]
-    fn min_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.min_u64x4(a0, b0), self.min_u64x4(a1, b1))
-    }
-    #[doc = "Return the element-wise maximum of two vectors."]
-    #[inline(always)]
-    fn max_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.max_u64x4(a0, b0), self.max_u64x4(a1, b1))
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u64x8(self, a: u64x8<Self>) -> (u64x4<Self>, u64x4<Self>);
@@ -8143,6 +8143,14 @@ pub trait SimdBase<S: Simd>:
     fn swizzle_dyn(self, indices: impl SimdInto<Self::Bytes, S>) -> Self;
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
     fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor integer vectors, this operation is the same as `max`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor integer vectors, this operation is the same as `min`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `self` is less than `rhs`, and false if not."]
@@ -8206,14 +8214,6 @@ pub trait SimdFloat<S: Simd>:
     fn approximate_recip(self) -> Self;
     #[doc = "Return a vector with the magnitude of `self` and the sign of `rhs` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self;
     #[doc = "Compute `(self * op1) + op2` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
     fn mul_add(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self;
     #[doc = "Compute `(self * op1) - op2` (fused multiply-subtract) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
@@ -8262,10 +8262,6 @@ pub trait SimdInt<S: Simd>:
     fn to_float<T: SimdCvtFloat<Self>>(self) -> T {
         T::float_from(self)
     }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self;
 }
 #[doc = r" Functionality implemented by SIMD masks."]
 #[doc = r""]

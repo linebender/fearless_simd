@@ -260,6 +260,46 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        [
+            f32::max(a[0usize], b[0usize]),
+            f32::max(a[1usize], b[1usize]),
+            f32::max(a[2usize], b[2usize]),
+            f32::max(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        [
+            f32::min(a[0usize], b[0usize]),
+            f32::min(a[1usize], b[1usize]),
+            f32::min(a[2usize], b[2usize]),
+            f32::min(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        [
+            f32::max(a[0usize], b[0usize]),
+            f32::max(a[1usize], b[1usize]),
+            f32::max(a[2usize], b[2usize]),
+            f32::max(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn min_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        [
+            f32::min(a[0usize], b[0usize]),
+            f32::min(a[1usize], b[1usize]),
+            f32::min(a[2usize], b[2usize]),
+            f32::min(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn simd_eq_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
         [
             -(f32::eq(&a[0usize], &b[0usize]) as i32),
@@ -312,46 +352,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn deinterleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>) {
         (self.unzip_low_f32x4(a, b), self.unzip_high_f32x4(a, b))
-    }
-    #[inline(always)]
-    fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        [
-            f32::max(a[0usize], b[0usize]),
-            f32::max(a[1usize], b[1usize]),
-            f32::max(a[2usize], b[2usize]),
-            f32::max(a[3usize], b[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        [
-            f32::min(a[0usize], b[0usize]),
-            f32::min(a[1usize], b[1usize]),
-            f32::min(a[2usize], b[2usize]),
-            f32::min(a[3usize], b[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        [
-            f32::max(a[0usize], b[0usize]),
-            f32::max(a[1usize], b[1usize]),
-            f32::max(a[2usize], b[2usize]),
-            f32::max(a[3usize], b[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn min_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        [
-            f32::min(a[0usize], b[0usize]),
-            f32::min(a[1usize], b[1usize]),
-            f32::min(a[2usize], b[2usize]),
-            f32::min(a[3usize], b[3usize]),
-        ]
-        .simd_into(self)
     }
     #[inline(always)]
     fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
@@ -779,6 +779,50 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        [
+            i8::max(a[0usize], b[0usize]),
+            i8::max(a[1usize], b[1usize]),
+            i8::max(a[2usize], b[2usize]),
+            i8::max(a[3usize], b[3usize]),
+            i8::max(a[4usize], b[4usize]),
+            i8::max(a[5usize], b[5usize]),
+            i8::max(a[6usize], b[6usize]),
+            i8::max(a[7usize], b[7usize]),
+            i8::max(a[8usize], b[8usize]),
+            i8::max(a[9usize], b[9usize]),
+            i8::max(a[10usize], b[10usize]),
+            i8::max(a[11usize], b[11usize]),
+            i8::max(a[12usize], b[12usize]),
+            i8::max(a[13usize], b[13usize]),
+            i8::max(a[14usize], b[14usize]),
+            i8::max(a[15usize], b[15usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        [
+            i8::min(a[0usize], b[0usize]),
+            i8::min(a[1usize], b[1usize]),
+            i8::min(a[2usize], b[2usize]),
+            i8::min(a[3usize], b[3usize]),
+            i8::min(a[4usize], b[4usize]),
+            i8::min(a[5usize], b[5usize]),
+            i8::min(a[6usize], b[6usize]),
+            i8::min(a[7usize], b[7usize]),
+            i8::min(a[8usize], b[8usize]),
+            i8::min(a[9usize], b[9usize]),
+            i8::min(a[10usize], b[10usize]),
+            i8::min(a[11usize], b[11usize]),
+            i8::min(a[12usize], b[12usize]),
+            i8::min(a[13usize], b[13usize]),
+            i8::min(a[14usize], b[14usize]),
+            i8::min(a[15usize], b[15usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
         [
             -(i8::eq(&a[0usize], &b[0usize]) as i8),
@@ -970,50 +1014,6 @@ impl Simd for Fallback {
             } else {
                 c[15usize]
             },
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        [
-            i8::min(a[0usize], b[0usize]),
-            i8::min(a[1usize], b[1usize]),
-            i8::min(a[2usize], b[2usize]),
-            i8::min(a[3usize], b[3usize]),
-            i8::min(a[4usize], b[4usize]),
-            i8::min(a[5usize], b[5usize]),
-            i8::min(a[6usize], b[6usize]),
-            i8::min(a[7usize], b[7usize]),
-            i8::min(a[8usize], b[8usize]),
-            i8::min(a[9usize], b[9usize]),
-            i8::min(a[10usize], b[10usize]),
-            i8::min(a[11usize], b[11usize]),
-            i8::min(a[12usize], b[12usize]),
-            i8::min(a[13usize], b[13usize]),
-            i8::min(a[14usize], b[14usize]),
-            i8::min(a[15usize], b[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        [
-            i8::max(a[0usize], b[0usize]),
-            i8::max(a[1usize], b[1usize]),
-            i8::max(a[2usize], b[2usize]),
-            i8::max(a[3usize], b[3usize]),
-            i8::max(a[4usize], b[4usize]),
-            i8::max(a[5usize], b[5usize]),
-            i8::max(a[6usize], b[6usize]),
-            i8::max(a[7usize], b[7usize]),
-            i8::max(a[8usize], b[8usize]),
-            i8::max(a[9usize], b[9usize]),
-            i8::max(a[10usize], b[10usize]),
-            i8::max(a[11usize], b[11usize]),
-            i8::max(a[12usize], b[12usize]),
-            i8::max(a[13usize], b[13usize]),
-            i8::max(a[14usize], b[14usize]),
-            i8::max(a[15usize], b[15usize]),
         ]
         .simd_into(self)
     }
@@ -1576,6 +1576,50 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        [
+            u8::max(a[0usize], b[0usize]),
+            u8::max(a[1usize], b[1usize]),
+            u8::max(a[2usize], b[2usize]),
+            u8::max(a[3usize], b[3usize]),
+            u8::max(a[4usize], b[4usize]),
+            u8::max(a[5usize], b[5usize]),
+            u8::max(a[6usize], b[6usize]),
+            u8::max(a[7usize], b[7usize]),
+            u8::max(a[8usize], b[8usize]),
+            u8::max(a[9usize], b[9usize]),
+            u8::max(a[10usize], b[10usize]),
+            u8::max(a[11usize], b[11usize]),
+            u8::max(a[12usize], b[12usize]),
+            u8::max(a[13usize], b[13usize]),
+            u8::max(a[14usize], b[14usize]),
+            u8::max(a[15usize], b[15usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        [
+            u8::min(a[0usize], b[0usize]),
+            u8::min(a[1usize], b[1usize]),
+            u8::min(a[2usize], b[2usize]),
+            u8::min(a[3usize], b[3usize]),
+            u8::min(a[4usize], b[4usize]),
+            u8::min(a[5usize], b[5usize]),
+            u8::min(a[6usize], b[6usize]),
+            u8::min(a[7usize], b[7usize]),
+            u8::min(a[8usize], b[8usize]),
+            u8::min(a[9usize], b[9usize]),
+            u8::min(a[10usize], b[10usize]),
+            u8::min(a[11usize], b[11usize]),
+            u8::min(a[12usize], b[12usize]),
+            u8::min(a[13usize], b[13usize]),
+            u8::min(a[14usize], b[14usize]),
+            u8::min(a[15usize], b[15usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
         [
             -(u8::eq(&a[0usize], &b[0usize]) as i8),
@@ -1767,50 +1811,6 @@ impl Simd for Fallback {
             } else {
                 c[15usize]
             },
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        [
-            u8::min(a[0usize], b[0usize]),
-            u8::min(a[1usize], b[1usize]),
-            u8::min(a[2usize], b[2usize]),
-            u8::min(a[3usize], b[3usize]),
-            u8::min(a[4usize], b[4usize]),
-            u8::min(a[5usize], b[5usize]),
-            u8::min(a[6usize], b[6usize]),
-            u8::min(a[7usize], b[7usize]),
-            u8::min(a[8usize], b[8usize]),
-            u8::min(a[9usize], b[9usize]),
-            u8::min(a[10usize], b[10usize]),
-            u8::min(a[11usize], b[11usize]),
-            u8::min(a[12usize], b[12usize]),
-            u8::min(a[13usize], b[13usize]),
-            u8::min(a[14usize], b[14usize]),
-            u8::min(a[15usize], b[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        [
-            u8::max(a[0usize], b[0usize]),
-            u8::max(a[1usize], b[1usize]),
-            u8::max(a[2usize], b[2usize]),
-            u8::max(a[3usize], b[3usize]),
-            u8::max(a[4usize], b[4usize]),
-            u8::max(a[5usize], b[5usize]),
-            u8::max(a[6usize], b[6usize]),
-            u8::max(a[7usize], b[7usize]),
-            u8::max(a[8usize], b[8usize]),
-            u8::max(a[9usize], b[9usize]),
-            u8::max(a[10usize], b[10usize]),
-            u8::max(a[11usize], b[11usize]),
-            u8::max(a[12usize], b[12usize]),
-            u8::max(a[13usize], b[13usize]),
-            u8::max(a[14usize], b[14usize]),
-            u8::max(a[15usize], b[15usize]),
         ]
         .simd_into(self)
     }
@@ -2503,6 +2503,34 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        [
+            i16::max(a[0usize], b[0usize]),
+            i16::max(a[1usize], b[1usize]),
+            i16::max(a[2usize], b[2usize]),
+            i16::max(a[3usize], b[3usize]),
+            i16::max(a[4usize], b[4usize]),
+            i16::max(a[5usize], b[5usize]),
+            i16::max(a[6usize], b[6usize]),
+            i16::max(a[7usize], b[7usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        [
+            i16::min(a[0usize], b[0usize]),
+            i16::min(a[1usize], b[1usize]),
+            i16::min(a[2usize], b[2usize]),
+            i16::min(a[3usize], b[3usize]),
+            i16::min(a[4usize], b[4usize]),
+            i16::min(a[5usize], b[5usize]),
+            i16::min(a[6usize], b[6usize]),
+            i16::min(a[7usize], b[7usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
         [
             -(i16::eq(&a[0usize], &b[0usize]) as i16),
@@ -2623,34 +2651,6 @@ impl Simd for Fallback {
             } else {
                 c[7usize]
             },
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        [
-            i16::min(a[0usize], b[0usize]),
-            i16::min(a[1usize], b[1usize]),
-            i16::min(a[2usize], b[2usize]),
-            i16::min(a[3usize], b[3usize]),
-            i16::min(a[4usize], b[4usize]),
-            i16::min(a[5usize], b[5usize]),
-            i16::min(a[6usize], b[6usize]),
-            i16::min(a[7usize], b[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        [
-            i16::max(a[0usize], b[0usize]),
-            i16::max(a[1usize], b[1usize]),
-            i16::max(a[2usize], b[2usize]),
-            i16::max(a[3usize], b[3usize]),
-            i16::max(a[4usize], b[4usize]),
-            i16::max(a[5usize], b[5usize]),
-            i16::max(a[6usize], b[6usize]),
-            i16::max(a[7usize], b[7usize]),
         ]
         .simd_into(self)
     }
@@ -3005,6 +3005,34 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        [
+            u16::max(a[0usize], b[0usize]),
+            u16::max(a[1usize], b[1usize]),
+            u16::max(a[2usize], b[2usize]),
+            u16::max(a[3usize], b[3usize]),
+            u16::max(a[4usize], b[4usize]),
+            u16::max(a[5usize], b[5usize]),
+            u16::max(a[6usize], b[6usize]),
+            u16::max(a[7usize], b[7usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        [
+            u16::min(a[0usize], b[0usize]),
+            u16::min(a[1usize], b[1usize]),
+            u16::min(a[2usize], b[2usize]),
+            u16::min(a[3usize], b[3usize]),
+            u16::min(a[4usize], b[4usize]),
+            u16::min(a[5usize], b[5usize]),
+            u16::min(a[6usize], b[6usize]),
+            u16::min(a[7usize], b[7usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
         [
             -(u16::eq(&a[0usize], &b[0usize]) as i16),
@@ -3125,34 +3153,6 @@ impl Simd for Fallback {
             } else {
                 c[7usize]
             },
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        [
-            u16::min(a[0usize], b[0usize]),
-            u16::min(a[1usize], b[1usize]),
-            u16::min(a[2usize], b[2usize]),
-            u16::min(a[3usize], b[3usize]),
-            u16::min(a[4usize], b[4usize]),
-            u16::min(a[5usize], b[5usize]),
-            u16::min(a[6usize], b[6usize]),
-            u16::min(a[7usize], b[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        [
-            u16::max(a[0usize], b[0usize]),
-            u16::max(a[1usize], b[1usize]),
-            u16::max(a[2usize], b[2usize]),
-            u16::max(a[3usize], b[3usize]),
-            u16::max(a[4usize], b[4usize]),
-            u16::max(a[5usize], b[5usize]),
-            u16::max(a[6usize], b[6usize]),
-            u16::max(a[7usize], b[7usize]),
         ]
         .simd_into(self)
     }
@@ -3664,6 +3664,26 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        [
+            i32::max(a[0usize], b[0usize]),
+            i32::max(a[1usize], b[1usize]),
+            i32::max(a[2usize], b[2usize]),
+            i32::max(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        [
+            i32::min(a[0usize], b[0usize]),
+            i32::min(a[1usize], b[1usize]),
+            i32::min(a[2usize], b[2usize]),
+            i32::min(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
         [
             -(i32::eq(&a[0usize], &b[0usize]) as i32),
@@ -3740,26 +3760,6 @@ impl Simd for Fallback {
             } else {
                 c[3usize]
             },
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        [
-            i32::min(a[0usize], b[0usize]),
-            i32::min(a[1usize], b[1usize]),
-            i32::min(a[2usize], b[2usize]),
-            i32::min(a[3usize], b[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        [
-            i32::max(a[0usize], b[0usize]),
-            i32::max(a[1usize], b[1usize]),
-            i32::max(a[2usize], b[2usize]),
-            i32::max(a[3usize], b[3usize]),
         ]
         .simd_into(self)
     }
@@ -3992,6 +3992,26 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        [
+            u32::max(a[0usize], b[0usize]),
+            u32::max(a[1usize], b[1usize]),
+            u32::max(a[2usize], b[2usize]),
+            u32::max(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        [
+            u32::min(a[0usize], b[0usize]),
+            u32::min(a[1usize], b[1usize]),
+            u32::min(a[2usize], b[2usize]),
+            u32::min(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
         [
             -(u32::eq(&a[0usize], &b[0usize]) as i32),
@@ -4068,26 +4088,6 @@ impl Simd for Fallback {
             } else {
                 c[3usize]
             },
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        [
-            u32::min(a[0usize], b[0usize]),
-            u32::min(a[1usize], b[1usize]),
-            u32::min(a[2usize], b[2usize]),
-            u32::min(a[3usize], b[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        [
-            u32::max(a[0usize], b[0usize]),
-            u32::max(a[1usize], b[1usize]),
-            u32::max(a[2usize], b[2usize]),
-            u32::max(a[3usize], b[3usize]),
         ]
         .simd_into(self)
     }
@@ -4399,6 +4399,38 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        [
+            f64::max(a[0usize], b[0usize]),
+            f64::max(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        [
+            f64::min(a[0usize], b[0usize]),
+            f64::min(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        [
+            f64::max(a[0usize], b[0usize]),
+            f64::max(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn min_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        [
+            f64::min(a[0usize], b[0usize]),
+            f64::min(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn simd_eq_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
         [
             -(f64::eq(&a[0usize], &b[0usize]) as i64),
@@ -4445,38 +4477,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn deinterleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>) {
         (self.unzip_low_f64x2(a, b), self.unzip_high_f64x2(a, b))
-    }
-    #[inline(always)]
-    fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        [
-            f64::max(a[0usize], b[0usize]),
-            f64::max(a[1usize], b[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        [
-            f64::min(a[0usize], b[0usize]),
-            f64::min(a[1usize], b[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        [
-            f64::max(a[0usize], b[0usize]),
-            f64::max(a[1usize], b[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn min_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        [
-            f64::min(a[0usize], b[0usize]),
-            f64::min(a[1usize], b[1usize]),
-        ]
-        .simd_into(self)
     }
     #[inline(always)]
     fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
@@ -4679,6 +4679,22 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        [
+            i64::max(a[0usize], b[0usize]),
+            i64::max(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        [
+            i64::min(a[0usize], b[0usize]),
+            i64::min(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
         [
             -(i64::eq(&a[0usize], &b[0usize]) as i64),
@@ -4739,22 +4755,6 @@ impl Simd for Fallback {
             } else {
                 c[1usize]
             },
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        [
-            i64::min(a[0usize], b[0usize]),
-            i64::min(a[1usize], b[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        [
-            i64::max(a[0usize], b[0usize]),
-            i64::max(a[1usize], b[1usize]),
         ]
         .simd_into(self)
     }
@@ -4922,6 +4922,22 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        [
+            u64::max(a[0usize], b[0usize]),
+            u64::max(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        [
+            u64::min(a[0usize], b[0usize]),
+            u64::min(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn simd_eq_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
         [
             -(u64::eq(&a[0usize], &b[0usize]) as i64),
@@ -4982,22 +4998,6 @@ impl Simd for Fallback {
             } else {
                 c[1usize]
             },
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        [
-            u64::min(a[0usize], b[0usize]),
-            u64::min(a[1usize], b[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        [
-            u64::max(a[0usize], b[0usize]),
-            u64::max(a[1usize], b[1usize]),
         ]
         .simd_into(self)
     }

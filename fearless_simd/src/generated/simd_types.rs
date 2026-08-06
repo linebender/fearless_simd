@@ -155,6 +155,22 @@ impl<S: Simd> SimdBase<S> for f32x4<S> {
             .swizzle_dyn_precise_f32x4(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_f32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_f32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_precise_f32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_precise_f32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_f32x4(self, rhs.simd_into(self.simd))
     }
@@ -215,22 +231,6 @@ impl<S: Simd> crate::SimdFloat<S> for f32x4<S> {
     #[inline(always)]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.copysign_f32x4(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_f32x4(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_f32x4(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_precise_f32x4(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_precise_f32x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn mul_add(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
@@ -459,6 +459,22 @@ impl<S: Simd> SimdBase<S> for i8x16<S> {
             .swizzle_dyn_precise_i8x16(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i8x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i8x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i8x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i8x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i8x16(self, rhs.simd_into(self.simd))
     }
@@ -503,16 +519,7 @@ impl<S: Simd> SimdBase<S> for i8x16<S> {
         self.simd.deinterleave_i8x16(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for i8x16<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_i8x16(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_i8x16(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for i8x16<S> {}
 impl<S: Simd> SimdWiden<S> for i8x16<S> {
     type Widened = i16x8<S>;
     #[inline(always)]
@@ -695,6 +702,22 @@ impl<S: Simd> SimdBase<S> for u8x16<S> {
             .swizzle_dyn_precise_u8x16(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u8x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u8x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u8x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u8x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u8x16(self, rhs.simd_into(self.simd))
     }
@@ -739,16 +762,7 @@ impl<S: Simd> SimdBase<S> for u8x16<S> {
         self.simd.deinterleave_u8x16(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for u8x16<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_u8x16(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_u8x16(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for u8x16<S> {}
 impl<S: Simd> SimdWiden<S> for u8x16<S> {
     type Widened = u16x8<S>;
     #[inline(always)]
@@ -1017,6 +1031,22 @@ impl<S: Simd> SimdBase<S> for i16x8<S> {
             .swizzle_dyn_precise_i16x8(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i16x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i16x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i16x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i16x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i16x8(self, rhs.simd_into(self.simd))
     }
@@ -1061,16 +1091,7 @@ impl<S: Simd> SimdBase<S> for i16x8<S> {
         self.simd.deinterleave_i16x8(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for i16x8<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_i16x8(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_i16x8(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for i16x8<S> {}
 impl<S: Simd> SimdWiden<S> for i16x8<S> {
     type Widened = i32x4<S>;
     #[inline(always)]
@@ -1260,6 +1281,22 @@ impl<S: Simd> SimdBase<S> for u16x8<S> {
             .swizzle_dyn_precise_u16x8(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u16x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u16x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u16x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u16x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u16x8(self, rhs.simd_into(self.simd))
     }
@@ -1304,16 +1341,7 @@ impl<S: Simd> SimdBase<S> for u16x8<S> {
         self.simd.deinterleave_u16x8(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for u16x8<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_u16x8(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_u16x8(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for u16x8<S> {}
 impl<S: Simd> SimdWiden<S> for u16x8<S> {
     type Widened = u32x4<S>;
     #[inline(always)]
@@ -1585,6 +1613,22 @@ impl<S: Simd> SimdBase<S> for i32x4<S> {
             .swizzle_dyn_precise_i32x4(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i32x4(self, rhs.simd_into(self.simd))
     }
@@ -1629,16 +1673,7 @@ impl<S: Simd> SimdBase<S> for i32x4<S> {
         self.simd.deinterleave_i32x4(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for i32x4<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_i32x4(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_i32x4(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for i32x4<S> {}
 impl<S: Simd> SimdCvtTruncate<f32x4<S>> for i32x4<S> {
     #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     #[inline(always)]
@@ -1828,6 +1863,22 @@ impl<S: Simd> SimdBase<S> for u32x4<S> {
             .swizzle_dyn_precise_u32x4(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u32x4(self, rhs.simd_into(self.simd))
     }
@@ -1872,16 +1923,7 @@ impl<S: Simd> SimdBase<S> for u32x4<S> {
         self.simd.deinterleave_u32x4(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for u32x4<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_u32x4(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_u32x4(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for u32x4<S> {}
 impl<S: Simd> SimdCvtTruncate<f32x4<S>> for u32x4<S> {
     #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms below AVX-512, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32`.\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     #[inline(always)]
@@ -2165,6 +2207,22 @@ impl<S: Simd> SimdBase<S> for f64x2<S> {
             .swizzle_dyn_precise_f64x2(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_f64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_f64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_precise_f64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_precise_f64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_f64x2(self, rhs.simd_into(self.simd))
     }
@@ -2225,22 +2283,6 @@ impl<S: Simd> crate::SimdFloat<S> for f64x2<S> {
     #[inline(always)]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.copysign_f64x2(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_f64x2(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_f64x2(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_precise_f64x2(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_precise_f64x2(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn mul_add(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
@@ -2443,6 +2485,22 @@ impl<S: Simd> SimdBase<S> for i64x2<S> {
             .swizzle_dyn_precise_i64x2(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i64x2(self, rhs.simd_into(self.simd))
     }
@@ -2487,16 +2545,7 @@ impl<S: Simd> SimdBase<S> for i64x2<S> {
         self.simd.deinterleave_i64x2(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for i64x2<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_i64x2(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_i64x2(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for i64x2<S> {}
 impl<S: Simd> SimdNarrow<S> for i64x2<S> {
     type Narrowed = i32x4<S>;
     #[inline(always)]
@@ -2667,6 +2716,22 @@ impl<S: Simd> SimdBase<S> for u64x2<S> {
             .swizzle_dyn_precise_u64x2(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u64x2(self, rhs.simd_into(self.simd))
     }
@@ -2711,16 +2776,7 @@ impl<S: Simd> SimdBase<S> for u64x2<S> {
         self.simd.deinterleave_u64x2(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for u64x2<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_u64x2(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_u64x2(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for u64x2<S> {}
 impl<S: Simd> SimdNarrow<S> for u64x2<S> {
     type Narrowed = u32x4<S>;
     #[inline(always)]
@@ -2997,6 +3053,22 @@ impl<S: Simd> SimdBase<S> for f32x8<S> {
             .swizzle_dyn_precise_f32x8(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_f32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_f32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_precise_f32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_precise_f32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_f32x8(self, rhs.simd_into(self.simd))
     }
@@ -3057,22 +3129,6 @@ impl<S: Simd> crate::SimdFloat<S> for f32x8<S> {
     #[inline(always)]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.copysign_f32x8(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_f32x8(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_f32x8(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_precise_f32x8(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_precise_f32x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn mul_add(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
@@ -3324,6 +3380,22 @@ impl<S: Simd> SimdBase<S> for i8x32<S> {
             .swizzle_dyn_precise_i8x32(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i8x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i8x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i8x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i8x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i8x32(self, rhs.simd_into(self.simd))
     }
@@ -3368,16 +3440,7 @@ impl<S: Simd> SimdBase<S> for i8x32<S> {
         self.simd.deinterleave_i8x32(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for i8x32<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_i8x32(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_i8x32(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for i8x32<S> {}
 impl<S: Simd> SimdWiden<S> for i8x32<S> {
     type Widened = i16x16<S>;
     #[inline(always)]
@@ -3583,6 +3646,22 @@ impl<S: Simd> SimdBase<S> for u8x32<S> {
             .swizzle_dyn_precise_u8x32(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u8x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u8x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u8x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u8x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u8x32(self, rhs.simd_into(self.simd))
     }
@@ -3627,16 +3706,7 @@ impl<S: Simd> SimdBase<S> for u8x32<S> {
         self.simd.deinterleave_u8x32(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for u8x32<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_u8x32(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_u8x32(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for u8x32<S> {}
 impl<S: Simd> SimdWiden<S> for u8x32<S> {
     type Widened = u16x16<S>;
     #[inline(always)]
@@ -3920,6 +3990,22 @@ impl<S: Simd> SimdBase<S> for i16x16<S> {
             .swizzle_dyn_precise_i16x16(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i16x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i16x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i16x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i16x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i16x16(self, rhs.simd_into(self.simd))
     }
@@ -3965,16 +4051,7 @@ impl<S: Simd> SimdBase<S> for i16x16<S> {
             .deinterleave_i16x16(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for i16x16<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_i16x16(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_i16x16(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for i16x16<S> {}
 impl<S: Simd> SimdWiden<S> for i16x16<S> {
     type Widened = i32x8<S>;
     #[inline(always)]
@@ -4179,6 +4256,22 @@ impl<S: Simd> SimdBase<S> for u16x16<S> {
             .swizzle_dyn_precise_u16x16(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u16x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u16x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u16x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u16x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u16x16(self, rhs.simd_into(self.simd))
     }
@@ -4224,16 +4317,7 @@ impl<S: Simd> SimdBase<S> for u16x16<S> {
             .deinterleave_u16x16(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for u16x16<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_u16x16(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_u16x16(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for u16x16<S> {}
 impl<S: Simd> SimdWiden<S> for u16x16<S> {
     type Widened = u32x8<S>;
     #[inline(always)]
@@ -4524,6 +4608,22 @@ impl<S: Simd> SimdBase<S> for i32x8<S> {
             .swizzle_dyn_precise_i32x8(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i32x8(self, rhs.simd_into(self.simd))
     }
@@ -4568,16 +4668,7 @@ impl<S: Simd> SimdBase<S> for i32x8<S> {
         self.simd.deinterleave_i32x8(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for i32x8<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_i32x8(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_i32x8(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for i32x8<S> {}
 impl<S: Simd> SimdCvtTruncate<f32x8<S>> for i32x8<S> {
     #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     #[inline(always)]
@@ -4786,6 +4877,22 @@ impl<S: Simd> SimdBase<S> for u32x8<S> {
             .swizzle_dyn_precise_u32x8(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u32x8(self, rhs.simd_into(self.simd))
     }
@@ -4830,16 +4937,7 @@ impl<S: Simd> SimdBase<S> for u32x8<S> {
         self.simd.deinterleave_u32x8(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for u32x8<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_u32x8(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_u32x8(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for u32x8<S> {}
 impl<S: Simd> SimdCvtTruncate<f32x8<S>> for u32x8<S> {
     #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms below AVX-512, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32`.\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     #[inline(always)]
@@ -5130,6 +5228,22 @@ impl<S: Simd> SimdBase<S> for f64x4<S> {
             .swizzle_dyn_precise_f64x4(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_f64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_f64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_precise_f64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_precise_f64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_f64x4(self, rhs.simd_into(self.simd))
     }
@@ -5190,22 +5304,6 @@ impl<S: Simd> crate::SimdFloat<S> for f64x4<S> {
     #[inline(always)]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.copysign_f64x4(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_f64x4(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_f64x4(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_precise_f64x4(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_precise_f64x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn mul_add(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
@@ -5415,6 +5513,22 @@ impl<S: Simd> SimdBase<S> for i64x4<S> {
             .swizzle_dyn_precise_i64x4(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i64x4(self, rhs.simd_into(self.simd))
     }
@@ -5459,16 +5573,7 @@ impl<S: Simd> SimdBase<S> for i64x4<S> {
         self.simd.deinterleave_i64x4(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for i64x4<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_i64x4(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_i64x4(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for i64x4<S> {}
 impl<S: Simd> SimdNarrow<S> for i64x4<S> {
     type Narrowed = i32x8<S>;
     #[inline(always)]
@@ -5646,6 +5751,22 @@ impl<S: Simd> SimdBase<S> for u64x4<S> {
             .swizzle_dyn_precise_u64x4(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u64x4(self, rhs.simd_into(self.simd))
     }
@@ -5690,16 +5811,7 @@ impl<S: Simd> SimdBase<S> for u64x4<S> {
         self.simd.deinterleave_u64x4(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for u64x4<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_u64x4(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_u64x4(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for u64x4<S> {}
 impl<S: Simd> SimdNarrow<S> for u64x4<S> {
     type Narrowed = u32x8<S>;
     #[inline(always)]
@@ -5992,6 +6104,22 @@ impl<S: Simd> SimdBase<S> for f32x16<S> {
             .swizzle_dyn_precise_f32x16(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_f32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_f32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_precise_f32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_precise_f32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_f32x16(self, rhs.simd_into(self.simd))
     }
@@ -6053,22 +6181,6 @@ impl<S: Simd> crate::SimdFloat<S> for f32x16<S> {
     #[inline(always)]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.copysign_f32x16(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_f32x16(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_f32x16(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_precise_f32x16(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_precise_f32x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn mul_add(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
@@ -6346,6 +6458,22 @@ impl<S: Simd> SimdBase<S> for i8x64<S> {
             .swizzle_dyn_precise_i8x64(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i8x64(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i8x64(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i8x64(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i8x64(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i8x64(self, rhs.simd_into(self.simd))
     }
@@ -6390,16 +6518,7 @@ impl<S: Simd> SimdBase<S> for i8x64<S> {
         self.simd.deinterleave_i8x64(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for i8x64<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_i8x64(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_i8x64(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for i8x64<S> {}
 impl<S: Simd> SimdWiden<S> for i8x64<S> {
     type Widened = i16x32<S>;
     #[inline(always)]
@@ -6631,6 +6750,22 @@ impl<S: Simd> SimdBase<S> for u8x64<S> {
             .swizzle_dyn_precise_u8x64(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u8x64(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u8x64(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u8x64(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u8x64(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u8x64(self, rhs.simd_into(self.simd))
     }
@@ -6675,16 +6810,7 @@ impl<S: Simd> SimdBase<S> for u8x64<S> {
         self.simd.deinterleave_u8x64(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for u8x64<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_u8x64(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_u8x64(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for u8x64<S> {}
 impl<S: Simd> SimdWiden<S> for u8x64<S> {
     type Widened = u16x32<S>;
     #[inline(always)]
@@ -6978,6 +7104,22 @@ impl<S: Simd> SimdBase<S> for i16x32<S> {
             .swizzle_dyn_precise_i16x32(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i16x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i16x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i16x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i16x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i16x32(self, rhs.simd_into(self.simd))
     }
@@ -7023,16 +7165,7 @@ impl<S: Simd> SimdBase<S> for i16x32<S> {
             .deinterleave_i16x32(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for i16x32<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_i16x32(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_i16x32(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for i16x32<S> {}
 impl<S: Simd> SimdWiden<S> for i16x32<S> {
     type Widened = i32x16<S>;
     #[inline(always)]
@@ -7247,6 +7380,22 @@ impl<S: Simd> SimdBase<S> for u16x32<S> {
             .swizzle_dyn_precise_u16x32(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u16x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u16x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u16x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u16x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u16x32(self, rhs.simd_into(self.simd))
     }
@@ -7292,16 +7441,7 @@ impl<S: Simd> SimdBase<S> for u16x32<S> {
             .deinterleave_u16x32(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for u16x32<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_u16x32(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_u16x32(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for u16x32<S> {}
 impl<S: Simd> SimdWiden<S> for u16x32<S> {
     type Widened = u32x16<S>;
     #[inline(always)]
@@ -7594,6 +7734,22 @@ impl<S: Simd> SimdBase<S> for i32x16<S> {
             .swizzle_dyn_precise_i32x16(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i32x16(self, rhs.simd_into(self.simd))
     }
@@ -7639,16 +7795,7 @@ impl<S: Simd> SimdBase<S> for i32x16<S> {
             .deinterleave_i32x16(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for i32x16<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_i32x16(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_i32x16(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for i32x16<S> {}
 impl<S: Simd> SimdCvtTruncate<f32x16<S>> for i32x16<S> {
     #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     #[inline(always)]
@@ -7859,6 +8006,22 @@ impl<S: Simd> SimdBase<S> for u32x16<S> {
             .swizzle_dyn_precise_u32x16(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u32x16(self, rhs.simd_into(self.simd))
     }
@@ -7904,16 +8067,7 @@ impl<S: Simd> SimdBase<S> for u32x16<S> {
             .deinterleave_u32x16(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for u32x16<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_u32x16(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_u32x16(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for u32x16<S> {}
 impl<S: Simd> SimdCvtTruncate<f32x16<S>> for u32x16<S> {
     #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms below AVX-512, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32`.\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     #[inline(always)]
@@ -8210,6 +8364,22 @@ impl<S: Simd> SimdBase<S> for f64x8<S> {
             .swizzle_dyn_precise_f64x8(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_f64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_f64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_precise_f64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_precise_f64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_f64x8(self, rhs.simd_into(self.simd))
     }
@@ -8270,22 +8440,6 @@ impl<S: Simd> crate::SimdFloat<S> for f64x8<S> {
     #[inline(always)]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.copysign_f64x8(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_f64x8(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_f64x8(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_precise_f64x8(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_precise_f64x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn mul_add(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
@@ -8501,6 +8655,22 @@ impl<S: Simd> SimdBase<S> for i64x8<S> {
             .swizzle_dyn_precise_i64x8(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_i64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_i64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i64x8(self, rhs.simd_into(self.simd))
     }
@@ -8545,16 +8715,7 @@ impl<S: Simd> SimdBase<S> for i64x8<S> {
         self.simd.deinterleave_i64x8(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for i64x8<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_i64x8(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_i64x8(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for i64x8<S> {}
 impl<S: Simd> SimdNarrow<S> for i64x8<S> {
     type Narrowed = i32x16<S>;
     #[inline(always)]
@@ -8738,6 +8899,22 @@ impl<S: Simd> SimdBase<S> for u64x8<S> {
             .swizzle_dyn_precise_u64x8(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.max_u64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.min_u64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u64x8(self, rhs.simd_into(self.simd))
     }
@@ -8782,16 +8959,7 @@ impl<S: Simd> SimdBase<S> for u64x8<S> {
         self.simd.deinterleave_u64x8(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdInt<S> for u64x8<S> {
-    #[inline(always)]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.min_u64x8(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd.max_u64x8(self, rhs.simd_into(self.simd))
-    }
-}
+impl<S: Simd> crate::SimdInt<S> for u64x8<S> {}
 impl<S: Simd> SimdNarrow<S> for u64x8<S> {
     type Narrowed = u32x16<S>;
     #[inline(always)]
