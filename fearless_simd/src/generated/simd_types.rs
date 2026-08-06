@@ -140,23 +140,6 @@ impl<S: Simd> SimdBase<S> for f32x4<S> {
             .slide_within_blocks_f32x4::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_f32x4::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_f32x4::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_f32x4::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_f32x4::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_f32x4(self, indices.simd_into(self.simd))
@@ -461,23 +444,6 @@ impl<S: Simd> SimdBase<S> for i8x16<S> {
             .slide_within_blocks_i8x16::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_i8x16::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_i8x16::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_i8x16::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_i8x16::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i8x16(self, indices.simd_into(self.simd))
@@ -712,23 +678,6 @@ impl<S: Simd> SimdBase<S> for u8x16<S> {
     fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd
             .slide_within_blocks_u8x16::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_u8x16::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_u8x16::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_u8x16::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_u8x16::<OFFSET>(self, padding)
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
@@ -1053,23 +1002,6 @@ impl<S: Simd> SimdBase<S> for i16x8<S> {
             .slide_within_blocks_i16x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_i16x8::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_i16x8::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_i16x8::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_i16x8::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i16x8(self, indices.simd_into(self.simd))
@@ -1311,23 +1243,6 @@ impl<S: Simd> SimdBase<S> for u16x8<S> {
     fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd
             .slide_within_blocks_u16x8::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_u16x8::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_u16x8::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_u16x8::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_u16x8::<OFFSET>(self, padding)
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
@@ -1655,23 +1570,6 @@ impl<S: Simd> SimdBase<S> for i32x4<S> {
             .slide_within_blocks_i32x4::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_i32x4::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_i32x4::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_i32x4::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_i32x4::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i32x4(self, indices.simd_into(self.simd))
@@ -1913,23 +1811,6 @@ impl<S: Simd> SimdBase<S> for u32x4<S> {
     fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd
             .slide_within_blocks_u32x4::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_u32x4::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_u32x4::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_u32x4::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_u32x4::<OFFSET>(self, padding)
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
@@ -2269,23 +2150,6 @@ impl<S: Simd> SimdBase<S> for f64x2<S> {
             .slide_within_blocks_f64x2::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_f64x2::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_f64x2::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_f64x2::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_f64x2::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_f64x2(self, indices.simd_into(self.simd))
@@ -2564,23 +2428,6 @@ impl<S: Simd> SimdBase<S> for i64x2<S> {
             .slide_within_blocks_i64x2::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_i64x2::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_i64x2::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_i64x2::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_i64x2::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i64x2(self, indices.simd_into(self.simd))
@@ -2803,23 +2650,6 @@ impl<S: Simd> SimdBase<S> for u64x2<S> {
     fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd
             .slide_within_blocks_u64x2::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_u64x2::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_u64x2::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_u64x2::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_u64x2::<OFFSET>(self, padding)
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
@@ -3152,23 +2982,6 @@ impl<S: Simd> SimdBase<S> for f32x8<S> {
             .slide_within_blocks_f32x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_f32x8::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_f32x8::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_f32x8::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_f32x8::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_f32x8(self, indices.simd_into(self.simd))
@@ -3496,23 +3309,6 @@ impl<S: Simd> SimdBase<S> for i8x32<S> {
             .slide_within_blocks_i8x32::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_i8x32::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_i8x32::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_i8x32::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_i8x32::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i8x32(self, indices.simd_into(self.simd))
@@ -3770,23 +3566,6 @@ impl<S: Simd> SimdBase<S> for u8x32<S> {
     fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd
             .slide_within_blocks_u8x32::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_u8x32::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_u8x32::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_u8x32::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_u8x32::<OFFSET>(self, padding)
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
@@ -4126,24 +3905,6 @@ impl<S: Simd> SimdBase<S> for i16x16<S> {
             .slide_within_blocks_i16x16::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_i16x16::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_i16x16::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_left_i16x16::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_i16x16::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i16x16(self, indices.simd_into(self.simd))
@@ -4401,24 +4162,6 @@ impl<S: Simd> SimdBase<S> for u16x16<S> {
     fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd
             .slide_within_blocks_u16x16::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_u16x16::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_u16x16::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_left_u16x16::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_u16x16::<OFFSET>(self, padding)
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
@@ -4766,23 +4509,6 @@ impl<S: Simd> SimdBase<S> for i32x8<S> {
             .slide_within_blocks_i32x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_i32x8::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_i32x8::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_i32x8::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_i32x8::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i32x8(self, indices.simd_into(self.simd))
@@ -5043,23 +4769,6 @@ impl<S: Simd> SimdBase<S> for u32x8<S> {
     fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd
             .slide_within_blocks_u32x8::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_u32x8::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_u32x8::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_u32x8::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_u32x8::<OFFSET>(self, padding)
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
@@ -5406,23 +5115,6 @@ impl<S: Simd> SimdBase<S> for f64x4<S> {
             .slide_within_blocks_f64x4::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_f64x4::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_f64x4::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_f64x4::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_f64x4::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_f64x4(self, indices.simd_into(self.simd))
@@ -5708,23 +5400,6 @@ impl<S: Simd> SimdBase<S> for i64x4<S> {
             .slide_within_blocks_i64x4::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_i64x4::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_i64x4::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_i64x4::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_i64x4::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i64x4(self, indices.simd_into(self.simd))
@@ -5954,23 +5629,6 @@ impl<S: Simd> SimdBase<S> for u64x4<S> {
     fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd
             .slide_within_blocks_u64x4::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_u64x4::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_u64x4::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_u64x4::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_u64x4::<OFFSET>(self, padding)
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
@@ -6317,24 +5975,6 @@ impl<S: Simd> SimdBase<S> for f32x16<S> {
     fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd
             .slide_within_blocks_f32x16::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_f32x16::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_f32x16::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_left_f32x16::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_f32x16::<OFFSET>(self, padding)
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
@@ -6691,23 +6331,6 @@ impl<S: Simd> SimdBase<S> for i8x64<S> {
             .slide_within_blocks_i8x64::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_i8x64::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_i8x64::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_i8x64::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_i8x64::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i8x64(self, indices.simd_into(self.simd))
@@ -6991,23 +6614,6 @@ impl<S: Simd> SimdBase<S> for u8x64<S> {
     fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd
             .slide_within_blocks_u8x64::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_u8x64::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_u8x64::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_u8x64::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_u8x64::<OFFSET>(self, padding)
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
@@ -7357,24 +6963,6 @@ impl<S: Simd> SimdBase<S> for i16x32<S> {
             .slide_within_blocks_i16x32::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_i16x32::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_i16x32::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_left_i16x32::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_i16x32::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i16x32(self, indices.simd_into(self.simd))
@@ -7642,24 +7230,6 @@ impl<S: Simd> SimdBase<S> for u16x32<S> {
     fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd
             .slide_within_blocks_u16x32::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_u16x32::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_u16x32::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_left_u16x32::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_u16x32::<OFFSET>(self, padding)
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
@@ -8009,24 +7579,6 @@ impl<S: Simd> SimdBase<S> for i32x16<S> {
             .slide_within_blocks_i32x16::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_i32x16::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_i32x16::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_left_i32x16::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_i32x16::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i32x16(self, indices.simd_into(self.simd))
@@ -8290,24 +7842,6 @@ impl<S: Simd> SimdBase<S> for u32x16<S> {
     fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd
             .slide_within_blocks_u32x16::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_u32x16::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_u32x16::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_left_u32x16::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_u32x16::<OFFSET>(self, padding)
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
@@ -8661,23 +8195,6 @@ impl<S: Simd> SimdBase<S> for f64x8<S> {
             .slide_within_blocks_f64x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_f64x8::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_f64x8::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_f64x8::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_f64x8::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_f64x8(self, indices.simd_into(self.simd))
@@ -8969,23 +8486,6 @@ impl<S: Simd> SimdBase<S> for i64x8<S> {
             .slide_within_blocks_i64x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_i64x8::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_i64x8::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_i64x8::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_i64x8::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i64x8(self, indices.simd_into(self.simd))
@@ -9221,23 +8721,6 @@ impl<S: Simd> SimdBase<S> for u64x8<S> {
     fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd
             .slide_within_blocks_u64x8::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_left_u64x8::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        self.simd.rotate_elements_right_u64x8::<OFFSET>(self)
-    }
-    #[inline(always)]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd.shift_elements_left_u64x8::<OFFSET>(self, padding)
-    }
-    #[inline(always)]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        self.simd
-            .shift_elements_right_u64x8::<OFFSET>(self, padding)
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {

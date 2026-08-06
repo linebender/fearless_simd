@@ -6,7 +6,7 @@ use quote::{ToTokens, quote};
 
 use crate::{
     level::Level,
-    ops::{ElementDirection, Op, OpSig, SlideGranularity},
+    ops::{Op, OpSig, SlideGranularity},
     types::{ScalarType, VecType},
 };
 
@@ -344,74 +344,6 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::ElementRotate { direction } => {
-            let slide = generic_op_name("slide", ty);
-            let len = Literal::usize_unsuffixed(ty.len);
-            match direction {
-                ElementDirection::Left => {
-                    let arms = modulo_offset_arms(ty, |offset| {
-                        let offset = Literal::usize_unsuffixed(offset);
-                        quote! { self.#slide::<#offset>(a, a) }
-                    });
-                    quote! {
-                        #method_sig {
-                            match OFFSET % #len {
-                                #(#arms,)*
-                                _ => unreachable!(),
-                            }
-                        }
-                    }
-                }
-                ElementDirection::Right => {
-                    let arms = modulo_offset_arms(ty, |offset| {
-                        let shift = if offset == 0 { ty.len } else { ty.len - offset };
-                        let shift = Literal::usize_unsuffixed(shift);
-                        quote! { self.#slide::<#shift>(a, a) }
-                    });
-                    quote! {
-                        #method_sig {
-                            match OFFSET % #len {
-                                #(#arms,)*
-                                _ => unreachable!(),
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        OpSig::ElementShift { direction } => {
-            let splat = generic_op_name("splat", ty);
-            let slide = generic_op_name("slide", ty);
-            match direction {
-                ElementDirection::Left => {
-                    let arms =
-                        offset_arms(ty, |shift| quote! { self.#slide::<#shift>(a, padding) });
-                    let all_padding = Literal::usize_unsuffixed(ty.len);
-                    quote! {
-                        #method_sig {
-                            let padding = self.#splat(padding);
-                            match OFFSET {
-                                #(#arms,)*
-                                _ => self.#slide::<#all_padding>(a, padding),
-                            }
-                        }
-                    }
-                }
-                ElementDirection::Right => {
-                    let arms =
-                        right_offset_arms(ty, |shift| quote! { self.#slide::<#shift>(padding, a) });
-                    quote! {
-                        #method_sig {
-                            let padding = self.#splat(padding);
-                            match OFFSET {
-                                #(#arms,)*
-                                _ => self.#slide::<0>(padding, a),
-                            }
-                        }
-                    }
-                }
-            }
-        }
         OpSig::Slide { granularity, .. } => {
             match (granularity, ty.n_bits()) {
                 (SlideGranularity::WithinBlocks, 128) => {
@@ -439,43 +371,6 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
             }
         }
     }
-}
-
-fn modulo_offset_arms(
-    ty: &VecType,
-    mut body: impl FnMut(usize) -> TokenStream,
-) -> Vec<TokenStream> {
-    (0..ty.len)
-        .map(|offset| {
-            let offset_lit = Literal::usize_unsuffixed(offset);
-            let body = body(offset);
-            quote! { #offset_lit => #body }
-        })
-        .collect()
-}
-
-fn offset_arms(ty: &VecType, mut body: impl FnMut(Literal) -> TokenStream) -> Vec<TokenStream> {
-    (0..=ty.len)
-        .map(|offset| {
-            let offset_lit = Literal::usize_unsuffixed(offset);
-            let body = body(offset_lit.clone());
-            quote! { #offset_lit => #body }
-        })
-        .collect()
-}
-
-fn right_offset_arms(
-    ty: &VecType,
-    mut body: impl FnMut(Literal) -> TokenStream,
-) -> Vec<TokenStream> {
-    (0..=ty.len)
-        .map(|offset| {
-            let offset_lit = Literal::usize_unsuffixed(offset);
-            let shift = Literal::usize_unsuffixed(ty.len - offset);
-            let body = body(shift);
-            quote! { #offset_lit => #body }
-        })
-        .collect()
 }
 
 pub(crate) fn unrolled_array(len: usize, item: impl FnMut(usize) -> TokenStream) -> TokenStream {

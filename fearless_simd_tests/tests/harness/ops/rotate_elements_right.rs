@@ -9,9 +9,13 @@ use fearless_simd_dev_macros::simd_test;
 #[simd_test]
 fn rotate_elements_right_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);
+    assert_eq!(*a.rotate_elements_right::<1>(), [4.0, 1.0, 2.0, 3.0]);
+    assert_eq!(*a.rotate_elements_right::<0>(), [1.0, 2.0, 3.0, 4.0]);
+    assert_eq!(*a.rotate_elements_right::<4>(), [1.0, 2.0, 3.0, 4.0]);
+    assert_eq!(*a.rotate_elements_right::<5>(), [4.0, 1.0, 2.0, 3.0]);
     assert_eq!(
-        *simd.rotate_elements_right_f32x4::<1>(a),
-        [4.0, 1.0, 2.0, 3.0]
+        *a.rotate_elements_right::<{ usize::MAX }>(),
+        [2.0, 3.0, 4.0, 1.0]
     );
 }
 
@@ -25,7 +29,7 @@ fn rotate_elements_right_i8x16<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *simd.rotate_elements_right_i8x16::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [
             16_i8, 1_i8, 2_i8, 3_i8, 4_i8, 5_i8, 6_i8, 7_i8, 8_i8, 9_i8, 10_i8, 11_i8, 12_i8,
             13_i8, 14_i8, 15_i8
@@ -43,7 +47,7 @@ fn rotate_elements_right_u8x16<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *simd.rotate_elements_right_u8x16::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [
             16_u8, 1_u8, 2_u8, 3_u8, 4_u8, 5_u8, 6_u8, 7_u8, 8_u8, 9_u8, 10_u8, 11_u8, 12_u8,
             13_u8, 14_u8, 15_u8
@@ -58,7 +62,7 @@ fn rotate_elements_right_i16x8<S: Simd>(simd: S) {
         &[1_i16, 2_i16, 3_i16, 4_i16, 5_i16, 6_i16, 7_i16, 8_i16],
     );
     assert_eq!(
-        *simd.rotate_elements_right_i16x8::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [8_i16, 1_i16, 2_i16, 3_i16, 4_i16, 5_i16, 6_i16, 7_i16]
     );
 }
@@ -70,7 +74,7 @@ fn rotate_elements_right_u16x8<S: Simd>(simd: S) {
         &[1_u16, 2_u16, 3_u16, 4_u16, 5_u16, 6_u16, 7_u16, 8_u16],
     );
     assert_eq!(
-        *simd.rotate_elements_right_u16x8::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [8_u16, 1_u16, 2_u16, 3_u16, 4_u16, 5_u16, 6_u16, 7_u16]
     );
 }
@@ -79,7 +83,7 @@ fn rotate_elements_right_u16x8<S: Simd>(simd: S) {
 fn rotate_elements_right_i32x4<S: Simd>(simd: S) {
     let a = i32x4::from_slice(simd, &[1_i32, 2_i32, 3_i32, 4_i32]);
     assert_eq!(
-        *simd.rotate_elements_right_i32x4::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [4_i32, 1_i32, 2_i32, 3_i32]
     );
 }
@@ -88,7 +92,7 @@ fn rotate_elements_right_i32x4<S: Simd>(simd: S) {
 fn rotate_elements_right_u32x4<S: Simd>(simd: S) {
     let a = u32x4::from_slice(simd, &[1_u32, 2_u32, 3_u32, 4_u32]);
     assert_eq!(
-        *simd.rotate_elements_right_u32x4::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [4_u32, 1_u32, 2_u32, 3_u32]
     );
 }
@@ -96,14 +100,14 @@ fn rotate_elements_right_u32x4<S: Simd>(simd: S) {
 #[simd_test]
 fn rotate_elements_right_f64x2<S: Simd>(simd: S) {
     let a = f64x2::from_slice(simd, &[1.0, 2.0]);
-    assert_eq!(*simd.rotate_elements_right_f64x2::<1>(a), [2.0, 1.0]);
+    assert_eq!(*a.rotate_elements_right::<1>(), [2.0, 1.0]);
 }
 
 #[simd_test]
 fn rotate_elements_right_f32x8<S: Simd>(simd: S) {
     let a = f32x8::from_slice(simd, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
     assert_eq!(
-        *simd.rotate_elements_right_f32x8::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [8.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
     );
 }
@@ -119,7 +123,7 @@ fn rotate_elements_right_i8x32<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *simd.rotate_elements_right_i8x32::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [
             32_i8, 1_i8, 2_i8, 3_i8, 4_i8, 5_i8, 6_i8, 7_i8, 8_i8, 9_i8, 10_i8, 11_i8, 12_i8,
             13_i8, 14_i8, 15_i8, 16_i8, 17_i8, 18_i8, 19_i8, 20_i8, 21_i8, 22_i8, 23_i8, 24_i8,
@@ -139,7 +143,7 @@ fn rotate_elements_right_u8x32<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *simd.rotate_elements_right_u8x32::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [
             32_u8, 1_u8, 2_u8, 3_u8, 4_u8, 5_u8, 6_u8, 7_u8, 8_u8, 9_u8, 10_u8, 11_u8, 12_u8,
             13_u8, 14_u8, 15_u8, 16_u8, 17_u8, 18_u8, 19_u8, 20_u8, 21_u8, 22_u8, 23_u8, 24_u8,
@@ -158,7 +162,7 @@ fn rotate_elements_right_i16x16<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *simd.rotate_elements_right_i16x16::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [
             16_i16, 1_i16, 2_i16, 3_i16, 4_i16, 5_i16, 6_i16, 7_i16, 8_i16, 9_i16, 10_i16, 11_i16,
             12_i16, 13_i16, 14_i16, 15_i16
@@ -176,7 +180,7 @@ fn rotate_elements_right_u16x16<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *simd.rotate_elements_right_u16x16::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [
             16_u16, 1_u16, 2_u16, 3_u16, 4_u16, 5_u16, 6_u16, 7_u16, 8_u16, 9_u16, 10_u16, 11_u16,
             12_u16, 13_u16, 14_u16, 15_u16
@@ -191,7 +195,7 @@ fn rotate_elements_right_i32x8<S: Simd>(simd: S) {
         &[1_i32, 2_i32, 3_i32, 4_i32, 5_i32, 6_i32, 7_i32, 8_i32],
     );
     assert_eq!(
-        *simd.rotate_elements_right_i32x8::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [8_i32, 1_i32, 2_i32, 3_i32, 4_i32, 5_i32, 6_i32, 7_i32]
     );
 }
@@ -203,7 +207,7 @@ fn rotate_elements_right_u32x8<S: Simd>(simd: S) {
         &[1_u32, 2_u32, 3_u32, 4_u32, 5_u32, 6_u32, 7_u32, 8_u32],
     );
     assert_eq!(
-        *simd.rotate_elements_right_u32x8::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [8_u32, 1_u32, 2_u32, 3_u32, 4_u32, 5_u32, 6_u32, 7_u32]
     );
 }
@@ -211,10 +215,7 @@ fn rotate_elements_right_u32x8<S: Simd>(simd: S) {
 #[simd_test]
 fn rotate_elements_right_f64x4<S: Simd>(simd: S) {
     let a = f64x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);
-    assert_eq!(
-        *simd.rotate_elements_right_f64x4::<1>(a),
-        [4.0, 1.0, 2.0, 3.0]
-    );
+    assert_eq!(*a.rotate_elements_right::<1>(), [4.0, 1.0, 2.0, 3.0]);
 }
 
 #[simd_test]
@@ -226,7 +227,7 @@ fn rotate_elements_right_f32x16<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *simd.rotate_elements_right_f32x16::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [
             16.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0
         ]
@@ -247,7 +248,7 @@ fn rotate_elements_right_i8x64<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *simd.rotate_elements_right_i8x64::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [
             64_i8, 1_i8, 2_i8, 3_i8, 4_i8, 5_i8, 6_i8, 7_i8, 8_i8, 9_i8, 10_i8, 11_i8, 12_i8,
             13_i8, 14_i8, 15_i8, 16_i8, 17_i8, 18_i8, 19_i8, 20_i8, 21_i8, 22_i8, 23_i8, 24_i8,
@@ -273,7 +274,7 @@ fn rotate_elements_right_u8x64<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *simd.rotate_elements_right_u8x64::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [
             64_u8, 1_u8, 2_u8, 3_u8, 4_u8, 5_u8, 6_u8, 7_u8, 8_u8, 9_u8, 10_u8, 11_u8, 12_u8,
             13_u8, 14_u8, 15_u8, 16_u8, 17_u8, 18_u8, 19_u8, 20_u8, 21_u8, 22_u8, 23_u8, 24_u8,
@@ -296,7 +297,7 @@ fn rotate_elements_right_i16x32<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *simd.rotate_elements_right_i16x32::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [
             32_i16, 1_i16, 2_i16, 3_i16, 4_i16, 5_i16, 6_i16, 7_i16, 8_i16, 9_i16, 10_i16, 11_i16,
             12_i16, 13_i16, 14_i16, 15_i16, 16_i16, 17_i16, 18_i16, 19_i16, 20_i16, 21_i16, 22_i16,
@@ -316,7 +317,7 @@ fn rotate_elements_right_u16x32<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *simd.rotate_elements_right_u16x32::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [
             32_u16, 1_u16, 2_u16, 3_u16, 4_u16, 5_u16, 6_u16, 7_u16, 8_u16, 9_u16, 10_u16, 11_u16,
             12_u16, 13_u16, 14_u16, 15_u16, 16_u16, 17_u16, 18_u16, 19_u16, 20_u16, 21_u16, 22_u16,
@@ -335,7 +336,7 @@ fn rotate_elements_right_i32x16<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *simd.rotate_elements_right_i32x16::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [
             16_i32, 1_i32, 2_i32, 3_i32, 4_i32, 5_i32, 6_i32, 7_i32, 8_i32, 9_i32, 10_i32, 11_i32,
             12_i32, 13_i32, 14_i32, 15_i32
@@ -353,7 +354,7 @@ fn rotate_elements_right_u32x16<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *simd.rotate_elements_right_u32x16::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [
             16_u32, 1_u32, 2_u32, 3_u32, 4_u32, 5_u32, 6_u32, 7_u32, 8_u32, 9_u32, 10_u32, 11_u32,
             12_u32, 13_u32, 14_u32, 15_u32
@@ -365,7 +366,7 @@ fn rotate_elements_right_u32x16<S: Simd>(simd: S) {
 fn rotate_elements_right_f64x8<S: Simd>(simd: S) {
     let a = f64x8::from_slice(simd, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
     assert_eq!(
-        *simd.rotate_elements_right_f64x8::<1>(a),
+        *a.rotate_elements_right::<1>(),
         [8.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
     );
 }
@@ -377,7 +378,7 @@ fn rotate_elements_right_i64x2<S: Simd>(simd: S) {
     let values: [i64; 2] = core::array::from_fn(|i| (i % 23) as i64 + 10_i64);
     let a = i64x2::from_slice(simd, &values);
     let expected: [i64; 2] = core::array::from_fn(|i| values[(i + 2 - 1) % 2]);
-    let result = simd.rotate_elements_right_i64x2::<1>(a);
+    let result = a.rotate_elements_right::<1>();
     assert_eq!(result.as_slice(), expected.as_slice());
 }
 
@@ -386,7 +387,7 @@ fn rotate_elements_right_u64x2<S: Simd>(simd: S) {
     let values: [u64; 2] = core::array::from_fn(|i| (i % 23) as u64 + 10_u64);
     let a = u64x2::from_slice(simd, &values);
     let expected: [u64; 2] = core::array::from_fn(|i| values[(i + 2 - 1) % 2]);
-    let result = simd.rotate_elements_right_u64x2::<1>(a);
+    let result = a.rotate_elements_right::<1>();
     assert_eq!(result.as_slice(), expected.as_slice());
 }
 
@@ -395,7 +396,7 @@ fn rotate_elements_right_i64x4<S: Simd>(simd: S) {
     let values: [i64; 4] = core::array::from_fn(|i| (i % 23) as i64 + 10_i64);
     let a = i64x4::from_slice(simd, &values);
     let expected: [i64; 4] = core::array::from_fn(|i| values[(i + 4 - 1) % 4]);
-    let result = simd.rotate_elements_right_i64x4::<1>(a);
+    let result = a.rotate_elements_right::<1>();
     assert_eq!(result.as_slice(), expected.as_slice());
 }
 
@@ -404,7 +405,7 @@ fn rotate_elements_right_u64x4<S: Simd>(simd: S) {
     let values: [u64; 4] = core::array::from_fn(|i| (i % 23) as u64 + 10_u64);
     let a = u64x4::from_slice(simd, &values);
     let expected: [u64; 4] = core::array::from_fn(|i| values[(i + 4 - 1) % 4]);
-    let result = simd.rotate_elements_right_u64x4::<1>(a);
+    let result = a.rotate_elements_right::<1>();
     assert_eq!(result.as_slice(), expected.as_slice());
 }
 
@@ -413,7 +414,7 @@ fn rotate_elements_right_i64x8<S: Simd>(simd: S) {
     let values: [i64; 8] = core::array::from_fn(|i| (i % 23) as i64 + 10_i64);
     let a = i64x8::from_slice(simd, &values);
     let expected: [i64; 8] = core::array::from_fn(|i| values[(i + 8 - 1) % 8]);
-    let result = simd.rotate_elements_right_i64x8::<1>(a);
+    let result = a.rotate_elements_right::<1>();
     assert_eq!(result.as_slice(), expected.as_slice());
 }
 
@@ -422,6 +423,6 @@ fn rotate_elements_right_u64x8<S: Simd>(simd: S) {
     let values: [u64; 8] = core::array::from_fn(|i| (i % 23) as u64 + 10_u64);
     let a = u64x8::from_slice(simd, &values);
     let expected: [u64; 8] = core::array::from_fn(|i| values[(i + 8 - 1) % 8]);
-    let result = simd.rotate_elements_right_u64x8::<1>(a);
+    let result = a.rotate_elements_right::<1>();
     assert_eq!(result.as_slice(), expected.as_slice());
 }
