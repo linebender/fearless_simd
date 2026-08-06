@@ -356,12 +356,38 @@ pub trait SimdNarrow<S: Simd>: SimdBase<S> + Seal {
     ///  - Floating-point values follow IEEE 754 narrowing behavior in round-to-even mode:
     ///    they are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity.
     ///
+    /// # Example
+    ///
+    /// ```
+    /// use fearless_simd::{dispatch, Level, i64x2, i32x4, prelude::*};
+    ///
+    /// let level = Level::new();
+    /// dispatch!(level, simd => {
+    ///     let low = i64x2::simd_from(simd, [1, -1]);
+    ///     let high = i64x2::simd_from(simd, [i64::MAX - 5, i64::MIN + 5]);
+    ///     let narrowed: i32x4<_> = low.narrow(high);
+    ///     assert_eq!(*narrowed, [1, -1, -6, 5]);
+    /// });
+    /// ```
     fn narrow(self, high: Self) -> Self::Narrowed;
 
     /// Narrow with saturation for integers. Floats behave identically to [`narrow`](Self::narrow).
     ///
     /// Integer values that overflow the narrowed type become the closest representable value for the narrowed type.
     /// For example, `1234u16` becomes `u8::MAX` after narrowing, and `-1234i16` becomes `i8::MIN`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use fearless_simd::{dispatch, Level, i64x2, i32x4, prelude::*};
+    ///
+    /// let level = Level::new();
+    /// dispatch!(level, simd => {
+    ///     let low = i64x2::simd_from(simd, [1, -1]);
+    ///     let high = i64x2::simd_from(simd, [i64::MAX - 5, i64::MIN + 5]);
+    ///     let narrowed: i32x4<_> = low.saturating_narrow(high);
+    ///     assert_eq!(*narrowed, [1, -1, i32::MAX, i32::MIN]);
+    /// });
     fn saturating_narrow(self, high: Self) -> Self::Narrowed;
 
     /// Narrow using the cheapest operation for the active SIMD backend, assuming no overflow.
@@ -375,5 +401,18 @@ pub trait SimdNarrow<S: Simd>: SimdBase<S> + Seal {
     /// but will produce arbitrary values on overflow in release mode.
     ///
     /// Floats behave identically to [`narrow`](Self::narrow), with no additional precondition.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use fearless_simd::{dispatch, Level, i64x2, i32x4, prelude::*};
+    ///
+    /// let level = Level::new();
+    /// dispatch!(level, simd => {
+    ///     let low = i64x2::simd_from(simd, [1, -1]);
+    ///     let high = i64x2::simd_from(simd, [5, -5]);
+    ///     let narrowed: i32x4<_> = low.relaxed_narrow(high);
+    ///     assert_eq!(*narrowed, [1, -1, 5, -5]);
+    /// });
     fn relaxed_narrow(self, high: Self) -> Self::Narrowed;
 }
