@@ -119,26 +119,6 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
-        self.swizzle_dyn_precise_f32x4(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
     fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
         f32x4_abs(a.into()).simd_into(self)
     }
@@ -413,26 +393,6 @@ impl Simd for WasmSimd128 {
             return b;
         }
         let result = dyn_slide_128(Bytes::to_bytes(a).val.0, Bytes::to_bytes(b).val.0, SHIFT);
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
-        self.swizzle_dyn_precise_i8x16(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
         Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
@@ -1079,26 +1039,6 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
-        self.swizzle_dyn_precise_i16x8(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         i16x8_add(a.into(), b.into()).simd_into(self)
     }
@@ -1327,26 +1267,6 @@ impl Simd for WasmSimd128 {
             Bytes::to_bytes(b).val.0,
             SHIFT * 2usize,
         );
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
-        self.swizzle_dyn_precise_u16x8(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
         Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
@@ -1670,26 +1590,6 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
-        self.swizzle_dyn_precise_i32x4(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         i32x4_add(a.into(), b.into()).simd_into(self)
     }
@@ -1914,26 +1814,6 @@ impl Simd for WasmSimd128 {
             Bytes::to_bytes(b).val.0,
             SHIFT * 4usize,
         );
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
-        self.swizzle_dyn_precise_u32x4(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
         Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
@@ -2253,26 +2133,6 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
-        self.swizzle_dyn_precise_f64x2(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
         f64x2_abs(a.into()).simd_into(self)
     }
@@ -2525,26 +2385,6 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
-        self.swizzle_dyn_precise_i64x2(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         i64x2_add(a.into(), b.into()).simd_into(self)
     }
@@ -2763,26 +2603,6 @@ impl Simd for WasmSimd128 {
             Bytes::to_bytes(b).val.0,
             SHIFT * 8usize,
         );
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
-        Bytes::from_bytes(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
-        self.swizzle_dyn_precise_u64x2(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
-        let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
         Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
@@ -3111,27 +2931,6 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
-        self.swizzle_dyn_precise_f32x8(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let (table_low, table_high) = self.split_u8x32(bytes);
-        let (indices_low, indices_high) = self.split_u8x32(indices);
-        let high_table_offset = self.splat_u8x16(16);
-        let output_low_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_low);
-        let output_low_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_low, high_table_offset));
-        let output_low = self.or_u8x16(output_low_from_low, output_low_from_high);
-        let output_high_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_high);
-        let output_high_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_high, high_table_offset));
-        let output_high = self.or_u8x16(output_high_from_low, output_high_from_high);
-        let result_bytes = self.combine_u8x16(output_low, output_high);
-        Bytes::from_bytes(result_bytes)
-    }
-    #[inline(always)]
     fn combine_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x16<Self> {
         f32x16 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -3162,27 +2961,6 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
-        self.swizzle_dyn_precise_i8x32(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let (table_low, table_high) = self.split_u8x32(bytes);
-        let (indices_low, indices_high) = self.split_u8x32(indices);
-        let high_table_offset = self.splat_u8x16(16);
-        let output_low_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_low);
-        let output_low_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_low, high_table_offset));
-        let output_low = self.or_u8x16(output_low_from_low, output_low_from_high);
-        let output_high_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_high);
-        let output_high_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_high, high_table_offset));
-        let output_high = self.or_u8x16(output_high_from_low, output_high_from_high);
-        let result_bytes = self.combine_u8x16(output_low, output_high);
-        Bytes::from_bytes(result_bytes)
     }
     #[inline(always)]
     fn combine_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x64<Self> {
@@ -3304,27 +3082,6 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_i16x16(self, a: i16x16<Self>, indices: u8x32<Self>) -> i16x16<Self> {
-        self.swizzle_dyn_precise_i16x16(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i16x16(self, a: i16x16<Self>, indices: u8x32<Self>) -> i16x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let (table_low, table_high) = self.split_u8x32(bytes);
-        let (indices_low, indices_high) = self.split_u8x32(indices);
-        let high_table_offset = self.splat_u8x16(16);
-        let output_low_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_low);
-        let output_low_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_low, high_table_offset));
-        let output_low = self.or_u8x16(output_low_from_low, output_low_from_high);
-        let output_high_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_high);
-        let output_high_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_high, high_table_offset));
-        let output_high = self.or_u8x16(output_high_from_low, output_high_from_high);
-        let result_bytes = self.combine_u8x16(output_low, output_high);
-        Bytes::from_bytes(result_bytes)
-    }
-    #[inline(always)]
     fn combine_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x32<Self> {
         i16x32 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -3358,27 +3115,6 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u16x16(self, a: u16x16<Self>, indices: u8x32<Self>) -> u16x16<Self> {
-        self.swizzle_dyn_precise_u16x16(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u16x16(self, a: u16x16<Self>, indices: u8x32<Self>) -> u16x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let (table_low, table_high) = self.split_u8x32(bytes);
-        let (indices_low, indices_high) = self.split_u8x32(indices);
-        let high_table_offset = self.splat_u8x16(16);
-        let output_low_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_low);
-        let output_low_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_low, high_table_offset));
-        let output_low = self.or_u8x16(output_low_from_low, output_low_from_high);
-        let output_high_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_high);
-        let output_high_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_high, high_table_offset));
-        let output_high = self.or_u8x16(output_high_from_low, output_high_from_high);
-        let result_bytes = self.combine_u8x16(output_low, output_high);
-        Bytes::from_bytes(result_bytes)
     }
     #[inline(always)]
     fn combine_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x32<Self> {
@@ -3447,27 +3183,6 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
-        self.swizzle_dyn_precise_i32x8(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let (table_low, table_high) = self.split_u8x32(bytes);
-        let (indices_low, indices_high) = self.split_u8x32(indices);
-        let high_table_offset = self.splat_u8x16(16);
-        let output_low_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_low);
-        let output_low_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_low, high_table_offset));
-        let output_low = self.or_u8x16(output_low_from_low, output_low_from_high);
-        let output_high_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_high);
-        let output_high_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_high, high_table_offset));
-        let output_high = self.or_u8x16(output_high_from_low, output_high_from_high);
-        let result_bytes = self.combine_u8x16(output_low, output_high);
-        Bytes::from_bytes(result_bytes)
-    }
-    #[inline(always)]
     fn combine_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x16<Self> {
         i32x16 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -3501,27 +3216,6 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
-        self.swizzle_dyn_precise_u32x8(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let (table_low, table_high) = self.split_u8x32(bytes);
-        let (indices_low, indices_high) = self.split_u8x32(indices);
-        let high_table_offset = self.splat_u8x16(16);
-        let output_low_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_low);
-        let output_low_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_low, high_table_offset));
-        let output_low = self.or_u8x16(output_low_from_low, output_low_from_high);
-        let output_high_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_high);
-        let output_high_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_high, high_table_offset));
-        let output_high = self.or_u8x16(output_high_from_low, output_high_from_high);
-        let result_bytes = self.combine_u8x16(output_low, output_high);
-        Bytes::from_bytes(result_bytes)
     }
     #[inline(always)]
     fn combine_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x16<Self> {
@@ -3590,27 +3284,6 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
-        self.swizzle_dyn_precise_f64x4(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let (table_low, table_high) = self.split_u8x32(bytes);
-        let (indices_low, indices_high) = self.split_u8x32(indices);
-        let high_table_offset = self.splat_u8x16(16);
-        let output_low_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_low);
-        let output_low_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_low, high_table_offset));
-        let output_low = self.or_u8x16(output_low_from_low, output_low_from_high);
-        let output_high_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_high);
-        let output_high_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_high, high_table_offset));
-        let output_high = self.or_u8x16(output_high_from_low, output_high_from_high);
-        let result_bytes = self.combine_u8x16(output_low, output_high);
-        Bytes::from_bytes(result_bytes)
-    }
-    #[inline(always)]
     fn combine_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x8<Self> {
         f64x8 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -3646,27 +3319,6 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
-        self.swizzle_dyn_precise_i64x4(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let (table_low, table_high) = self.split_u8x32(bytes);
-        let (indices_low, indices_high) = self.split_u8x32(indices);
-        let high_table_offset = self.splat_u8x16(16);
-        let output_low_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_low);
-        let output_low_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_low, high_table_offset));
-        let output_low = self.or_u8x16(output_low_from_low, output_low_from_high);
-        let output_high_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_high);
-        let output_high_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_high, high_table_offset));
-        let output_high = self.or_u8x16(output_high_from_low, output_high_from_high);
-        let result_bytes = self.combine_u8x16(output_low, output_high);
-        Bytes::from_bytes(result_bytes)
-    }
-    #[inline(always)]
     fn combine_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x8<Self> {
         i64x8 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -3700,27 +3352,6 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
-        self.swizzle_dyn_precise_u64x4(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let (table_low, table_high) = self.split_u8x32(bytes);
-        let (indices_low, indices_high) = self.split_u8x32(indices);
-        let high_table_offset = self.splat_u8x16(16);
-        let output_low_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_low);
-        let output_low_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_low, high_table_offset));
-        let output_low = self.or_u8x16(output_low_from_low, output_low_from_high);
-        let output_high_from_low = self.swizzle_dyn_precise_u8x16(table_low, indices_high);
-        let output_high_from_high = self
-            .swizzle_dyn_precise_u8x16(table_high, self.sub_u8x16(indices_high, high_table_offset));
-        let output_high = self.or_u8x16(output_high_from_low, output_high_from_high);
-        let result_bytes = self.combine_u8x16(output_low, output_high);
-        Bytes::from_bytes(result_bytes)
     }
     #[inline(always)]
     fn combine_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x8<Self> {
@@ -3789,22 +3420,6 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self> {
-        self.swizzle_dyn_precise_f32x16(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn split_f32x16(self, a: f32x16<Self>) -> (f32x8<Self>, f32x8<Self>) {
         (
             f32x8 {
@@ -3828,22 +3443,6 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
-        self.swizzle_dyn_precise_i8x64(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn split_i8x64(self, a: i8x64<Self>) -> (i8x32<Self>, i8x32<Self>) {
@@ -3939,22 +3538,6 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_i16x32(self, a: i16x32<Self>, indices: u8x64<Self>) -> i16x32<Self> {
-        self.swizzle_dyn_precise_i16x32(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i16x32(self, a: i16x32<Self>, indices: u8x64<Self>) -> i16x32<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn split_i16x32(self, a: i16x32<Self>) -> (i16x16<Self>, i16x16<Self>) {
         (
             i16x16 {
@@ -3981,22 +3564,6 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u16x32(self, a: u16x32<Self>, indices: u8x64<Self>) -> u16x32<Self> {
-        self.swizzle_dyn_precise_u16x32(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u16x32(self, a: u16x32<Self>, indices: u8x64<Self>) -> u16x32<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>) {
@@ -4051,22 +3618,6 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_i32x16(self, a: i32x16<Self>, indices: u8x64<Self>) -> i32x16<Self> {
-        self.swizzle_dyn_precise_i32x16(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i32x16(self, a: i32x16<Self>, indices: u8x64<Self>) -> i32x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
         (
             i32x8 {
@@ -4093,22 +3644,6 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u32x16(self, a: u32x16<Self>, indices: u8x64<Self>) -> u32x16<Self> {
-        self.swizzle_dyn_precise_u32x16(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u32x16(self, a: u32x16<Self>, indices: u8x64<Self>) -> u32x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>) {
@@ -4163,22 +3698,6 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
-        self.swizzle_dyn_precise_f64x8(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>) {
         (
             f64x4 {
@@ -4207,22 +3726,6 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
-        self.swizzle_dyn_precise_i64x8(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn split_i64x8(self, a: i64x8<Self>) -> (i64x4<Self>, i64x4<Self>) {
         (
             i64x4 {
@@ -4249,22 +3752,6 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
-        self.swizzle_dyn_precise_u64x8(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn split_u64x8(self, a: u64x8<Self>) -> (u64x4<Self>, u64x4<Self>) {

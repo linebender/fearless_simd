@@ -18,6 +18,19 @@ pub(crate) fn fallback_method(op: Op, vec_ty: &VecType) -> TokenStream {
     crate::mk_fallback::Fallback.make_method(op, vec_ty)
 }
 
+/// Implement a typed byte swizzle by forwarding to the corresponding byte-vector operation.
+pub(crate) fn byte_swizzle_op(op: &Op, vec_ty: &VecType) -> TokenStream {
+    assert!(op.sig.should_route_swizzle_through_bytes(vec_ty));
+
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let byte_method = generic_op_name(op.method, &vec_ty.bytes_ty());
+    quote! {
+        #method_sig {
+            Bytes::from_bytes(self.#byte_method(Bytes::to_bytes(a), indices))
+        }
+    }
+}
+
 pub(crate) fn recursive_swizzle_dyn_precise_body<T: ToTokens + ?Sized>(
     vec_ty: &VecType,
     token: &T,

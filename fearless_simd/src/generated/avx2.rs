@@ -138,52 +138,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x4<Avx2>, indices: u8x16<Avx2>) -> f32x4<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x4<Avx2>, indices: u8x16<Avx2>) -> f32x4<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x4<Avx2>, indices: u8x16<Avx2>) -> f32x4<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -709,52 +663,6 @@ impl Simd for Avx2 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x16<Avx2>, indices: u8x16<Avx2>) -> i8x16<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x16<Avx2>, indices: u8x16<Avx2>) -> i8x16<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x16<Avx2>, indices: u8x16<Avx2>) -> i8x16<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -1843,52 +1751,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x8<Avx2>, indices: u8x16<Avx2>) -> i16x8<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x8<Avx2>, indices: u8x16<Avx2>) -> i16x8<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x8<Avx2>, indices: u8x16<Avx2>) -> i16x8<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2324,52 +2186,6 @@ impl Simd for Avx2 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x8<Avx2>, indices: u8x16<Avx2>) -> u16x8<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x8<Avx2>, indices: u8x16<Avx2>) -> u16x8<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x8<Avx2>, indices: u8x16<Avx2>) -> u16x8<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -2980,52 +2796,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x4<Avx2>, indices: u8x16<Avx2>) -> i32x4<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x4<Avx2>, indices: u8x16<Avx2>) -> i32x4<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x4<Avx2>, indices: u8x16<Avx2>) -> i32x4<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3451,52 +3221,6 @@ impl Simd for Avx2 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x4<Avx2>, indices: u8x16<Avx2>) -> u32x4<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x4<Avx2>, indices: u8x16<Avx2>) -> u32x4<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x4<Avx2>, indices: u8x16<Avx2>) -> u32x4<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -4100,52 +3824,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x2<Avx2>, indices: u8x16<Avx2>) -> f64x2<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x2<Avx2>, indices: u8x16<Avx2>) -> f64x2<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x2<Avx2>, indices: u8x16<Avx2>) -> f64x2<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4578,52 +4256,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i64x2<Avx2>, indices: u8x16<Avx2>) -> i64x2<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i64x2<Avx2>, indices: u8x16<Avx2>) -> i64x2<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i64x2<Avx2>, indices: u8x16<Avx2>) -> i64x2<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5008,52 +4640,6 @@ impl Simd for Avx2 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u64x2<Avx2>, indices: u8x16<Avx2>) -> u64x2<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u64x2<Avx2>, indices: u8x16<Avx2>) -> u64x2<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u64x2<Avx2>, indices: u8x16<Avx2>) -> u64x2<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -5609,65 +5195,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x8<Avx2>, indices: u8x32<Avx2>) -> f32x8<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x8<Avx2>, indices: u8x32<Avx2>) -> f32x8<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x8<Avx2>, indices: u8x32<Avx2>) -> f32x8<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6181,65 +5708,6 @@ impl Simd for Avx2 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x32<Avx2>, indices: u8x32<Avx2>) -> i8x32<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x32<Avx2>, indices: u8x32<Avx2>) -> i8x32<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x32<Avx2>, indices: u8x32<Avx2>) -> i8x32<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
@@ -7426,69 +6894,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_i16x16(
-        self,
-        a: i16x16<Self>,
-        indices: u8x32<Self>,
-    ) -> i16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x16<Avx2>, indices: u8x32<Avx2>) -> i16x16<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i16x16(self, a: i16x16<Self>, indices: u8x32<Self>) -> i16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x16<Avx2>, indices: u8x32<Avx2>) -> i16x16<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i16x16(self, a: i16x16<Self>, indices: u8x32<Self>) -> i16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x16<Avx2>, indices: u8x32<Avx2>) -> i16x16<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -7951,69 +7356,6 @@ impl Simd for Avx2 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u16x16(
-        self,
-        a: u16x16<Self>,
-        indices: u8x32<Self>,
-    ) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x16<Avx2>, indices: u8x32<Avx2>) -> u16x16<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u16x16(self, a: u16x16<Self>, indices: u8x32<Self>) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x16<Avx2>, indices: u8x32<Avx2>) -> u16x16<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u16x16(self, a: u16x16<Self>, indices: u8x32<Self>) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x16<Avx2>, indices: u8x32<Avx2>) -> u16x16<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
@@ -8667,65 +8009,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x8<Avx2>, indices: u8x32<Avx2>) -> i32x8<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x8<Avx2>, indices: u8x32<Avx2>) -> i32x8<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x8<Avx2>, indices: u8x32<Avx2>) -> i32x8<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9148,65 +8431,6 @@ impl Simd for Avx2 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x8<Avx2>, indices: u8x32<Avx2>) -> u32x8<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x8<Avx2>, indices: u8x32<Avx2>) -> u32x8<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x8<Avx2>, indices: u8x32<Avx2>) -> u32x8<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
@@ -9823,65 +9047,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x4<Avx2>, indices: u8x32<Avx2>) -> f64x4<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x4<Avx2>, indices: u8x32<Avx2>) -> f64x4<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x4<Avx2>, indices: u8x32<Avx2>) -> f64x4<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10312,65 +9477,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i64x4<Avx2>, indices: u8x32<Avx2>) -> i64x4<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i64x4<Avx2>, indices: u8x32<Avx2>) -> i64x4<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i64x4<Avx2>, indices: u8x32<Avx2>) -> i64x4<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10765,65 +9871,6 @@ impl Simd for Avx2 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u64x4<Avx2>, indices: u8x32<Avx2>) -> u64x4<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u64x4<Avx2>, indices: u8x32<Avx2>) -> u64x4<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u64x4<Avx2>, indices: u8x32<Avx2>) -> u64x4<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
@@ -11347,37 +10394,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self> {
-        self.swizzle_dyn_precise_f32x16(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x16<Avx2>, indices: u8x64<Avx2>) -> f32x16<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn split_f32x16(self, a: f32x16<Self>) -> (f32x8<Self>, f32x8<Self>) {
         (
             f32x8 {
@@ -11405,37 +10421,6 @@ impl Simd for Avx2 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
-        self.swizzle_dyn_precise_i8x64(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x64<Avx2>, indices: u8x64<Avx2>) -> i8x64<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
     }
     #[inline(always)]
     fn split_i8x64(self, a: i8x64<Self>) -> (i8x32<Self>, i8x32<Self>) {
@@ -11592,37 +10577,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_i16x32(self, a: i16x32<Self>, indices: u8x64<Self>) -> i16x32<Self> {
-        self.swizzle_dyn_precise_i16x32(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i16x32(self, a: i16x32<Self>, indices: u8x64<Self>) -> i16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x32<Avx2>, indices: u8x64<Avx2>) -> i16x32<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn split_i16x32(self, a: i16x32<Self>) -> (i16x16<Self>, i16x16<Self>) {
         (
             i16x16 {
@@ -11650,37 +10604,6 @@ impl Simd for Avx2 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u16x32(self, a: u16x32<Self>, indices: u8x64<Self>) -> u16x32<Self> {
-        self.swizzle_dyn_precise_u16x32(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u16x32(self, a: u16x32<Self>, indices: u8x64<Self>) -> u16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x32<Avx2>, indices: u8x64<Avx2>) -> u16x32<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
     }
     #[inline(always)]
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>) {
@@ -11752,37 +10675,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_i32x16(self, a: i32x16<Self>, indices: u8x64<Self>) -> i32x16<Self> {
-        self.swizzle_dyn_precise_i32x16(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i32x16(self, a: i32x16<Self>, indices: u8x64<Self>) -> i32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x16<Avx2>, indices: u8x64<Avx2>) -> i32x16<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
         (
             i32x8 {
@@ -11810,37 +10702,6 @@ impl Simd for Avx2 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u32x16(self, a: u32x16<Self>, indices: u8x64<Self>) -> u32x16<Self> {
-        self.swizzle_dyn_precise_u32x16(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u32x16(self, a: u32x16<Self>, indices: u8x64<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x16<Avx2>, indices: u8x64<Avx2>) -> u32x16<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
     }
     #[inline(always)]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>) {
@@ -11923,37 +10784,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
-        self.swizzle_dyn_precise_f64x8(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x8<Avx2>, indices: u8x64<Avx2>) -> f64x8<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>) {
         (
             f64x4 {
@@ -11983,37 +10813,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
-        self.swizzle_dyn_precise_i64x8(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i64x8<Avx2>, indices: u8x64<Avx2>) -> i64x8<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn split_i64x8(self, a: i64x8<Self>) -> (i64x4<Self>, i64x4<Self>) {
         (
             i64x4 {
@@ -12041,37 +10840,6 @@ impl Simd for Avx2 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
-        self.swizzle_dyn_precise_u64x8(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u64x8<Avx2>, indices: u8x64<Avx2>) -> u64x8<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
     }
     #[inline(always)]
     fn split_u64x8(self, a: u64x8<Self>) -> (u64x4<Self>, u64x4<Self>) {

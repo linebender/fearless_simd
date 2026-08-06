@@ -176,101 +176,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let result: u8x16<Self> = [
-            {
-                let index = indices[0usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[1usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[2usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[3usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[4usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[5usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[6usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[7usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[8usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[9usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[10usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[11usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[12usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[13usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[14usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[15usize] as usize;
-                bytes[index % 16usize]
-            },
-        ]
-        .simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 16usize];
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 16usize];
-            output[lane] = if index < 16usize { value } else { 0 };
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
         [
             f32::abs(a[0usize]),
@@ -650,101 +555,6 @@ impl Simd for Fallback {
         dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[16usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let result: u8x16<Self> = [
-            {
-                let index = indices[0usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[1usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[2usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[3usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[4usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[5usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[6usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[7usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[8usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[9usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[10usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[11usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[12usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[13usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[14usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[15usize] as usize;
-                bytes[index % 16usize]
-            },
-        ]
-        .simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 16usize];
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 16usize];
-            output[lane] = if index < 16usize { value } else { 0 };
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -2647,101 +2457,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let result: u8x16<Self> = [
-            {
-                let index = indices[0usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[1usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[2usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[3usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[4usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[5usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[6usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[7usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[8usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[9usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[10usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[11usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[12usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[13usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[14usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[15usize] as usize;
-                bytes[index % 16usize]
-            },
-        ]
-        .simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 16usize];
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 16usize];
-            output[lane] = if index < 16usize { value } else { 0 };
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         [
             i16::wrapping_add(a[0usize], b[0usize]),
@@ -3270,101 +2985,6 @@ impl Simd for Fallback {
         dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[8usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let result: u8x16<Self> = [
-            {
-                let index = indices[0usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[1usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[2usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[3usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[4usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[5usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[6usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[7usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[8usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[9usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[10usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[11usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[12usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[13usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[14usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[15usize] as usize;
-                bytes[index % 16usize]
-            },
-        ]
-        .simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 16usize];
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 16usize];
-            output[lane] = if index < 16usize { value } else { 0 };
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -4098,101 +3718,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let result: u8x16<Self> = [
-            {
-                let index = indices[0usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[1usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[2usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[3usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[4usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[5usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[6usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[7usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[8usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[9usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[10usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[11usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[12usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[13usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[14usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[15usize] as usize;
-                bytes[index % 16usize]
-            },
-        ]
-        .simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 16usize];
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 16usize];
-            output[lane] = if index < 16usize { value } else { 0 };
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         [
             i32::wrapping_add(a[0usize], b[0usize]),
@@ -4539,101 +4064,6 @@ impl Simd for Fallback {
         dest[..4usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[4usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let result: u8x16<Self> = [
-            {
-                let index = indices[0usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[1usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[2usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[3usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[4usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[5usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[6usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[7usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[8usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[9usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[10usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[11usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[12usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[13usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[14usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[15usize] as usize;
-                bytes[index % 16usize]
-            },
-        ]
-        .simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 16usize];
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 16usize];
-            output[lane] = if index < 16usize { value } else { 0 };
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -5117,101 +4547,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let result: u8x16<Self> = [
-            {
-                let index = indices[0usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[1usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[2usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[3usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[4usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[5usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[6usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[7usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[8usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[9usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[10usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[11usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[12usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[13usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[14usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[15usize] as usize;
-                bytes[index % 16usize]
-            },
-        ]
-        .simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 16usize];
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 16usize];
-            output[lane] = if index < 16usize { value } else { 0 };
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
         [f64::abs(a[0usize]), f64::abs(a[1usize])].simd_into(self)
     }
@@ -5480,101 +4815,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let result: u8x16<Self> = [
-            {
-                let index = indices[0usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[1usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[2usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[3usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[4usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[5usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[6usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[7usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[8usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[9usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[10usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[11usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[12usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[13usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[14usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[15usize] as usize;
-                bytes[index % 16usize]
-            },
-        ]
-        .simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 16usize];
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 16usize];
-            output[lane] = if index < 16usize { value } else { 0 };
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         [
             i64::wrapping_add(a[0usize], b[0usize]),
@@ -5832,101 +5072,6 @@ impl Simd for Fallback {
         dest[..2usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[2usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let result: u8x16<Self> = [
-            {
-                let index = indices[0usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[1usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[2usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[3usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[4usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[5usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[6usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[7usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[8usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[9usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[10usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[11usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[12usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[13usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[14usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[15usize] as usize;
-                bytes[index % 16usize]
-            },
-        ]
-        .simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 16usize];
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 16usize];
-            output[lane] = if index < 16usize { value } else { 0 };
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -6297,29 +5442,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn swizzle_dyn_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 32usize];
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 32usize];
-            output[lane] = if index < 32usize { value } else { 0 };
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn combine_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x16<Self> {
         let mut result = [0.0; 16usize];
         result[0..8usize].copy_from_slice(&a.val.0);
@@ -6340,29 +5462,6 @@ impl Simd for Fallback {
         dest[..32usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[32usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 32usize];
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 32usize];
-            output[lane] = if index < 32usize { value } else { 0 };
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn combine_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x64<Self> {
@@ -6458,29 +5557,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn swizzle_dyn_i16x16(self, a: i16x16<Self>, indices: u8x32<Self>) -> i16x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 32usize];
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i16x16(self, a: i16x16<Self>, indices: u8x32<Self>) -> i16x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 32usize];
-            output[lane] = if index < 32usize { value } else { 0 };
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn combine_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x32<Self> {
         let mut result = [0; 32usize];
         result[0..16usize].copy_from_slice(&a.val.0);
@@ -6501,29 +5577,6 @@ impl Simd for Fallback {
         dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[16usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u16x16(self, a: u16x16<Self>, indices: u8x32<Self>) -> u16x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 32usize];
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u16x16(self, a: u16x16<Self>, indices: u8x32<Self>) -> u16x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 32usize];
-            output[lane] = if index < 32usize { value } else { 0 };
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn combine_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x32<Self> {
@@ -6574,29 +5627,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn swizzle_dyn_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 32usize];
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 32usize];
-            output[lane] = if index < 32usize { value } else { 0 };
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn combine_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x16<Self> {
         let mut result = [0; 16usize];
         result[0..8usize].copy_from_slice(&a.val.0);
@@ -6617,29 +5647,6 @@ impl Simd for Fallback {
         dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[8usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 32usize];
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 32usize];
-            output[lane] = if index < 32usize { value } else { 0 };
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn combine_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x16<Self> {
@@ -6690,29 +5697,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn swizzle_dyn_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 32usize];
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 32usize];
-            output[lane] = if index < 32usize { value } else { 0 };
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn combine_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x8<Self> {
         let mut result = [0.0; 8usize];
         result[0..4usize].copy_from_slice(&a.val.0);
@@ -6735,29 +5719,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn swizzle_dyn_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 32usize];
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 32usize];
-            output[lane] = if index < 32usize { value } else { 0 };
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn combine_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x8<Self> {
         let mut result = [0; 8usize];
         result[0..4usize].copy_from_slice(&a.val.0);
@@ -6778,29 +5739,6 @@ impl Simd for Fallback {
         dest[..4usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[4usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 32usize];
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 32usize];
-        for lane in 0..32usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 32usize];
-            output[lane] = if index < 32usize { value } else { 0 };
-        }
-        let result: u8x32<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn combine_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x8<Self> {
@@ -6851,29 +5789,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn swizzle_dyn_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 64usize];
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn split_f32x16(self, a: f32x16<Self>) -> (f32x8<Self>, f32x8<Self>) {
         let mut b0 = [0.0; 8usize];
         let mut b1 = [0.0; 8usize];
@@ -6887,29 +5802,6 @@ impl Simd for Fallback {
         dest[..64usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[64usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 64usize];
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn split_i8x64(self, a: i8x64<Self>) -> (i8x32<Self>, i8x32<Self>) {
@@ -6984,29 +5876,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn swizzle_dyn_i16x32(self, a: i16x32<Self>, indices: u8x64<Self>) -> i16x32<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 64usize];
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i16x32(self, a: i16x32<Self>, indices: u8x64<Self>) -> i16x32<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn split_i16x32(self, a: i16x32<Self>) -> (i16x16<Self>, i16x16<Self>) {
         let mut b0 = [0; 16usize];
         let mut b1 = [0; 16usize];
@@ -7020,29 +5889,6 @@ impl Simd for Fallback {
         dest[..32usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[32usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u16x32(self, a: u16x32<Self>, indices: u8x64<Self>) -> u16x32<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 64usize];
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u16x32(self, a: u16x32<Self>, indices: u8x64<Self>) -> u16x32<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>) {
@@ -7079,29 +5925,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn swizzle_dyn_i32x16(self, a: i32x16<Self>, indices: u8x64<Self>) -> i32x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 64usize];
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i32x16(self, a: i32x16<Self>, indices: u8x64<Self>) -> i32x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
         let mut b0 = [0; 8usize];
         let mut b1 = [0; 8usize];
@@ -7115,29 +5938,6 @@ impl Simd for Fallback {
         dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[16usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u32x16(self, a: u32x16<Self>, indices: u8x64<Self>) -> u32x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 64usize];
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u32x16(self, a: u32x16<Self>, indices: u8x64<Self>) -> u32x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>) {
@@ -7174,29 +5974,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn swizzle_dyn_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 64usize];
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>) {
         let mut b0 = [0.0; 4usize];
         let mut b1 = [0.0; 4usize];
@@ -7212,29 +5989,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn swizzle_dyn_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 64usize];
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
     fn split_i64x8(self, a: i64x8<Self>) -> (i64x4<Self>, i64x4<Self>) {
         let mut b0 = [0; 4usize];
         let mut b1 = [0; 4usize];
@@ -7248,29 +6002,6 @@ impl Simd for Fallback {
         dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[8usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 64usize];
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn split_u64x8(self, a: u64x8<Self>) -> (u64x4<Self>, u64x4<Self>) {

@@ -137,7 +137,9 @@ pub(crate) trait Level {
         let mut methods = vec![];
         for vec_ty in SIMD_TYPES {
             for op in ops_for_type(vec_ty) {
-                if self.should_use_generic_op(&op, vec_ty) {
+                if op.sig.should_route_swizzle_through_bytes(vec_ty)
+                    || self.should_use_generic_op(&op, vec_ty)
+                {
                     continue;
                 }
 

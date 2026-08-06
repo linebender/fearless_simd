@@ -1438,6 +1438,15 @@ impl CoreOpTrait {
 }
 
 impl OpSig {
+    /// Whether this typed swizzle can be implemented by bitcasting to bytes and forwarding to the
+    /// corresponding byte-vector operation.
+    pub(crate) fn should_route_swizzle_through_bytes(&self, vec_ty: &VecType) -> bool {
+        matches!(
+            self,
+            Self::SwizzleDynWithinBlocks | Self::SwizzleDyn | Self::SwizzleDynPrecise
+        ) && *vec_ty != vec_ty.bytes_ty()
+    }
+
     /// Determine whether a given operation should defer to its generic implementation, for a given vector type and the
     /// maximum native vector width.
     pub(crate) fn should_use_generic_op(&self, vec_ty: &VecType, native_width: usize) -> bool {
