@@ -412,14 +412,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_f32x4<const SHIFT: usize>(
-        self,
-        a: f32x4<Self>,
-        b: f32x4<Self>,
-    ) -> f32x4<Self> {
-        self.slide_f32x4::<SHIFT>(a, b)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -960,14 +952,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_i8x16<const SHIFT: usize>(
-        self,
-        a: i8x16<Self>,
-        b: i8x16<Self>,
-    ) -> i8x16<Self> {
-        self.slide_i8x16::<SHIFT>(a, b)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1464,14 +1448,6 @@ impl Simd for Avx512 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_u8x16<const SHIFT: usize>(
-        self,
-        a: u8x16<Self>,
-        b: u8x16<Self>,
-    ) -> u8x16<Self> {
-        self.slide_u8x16::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_u8x16(self, a: u8x16<Self>, indices: u8x16<Self>) -> u8x16<Self> {
@@ -2069,14 +2045,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_i16x8<const SHIFT: usize>(
-        self,
-        a: i16x8<Self>,
-        b: i16x8<Self>,
-    ) -> i16x8<Self> {
-        self.slide_i16x8::<SHIFT>(a, b)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2554,14 +2522,6 @@ impl Simd for Avx512 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_u16x8<const SHIFT: usize>(
-        self,
-        a: u16x8<Self>,
-        b: u16x8<Self>,
-    ) -> u16x8<Self> {
-        self.slide_u16x8::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
@@ -3143,14 +3103,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_i32x4<const SHIFT: usize>(
-        self,
-        a: i32x4<Self>,
-        b: i32x4<Self>,
-    ) -> i32x4<Self> {
-        self.slide_i32x4::<SHIFT>(a, b)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3622,14 +3574,6 @@ impl Simd for Avx512 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_u32x4<const SHIFT: usize>(
-        self,
-        a: u32x4<Self>,
-        b: u32x4<Self>,
-    ) -> u32x4<Self> {
-        self.slide_u32x4::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
@@ -4206,14 +4150,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_f64x2<const SHIFT: usize>(
-        self,
-        a: f64x2<Self>,
-        b: f64x2<Self>,
-    ) -> f64x2<Self> {
-        self.slide_f64x2::<SHIFT>(a, b)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4701,14 +4637,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_i64x2<const SHIFT: usize>(
-        self,
-        a: i64x2<Self>,
-        b: i64x2<Self>,
-    ) -> i64x2<Self> {
-        self.slide_i64x2::<SHIFT>(a, b)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5150,14 +5078,6 @@ impl Simd for Avx512 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_u64x2<const SHIFT: usize>(
-        self,
-        a: u64x2<Self>,
-        b: u64x2<Self>,
-    ) -> u64x2<Self> {
-        self.slide_u64x2::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
