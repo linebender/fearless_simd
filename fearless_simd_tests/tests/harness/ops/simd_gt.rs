@@ -14,6 +14,13 @@ fn simd_gt_f32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn simd_gt_f32x4_nan<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[f32::NAN, 1.0, f32::NAN, 3.0]);
+    let b = f32x4::from_slice(simd, &[0.0, f32::NAN, f32::NAN, 2.0]);
+    assert_eq!(<[i32; 4]>::from(a.simd_gt(b)), [0, 0, 0, -1]);
+}
+
+#[simd_test]
 fn simd_gt_i8x16<S: Simd>(simd: S) {
     let a = i8x16::from_slice(
         simd,

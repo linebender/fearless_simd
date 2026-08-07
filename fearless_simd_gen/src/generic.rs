@@ -6,7 +6,7 @@ use quote::{ToTokens, quote};
 
 use crate::{
     level::Level,
-    ops::{ElementDirection, Op, OpSig, SlideGranularity},
+    ops::{Op, OpSig, SlideGranularity},
     types::{ScalarType, VecType},
 };
 
@@ -16,6 +16,33 @@ pub(crate) fn generic_op_name(op: &str, ty: &VecType) -> Ident {
 
 pub(crate) fn fallback_method(op: Op, vec_ty: &VecType) -> TokenStream {
     crate::mk_fallback::Fallback.make_method(op, vec_ty)
+}
+
+/// Implement a typed byte swizzle by forwarding to the corresponding byte-vector operation.
+pub(crate) fn byte_swizzle_op(op: &Op, vec_ty: &VecType) -> TokenStream {
+    assert!(
+        op.sig.should_route_swizzle_through_bytes(vec_ty),
+        "what are we even doing here?"
+    );
+
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let byte_method = generic_op_name(op.method, &vec_ty.bytes_ty());
+    quote! {
+        #method_sig {
+            Bytes::from_bytes(self.#byte_method(Bytes::to_bytes(a), indices))
+        }
+    }
+}
+
+/// Implement a greater-than comparison by reversing the corresponding less-than comparison.
+pub(crate) fn reversed_compare_op(op: &Op, vec_ty: &VecType) -> Option<TokenStream> {
+    let reversed_method = generic_op_name(op.reversed_compare_method()?, vec_ty);
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    Some(quote! {
+        #method_sig {
+            self.#reversed_method(b, a)
+        }
+    })
 }
 
 pub(crate) fn recursive_swizzle_dyn_precise_body<T: ToTokens + ?Sized>(
@@ -344,74 +371,6 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::ElementRotate { direction } => {
-            let slide = generic_op_name("slide", ty);
-            let len = Literal::usize_unsuffixed(ty.len);
-            match direction {
-                ElementDirection::Left => {
-                    let arms = modulo_offset_arms(ty, |offset| {
-                        let offset = Literal::usize_unsuffixed(offset);
-                        quote! { self.#slide::<#offset>(a, a) }
-                    });
-                    quote! {
-                        #method_sig {
-                            match OFFSET % #len {
-                                #(#arms,)*
-                                _ => unreachable!(),
-                            }
-                        }
-                    }
-                }
-                ElementDirection::Right => {
-                    let arms = modulo_offset_arms(ty, |offset| {
-                        let shift = if offset == 0 { ty.len } else { ty.len - offset };
-                        let shift = Literal::usize_unsuffixed(shift);
-                        quote! { self.#slide::<#shift>(a, a) }
-                    });
-                    quote! {
-                        #method_sig {
-                            match OFFSET % #len {
-                                #(#arms,)*
-                                _ => unreachable!(),
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        OpSig::ElementShift { direction } => {
-            let splat = generic_op_name("splat", ty);
-            let slide = generic_op_name("slide", ty);
-            match direction {
-                ElementDirection::Left => {
-                    let arms =
-                        offset_arms(ty, |shift| quote! { self.#slide::<#shift>(a, padding) });
-                    let all_padding = Literal::usize_unsuffixed(ty.len);
-                    quote! {
-                        #method_sig {
-                            let padding = self.#splat(padding);
-                            match OFFSET {
-                                #(#arms,)*
-                                _ => self.#slide::<#all_padding>(a, padding),
-                            }
-                        }
-                    }
-                }
-                ElementDirection::Right => {
-                    let arms =
-                        right_offset_arms(ty, |shift| quote! { self.#slide::<#shift>(padding, a) });
-                    quote! {
-                        #method_sig {
-                            let padding = self.#splat(padding);
-                            match OFFSET {
-                                #(#arms,)*
-                                _ => self.#slide::<0>(padding, a),
-                            }
-                        }
-                    }
-                }
-            }
-        }
         OpSig::Slide { granularity, .. } => {
             match (granularity, ty.n_bits()) {
                 (SlideGranularity::WithinBlocks, 128) => {
@@ -439,43 +398,6 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
             }
         }
     }
-}
-
-fn modulo_offset_arms(
-    ty: &VecType,
-    mut body: impl FnMut(usize) -> TokenStream,
-) -> Vec<TokenStream> {
-    (0..ty.len)
-        .map(|offset| {
-            let offset_lit = Literal::usize_unsuffixed(offset);
-            let body = body(offset);
-            quote! { #offset_lit => #body }
-        })
-        .collect()
-}
-
-fn offset_arms(ty: &VecType, mut body: impl FnMut(Literal) -> TokenStream) -> Vec<TokenStream> {
-    (0..=ty.len)
-        .map(|offset| {
-            let offset_lit = Literal::usize_unsuffixed(offset);
-            let body = body(offset_lit.clone());
-            quote! { #offset_lit => #body }
-        })
-        .collect()
-}
-
-fn right_offset_arms(
-    ty: &VecType,
-    mut body: impl FnMut(Literal) -> TokenStream,
-) -> Vec<TokenStream> {
-    (0..=ty.len)
-        .map(|offset| {
-            let offset_lit = Literal::usize_unsuffixed(offset);
-            let shift = Literal::usize_unsuffixed(ty.len - offset);
-            let body = body(shift);
-            quote! { #offset_lit => #body }
-        })
-        .collect()
 }
 
 pub(crate) fn unrolled_array(len: usize, item: impl FnMut(usize) -> TokenStream) -> TokenStream {

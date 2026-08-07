@@ -16,7 +16,7 @@ use crate::{
 
 pub(crate) fn mk_simd_types() -> TokenStream {
     let mut result = quote! {
-        use crate::{Bytes, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdMask, SimdCvtFloat, SimdCvtTruncate, SimdWiden, SimdNarrow, seal::Seal};
+        use crate::{Bytes, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdMask, SimdCvtFloat, SimdCvtTruncate, SimdInterleaved, SimdWiden, SimdNarrow, seal::Seal};
     };
     for ty in SIMD_TYPES {
         let name = ty.rust();
@@ -262,6 +262,33 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 }
             });
         }
+        if ty.n_bits() == 128 {
+            let four_interleaved_len = Literal::usize_unsuffixed(ty.len * 4);
+            let load_four_interleaved = generic_op_name("load_four_interleaved", ty);
+            let store_four_interleaved = generic_op_name("store_four_interleaved", ty);
+            conditional_impls.push(quote! {
+                impl<S: Simd> SimdInterleaved<S> for #name<S> {
+                    #[inline(always)]
+                    fn load_four_interleaved(
+                        simd: S,
+                        src: &[Self::Element],
+                    ) -> [Self; 4] {
+                        let src: &[#rust_scalar; #four_interleaved_len] = src.try_into().unwrap();
+                        simd.#load_four_interleaved(src)
+                    }
+
+                    #[inline(always)]
+                    fn store_four_interleaved(
+                        vectors: [Self; 4],
+                        dest: &mut [Self::Element],
+                    ) {
+                        let dest: &mut [#rust_scalar; #four_interleaved_len] =
+                            dest.try_into().unwrap();
+                        vectors[0].simd.#store_four_interleaved(vectors, dest);
+                    }
+                }
+            });
+        }
         // There are architecture-specific "load" intrinsics, but they can actually be *worse* for performance. If they
         // lower to LLVM intrinsics, they will likely not be optimized until much later in the pipeline (if at all),
         // resulting in substantially worse codegen. See https://github.com/linebender/fearless_simd/pull/185.
@@ -450,7 +477,18 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
         let Some(call_args) = sig.forwarding_call_args() else {
             continue;
         };
-        let trait_method = generic_op_name(method, ty);
+        // Integer min/max have no precision-related edge cases, so the precise
+        // variants deliberately forward to the regular backend operations.
+        let backend_method = if matches!(ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
+            match method {
+                "min_precise" => "min",
+                "max_precise" => "max",
+                _ => method,
+            }
+        } else {
+            method
+        };
+        let trait_method = generic_op_name(backend_method, ty);
         let method_sig = op
             .vec_trait_method_sig()
             .expect("base trait operation must have a vector method signature");
@@ -504,10 +542,6 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     };
     let slide_op = generic_op_name("slide", ty);
     let slide_blockwise_op = generic_op_name("slide_within_blocks", ty);
-    let rotate_elements_left_op = generic_op_name("rotate_elements_left", ty);
-    let rotate_elements_right_op = generic_op_name("rotate_elements_right", ty);
-    let shift_elements_left_op = generic_op_name("shift_elements_left", ty);
-    let shift_elements_right_op = generic_op_name("shift_elements_right", ty);
     let swizzle_dyn_within_blocks_op = generic_op_name("swizzle_dyn_within_blocks", ty);
     let swizzle_dyn_op = generic_op_name("swizzle_dyn", ty);
     let swizzle_dyn_precise_op = generic_op_name("swizzle_dyn_precise", ty);
@@ -568,26 +602,6 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
             #[inline(always)]
             fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
                 self.simd.#slide_blockwise_op::<SHIFT>(self, rhs.simd_into(self.simd))
-            }
-
-            #[inline(always)]
-            fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-                self.simd.#rotate_elements_left_op::<OFFSET>(self)
-            }
-
-            #[inline(always)]
-            fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-                self.simd.#rotate_elements_right_op::<OFFSET>(self)
-            }
-
-            #[inline(always)]
-            fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-                self.simd.#shift_elements_left_op::<OFFSET>(self, padding)
-            }
-
-            #[inline(always)]
-            fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-                self.simd.#shift_elements_right_op::<OFFSET>(self, padding)
             }
 
             #[inline(always)]

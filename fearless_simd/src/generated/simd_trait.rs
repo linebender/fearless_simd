@@ -23,7 +23,7 @@ use core::fmt::Debug;
 #[doc = r" This trait defines all the low-level SIMD operations (e.g. [`add_f32x4`](Simd::add_f32x4),"]
 #[doc = r" [`mul_u32x4`](Simd::mul_u32x4)) that are implemented by each token type using platform-specific intrinsics."]
 #[doc = r" However, you typically won't call these methods directly. Instead, you'll probably be using the methods"]
-#[doc = r" defined on the vector types themselves."]
+#[doc = r" defined on the vector types themselves, such as [`f32x4`] or [`u32x4`]."]
 #[doc = r""]
 #[doc = r" # Associated Types"]
 #[doc = r""]
@@ -218,33 +218,29 @@ pub trait Simd:
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_f32x4<const SHIFT: usize>(
         self,
         a: f32x4<Self>,
         b: f32x4<Self>,
-    ) -> f32x4<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_f32x4<const OFFSET: usize>(self, a: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_f32x4<const OFFSET: usize>(self, a: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_f32x4<const OFFSET: usize>(
-        self,
-        a: f32x4<Self>,
-        padding: f32,
-    ) -> f32x4<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_f32x4<const OFFSET: usize>(
-        self,
-        a: f32x4<Self>,
-        padding: f32,
-    ) -> f32x4<Self>;
+    ) -> f32x4<Self> {
+        self.slide_f32x4::<SHIFT>(a, b)
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Compute the absolute value of each element."]
     fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Negate each element of the vector."]
@@ -263,6 +259,14 @@ pub trait Simd:
     fn div_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor integer vectors, this operation is the same as `max`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor integer vectors, this operation is the same as `min`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    fn min_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -270,9 +274,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn simd_ge_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
+        self.simd_le_f32x4(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn simd_gt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
+        self.simd_lt_f32x4(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -285,14 +295,6 @@ pub trait Simd:
     fn interleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>);
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn min_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
     fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
@@ -336,33 +338,29 @@ pub trait Simd:
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_i8x16<const SHIFT: usize>(
         self,
         a: i8x16<Self>,
         b: i8x16<Self>,
-    ) -> i8x16<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_i8x16<const OFFSET: usize>(self, a: i8x16<Self>) -> i8x16<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_i8x16<const OFFSET: usize>(self, a: i8x16<Self>) -> i8x16<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_i8x16<const OFFSET: usize>(
-        self,
-        a: i8x16<Self>,
-        padding: i8,
-    ) -> i8x16<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_i8x16<const OFFSET: usize>(
-        self,
-        a: i8x16<Self>,
-        padding: i8,
-    ) -> i8x16<Self>;
+    ) -> i8x16<Self> {
+        self.slide_i8x16::<SHIFT>(a, b)
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -385,6 +383,10 @@ pub trait Simd:
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -392,9 +394,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
+    #[inline(always)]
+    fn simd_ge_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
+        self.simd_le_i8x16(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
+    #[inline(always)]
+    fn simd_gt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
+        self.simd_lt_i8x16(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -409,10 +417,6 @@ pub trait Simd:
     fn deinterleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x32<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
@@ -434,27 +438,14 @@ pub trait Simd:
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_u8x16<const SHIFT: usize>(
         self,
         a: u8x16<Self>,
         b: u8x16<Self>,
-    ) -> u8x16<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_u8x16<const OFFSET: usize>(self, a: u8x16<Self>) -> u8x16<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_u8x16<const OFFSET: usize>(self, a: u8x16<Self>) -> u8x16<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_u8x16<const OFFSET: usize>(
-        self,
-        a: u8x16<Self>,
-        padding: u8,
-    ) -> u8x16<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_u8x16<const OFFSET: usize>(
-        self,
-        a: u8x16<Self>,
-        padding: u8,
-    ) -> u8x16<Self>;
+    ) -> u8x16<Self> {
+        self.slide_u8x16::<SHIFT>(a, b)
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
     fn swizzle_dyn_within_blocks_u8x16(self, a: u8x16<Self>, indices: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
@@ -483,6 +474,10 @@ pub trait Simd:
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -490,9 +485,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
+    #[inline(always)]
+    fn simd_ge_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
+        self.simd_le_u8x16(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
+    #[inline(always)]
+    fn simd_gt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
+        self.simd_lt_u8x16(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -507,10 +508,6 @@ pub trait Simd:
     fn deinterleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self>;
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
@@ -565,33 +562,29 @@ pub trait Simd:
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_i16x8<const SHIFT: usize>(
         self,
         a: i16x8<Self>,
         b: i16x8<Self>,
-    ) -> i16x8<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_i16x8<const OFFSET: usize>(self, a: i16x8<Self>) -> i16x8<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_i16x8<const OFFSET: usize>(self, a: i16x8<Self>) -> i16x8<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_i16x8<const OFFSET: usize>(
-        self,
-        a: i16x8<Self>,
-        padding: i16,
-    ) -> i16x8<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_i16x8<const OFFSET: usize>(
-        self,
-        a: i16x8<Self>,
-        padding: i16,
-    ) -> i16x8<Self>;
+    ) -> i16x8<Self> {
+        self.slide_i16x8::<SHIFT>(a, b)
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -614,6 +607,10 @@ pub trait Simd:
     fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -621,9 +618,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
+    #[inline(always)]
+    fn simd_ge_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
+        self.simd_le_i16x8(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
+    #[inline(always)]
+    fn simd_gt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
+        self.simd_lt_i16x8(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -638,10 +641,6 @@ pub trait Simd:
     fn deinterleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x16<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
@@ -669,33 +668,29 @@ pub trait Simd:
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_u16x8<const SHIFT: usize>(
         self,
         a: u16x8<Self>,
         b: u16x8<Self>,
-    ) -> u16x8<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_u16x8<const OFFSET: usize>(self, a: u16x8<Self>) -> u16x8<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_u16x8<const OFFSET: usize>(self, a: u16x8<Self>) -> u16x8<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_u16x8<const OFFSET: usize>(
-        self,
-        a: u16x8<Self>,
-        padding: u16,
-    ) -> u16x8<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_u16x8<const OFFSET: usize>(
-        self,
-        a: u16x8<Self>,
-        padding: u16,
-    ) -> u16x8<Self>;
+    ) -> u16x8<Self> {
+        self.slide_u16x8::<SHIFT>(a, b)
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -718,6 +713,10 @@ pub trait Simd:
     fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -725,9 +724,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
+    #[inline(always)]
+    fn simd_ge_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
+        self.simd_le_u16x8(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
+    #[inline(always)]
+    fn simd_gt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
+        self.simd_lt_u16x8(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -742,10 +747,6 @@ pub trait Simd:
     fn deinterleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x16<Self>;
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
@@ -806,33 +807,29 @@ pub trait Simd:
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_i32x4<const SHIFT: usize>(
         self,
         a: i32x4<Self>,
         b: i32x4<Self>,
-    ) -> i32x4<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_i32x4<const OFFSET: usize>(self, a: i32x4<Self>) -> i32x4<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_i32x4<const OFFSET: usize>(self, a: i32x4<Self>) -> i32x4<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_i32x4<const OFFSET: usize>(
-        self,
-        a: i32x4<Self>,
-        padding: i32,
-    ) -> i32x4<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_i32x4<const OFFSET: usize>(
-        self,
-        a: i32x4<Self>,
-        padding: i32,
-    ) -> i32x4<Self>;
+    ) -> i32x4<Self> {
+        self.slide_i32x4::<SHIFT>(a, b)
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -855,6 +852,10 @@ pub trait Simd:
     fn shr_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -862,9 +863,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn simd_ge_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
+        self.simd_le_i32x4(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn simd_gt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
+        self.simd_lt_i32x4(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -879,10 +886,6 @@ pub trait Simd:
     fn deinterleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x8<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
@@ -912,33 +915,29 @@ pub trait Simd:
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_u32x4<const SHIFT: usize>(
         self,
         a: u32x4<Self>,
         b: u32x4<Self>,
-    ) -> u32x4<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_u32x4<const OFFSET: usize>(self, a: u32x4<Self>) -> u32x4<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_u32x4<const OFFSET: usize>(self, a: u32x4<Self>) -> u32x4<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_u32x4<const OFFSET: usize>(
-        self,
-        a: u32x4<Self>,
-        padding: u32,
-    ) -> u32x4<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_u32x4<const OFFSET: usize>(
-        self,
-        a: u32x4<Self>,
-        padding: u32,
-    ) -> u32x4<Self>;
+    ) -> u32x4<Self> {
+        self.slide_u32x4::<SHIFT>(a, b)
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -961,6 +960,10 @@ pub trait Simd:
     fn shr_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -968,9 +971,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn simd_ge_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
+        self.simd_le_u32x4(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn simd_gt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
+        self.simd_lt_u32x4(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -985,10 +994,6 @@ pub trait Simd:
     fn deinterleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x8<Self>;
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
@@ -1051,33 +1056,29 @@ pub trait Simd:
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_f64x2<const SHIFT: usize>(
         self,
         a: f64x2<Self>,
         b: f64x2<Self>,
-    ) -> f64x2<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_f64x2<const OFFSET: usize>(self, a: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_f64x2<const OFFSET: usize>(self, a: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_f64x2<const OFFSET: usize>(
-        self,
-        a: f64x2<Self>,
-        padding: f64,
-    ) -> f64x2<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_f64x2<const OFFSET: usize>(
-        self,
-        a: f64x2<Self>,
-        padding: f64,
-    ) -> f64x2<Self>;
+    ) -> f64x2<Self> {
+        self.slide_f64x2::<SHIFT>(a, b)
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Compute the absolute value of each element."]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Negate each element of the vector."]
@@ -1096,6 +1097,14 @@ pub trait Simd:
     fn div_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor integer vectors, this operation is the same as `max`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor integer vectors, this operation is the same as `min`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    fn min_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -1103,9 +1112,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn simd_ge_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
+        self.simd_le_f64x2(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn simd_gt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
+        self.simd_lt_f64x2(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -1118,14 +1133,6 @@ pub trait Simd:
     fn interleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>);
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn min_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
     fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
@@ -1173,33 +1180,29 @@ pub trait Simd:
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_i64x2<const SHIFT: usize>(
         self,
         a: i64x2<Self>,
         b: i64x2<Self>,
-    ) -> i64x2<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_i64x2<const OFFSET: usize>(self, a: i64x2<Self>) -> i64x2<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_i64x2<const OFFSET: usize>(self, a: i64x2<Self>) -> i64x2<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_i64x2<const OFFSET: usize>(
-        self,
-        a: i64x2<Self>,
-        padding: i64,
-    ) -> i64x2<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_i64x2<const OFFSET: usize>(
-        self,
-        a: i64x2<Self>,
-        padding: i64,
-    ) -> i64x2<Self>;
+    ) -> i64x2<Self> {
+        self.slide_i64x2::<SHIFT>(a, b)
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -1222,6 +1225,10 @@ pub trait Simd:
     fn shr_i64x2(self, a: i64x2<Self>, shift: u32) -> i64x2<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -1229,9 +1236,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn simd_ge_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
+        self.simd_le_i64x2(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn simd_gt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
+        self.simd_lt_i64x2(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -1246,10 +1259,6 @@ pub trait Simd:
     fn deinterleave_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> (i64x2<Self>, i64x2<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_i64x2(self, a: mask64x2<Self>, b: i64x2<Self>, c: i64x2<Self>) -> i64x2<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x4<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
@@ -1277,33 +1286,29 @@ pub trait Simd:
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_u64x2<const SHIFT: usize>(
         self,
         a: u64x2<Self>,
         b: u64x2<Self>,
-    ) -> u64x2<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_u64x2<const OFFSET: usize>(self, a: u64x2<Self>) -> u64x2<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_u64x2<const OFFSET: usize>(self, a: u64x2<Self>) -> u64x2<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_u64x2<const OFFSET: usize>(
-        self,
-        a: u64x2<Self>,
-        padding: u64,
-    ) -> u64x2<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_u64x2<const OFFSET: usize>(
-        self,
-        a: u64x2<Self>,
-        padding: u64,
-    ) -> u64x2<Self>;
+    ) -> u64x2<Self> {
+        self.slide_u64x2::<SHIFT>(a, b)
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -1326,6 +1331,10 @@ pub trait Simd:
     fn shr_u64x2(self, a: u64x2<Self>, shift: u32) -> u64x2<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
@@ -1333,9 +1342,15 @@ pub trait Simd:
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn simd_ge_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
+        self.simd_le_u64x2(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn simd_gt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
+        self.simd_lt_u64x2(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
@@ -1350,10 +1365,6 @@ pub trait Simd:
     fn deinterleave_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> (u64x2<Self>, u64x2<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u64x2(self, a: mask64x2<Self>, b: u64x2<Self>, c: u64x2<Self>) -> u64x2<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x4<Self>;
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
@@ -1410,2251 +1421,6262 @@ pub trait Simd:
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_f32x8(self, val: f32) -> f32x8<Self>;
+    #[inline(always)]
+    fn splat_f32x8(self, val: f32) -> f32x8<Self> {
+        let half = self.splat_f32x4(val);
+        self.combine_f32x4(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_f32x8<const SHIFT: usize>(
         self,
         a: f32x8<Self>,
         b: f32x8<Self>,
-    ) -> f32x8<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_f32x8<const OFFSET: usize>(self, a: f32x8<Self>) -> f32x8<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_f32x8<const OFFSET: usize>(self, a: f32x8<Self>) -> f32x8<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_f32x8<const OFFSET: usize>(
-        self,
-        a: f32x8<Self>,
-        padding: f32,
-    ) -> f32x8<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_f32x8<const OFFSET: usize>(
-        self,
-        a: f32x8<Self>,
-        padding: f32,
-    ) -> f32x8<Self>;
+    ) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(
+            self.slide_within_blocks_f32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f32x4::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Compute the absolute value of each element."]
-    fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f32x4(self.abs_f32x4(a0), self.abs_f32x4(a1))
+    }
     #[doc = "Negate each element of the vector."]
-    fn neg_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn neg_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f32x4(self.neg_f32x4(a0), self.neg_f32x4(a1))
+    }
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
-    fn sqrt_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn sqrt_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f32x4(self.sqrt_f32x4(a0), self.sqrt_f32x4(a1))
+    }
     #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
-    fn approximate_recip_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn approximate_recip_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f32x4(
+            self.approximate_recip_f32x4(a0),
+            self.approximate_recip_f32x4(a1),
+        )
+    }
     #[doc = "Add two vectors element-wise."]
-    fn add_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn add_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(self.add_f32x4(a0, b0), self.add_f32x4(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise."]
-    fn sub_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn sub_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(self.sub_f32x4(a0, b0), self.sub_f32x4(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise."]
-    fn mul_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn mul_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(self.mul_f32x4(a0, b0), self.mul_f32x4(a1, b1))
+    }
     #[doc = "Divide two vectors element-wise."]
-    fn div_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn div_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(self.div_f32x4(a0, b0), self.div_f32x4(a1, b1))
+    }
     #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
-    fn copysign_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn copysign_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(self.copysign_f32x4(a0, b0), self.copysign_f32x4(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(self.max_f32x4(a0, b0), self.max_f32x4(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(self.min_f32x4(a0, b0), self.min_f32x4(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor integer vectors, this operation is the same as `max`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    #[inline(always)]
+    fn max_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(
+            self.max_precise_f32x4(a0, b0),
+            self.max_precise_f32x4(a1, b1),
+        )
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor integer vectors, this operation is the same as `min`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    #[inline(always)]
+    fn min_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(
+            self.min_precise_f32x4(a0, b0),
+            self.min_precise_f32x4(a1, b1),
+        )
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn simd_eq_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_mask32x4(self.simd_eq_f32x4(a0, b0), self.simd_eq_f32x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn simd_lt_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_mask32x4(self.simd_lt_f32x4(a0, b0), self.simd_lt_f32x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn simd_le_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_mask32x4(self.simd_le_f32x4(a0, b0), self.simd_le_f32x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn simd_ge_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
+        self.simd_le_f32x8(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn simd_gt_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
+        self.simd_lt_f32x8(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn zip_low_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, _) = self.split_f32x8(a);
+        let (b0, _) = self.split_f32x8(b);
+        self.combine_f32x4(self.zip_low_f32x4(a0, b0), self.zip_high_f32x4(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn zip_high_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (_, a1) = self.split_f32x8(a);
+        let (_, b1) = self.split_f32x8(b);
+        self.combine_f32x4(self.zip_low_f32x4(a1, b1), self.zip_high_f32x4(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn unzip_low_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(self.unzip_low_f32x4(a0, a1), self.unzip_low_f32x4(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn unzip_high_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(self.unzip_high_f32x4(a0, a1), self.unzip_high_f32x4(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> (f32x8<Self>, f32x8<Self>);
+    #[inline(always)]
+    fn interleave_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> (f32x8<Self>, f32x8<Self>) {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        let lo_lo = self.zip_low_f32x4(a0, b0);
+        let lo_hi = self.zip_high_f32x4(a0, b0);
+        let hi_lo = self.zip_low_f32x4(a1, b1);
+        let hi_hi = self.zip_high_f32x4(a1, b1);
+        (
+            self.combine_f32x4(lo_lo, lo_hi),
+            self.combine_f32x4(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> (f32x8<Self>, f32x8<Self>);
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn max_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn min_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn max_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn min_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn deinterleave_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> (f32x8<Self>, f32x8<Self>) {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        let lo_even = self.unzip_low_f32x4(a0, a1);
+        let lo_odd = self.unzip_high_f32x4(a0, a1);
+        let hi_even = self.unzip_low_f32x4(b0, b1);
+        let hi_odd = self.unzip_high_f32x4(b0, b1);
+        (
+            self.combine_f32x4(lo_even, hi_even),
+            self.combine_f32x4(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
-    fn mul_add_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn mul_add_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        let (c0, c1) = self.split_f32x8(c);
+        self.combine_f32x4(
+            self.mul_add_f32x4(a0, b0, c0),
+            self.mul_add_f32x4(a1, b1, c1),
+        )
+    }
     #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
-    fn mul_sub_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn mul_sub_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        let (c0, c1) = self.split_f32x8(c);
+        self.combine_f32x4(
+            self.mul_sub_f32x4(a0, b0, c0),
+            self.mul_sub_f32x4(a1, b1, c1),
+        )
+    }
     #[doc = "Return the largest integer less than or equal to each element, that is, round towards negative infinity."]
-    fn floor_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn floor_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f32x4(self.floor_f32x4(a0), self.floor_f32x4(a1))
+    }
     #[doc = "Return the smallest integer greater than or equal to each element, that is, round towards positive infinity."]
-    fn ceil_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn ceil_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f32x4(self.ceil_f32x4(a0), self.ceil_f32x4(a1))
+    }
     #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
-    fn round_ties_even_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn round_ties_even_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f32x4(
+            self.round_ties_even_f32x4(a0),
+            self.round_ties_even_f32x4(a1),
+        )
+    }
     #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `a - a.trunc()`."]
-    fn fract_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn fract_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f32x4(self.fract_f32x4(a0), self.fract_f32x4(a1))
+    }
     #[doc = "Return the integer part of each element, rounding towards zero."]
-    fn trunc_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn trunc_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f32x4(self.trunc_f32x4(a0), self.trunc_f32x4(a1))
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_f32x8(self, a: mask32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn select_f32x8(self, a: mask32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        let (c0, c1) = self.split_f32x8(c);
+        self.combine_f32x4(self.select_f32x4(a0, b0, c0), self.select_f32x4(a1, b1, c1))
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x16<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f32x8(self, a: f32x8<Self>) -> (f32x4<Self>, f32x4<Self>);
     #[doc = "Widen every `f32` lane exactly into two same-width `f64` vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
-    fn widen_f32x8(self, a: f32x8<Self>) -> (f64x4<Self>, f64x4<Self>);
+    #[inline(always)]
+    fn widen_f32x8(self, a: f32x8<Self>) -> (f64x4<Self>, f64x4<Self>) {
+        let (a0, a1) = self.split_f32x8(a);
+        let (a00, a01) = self.widen_f32x4(a0);
+        let (a10, a11) = self.widen_f32x4(a1);
+        (self.combine_f64x2(a00, a01), self.combine_f64x2(a10, a11))
+    }
     #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms below AVX-512, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32`.\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
-    fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_u32x4(self.cvt_u32_f32x4(a0), self.cvt_u32_f32x4(a1))
+    }
     #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
-    fn cvt_u32_precise_f32x8(self, a: f32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn cvt_u32_precise_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_u32x4(
+            self.cvt_u32_precise_f32x4(a0),
+            self.cvt_u32_precise_f32x4(a1),
+        )
+    }
     #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
-    fn cvt_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn cvt_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_i32x4(self.cvt_i32_f32x4(a0), self.cvt_i32_f32x4(a1))
+    }
     #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
-    fn cvt_i32_precise_f32x8(self, a: f32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn cvt_i32_precise_f32x8(self, a: f32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_i32x4(
+            self.cvt_i32_precise_f32x4(a0),
+            self.cvt_i32_precise_f32x4(a1),
+        )
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_i8x32(self, val: i8) -> i8x32<Self>;
+    #[inline(always)]
+    fn splat_i8x32(self, val: i8) -> i8x32<Self> {
+        let half = self.splat_i8x16(val);
+        self.combine_i8x16(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_i8x32<const SHIFT: usize>(
         self,
         a: i8x32<Self>,
         b: i8x32<Self>,
-    ) -> i8x32<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_i8x32<const OFFSET: usize>(self, a: i8x32<Self>) -> i8x32<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_i8x32<const OFFSET: usize>(self, a: i8x32<Self>) -> i8x32<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_i8x32<const OFFSET: usize>(
-        self,
-        a: i8x32<Self>,
-        padding: i8,
-    ) -> i8x32<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_i8x32<const OFFSET: usize>(
-        self,
-        a: i8x32<Self>,
-        padding: i8,
-    ) -> i8x32<Self>;
+    ) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(
+            self.slide_within_blocks_i8x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i8x16::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
-    fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(self.add_i8x16(a0, b0), self.add_i8x16(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
-    fn sub_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn sub_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(self.sub_i8x16(a0, b0), self.sub_i8x16(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
-    fn mul_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn mul_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(self.mul_i8x16(a0, b0), self.mul_i8x16(a1, b1))
+    }
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn and_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(self.and_i8x16(a0, b0), self.and_i8x16(a1, b1))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn or_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(self.or_i8x16(a0, b0), self.or_i8x16(a1, b1))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn xor_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(self.xor_i8x16(a0, b0), self.xor_i8x16(a1, b1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_i8x32(self, a: i8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn not_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        self.combine_i8x16(self.not_i8x16(a0), self.not_i8x16(a1))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shl_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self>;
+    #[inline(always)]
+    fn shl_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        self.combine_i8x16(self.shl_i8x16(a0, shift), self.shl_i8x16(a1, shift))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shlv_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn shlv_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(self.shlv_i8x16(a0, b0), self.shlv_i8x16(a1, b1))
+    }
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shr_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self>;
+    #[inline(always)]
+    fn shr_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        self.combine_i8x16(self.shr_i8x16(a0, shift), self.shr_i8x16(a1, shift))
+    }
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shrv_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn shrv_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(self.shrv_i8x16(a0, b0), self.shrv_i8x16(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(self.max_i8x16(a0, b0), self.max_i8x16(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(self.min_i8x16(a0, b0), self.min_i8x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
+    #[inline(always)]
+    fn simd_eq_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_mask8x16(self.simd_eq_i8x16(a0, b0), self.simd_eq_i8x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
+    #[inline(always)]
+    fn simd_lt_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_mask8x16(self.simd_lt_i8x16(a0, b0), self.simd_lt_i8x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
+    #[inline(always)]
+    fn simd_le_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_mask8x16(self.simd_le_i8x16(a0, b0), self.simd_le_i8x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
+    #[inline(always)]
+    fn simd_ge_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
+        self.simd_le_i8x32(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
+    #[inline(always)]
+    fn simd_gt_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
+        self.simd_lt_i8x32(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn zip_low_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        let (a0, _) = self.split_i8x32(a);
+        let (b0, _) = self.split_i8x32(b);
+        self.combine_i8x16(self.zip_low_i8x16(a0, b0), self.zip_high_i8x16(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn zip_high_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        let (_, a1) = self.split_i8x32(a);
+        let (_, b1) = self.split_i8x32(b);
+        self.combine_i8x16(self.zip_low_i8x16(a1, b1), self.zip_high_i8x16(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn unzip_low_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(self.unzip_low_i8x16(a0, a1), self.unzip_low_i8x16(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn unzip_high_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(self.unzip_high_i8x16(a0, a1), self.unzip_high_i8x16(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> (i8x32<Self>, i8x32<Self>);
+    #[inline(always)]
+    fn interleave_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> (i8x32<Self>, i8x32<Self>) {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        let lo_lo = self.zip_low_i8x16(a0, b0);
+        let lo_hi = self.zip_high_i8x16(a0, b0);
+        let hi_lo = self.zip_low_i8x16(a1, b1);
+        let hi_hi = self.zip_high_i8x16(a1, b1);
+        (
+            self.combine_i8x16(lo_lo, lo_hi),
+            self.combine_i8x16(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> (i8x32<Self>, i8x32<Self>);
+    #[inline(always)]
+    fn deinterleave_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> (i8x32<Self>, i8x32<Self>) {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        let lo_even = self.unzip_low_i8x16(a0, a1);
+        let lo_odd = self.unzip_high_i8x16(a0, a1);
+        let hi_even = self.unzip_low_i8x16(b0, b1);
+        let hi_odd = self.unzip_high_i8x16(b0, b1);
+        (
+            self.combine_i8x16(lo_even, hi_even),
+            self.combine_i8x16(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_i8x32(self, a: mask8x32<Self>, b: i8x32<Self>, c: i8x32<Self>) -> i8x32<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn select_i8x32(self, a: mask8x32<Self>, b: i8x32<Self>, c: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_mask8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        let (c0, c1) = self.split_i8x32(c);
+        self.combine_i8x16(self.select_i8x16(a0, b0, c0), self.select_i8x16(a1, b1, c1))
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x64<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i8x32(self, a: i8x32<Self>) -> (i8x16<Self>, i8x16<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
-    fn neg_i8x32(self, a: i8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn neg_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        self.combine_i8x16(self.neg_i8x16(a0), self.neg_i8x16(a1))
+    }
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
-    fn widen_i8x32(self, a: i8x32<Self>) -> (i16x16<Self>, i16x16<Self>);
+    #[inline(always)]
+    fn widen_i8x32(self, a: i8x32<Self>) -> (i16x16<Self>, i16x16<Self>) {
+        let (a0, a1) = self.split_i8x32(a);
+        let (a00, a01) = self.widen_i8x16(a0);
+        let (a10, a11) = self.widen_i8x16(a1);
+        (self.combine_i16x8(a00, a01), self.combine_i16x8(a10, a11))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_u8x32(self, val: u8) -> u8x32<Self>;
+    #[inline(always)]
+    fn splat_u8x32(self, val: u8) -> u8x32<Self> {
+        let half = self.splat_u8x16(val);
+        self.combine_u8x16(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_u8x32<const SHIFT: usize>(
         self,
         a: u8x32<Self>,
         b: u8x32<Self>,
-    ) -> u8x32<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_u8x32<const OFFSET: usize>(self, a: u8x32<Self>) -> u8x32<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_u8x32<const OFFSET: usize>(self, a: u8x32<Self>) -> u8x32<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_u8x32<const OFFSET: usize>(
-        self,
-        a: u8x32<Self>,
-        padding: u8,
-    ) -> u8x32<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_u8x32<const OFFSET: usize>(
-        self,
-        a: u8x32<Self>,
-        padding: u8,
-    ) -> u8x32<Self>;
+    ) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(
+            self.slide_within_blocks_u8x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u8x16::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_u8x32(self, a: u8x32<Self>, indices: u8x32<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_u8x32(self, a: u8x32<Self>, indices: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (indices0, indices1) = self.split_u8x32(indices);
+        self.combine_u8x16(
+            self.swizzle_dyn_within_blocks_u8x16(a0, indices0),
+            self.swizzle_dyn_within_blocks_u8x16(a1, indices1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
     fn swizzle_dyn_u8x32(self, a: u8x32<Self>, indices: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
     fn swizzle_dyn_precise_u8x32(self, a: u8x32<Self>, indices: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
-    fn add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(self.add_u8x16(a0, b0), self.add_u8x16(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
-    fn sub_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn sub_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(self.sub_u8x16(a0, b0), self.sub_u8x16(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
-    fn mul_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn mul_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(self.mul_u8x16(a0, b0), self.mul_u8x16(a1, b1))
+    }
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn and_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(self.and_u8x16(a0, b0), self.and_u8x16(a1, b1))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn or_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(self.or_u8x16(a0, b0), self.or_u8x16(a1, b1))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn xor_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(self.xor_u8x16(a0, b0), self.xor_u8x16(a1, b1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_u8x32(self, a: u8x32<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn not_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        self.combine_u8x16(self.not_u8x16(a0), self.not_u8x16(a1))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shl_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self>;
+    #[inline(always)]
+    fn shl_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        self.combine_u8x16(self.shl_u8x16(a0, shift), self.shl_u8x16(a1, shift))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shlv_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn shlv_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(self.shlv_u8x16(a0, b0), self.shlv_u8x16(a1, b1))
+    }
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shr_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self>;
+    #[inline(always)]
+    fn shr_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        self.combine_u8x16(self.shr_u8x16(a0, shift), self.shr_u8x16(a1, shift))
+    }
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shrv_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn shrv_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(self.shrv_u8x16(a0, b0), self.shrv_u8x16(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(self.max_u8x16(a0, b0), self.max_u8x16(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(self.min_u8x16(a0, b0), self.min_u8x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
+    #[inline(always)]
+    fn simd_eq_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_mask8x16(self.simd_eq_u8x16(a0, b0), self.simd_eq_u8x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
+    #[inline(always)]
+    fn simd_lt_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_mask8x16(self.simd_lt_u8x16(a0, b0), self.simd_lt_u8x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
+    #[inline(always)]
+    fn simd_le_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_mask8x16(self.simd_le_u8x16(a0, b0), self.simd_le_u8x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
+    #[inline(always)]
+    fn simd_ge_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
+        self.simd_le_u8x32(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
+    #[inline(always)]
+    fn simd_gt_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
+        self.simd_lt_u8x32(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn zip_low_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        let (a0, _) = self.split_u8x32(a);
+        let (b0, _) = self.split_u8x32(b);
+        self.combine_u8x16(self.zip_low_u8x16(a0, b0), self.zip_high_u8x16(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn zip_high_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        let (_, a1) = self.split_u8x32(a);
+        let (_, b1) = self.split_u8x32(b);
+        self.combine_u8x16(self.zip_low_u8x16(a1, b1), self.zip_high_u8x16(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn unzip_low_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(self.unzip_low_u8x16(a0, a1), self.unzip_low_u8x16(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn unzip_high_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(self.unzip_high_u8x16(a0, a1), self.unzip_high_u8x16(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> (u8x32<Self>, u8x32<Self>);
+    #[inline(always)]
+    fn interleave_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> (u8x32<Self>, u8x32<Self>) {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        let lo_lo = self.zip_low_u8x16(a0, b0);
+        let lo_hi = self.zip_high_u8x16(a0, b0);
+        let hi_lo = self.zip_low_u8x16(a1, b1);
+        let hi_hi = self.zip_high_u8x16(a1, b1);
+        (
+            self.combine_u8x16(lo_lo, lo_hi),
+            self.combine_u8x16(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> (u8x32<Self>, u8x32<Self>);
+    #[inline(always)]
+    fn deinterleave_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> (u8x32<Self>, u8x32<Self>) {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        let lo_even = self.unzip_low_u8x16(a0, a1);
+        let lo_odd = self.unzip_high_u8x16(a0, a1);
+        let hi_even = self.unzip_low_u8x16(b0, b1);
+        let hi_odd = self.unzip_high_u8x16(b0, b1);
+        (
+            self.combine_u8x16(lo_even, hi_even),
+            self.combine_u8x16(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_u8x32(self, a: mask8x32<Self>, b: u8x32<Self>, c: u8x32<Self>) -> u8x32<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn select_u8x32(self, a: mask8x32<Self>, b: u8x32<Self>, c: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_mask8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        let (c0, c1) = self.split_u8x32(c);
+        self.combine_u8x16(self.select_u8x16(a0, b0, c0), self.select_u8x16(a1, b1, c1))
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u8x32(self, a: u8x32<Self>) -> (u8x16<Self>, u8x16<Self>);
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
-    fn widen_u8x32(self, a: u8x32<Self>) -> (u16x16<Self>, u16x16<Self>);
+    #[inline(always)]
+    fn widen_u8x32(self, a: u8x32<Self>) -> (u16x16<Self>, u16x16<Self>) {
+        let (a0, a1) = self.split_u8x32(a);
+        let (a00, a01) = self.widen_u8x16(a0);
+        let (a10, a11) = self.widen_u8x16(a1);
+        (self.combine_u16x8(a00, a01), self.combine_u16x8(a10, a11))
+    }
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
-    fn splat_mask8x32(self, val: bool) -> mask8x32<Self>;
+    #[inline(always)]
+    fn splat_mask8x32(self, val: bool) -> mask8x32<Self> {
+        let half = self.splat_mask8x16(val);
+        self.combine_mask8x16(half, half)
+    }
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
-    fn from_bitmask_mask8x32(self, bits: u64) -> mask8x32<Self>;
+    #[inline(always)]
+    fn from_bitmask_mask8x32(self, bits: u64) -> mask8x32<Self> {
+        let lo = self.from_bitmask_mask8x16(bits);
+        let hi = self.from_bitmask_mask8x16(bits >> 16usize);
+        self.combine_mask8x16(lo, hi)
+    }
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
-    fn to_bitmask_mask8x32(self, a: mask8x32<Self>) -> u64;
+    #[inline(always)]
+    fn to_bitmask_mask8x32(self, a: mask8x32<Self>) -> u64 {
+        let (lo, hi) = self.split_mask8x32(a);
+        let lo = self.to_bitmask_mask8x16(lo);
+        let hi = self.to_bitmask_mask8x16(hi);
+        lo | (hi << 16usize)
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask8x32(self, a: &mut mask8x32<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
-    fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self>;
+    #[inline(always)]
+    fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask8x32(a);
+        let (b0, b1) = self.split_mask8x32(b);
+        self.combine_mask8x16(self.and_mask8x16(a0, b0), self.and_mask8x16(a1, b1))
+    }
     #[doc = "Compute the logical OR of two masks."]
-    fn or_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self>;
+    #[inline(always)]
+    fn or_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask8x32(a);
+        let (b0, b1) = self.split_mask8x32(b);
+        self.combine_mask8x16(self.or_mask8x16(a0, b0), self.or_mask8x16(a1, b1))
+    }
     #[doc = "Compute the logical XOR of two masks."]
-    fn xor_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self>;
+    #[inline(always)]
+    fn xor_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask8x32(a);
+        let (b0, b1) = self.split_mask8x32(b);
+        self.combine_mask8x16(self.xor_mask8x16(a0, b0), self.xor_mask8x16(a1, b1))
+    }
     #[doc = "Compute the logical NOT of the mask."]
-    fn not_mask8x32(self, a: mask8x32<Self>) -> mask8x32<Self>;
+    #[inline(always)]
+    fn not_mask8x32(self, a: mask8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask8x32(a);
+        self.combine_mask8x16(self.not_mask8x16(a0), self.not_mask8x16(a1))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    #[inline(always)]
     fn select_mask8x32(
         self,
         a: mask8x32<Self>,
         b: mask8x32<Self>,
         c: mask8x32<Self>,
-    ) -> mask8x32<Self>;
+    ) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask8x32(a);
+        let (b0, b1) = self.split_mask8x32(b);
+        let (c0, c1) = self.split_mask8x32(c);
+        self.combine_mask8x16(
+            self.select_mask8x16(a0, b0, c0),
+            self.select_mask8x16(a1, b1, c1),
+        )
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self>;
+    #[inline(always)]
+    fn simd_eq_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask8x32(a);
+        let (b0, b1) = self.split_mask8x32(b);
+        self.combine_mask8x16(self.simd_eq_mask8x16(a0, b0), self.simd_eq_mask8x16(a1, b1))
+    }
     #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn any_true_mask8x32(self, a: mask8x32<Self>) -> bool;
+    #[inline(always)]
+    fn any_true_mask8x32(self, a: mask8x32<Self>) -> bool {
+        let (a0, a1) = self.split_mask8x32(a);
+        self.any_true_mask8x16(a0) || self.any_true_mask8x16(a1)
+    }
     #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn all_true_mask8x32(self, a: mask8x32<Self>) -> bool;
+    #[inline(always)]
+    fn all_true_mask8x32(self, a: mask8x32<Self>) -> bool {
+        let (a0, a1) = self.split_mask8x32(a);
+        self.all_true_mask8x16(a0) && self.all_true_mask8x16(a1)
+    }
     #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn any_false_mask8x32(self, a: mask8x32<Self>) -> bool;
+    #[inline(always)]
+    fn any_false_mask8x32(self, a: mask8x32<Self>) -> bool {
+        let (a0, a1) = self.split_mask8x32(a);
+        self.any_false_mask8x16(a0) || self.any_false_mask8x16(a1)
+    }
     #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn all_false_mask8x32(self, a: mask8x32<Self>) -> bool;
+    #[inline(always)]
+    fn all_false_mask8x32(self, a: mask8x32<Self>) -> bool {
+        let (a0, a1) = self.split_mask8x32(a);
+        self.all_false_mask8x16(a0) && self.all_false_mask8x16(a1)
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x64<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask8x32(self, a: mask8x32<Self>) -> (mask8x16<Self>, mask8x16<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_i16x16(self, val: i16) -> i16x16<Self>;
+    #[inline(always)]
+    fn splat_i16x16(self, val: i16) -> i16x16<Self> {
+        let half = self.splat_i16x8(val);
+        self.combine_i16x8(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_i16x16<const SHIFT: usize>(
         self,
         a: i16x16<Self>,
         b: i16x16<Self>,
-    ) -> i16x16<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_i16x16<const OFFSET: usize>(self, a: i16x16<Self>) -> i16x16<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_i16x16<const OFFSET: usize>(self, a: i16x16<Self>) -> i16x16<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_i16x16<const OFFSET: usize>(
-        self,
-        a: i16x16<Self>,
-        padding: i16,
-    ) -> i16x16<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_i16x16<const OFFSET: usize>(
-        self,
-        a: i16x16<Self>,
-        padding: i16,
-    ) -> i16x16<Self>;
+    ) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(
+            self.slide_within_blocks_i16x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i16x8::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
+    #[inline(always)]
     fn swizzle_dyn_within_blocks_i16x16(
         self,
         a: i16x16<Self>,
         indices: u8x32<Self>,
-    ) -> i16x16<Self>;
+    ) -> i16x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_i16x16(self, a: i16x16<Self>, indices: u8x32<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_i16x16(self, a: i16x16<Self>, indices: u8x32<Self>) -> i16x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_i16x16(self, a: i16x16<Self>, indices: u8x32<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_i16x16(self, a: i16x16<Self>, indices: u8x32<Self>) -> i16x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
-    fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(self.add_i16x8(a0, b0), self.add_i16x8(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
-    fn sub_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn sub_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(self.sub_i16x8(a0, b0), self.sub_i16x8(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
-    fn mul_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn mul_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(self.mul_i16x8(a0, b0), self.mul_i16x8(a1, b1))
+    }
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn and_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(self.and_i16x8(a0, b0), self.and_i16x8(a1, b1))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn or_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(self.or_i16x8(a0, b0), self.or_i16x8(a1, b1))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn xor_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(self.xor_i16x8(a0, b0), self.xor_i16x8(a1, b1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_i16x16(self, a: i16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn not_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        self.combine_i16x8(self.not_i16x8(a0), self.not_i16x8(a1))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shl_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self>;
+    #[inline(always)]
+    fn shl_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        self.combine_i16x8(self.shl_i16x8(a0, shift), self.shl_i16x8(a1, shift))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shlv_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn shlv_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(self.shlv_i16x8(a0, b0), self.shlv_i16x8(a1, b1))
+    }
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shr_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self>;
+    #[inline(always)]
+    fn shr_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        self.combine_i16x8(self.shr_i16x8(a0, shift), self.shr_i16x8(a1, shift))
+    }
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shrv_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn shrv_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(self.shrv_i16x8(a0, b0), self.shrv_i16x8(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(self.max_i16x8(a0, b0), self.max_i16x8(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(self.min_i16x8(a0, b0), self.min_i16x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
+    #[inline(always)]
+    fn simd_eq_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_mask16x8(self.simd_eq_i16x8(a0, b0), self.simd_eq_i16x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
+    #[inline(always)]
+    fn simd_lt_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_mask16x8(self.simd_lt_i16x8(a0, b0), self.simd_lt_i16x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
+    #[inline(always)]
+    fn simd_le_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_mask16x8(self.simd_le_i16x8(a0, b0), self.simd_le_i16x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
+    #[inline(always)]
+    fn simd_ge_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
+        self.simd_le_i16x16(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
+    #[inline(always)]
+    fn simd_gt_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
+        self.simd_lt_i16x16(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn zip_low_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (a0, _) = self.split_i16x16(a);
+        let (b0, _) = self.split_i16x16(b);
+        self.combine_i16x8(self.zip_low_i16x8(a0, b0), self.zip_high_i16x8(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn zip_high_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (_, a1) = self.split_i16x16(a);
+        let (_, b1) = self.split_i16x16(b);
+        self.combine_i16x8(self.zip_low_i16x8(a1, b1), self.zip_high_i16x8(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn unzip_low_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(self.unzip_low_i16x8(a0, a1), self.unzip_low_i16x8(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn unzip_high_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(self.unzip_high_i16x8(a0, a1), self.unzip_high_i16x8(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> (i16x16<Self>, i16x16<Self>);
+    #[inline(always)]
+    fn interleave_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> (i16x16<Self>, i16x16<Self>) {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        let lo_lo = self.zip_low_i16x8(a0, b0);
+        let lo_hi = self.zip_high_i16x8(a0, b0);
+        let hi_lo = self.zip_low_i16x8(a1, b1);
+        let hi_hi = self.zip_high_i16x8(a1, b1);
+        (
+            self.combine_i16x8(lo_lo, lo_hi),
+            self.combine_i16x8(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> (i16x16<Self>, i16x16<Self>);
+    #[inline(always)]
+    fn deinterleave_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> (i16x16<Self>, i16x16<Self>) {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        let lo_even = self.unzip_low_i16x8(a0, a1);
+        let lo_odd = self.unzip_high_i16x8(a0, a1);
+        let hi_even = self.unzip_low_i16x8(b0, b1);
+        let hi_odd = self.unzip_high_i16x8(b0, b1);
+        (
+            self.combine_i16x8(lo_even, hi_even),
+            self.combine_i16x8(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_i16x16(self, a: mask16x16<Self>, b: i16x16<Self>, c: i16x16<Self>) -> i16x16<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn select_i16x16(self, a: mask16x16<Self>, b: i16x16<Self>, c: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        let (c0, c1) = self.split_i16x16(c);
+        self.combine_i16x8(self.select_i16x8(a0, b0, c0), self.select_i16x8(a1, b1, c1))
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x32<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i16x16(self, a: i16x16<Self>) -> (i16x8<Self>, i16x8<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
-    fn neg_i16x16(self, a: i16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn neg_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        self.combine_i16x8(self.neg_i16x8(a0), self.neg_i16x8(a1))
+    }
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
-    fn widen_i16x16(self, a: i16x16<Self>) -> (i32x8<Self>, i32x8<Self>);
+    #[inline(always)]
+    fn widen_i16x16(self, a: i16x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
+        let (a0, a1) = self.split_i16x16(a);
+        let (a00, a01) = self.widen_i16x8(a0);
+        let (a10, a11) = self.widen_i16x8(a1);
+        (self.combine_i32x4(a00, a01), self.combine_i32x4(a10, a11))
+    }
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i8x16(self.narrow_i16x8(a0, a1), self.narrow_i16x8(b0, b1))
+    }
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn saturating_narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn saturating_narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i8x16(
+            self.saturating_narrow_i16x8(a0, a1),
+            self.saturating_narrow_i16x8(b0, b1),
+        )
+    }
     #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn relaxed_narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn relaxed_narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i8x16(
+            self.relaxed_narrow_i16x8(a0, a1),
+            self.relaxed_narrow_i16x8(b0, b1),
+        )
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_u16x16(self, val: u16) -> u16x16<Self>;
+    #[inline(always)]
+    fn splat_u16x16(self, val: u16) -> u16x16<Self> {
+        let half = self.splat_u16x8(val);
+        self.combine_u16x8(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_u16x16<const SHIFT: usize>(
         self,
         a: u16x16<Self>,
         b: u16x16<Self>,
-    ) -> u16x16<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_u16x16<const OFFSET: usize>(self, a: u16x16<Self>) -> u16x16<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_u16x16<const OFFSET: usize>(self, a: u16x16<Self>) -> u16x16<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_u16x16<const OFFSET: usize>(
-        self,
-        a: u16x16<Self>,
-        padding: u16,
-    ) -> u16x16<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_u16x16<const OFFSET: usize>(
-        self,
-        a: u16x16<Self>,
-        padding: u16,
-    ) -> u16x16<Self>;
+    ) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(
+            self.slide_within_blocks_u16x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u16x8::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
+    #[inline(always)]
     fn swizzle_dyn_within_blocks_u16x16(
         self,
         a: u16x16<Self>,
         indices: u8x32<Self>,
-    ) -> u16x16<Self>;
+    ) -> u16x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_u16x16(self, a: u16x16<Self>, indices: u8x32<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_u16x16(self, a: u16x16<Self>, indices: u8x32<Self>) -> u16x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_u16x16(self, a: u16x16<Self>, indices: u8x32<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_u16x16(self, a: u16x16<Self>, indices: u8x32<Self>) -> u16x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
-    fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(self.add_u16x8(a0, b0), self.add_u16x8(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
-    fn sub_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn sub_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(self.sub_u16x8(a0, b0), self.sub_u16x8(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
-    fn mul_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn mul_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(self.mul_u16x8(a0, b0), self.mul_u16x8(a1, b1))
+    }
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn and_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(self.and_u16x8(a0, b0), self.and_u16x8(a1, b1))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn or_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(self.or_u16x8(a0, b0), self.or_u16x8(a1, b1))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn xor_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(self.xor_u16x8(a0, b0), self.xor_u16x8(a1, b1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_u16x16(self, a: u16x16<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn not_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        self.combine_u16x8(self.not_u16x8(a0), self.not_u16x8(a1))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shl_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self>;
+    #[inline(always)]
+    fn shl_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        self.combine_u16x8(self.shl_u16x8(a0, shift), self.shl_u16x8(a1, shift))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shlv_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn shlv_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(self.shlv_u16x8(a0, b0), self.shlv_u16x8(a1, b1))
+    }
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shr_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self>;
+    #[inline(always)]
+    fn shr_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        self.combine_u16x8(self.shr_u16x8(a0, shift), self.shr_u16x8(a1, shift))
+    }
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shrv_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn shrv_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(self.shrv_u16x8(a0, b0), self.shrv_u16x8(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(self.max_u16x8(a0, b0), self.max_u16x8(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(self.min_u16x8(a0, b0), self.min_u16x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
+    #[inline(always)]
+    fn simd_eq_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_mask16x8(self.simd_eq_u16x8(a0, b0), self.simd_eq_u16x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
+    #[inline(always)]
+    fn simd_lt_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_mask16x8(self.simd_lt_u16x8(a0, b0), self.simd_lt_u16x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
+    #[inline(always)]
+    fn simd_le_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_mask16x8(self.simd_le_u16x8(a0, b0), self.simd_le_u16x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
+    #[inline(always)]
+    fn simd_ge_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
+        self.simd_le_u16x16(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
+    #[inline(always)]
+    fn simd_gt_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
+        self.simd_lt_u16x16(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn zip_low_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        let (a0, _) = self.split_u16x16(a);
+        let (b0, _) = self.split_u16x16(b);
+        self.combine_u16x8(self.zip_low_u16x8(a0, b0), self.zip_high_u16x8(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn zip_high_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        let (_, a1) = self.split_u16x16(a);
+        let (_, b1) = self.split_u16x16(b);
+        self.combine_u16x8(self.zip_low_u16x8(a1, b1), self.zip_high_u16x8(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn unzip_low_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(self.unzip_low_u16x8(a0, a1), self.unzip_low_u16x8(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn unzip_high_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(self.unzip_high_u16x8(a0, a1), self.unzip_high_u16x8(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> (u16x16<Self>, u16x16<Self>);
+    #[inline(always)]
+    fn interleave_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> (u16x16<Self>, u16x16<Self>) {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        let lo_lo = self.zip_low_u16x8(a0, b0);
+        let lo_hi = self.zip_high_u16x8(a0, b0);
+        let hi_lo = self.zip_low_u16x8(a1, b1);
+        let hi_hi = self.zip_high_u16x8(a1, b1);
+        (
+            self.combine_u16x8(lo_lo, lo_hi),
+            self.combine_u16x8(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> (u16x16<Self>, u16x16<Self>);
+    #[inline(always)]
+    fn deinterleave_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> (u16x16<Self>, u16x16<Self>) {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        let lo_even = self.unzip_low_u16x8(a0, a1);
+        let lo_odd = self.unzip_high_u16x8(a0, a1);
+        let hi_even = self.unzip_low_u16x8(b0, b1);
+        let hi_odd = self.unzip_high_u16x8(b0, b1);
+        (
+            self.combine_u16x8(lo_even, hi_even),
+            self.combine_u16x8(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_u16x16(self, a: mask16x16<Self>, b: u16x16<Self>, c: u16x16<Self>) -> u16x16<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn select_u16x16(self, a: mask16x16<Self>, b: u16x16<Self>, c: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        let (c0, c1) = self.split_u16x16(c);
+        self.combine_u16x8(self.select_u16x8(a0, b0, c0), self.select_u16x8(a1, b1, c1))
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x32<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u16x16(self, a: u16x16<Self>) -> (u16x8<Self>, u16x8<Self>);
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
-    fn widen_u16x16(self, a: u16x16<Self>) -> (u32x8<Self>, u32x8<Self>);
+    #[inline(always)]
+    fn widen_u16x16(self, a: u16x16<Self>) -> (u32x8<Self>, u32x8<Self>) {
+        let (a0, a1) = self.split_u16x16(a);
+        let (a00, a01) = self.widen_u16x8(a0);
+        let (a10, a11) = self.widen_u16x8(a1);
+        (self.combine_u32x4(a00, a01), self.combine_u32x4(a10, a11))
+    }
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u8x16(self.narrow_u16x8(a0, a1), self.narrow_u16x8(b0, b1))
+    }
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn saturating_narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn saturating_narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u8x16(
+            self.saturating_narrow_u16x8(a0, a1),
+            self.saturating_narrow_u16x8(b0, b1),
+        )
+    }
     #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn relaxed_narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn relaxed_narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u8x16(
+            self.relaxed_narrow_u16x8(a0, a1),
+            self.relaxed_narrow_u16x8(b0, b1),
+        )
+    }
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
-    fn splat_mask16x16(self, val: bool) -> mask16x16<Self>;
+    #[inline(always)]
+    fn splat_mask16x16(self, val: bool) -> mask16x16<Self> {
+        let half = self.splat_mask16x8(val);
+        self.combine_mask16x8(half, half)
+    }
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
-    fn from_bitmask_mask16x16(self, bits: u64) -> mask16x16<Self>;
+    #[inline(always)]
+    fn from_bitmask_mask16x16(self, bits: u64) -> mask16x16<Self> {
+        let lo = self.from_bitmask_mask16x8(bits);
+        let hi = self.from_bitmask_mask16x8(bits >> 8usize);
+        self.combine_mask16x8(lo, hi)
+    }
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
-    fn to_bitmask_mask16x16(self, a: mask16x16<Self>) -> u64;
+    #[inline(always)]
+    fn to_bitmask_mask16x16(self, a: mask16x16<Self>) -> u64 {
+        let (lo, hi) = self.split_mask16x16(a);
+        let lo = self.to_bitmask_mask16x8(lo);
+        let hi = self.to_bitmask_mask16x8(hi);
+        lo | (hi << 8usize)
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask16x16(self, a: &mut mask16x16<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
-    fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self>;
+    #[inline(always)]
+    fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        let (b0, b1) = self.split_mask16x16(b);
+        self.combine_mask16x8(self.and_mask16x8(a0, b0), self.and_mask16x8(a1, b1))
+    }
     #[doc = "Compute the logical OR of two masks."]
-    fn or_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self>;
+    #[inline(always)]
+    fn or_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        let (b0, b1) = self.split_mask16x16(b);
+        self.combine_mask16x8(self.or_mask16x8(a0, b0), self.or_mask16x8(a1, b1))
+    }
     #[doc = "Compute the logical XOR of two masks."]
-    fn xor_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self>;
+    #[inline(always)]
+    fn xor_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        let (b0, b1) = self.split_mask16x16(b);
+        self.combine_mask16x8(self.xor_mask16x8(a0, b0), self.xor_mask16x8(a1, b1))
+    }
     #[doc = "Compute the logical NOT of the mask."]
-    fn not_mask16x16(self, a: mask16x16<Self>) -> mask16x16<Self>;
+    #[inline(always)]
+    fn not_mask16x16(self, a: mask16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        self.combine_mask16x8(self.not_mask16x8(a0), self.not_mask16x8(a1))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    #[inline(always)]
     fn select_mask16x16(
         self,
         a: mask16x16<Self>,
         b: mask16x16<Self>,
         c: mask16x16<Self>,
-    ) -> mask16x16<Self>;
+    ) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        let (b0, b1) = self.split_mask16x16(b);
+        let (c0, c1) = self.split_mask16x16(c);
+        self.combine_mask16x8(
+            self.select_mask16x8(a0, b0, c0),
+            self.select_mask16x8(a1, b1, c1),
+        )
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self>;
+    #[inline(always)]
+    fn simd_eq_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        let (b0, b1) = self.split_mask16x16(b);
+        self.combine_mask16x8(self.simd_eq_mask16x8(a0, b0), self.simd_eq_mask16x8(a1, b1))
+    }
     #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn any_true_mask16x16(self, a: mask16x16<Self>) -> bool;
+    #[inline(always)]
+    fn any_true_mask16x16(self, a: mask16x16<Self>) -> bool {
+        let (a0, a1) = self.split_mask16x16(a);
+        self.any_true_mask16x8(a0) || self.any_true_mask16x8(a1)
+    }
     #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn all_true_mask16x16(self, a: mask16x16<Self>) -> bool;
+    #[inline(always)]
+    fn all_true_mask16x16(self, a: mask16x16<Self>) -> bool {
+        let (a0, a1) = self.split_mask16x16(a);
+        self.all_true_mask16x8(a0) && self.all_true_mask16x8(a1)
+    }
     #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn any_false_mask16x16(self, a: mask16x16<Self>) -> bool;
+    #[inline(always)]
+    fn any_false_mask16x16(self, a: mask16x16<Self>) -> bool {
+        let (a0, a1) = self.split_mask16x16(a);
+        self.any_false_mask16x8(a0) || self.any_false_mask16x8(a1)
+    }
     #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn all_false_mask16x16(self, a: mask16x16<Self>) -> bool;
+    #[inline(always)]
+    fn all_false_mask16x16(self, a: mask16x16<Self>) -> bool {
+        let (a0, a1) = self.split_mask16x16(a);
+        self.all_false_mask16x8(a0) && self.all_false_mask16x8(a1)
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x32<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask16x16(self, a: mask16x16<Self>) -> (mask16x8<Self>, mask16x8<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_i32x8(self, val: i32) -> i32x8<Self>;
+    #[inline(always)]
+    fn splat_i32x8(self, val: i32) -> i32x8<Self> {
+        let half = self.splat_i32x4(val);
+        self.combine_i32x4(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_i32x8<const SHIFT: usize>(
         self,
         a: i32x8<Self>,
         b: i32x8<Self>,
-    ) -> i32x8<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_i32x8<const OFFSET: usize>(self, a: i32x8<Self>) -> i32x8<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_i32x8<const OFFSET: usize>(self, a: i32x8<Self>) -> i32x8<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_i32x8<const OFFSET: usize>(
-        self,
-        a: i32x8<Self>,
-        padding: i32,
-    ) -> i32x8<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_i32x8<const OFFSET: usize>(
-        self,
-        a: i32x8<Self>,
-        padding: i32,
-    ) -> i32x8<Self>;
+    ) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(
+            self.slide_within_blocks_i32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i32x4::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
-    fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(self.add_i32x4(a0, b0), self.add_i32x4(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
-    fn sub_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn sub_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(self.sub_i32x4(a0, b0), self.sub_i32x4(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
-    fn mul_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn mul_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(self.mul_i32x4(a0, b0), self.mul_i32x4(a1, b1))
+    }
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn and_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(self.and_i32x4(a0, b0), self.and_i32x4(a1, b1))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn or_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(self.or_i32x4(a0, b0), self.or_i32x4(a1, b1))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn xor_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(self.xor_i32x4(a0, b0), self.xor_i32x4(a1, b1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_i32x8(self, a: i32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn not_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        self.combine_i32x4(self.not_i32x4(a0), self.not_i32x4(a1))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shl_i32x8(self, a: i32x8<Self>, shift: u32) -> i32x8<Self>;
+    #[inline(always)]
+    fn shl_i32x8(self, a: i32x8<Self>, shift: u32) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        self.combine_i32x4(self.shl_i32x4(a0, shift), self.shl_i32x4(a1, shift))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shlv_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn shlv_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(self.shlv_i32x4(a0, b0), self.shlv_i32x4(a1, b1))
+    }
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shr_i32x8(self, a: i32x8<Self>, shift: u32) -> i32x8<Self>;
+    #[inline(always)]
+    fn shr_i32x8(self, a: i32x8<Self>, shift: u32) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        self.combine_i32x4(self.shr_i32x4(a0, shift), self.shr_i32x4(a1, shift))
+    }
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shrv_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn shrv_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(self.shrv_i32x4(a0, b0), self.shrv_i32x4(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(self.max_i32x4(a0, b0), self.max_i32x4(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(self.min_i32x4(a0, b0), self.min_i32x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn simd_eq_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_mask32x4(self.simd_eq_i32x4(a0, b0), self.simd_eq_i32x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn simd_lt_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_mask32x4(self.simd_lt_i32x4(a0, b0), self.simd_lt_i32x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn simd_le_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_mask32x4(self.simd_le_i32x4(a0, b0), self.simd_le_i32x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn simd_ge_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
+        self.simd_le_i32x8(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn simd_gt_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
+        self.simd_lt_i32x8(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn zip_low_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        let (a0, _) = self.split_i32x8(a);
+        let (b0, _) = self.split_i32x8(b);
+        self.combine_i32x4(self.zip_low_i32x4(a0, b0), self.zip_high_i32x4(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn zip_high_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        let (_, a1) = self.split_i32x8(a);
+        let (_, b1) = self.split_i32x8(b);
+        self.combine_i32x4(self.zip_low_i32x4(a1, b1), self.zip_high_i32x4(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn unzip_low_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(self.unzip_low_i32x4(a0, a1), self.unzip_low_i32x4(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn unzip_high_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(self.unzip_high_i32x4(a0, a1), self.unzip_high_i32x4(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> (i32x8<Self>, i32x8<Self>);
+    #[inline(always)]
+    fn interleave_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> (i32x8<Self>, i32x8<Self>) {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        let lo_lo = self.zip_low_i32x4(a0, b0);
+        let lo_hi = self.zip_high_i32x4(a0, b0);
+        let hi_lo = self.zip_low_i32x4(a1, b1);
+        let hi_hi = self.zip_high_i32x4(a1, b1);
+        (
+            self.combine_i32x4(lo_lo, lo_hi),
+            self.combine_i32x4(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> (i32x8<Self>, i32x8<Self>);
+    #[inline(always)]
+    fn deinterleave_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> (i32x8<Self>, i32x8<Self>) {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        let lo_even = self.unzip_low_i32x4(a0, a1);
+        let lo_odd = self.unzip_high_i32x4(a0, a1);
+        let hi_even = self.unzip_low_i32x4(b0, b1);
+        let hi_odd = self.unzip_high_i32x4(b0, b1);
+        (
+            self.combine_i32x4(lo_even, hi_even),
+            self.combine_i32x4(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_i32x8(self, a: mask32x8<Self>, b: i32x8<Self>, c: i32x8<Self>) -> i32x8<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn select_i32x8(self, a: mask32x8<Self>, b: i32x8<Self>, c: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        let (c0, c1) = self.split_i32x8(c);
+        self.combine_i32x4(self.select_i32x4(a0, b0, c0), self.select_i32x4(a1, b1, c1))
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x16<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i32x8(self, a: i32x8<Self>) -> (i32x4<Self>, i32x4<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
-    fn neg_i32x8(self, a: i32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn neg_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        self.combine_i32x4(self.neg_i32x4(a0), self.neg_i32x4(a1))
+    }
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
-    fn widen_i32x8(self, a: i32x8<Self>) -> (i64x4<Self>, i64x4<Self>);
+    #[inline(always)]
+    fn widen_i32x8(self, a: i32x8<Self>) -> (i64x4<Self>, i64x4<Self>) {
+        let (a0, a1) = self.split_i32x8(a);
+        let (a00, a01) = self.widen_i32x4(a0);
+        let (a10, a11) = self.widen_i32x4(a1);
+        (self.combine_i64x2(a00, a01), self.combine_i64x2(a10, a11))
+    }
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i16x8(self.narrow_i32x4(a0, a1), self.narrow_i32x4(b0, b1))
+    }
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn saturating_narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn saturating_narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i16x8(
+            self.saturating_narrow_i32x4(a0, a1),
+            self.saturating_narrow_i32x4(b0, b1),
+        )
+    }
     #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn relaxed_narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn relaxed_narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i16x8(
+            self.relaxed_narrow_i32x4(a0, a1),
+            self.relaxed_narrow_i32x4(b0, b1),
+        )
+    }
     #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
-    fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        self.combine_f32x4(self.cvt_f32_i32x4(a0), self.cvt_f32_i32x4(a1))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_u32x8(self, val: u32) -> u32x8<Self>;
+    #[inline(always)]
+    fn splat_u32x8(self, val: u32) -> u32x8<Self> {
+        let half = self.splat_u32x4(val);
+        self.combine_u32x4(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_u32x8<const SHIFT: usize>(
         self,
         a: u32x8<Self>,
         b: u32x8<Self>,
-    ) -> u32x8<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_u32x8<const OFFSET: usize>(self, a: u32x8<Self>) -> u32x8<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_u32x8<const OFFSET: usize>(self, a: u32x8<Self>) -> u32x8<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_u32x8<const OFFSET: usize>(
-        self,
-        a: u32x8<Self>,
-        padding: u32,
-    ) -> u32x8<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_u32x8<const OFFSET: usize>(
-        self,
-        a: u32x8<Self>,
-        padding: u32,
-    ) -> u32x8<Self>;
+    ) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(
+            self.slide_within_blocks_u32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u32x4::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
-    fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(self.add_u32x4(a0, b0), self.add_u32x4(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
-    fn sub_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn sub_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(self.sub_u32x4(a0, b0), self.sub_u32x4(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
-    fn mul_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn mul_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(self.mul_u32x4(a0, b0), self.mul_u32x4(a1, b1))
+    }
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn and_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(self.and_u32x4(a0, b0), self.and_u32x4(a1, b1))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn or_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(self.or_u32x4(a0, b0), self.or_u32x4(a1, b1))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn xor_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(self.xor_u32x4(a0, b0), self.xor_u32x4(a1, b1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_u32x8(self, a: u32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn not_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        self.combine_u32x4(self.not_u32x4(a0), self.not_u32x4(a1))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shl_u32x8(self, a: u32x8<Self>, shift: u32) -> u32x8<Self>;
+    #[inline(always)]
+    fn shl_u32x8(self, a: u32x8<Self>, shift: u32) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        self.combine_u32x4(self.shl_u32x4(a0, shift), self.shl_u32x4(a1, shift))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shlv_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn shlv_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(self.shlv_u32x4(a0, b0), self.shlv_u32x4(a1, b1))
+    }
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shr_u32x8(self, a: u32x8<Self>, shift: u32) -> u32x8<Self>;
+    #[inline(always)]
+    fn shr_u32x8(self, a: u32x8<Self>, shift: u32) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        self.combine_u32x4(self.shr_u32x4(a0, shift), self.shr_u32x4(a1, shift))
+    }
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shrv_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn shrv_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(self.shrv_u32x4(a0, b0), self.shrv_u32x4(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(self.max_u32x4(a0, b0), self.max_u32x4(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(self.min_u32x4(a0, b0), self.min_u32x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn simd_eq_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_mask32x4(self.simd_eq_u32x4(a0, b0), self.simd_eq_u32x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn simd_lt_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_mask32x4(self.simd_lt_u32x4(a0, b0), self.simd_lt_u32x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn simd_le_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_mask32x4(self.simd_le_u32x4(a0, b0), self.simd_le_u32x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn simd_ge_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
+        self.simd_le_u32x8(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn simd_gt_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
+        self.simd_lt_u32x8(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn zip_low_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        let (a0, _) = self.split_u32x8(a);
+        let (b0, _) = self.split_u32x8(b);
+        self.combine_u32x4(self.zip_low_u32x4(a0, b0), self.zip_high_u32x4(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn zip_high_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        let (_, a1) = self.split_u32x8(a);
+        let (_, b1) = self.split_u32x8(b);
+        self.combine_u32x4(self.zip_low_u32x4(a1, b1), self.zip_high_u32x4(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn unzip_low_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(self.unzip_low_u32x4(a0, a1), self.unzip_low_u32x4(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn unzip_high_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(self.unzip_high_u32x4(a0, a1), self.unzip_high_u32x4(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> (u32x8<Self>, u32x8<Self>);
+    #[inline(always)]
+    fn interleave_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> (u32x8<Self>, u32x8<Self>) {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        let lo_lo = self.zip_low_u32x4(a0, b0);
+        let lo_hi = self.zip_high_u32x4(a0, b0);
+        let hi_lo = self.zip_low_u32x4(a1, b1);
+        let hi_hi = self.zip_high_u32x4(a1, b1);
+        (
+            self.combine_u32x4(lo_lo, lo_hi),
+            self.combine_u32x4(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> (u32x8<Self>, u32x8<Self>);
+    #[inline(always)]
+    fn deinterleave_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> (u32x8<Self>, u32x8<Self>) {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        let lo_even = self.unzip_low_u32x4(a0, a1);
+        let lo_odd = self.unzip_high_u32x4(a0, a1);
+        let hi_even = self.unzip_low_u32x4(b0, b1);
+        let hi_odd = self.unzip_high_u32x4(b0, b1);
+        (
+            self.combine_u32x4(lo_even, hi_even),
+            self.combine_u32x4(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_u32x8(self, a: mask32x8<Self>, b: u32x8<Self>, c: u32x8<Self>) -> u32x8<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn select_u32x8(self, a: mask32x8<Self>, b: u32x8<Self>, c: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        let (c0, c1) = self.split_u32x8(c);
+        self.combine_u32x4(self.select_u32x4(a0, b0, c0), self.select_u32x4(a1, b1, c1))
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x16<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u32x8(self, a: u32x8<Self>) -> (u32x4<Self>, u32x4<Self>);
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
-    fn widen_u32x8(self, a: u32x8<Self>) -> (u64x4<Self>, u64x4<Self>);
+    #[inline(always)]
+    fn widen_u32x8(self, a: u32x8<Self>) -> (u64x4<Self>, u64x4<Self>) {
+        let (a0, a1) = self.split_u32x8(a);
+        let (a00, a01) = self.widen_u32x4(a0);
+        let (a10, a11) = self.widen_u32x4(a1);
+        (self.combine_u64x2(a00, a01), self.combine_u64x2(a10, a11))
+    }
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u16x8(self.narrow_u32x4(a0, a1), self.narrow_u32x4(b0, b1))
+    }
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn saturating_narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn saturating_narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u16x8(
+            self.saturating_narrow_u32x4(a0, a1),
+            self.saturating_narrow_u32x4(b0, b1),
+        )
+    }
     #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn relaxed_narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn relaxed_narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u16x8(
+            self.relaxed_narrow_u32x4(a0, a1),
+            self.relaxed_narrow_u32x4(b0, b1),
+        )
+    }
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
-    fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        self.combine_f32x4(self.cvt_f32_u32x4(a0), self.cvt_f32_u32x4(a1))
+    }
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
-    fn splat_mask32x8(self, val: bool) -> mask32x8<Self>;
+    #[inline(always)]
+    fn splat_mask32x8(self, val: bool) -> mask32x8<Self> {
+        let half = self.splat_mask32x4(val);
+        self.combine_mask32x4(half, half)
+    }
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
-    fn from_bitmask_mask32x8(self, bits: u64) -> mask32x8<Self>;
+    #[inline(always)]
+    fn from_bitmask_mask32x8(self, bits: u64) -> mask32x8<Self> {
+        let lo = self.from_bitmask_mask32x4(bits);
+        let hi = self.from_bitmask_mask32x4(bits >> 4usize);
+        self.combine_mask32x4(lo, hi)
+    }
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
-    fn to_bitmask_mask32x8(self, a: mask32x8<Self>) -> u64;
+    #[inline(always)]
+    fn to_bitmask_mask32x8(self, a: mask32x8<Self>) -> u64 {
+        let (lo, hi) = self.split_mask32x8(a);
+        let lo = self.to_bitmask_mask32x4(lo);
+        let hi = self.to_bitmask_mask32x4(hi);
+        lo | (hi << 4usize)
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask32x8(self, a: &mut mask32x8<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
-    fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        let (b0, b1) = self.split_mask32x8(b);
+        self.combine_mask32x4(self.and_mask32x4(a0, b0), self.and_mask32x4(a1, b1))
+    }
     #[doc = "Compute the logical OR of two masks."]
-    fn or_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn or_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        let (b0, b1) = self.split_mask32x8(b);
+        self.combine_mask32x4(self.or_mask32x4(a0, b0), self.or_mask32x4(a1, b1))
+    }
     #[doc = "Compute the logical XOR of two masks."]
-    fn xor_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn xor_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        let (b0, b1) = self.split_mask32x8(b);
+        self.combine_mask32x4(self.xor_mask32x4(a0, b0), self.xor_mask32x4(a1, b1))
+    }
     #[doc = "Compute the logical NOT of the mask."]
-    fn not_mask32x8(self, a: mask32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn not_mask32x8(self, a: mask32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        self.combine_mask32x4(self.not_mask32x4(a0), self.not_mask32x4(a1))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    #[inline(always)]
     fn select_mask32x8(
         self,
         a: mask32x8<Self>,
         b: mask32x8<Self>,
         c: mask32x8<Self>,
-    ) -> mask32x8<Self>;
+    ) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        let (b0, b1) = self.split_mask32x8(b);
+        let (c0, c1) = self.split_mask32x8(c);
+        self.combine_mask32x4(
+            self.select_mask32x4(a0, b0, c0),
+            self.select_mask32x4(a1, b1, c1),
+        )
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn simd_eq_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        let (b0, b1) = self.split_mask32x8(b);
+        self.combine_mask32x4(self.simd_eq_mask32x4(a0, b0), self.simd_eq_mask32x4(a1, b1))
+    }
     #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn any_true_mask32x8(self, a: mask32x8<Self>) -> bool;
+    #[inline(always)]
+    fn any_true_mask32x8(self, a: mask32x8<Self>) -> bool {
+        let (a0, a1) = self.split_mask32x8(a);
+        self.any_true_mask32x4(a0) || self.any_true_mask32x4(a1)
+    }
     #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn all_true_mask32x8(self, a: mask32x8<Self>) -> bool;
+    #[inline(always)]
+    fn all_true_mask32x8(self, a: mask32x8<Self>) -> bool {
+        let (a0, a1) = self.split_mask32x8(a);
+        self.all_true_mask32x4(a0) && self.all_true_mask32x4(a1)
+    }
     #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn any_false_mask32x8(self, a: mask32x8<Self>) -> bool;
+    #[inline(always)]
+    fn any_false_mask32x8(self, a: mask32x8<Self>) -> bool {
+        let (a0, a1) = self.split_mask32x8(a);
+        self.any_false_mask32x4(a0) || self.any_false_mask32x4(a1)
+    }
     #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn all_false_mask32x8(self, a: mask32x8<Self>) -> bool;
+    #[inline(always)]
+    fn all_false_mask32x8(self, a: mask32x8<Self>) -> bool {
+        let (a0, a1) = self.split_mask32x8(a);
+        self.all_false_mask32x4(a0) && self.all_false_mask32x4(a1)
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x16<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask32x8(self, a: mask32x8<Self>) -> (mask32x4<Self>, mask32x4<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_f64x4(self, val: f64) -> f64x4<Self>;
+    #[inline(always)]
+    fn splat_f64x4(self, val: f64) -> f64x4<Self> {
+        let half = self.splat_f64x2(val);
+        self.combine_f64x2(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_f64x4<const SHIFT: usize>(
         self,
         a: f64x4<Self>,
         b: f64x4<Self>,
-    ) -> f64x4<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_f64x4<const OFFSET: usize>(self, a: f64x4<Self>) -> f64x4<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_f64x4<const OFFSET: usize>(self, a: f64x4<Self>) -> f64x4<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_f64x4<const OFFSET: usize>(
-        self,
-        a: f64x4<Self>,
-        padding: f64,
-    ) -> f64x4<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_f64x4<const OFFSET: usize>(
-        self,
-        a: f64x4<Self>,
-        padding: f64,
-    ) -> f64x4<Self>;
+    ) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(
+            self.slide_within_blocks_f64x2::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f64x2::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Compute the absolute value of each element."]
-    fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_f64x2(self.abs_f64x2(a0), self.abs_f64x2(a1))
+    }
     #[doc = "Negate each element of the vector."]
-    fn neg_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn neg_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_f64x2(self.neg_f64x2(a0), self.neg_f64x2(a1))
+    }
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
-    fn sqrt_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn sqrt_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_f64x2(self.sqrt_f64x2(a0), self.sqrt_f64x2(a1))
+    }
     #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
-    fn approximate_recip_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn approximate_recip_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_f64x2(
+            self.approximate_recip_f64x2(a0),
+            self.approximate_recip_f64x2(a1),
+        )
+    }
     #[doc = "Add two vectors element-wise."]
-    fn add_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn add_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(self.add_f64x2(a0, b0), self.add_f64x2(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise."]
-    fn sub_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn sub_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(self.sub_f64x2(a0, b0), self.sub_f64x2(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise."]
-    fn mul_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn mul_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(self.mul_f64x2(a0, b0), self.mul_f64x2(a1, b1))
+    }
     #[doc = "Divide two vectors element-wise."]
-    fn div_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn div_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(self.div_f64x2(a0, b0), self.div_f64x2(a1, b1))
+    }
     #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
-    fn copysign_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn copysign_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(self.copysign_f64x2(a0, b0), self.copysign_f64x2(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(self.max_f64x2(a0, b0), self.max_f64x2(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(self.min_f64x2(a0, b0), self.min_f64x2(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor integer vectors, this operation is the same as `max`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    #[inline(always)]
+    fn max_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(
+            self.max_precise_f64x2(a0, b0),
+            self.max_precise_f64x2(a1, b1),
+        )
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor integer vectors, this operation is the same as `min`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    #[inline(always)]
+    fn min_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(
+            self.min_precise_f64x2(a0, b0),
+            self.min_precise_f64x2(a1, b1),
+        )
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn simd_eq_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_mask64x2(self.simd_eq_f64x2(a0, b0), self.simd_eq_f64x2(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn simd_lt_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_mask64x2(self.simd_lt_f64x2(a0, b0), self.simd_lt_f64x2(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn simd_le_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_mask64x2(self.simd_le_f64x2(a0, b0), self.simd_le_f64x2(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn simd_ge_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
+        self.simd_le_f64x4(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn simd_gt_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
+        self.simd_lt_f64x4(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn zip_low_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, _) = self.split_f64x4(a);
+        let (b0, _) = self.split_f64x4(b);
+        self.combine_f64x2(self.zip_low_f64x2(a0, b0), self.zip_high_f64x2(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn zip_high_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (_, a1) = self.split_f64x4(a);
+        let (_, b1) = self.split_f64x4(b);
+        self.combine_f64x2(self.zip_low_f64x2(a1, b1), self.zip_high_f64x2(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn unzip_low_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(self.unzip_low_f64x2(a0, a1), self.unzip_low_f64x2(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn unzip_high_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(self.unzip_high_f64x2(a0, a1), self.unzip_high_f64x2(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> (f64x4<Self>, f64x4<Self>);
+    #[inline(always)]
+    fn interleave_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> (f64x4<Self>, f64x4<Self>) {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        let lo_lo = self.zip_low_f64x2(a0, b0);
+        let lo_hi = self.zip_high_f64x2(a0, b0);
+        let hi_lo = self.zip_low_f64x2(a1, b1);
+        let hi_hi = self.zip_high_f64x2(a1, b1);
+        (
+            self.combine_f64x2(lo_lo, lo_hi),
+            self.combine_f64x2(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> (f64x4<Self>, f64x4<Self>);
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn max_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn min_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn max_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn min_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn deinterleave_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> (f64x4<Self>, f64x4<Self>) {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        let lo_even = self.unzip_low_f64x2(a0, a1);
+        let lo_odd = self.unzip_high_f64x2(a0, a1);
+        let hi_even = self.unzip_low_f64x2(b0, b1);
+        let hi_odd = self.unzip_high_f64x2(b0, b1);
+        (
+            self.combine_f64x2(lo_even, hi_even),
+            self.combine_f64x2(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
-    fn mul_add_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn mul_add_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        let (c0, c1) = self.split_f64x4(c);
+        self.combine_f64x2(
+            self.mul_add_f64x2(a0, b0, c0),
+            self.mul_add_f64x2(a1, b1, c1),
+        )
+    }
     #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
-    fn mul_sub_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn mul_sub_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        let (c0, c1) = self.split_f64x4(c);
+        self.combine_f64x2(
+            self.mul_sub_f64x2(a0, b0, c0),
+            self.mul_sub_f64x2(a1, b1, c1),
+        )
+    }
     #[doc = "Return the largest integer less than or equal to each element, that is, round towards negative infinity."]
-    fn floor_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn floor_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_f64x2(self.floor_f64x2(a0), self.floor_f64x2(a1))
+    }
     #[doc = "Return the smallest integer greater than or equal to each element, that is, round towards positive infinity."]
-    fn ceil_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn ceil_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_f64x2(self.ceil_f64x2(a0), self.ceil_f64x2(a1))
+    }
     #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
-    fn round_ties_even_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn round_ties_even_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_f64x2(
+            self.round_ties_even_f64x2(a0),
+            self.round_ties_even_f64x2(a1),
+        )
+    }
     #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `a - a.trunc()`."]
-    fn fract_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn fract_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_f64x2(self.fract_f64x2(a0), self.fract_f64x2(a1))
+    }
     #[doc = "Return the integer part of each element, rounding towards zero."]
-    fn trunc_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn trunc_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_f64x2(self.trunc_f64x2(a0), self.trunc_f64x2(a1))
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_f64x4(self, a: mask64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn select_f64x4(self, a: mask64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        let (c0, c1) = self.split_f64x4(c);
+        self.combine_f64x2(self.select_f64x2(a0, b0, c0), self.select_f64x2(a1, b1, c1))
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f64x4(self, a: f64x4<Self>) -> (f64x2<Self>, f64x2<Self>);
     #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nValues are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity.This is the same as the `as` operator, and follows the IEEE 754 narrowing behavior in round-to-even mode.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f32x4(self.narrow_f64x2(a0, a1), self.narrow_f64x2(b0, b1))
+    }
     #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn saturating_narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn saturating_narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f32x4(
+            self.saturating_narrow_f64x2(a0, a1),
+            self.saturating_narrow_f64x2(b0, b1),
+        )
+    }
     #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn relaxed_narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn relaxed_narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f32x4(
+            self.relaxed_narrow_f64x2(a0, a1),
+            self.relaxed_narrow_f64x2(b0, b1),
+        )
+    }
     #[doc = "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
-    fn cvt_u64_f64x4(self, a: f64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn cvt_u64_f64x4(self, a: f64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_u64x2(self.cvt_u64_f64x2(a0), self.cvt_u64_f64x2(a1))
+    }
     #[doc = "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
-    fn cvt_u64_precise_f64x4(self, a: f64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn cvt_u64_precise_f64x4(self, a: f64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_u64x2(
+            self.cvt_u64_precise_f64x2(a0),
+            self.cvt_u64_precise_f64x2(a1),
+        )
+    }
     #[doc = "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
-    fn cvt_i64_f64x4(self, a: f64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn cvt_i64_f64x4(self, a: f64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_i64x2(self.cvt_i64_f64x2(a0), self.cvt_i64_f64x2(a1))
+    }
     #[doc = "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
-    fn cvt_i64_precise_f64x4(self, a: f64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn cvt_i64_precise_f64x4(self, a: f64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_i64x2(
+            self.cvt_i64_precise_f64x2(a0),
+            self.cvt_i64_precise_f64x2(a1),
+        )
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_i64x4(self, val: i64) -> i64x4<Self>;
+    #[inline(always)]
+    fn splat_i64x4(self, val: i64) -> i64x4<Self> {
+        let half = self.splat_i64x2(val);
+        self.combine_i64x2(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i64x4<const SHIFT: usize>(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_i64x4<const SHIFT: usize>(
         self,
         a: i64x4<Self>,
         b: i64x4<Self>,
-    ) -> i64x4<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_i64x4<const OFFSET: usize>(self, a: i64x4<Self>) -> i64x4<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_i64x4<const OFFSET: usize>(self, a: i64x4<Self>) -> i64x4<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_i64x4<const OFFSET: usize>(
-        self,
-        a: i64x4<Self>,
-        padding: i64,
-    ) -> i64x4<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_i64x4<const OFFSET: usize>(
-        self,
-        a: i64x4<Self>,
-        padding: i64,
-    ) -> i64x4<Self>;
+    ) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i64x2(
+            self.slide_within_blocks_i64x2::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i64x2::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
-    fn add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i64x2(self.add_i64x2(a0, b0), self.add_i64x2(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
-    fn sub_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn sub_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i64x2(self.sub_i64x2(a0, b0), self.sub_i64x2(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
-    fn mul_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn mul_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i64x2(self.mul_i64x2(a0, b0), self.mul_i64x2(a1, b1))
+    }
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn and_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i64x2(self.and_i64x2(a0, b0), self.and_i64x2(a1, b1))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn or_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i64x2(self.or_i64x2(a0, b0), self.or_i64x2(a1, b1))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn xor_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i64x2(self.xor_i64x2(a0, b0), self.xor_i64x2(a1, b1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_i64x4(self, a: i64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn not_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        self.combine_i64x2(self.not_i64x2(a0), self.not_i64x2(a1))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shl_i64x4(self, a: i64x4<Self>, shift: u32) -> i64x4<Self>;
+    #[inline(always)]
+    fn shl_i64x4(self, a: i64x4<Self>, shift: u32) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        self.combine_i64x2(self.shl_i64x2(a0, shift), self.shl_i64x2(a1, shift))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shlv_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn shlv_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i64x2(self.shlv_i64x2(a0, b0), self.shlv_i64x2(a1, b1))
+    }
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shr_i64x4(self, a: i64x4<Self>, shift: u32) -> i64x4<Self>;
+    #[inline(always)]
+    fn shr_i64x4(self, a: i64x4<Self>, shift: u32) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        self.combine_i64x2(self.shr_i64x2(a0, shift), self.shr_i64x2(a1, shift))
+    }
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shrv_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn shrv_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i64x2(self.shrv_i64x2(a0, b0), self.shrv_i64x2(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i64x2(self.max_i64x2(a0, b0), self.max_i64x2(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i64x2(self.min_i64x2(a0, b0), self.min_i64x2(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn simd_eq_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_mask64x2(self.simd_eq_i64x2(a0, b0), self.simd_eq_i64x2(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn simd_lt_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_mask64x2(self.simd_lt_i64x2(a0, b0), self.simd_lt_i64x2(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn simd_le_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_mask64x2(self.simd_le_i64x2(a0, b0), self.simd_le_i64x2(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn simd_ge_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
+        self.simd_le_i64x4(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn simd_gt_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
+        self.simd_lt_i64x4(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn zip_low_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        let (a0, _) = self.split_i64x4(a);
+        let (b0, _) = self.split_i64x4(b);
+        self.combine_i64x2(self.zip_low_i64x2(a0, b0), self.zip_high_i64x2(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn zip_high_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        let (_, a1) = self.split_i64x4(a);
+        let (_, b1) = self.split_i64x4(b);
+        self.combine_i64x2(self.zip_low_i64x2(a1, b1), self.zip_high_i64x2(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn unzip_low_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i64x2(self.unzip_low_i64x2(a0, a1), self.unzip_low_i64x2(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn unzip_high_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i64x2(self.unzip_high_i64x2(a0, a1), self.unzip_high_i64x2(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> (i64x4<Self>, i64x4<Self>);
+    #[inline(always)]
+    fn interleave_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> (i64x4<Self>, i64x4<Self>) {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        let lo_lo = self.zip_low_i64x2(a0, b0);
+        let lo_hi = self.zip_high_i64x2(a0, b0);
+        let hi_lo = self.zip_low_i64x2(a1, b1);
+        let hi_hi = self.zip_high_i64x2(a1, b1);
+        (
+            self.combine_i64x2(lo_lo, lo_hi),
+            self.combine_i64x2(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> (i64x4<Self>, i64x4<Self>);
+    #[inline(always)]
+    fn deinterleave_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> (i64x4<Self>, i64x4<Self>) {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        let lo_even = self.unzip_low_i64x2(a0, a1);
+        let lo_odd = self.unzip_high_i64x2(a0, a1);
+        let hi_even = self.unzip_low_i64x2(b0, b1);
+        let hi_odd = self.unzip_high_i64x2(b0, b1);
+        (
+            self.combine_i64x2(lo_even, hi_even),
+            self.combine_i64x2(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_i64x4(self, a: mask64x4<Self>, b: i64x4<Self>, c: i64x4<Self>) -> i64x4<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn select_i64x4(self, a: mask64x4<Self>, b: i64x4<Self>, c: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        let (c0, c1) = self.split_i64x4(c);
+        self.combine_i64x2(self.select_i64x2(a0, b0, c0), self.select_i64x2(a1, b1, c1))
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i64x4(self, a: i64x4<Self>) -> (i64x2<Self>, i64x2<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
-    fn neg_i64x4(self, a: i64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn neg_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        self.combine_i64x2(self.neg_i64x2(a0), self.neg_i64x2(a1))
+    }
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i32x4(self.narrow_i64x2(a0, a1), self.narrow_i64x2(b0, b1))
+    }
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn saturating_narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn saturating_narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i32x4(
+            self.saturating_narrow_i64x2(a0, a1),
+            self.saturating_narrow_i64x2(b0, b1),
+        )
+    }
     #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn relaxed_narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn relaxed_narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i32x4(
+            self.relaxed_narrow_i64x2(a0, a1),
+            self.relaxed_narrow_i64x2(b0, b1),
+        )
+    }
     #[doc = "Convert each signed 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
-    fn cvt_f64_i64x4(self, a: i64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn cvt_f64_i64x4(self, a: i64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        self.combine_f64x2(self.cvt_f64_i64x2(a0), self.cvt_f64_i64x2(a1))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_u64x4(self, val: u64) -> u64x4<Self>;
+    #[inline(always)]
+    fn splat_u64x4(self, val: u64) -> u64x4<Self> {
+        let half = self.splat_u64x2(val);
+        self.combine_u64x2(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u64x4<const SHIFT: usize>(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_u64x4<const SHIFT: usize>(
         self,
         a: u64x4<Self>,
         b: u64x4<Self>,
-    ) -> u64x4<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_u64x4<const OFFSET: usize>(self, a: u64x4<Self>) -> u64x4<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_u64x4<const OFFSET: usize>(self, a: u64x4<Self>) -> u64x4<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_u64x4<const OFFSET: usize>(
-        self,
-        a: u64x4<Self>,
-        padding: u64,
-    ) -> u64x4<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_u64x4<const OFFSET: usize>(
-        self,
-        a: u64x4<Self>,
-        padding: u64,
-    ) -> u64x4<Self>;
+    ) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u64x2(
+            self.slide_within_blocks_u64x2::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u64x2::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
-    fn add_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn add_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u64x2(self.add_u64x2(a0, b0), self.add_u64x2(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
-    fn sub_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn sub_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u64x2(self.sub_u64x2(a0, b0), self.sub_u64x2(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
-    fn mul_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn mul_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u64x2(self.mul_u64x2(a0, b0), self.mul_u64x2(a1, b1))
+    }
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn and_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u64x2(self.and_u64x2(a0, b0), self.and_u64x2(a1, b1))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn or_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u64x2(self.or_u64x2(a0, b0), self.or_u64x2(a1, b1))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn xor_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u64x2(self.xor_u64x2(a0, b0), self.xor_u64x2(a1, b1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_u64x4(self, a: u64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn not_u64x4(self, a: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        self.combine_u64x2(self.not_u64x2(a0), self.not_u64x2(a1))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shl_u64x4(self, a: u64x4<Self>, shift: u32) -> u64x4<Self>;
+    #[inline(always)]
+    fn shl_u64x4(self, a: u64x4<Self>, shift: u32) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        self.combine_u64x2(self.shl_u64x2(a0, shift), self.shl_u64x2(a1, shift))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shlv_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn shlv_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u64x2(self.shlv_u64x2(a0, b0), self.shlv_u64x2(a1, b1))
+    }
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shr_u64x4(self, a: u64x4<Self>, shift: u32) -> u64x4<Self>;
+    #[inline(always)]
+    fn shr_u64x4(self, a: u64x4<Self>, shift: u32) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        self.combine_u64x2(self.shr_u64x2(a0, shift), self.shr_u64x2(a1, shift))
+    }
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shrv_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn shrv_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u64x2(self.shrv_u64x2(a0, b0), self.shrv_u64x2(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u64x2(self.max_u64x2(a0, b0), self.max_u64x2(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u64x2(self.min_u64x2(a0, b0), self.min_u64x2(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn simd_eq_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_mask64x2(self.simd_eq_u64x2(a0, b0), self.simd_eq_u64x2(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn simd_lt_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_mask64x2(self.simd_lt_u64x2(a0, b0), self.simd_lt_u64x2(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn simd_le_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_mask64x2(self.simd_le_u64x2(a0, b0), self.simd_le_u64x2(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn simd_ge_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
+        self.simd_le_u64x4(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn simd_gt_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
+        self.simd_lt_u64x4(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn zip_low_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        let (a0, _) = self.split_u64x4(a);
+        let (b0, _) = self.split_u64x4(b);
+        self.combine_u64x2(self.zip_low_u64x2(a0, b0), self.zip_high_u64x2(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn zip_high_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        let (_, a1) = self.split_u64x4(a);
+        let (_, b1) = self.split_u64x4(b);
+        self.combine_u64x2(self.zip_low_u64x2(a1, b1), self.zip_high_u64x2(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn unzip_low_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u64x2(self.unzip_low_u64x2(a0, a1), self.unzip_low_u64x2(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn unzip_high_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u64x2(self.unzip_high_u64x2(a0, a1), self.unzip_high_u64x2(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> (u64x4<Self>, u64x4<Self>);
+    #[inline(always)]
+    fn interleave_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> (u64x4<Self>, u64x4<Self>) {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        let lo_lo = self.zip_low_u64x2(a0, b0);
+        let lo_hi = self.zip_high_u64x2(a0, b0);
+        let hi_lo = self.zip_low_u64x2(a1, b1);
+        let hi_hi = self.zip_high_u64x2(a1, b1);
+        (
+            self.combine_u64x2(lo_lo, lo_hi),
+            self.combine_u64x2(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> (u64x4<Self>, u64x4<Self>);
+    #[inline(always)]
+    fn deinterleave_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> (u64x4<Self>, u64x4<Self>) {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        let lo_even = self.unzip_low_u64x2(a0, a1);
+        let lo_odd = self.unzip_high_u64x2(a0, a1);
+        let hi_even = self.unzip_low_u64x2(b0, b1);
+        let hi_odd = self.unzip_high_u64x2(b0, b1);
+        (
+            self.combine_u64x2(lo_even, hi_even),
+            self.combine_u64x2(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_u64x4(self, a: mask64x4<Self>, b: u64x4<Self>, c: u64x4<Self>) -> u64x4<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn select_u64x4(self, a: mask64x4<Self>, b: u64x4<Self>, c: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        let (c0, c1) = self.split_u64x4(c);
+        self.combine_u64x2(self.select_u64x2(a0, b0, c0), self.select_u64x2(a1, b1, c1))
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u64x4(self, a: u64x4<Self>) -> (u64x2<Self>, u64x2<Self>);
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u32x4(self.narrow_u64x2(a0, a1), self.narrow_u64x2(b0, b1))
+    }
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn saturating_narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn saturating_narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u32x4(
+            self.saturating_narrow_u64x2(a0, a1),
+            self.saturating_narrow_u64x2(b0, b1),
+        )
+    }
     #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn relaxed_narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn relaxed_narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u32x4(
+            self.relaxed_narrow_u64x2(a0, a1),
+            self.relaxed_narrow_u64x2(b0, b1),
+        )
+    }
     #[doc = "Convert each unsigned 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
-    fn cvt_f64_u64x4(self, a: u64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn cvt_f64_u64x4(self, a: u64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        self.combine_f64x2(self.cvt_f64_u64x2(a0), self.cvt_f64_u64x2(a1))
+    }
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
-    fn splat_mask64x4(self, val: bool) -> mask64x4<Self>;
+    #[inline(always)]
+    fn splat_mask64x4(self, val: bool) -> mask64x4<Self> {
+        let half = self.splat_mask64x2(val);
+        self.combine_mask64x2(half, half)
+    }
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
-    fn from_bitmask_mask64x4(self, bits: u64) -> mask64x4<Self>;
+    #[inline(always)]
+    fn from_bitmask_mask64x4(self, bits: u64) -> mask64x4<Self> {
+        let lo = self.from_bitmask_mask64x2(bits);
+        let hi = self.from_bitmask_mask64x2(bits >> 2usize);
+        self.combine_mask64x2(lo, hi)
+    }
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
-    fn to_bitmask_mask64x4(self, a: mask64x4<Self>) -> u64;
+    #[inline(always)]
+    fn to_bitmask_mask64x4(self, a: mask64x4<Self>) -> u64 {
+        let (lo, hi) = self.split_mask64x4(a);
+        let lo = self.to_bitmask_mask64x2(lo);
+        let hi = self.to_bitmask_mask64x2(hi);
+        lo | (hi << 2usize)
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask64x4(self, a: &mut mask64x4<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
-    fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        let (b0, b1) = self.split_mask64x4(b);
+        self.combine_mask64x2(self.and_mask64x2(a0, b0), self.and_mask64x2(a1, b1))
+    }
     #[doc = "Compute the logical OR of two masks."]
-    fn or_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn or_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        let (b0, b1) = self.split_mask64x4(b);
+        self.combine_mask64x2(self.or_mask64x2(a0, b0), self.or_mask64x2(a1, b1))
+    }
     #[doc = "Compute the logical XOR of two masks."]
-    fn xor_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn xor_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        let (b0, b1) = self.split_mask64x4(b);
+        self.combine_mask64x2(self.xor_mask64x2(a0, b0), self.xor_mask64x2(a1, b1))
+    }
     #[doc = "Compute the logical NOT of the mask."]
-    fn not_mask64x4(self, a: mask64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn not_mask64x4(self, a: mask64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        self.combine_mask64x2(self.not_mask64x2(a0), self.not_mask64x2(a1))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    #[inline(always)]
     fn select_mask64x4(
         self,
         a: mask64x4<Self>,
         b: mask64x4<Self>,
         c: mask64x4<Self>,
-    ) -> mask64x4<Self>;
+    ) -> mask64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        let (b0, b1) = self.split_mask64x4(b);
+        let (c0, c1) = self.split_mask64x4(c);
+        self.combine_mask64x2(
+            self.select_mask64x2(a0, b0, c0),
+            self.select_mask64x2(a1, b1, c1),
+        )
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn simd_eq_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        let (b0, b1) = self.split_mask64x4(b);
+        self.combine_mask64x2(self.simd_eq_mask64x2(a0, b0), self.simd_eq_mask64x2(a1, b1))
+    }
     #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn any_true_mask64x4(self, a: mask64x4<Self>) -> bool;
+    #[inline(always)]
+    fn any_true_mask64x4(self, a: mask64x4<Self>) -> bool {
+        let (a0, a1) = self.split_mask64x4(a);
+        self.any_true_mask64x2(a0) || self.any_true_mask64x2(a1)
+    }
     #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn all_true_mask64x4(self, a: mask64x4<Self>) -> bool;
+    #[inline(always)]
+    fn all_true_mask64x4(self, a: mask64x4<Self>) -> bool {
+        let (a0, a1) = self.split_mask64x4(a);
+        self.all_true_mask64x2(a0) && self.all_true_mask64x2(a1)
+    }
     #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn any_false_mask64x4(self, a: mask64x4<Self>) -> bool;
+    #[inline(always)]
+    fn any_false_mask64x4(self, a: mask64x4<Self>) -> bool {
+        let (a0, a1) = self.split_mask64x4(a);
+        self.any_false_mask64x2(a0) || self.any_false_mask64x2(a1)
+    }
     #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn all_false_mask64x4(self, a: mask64x4<Self>) -> bool;
+    #[inline(always)]
+    fn all_false_mask64x4(self, a: mask64x4<Self>) -> bool {
+        let (a0, a1) = self.split_mask64x4(a);
+        self.all_false_mask64x2(a0) && self.all_false_mask64x2(a1)
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask64x4(self, a: mask64x4<Self>) -> (mask64x2<Self>, mask64x2<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_f32x16(self, val: f32) -> f32x16<Self>;
+    #[inline(always)]
+    fn splat_f32x16(self, val: f32) -> f32x16<Self> {
+        let half = self.splat_f32x8(val);
+        self.combine_f32x8(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_f32x16<const SHIFT: usize>(
         self,
         a: f32x16<Self>,
         b: f32x16<Self>,
-    ) -> f32x16<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_f32x16<const OFFSET: usize>(self, a: f32x16<Self>) -> f32x16<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_f32x16<const OFFSET: usize>(self, a: f32x16<Self>) -> f32x16<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_f32x16<const OFFSET: usize>(
-        self,
-        a: f32x16<Self>,
-        padding: f32,
-    ) -> f32x16<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_f32x16<const OFFSET: usize>(
-        self,
-        a: f32x16<Self>,
-        padding: f32,
-    ) -> f32x16<Self>;
+    ) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(
+            self.slide_within_blocks_f32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f32x8::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
+    #[inline(always)]
     fn swizzle_dyn_within_blocks_f32x16(
         self,
         a: f32x16<Self>,
         indices: u8x64<Self>,
-    ) -> f32x16<Self>;
+    ) -> f32x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Compute the absolute value of each element."]
-    fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f32x8(self.abs_f32x8(a0), self.abs_f32x8(a1))
+    }
     #[doc = "Negate each element of the vector."]
-    fn neg_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn neg_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f32x8(self.neg_f32x8(a0), self.neg_f32x8(a1))
+    }
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
-    fn sqrt_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn sqrt_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f32x8(self.sqrt_f32x8(a0), self.sqrt_f32x8(a1))
+    }
     #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
-    fn approximate_recip_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn approximate_recip_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f32x8(
+            self.approximate_recip_f32x8(a0),
+            self.approximate_recip_f32x8(a1),
+        )
+    }
     #[doc = "Add two vectors element-wise."]
-    fn add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(self.add_f32x8(a0, b0), self.add_f32x8(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise."]
-    fn sub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn sub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(self.sub_f32x8(a0, b0), self.sub_f32x8(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise."]
-    fn mul_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn mul_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(self.mul_f32x8(a0, b0), self.mul_f32x8(a1, b1))
+    }
     #[doc = "Divide two vectors element-wise."]
-    fn div_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn div_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(self.div_f32x8(a0, b0), self.div_f32x8(a1, b1))
+    }
     #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
-    fn copysign_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn copysign_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(self.copysign_f32x8(a0, b0), self.copysign_f32x8(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(self.max_f32x8(a0, b0), self.max_f32x8(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(self.min_f32x8(a0, b0), self.min_f32x8(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor integer vectors, this operation is the same as `max`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    #[inline(always)]
+    fn max_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(
+            self.max_precise_f32x8(a0, b0),
+            self.max_precise_f32x8(a1, b1),
+        )
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor integer vectors, this operation is the same as `min`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    #[inline(always)]
+    fn min_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(
+            self.min_precise_f32x8(a0, b0),
+            self.min_precise_f32x8(a1, b1),
+        )
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn simd_eq_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_mask32x8(self.simd_eq_f32x8(a0, b0), self.simd_eq_f32x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn simd_lt_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_mask32x8(self.simd_lt_f32x8(a0, b0), self.simd_lt_f32x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn simd_le_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_mask32x8(self.simd_le_f32x8(a0, b0), self.simd_le_f32x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn simd_ge_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
+        self.simd_le_f32x16(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn simd_gt_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
+        self.simd_lt_f32x16(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn zip_low_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, _) = self.split_f32x16(a);
+        let (b0, _) = self.split_f32x16(b);
+        self.combine_f32x8(self.zip_low_f32x8(a0, b0), self.zip_high_f32x8(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn zip_high_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (_, a1) = self.split_f32x16(a);
+        let (_, b1) = self.split_f32x16(b);
+        self.combine_f32x8(self.zip_low_f32x8(a1, b1), self.zip_high_f32x8(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn unzip_low_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(self.unzip_low_f32x8(a0, a1), self.unzip_low_f32x8(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn unzip_high_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(self.unzip_high_f32x8(a0, a1), self.unzip_high_f32x8(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> (f32x16<Self>, f32x16<Self>);
+    #[inline(always)]
+    fn interleave_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> (f32x16<Self>, f32x16<Self>) {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        let lo_lo = self.zip_low_f32x8(a0, b0);
+        let lo_hi = self.zip_high_f32x8(a0, b0);
+        let hi_lo = self.zip_low_f32x8(a1, b1);
+        let hi_hi = self.zip_high_f32x8(a1, b1);
+        (
+            self.combine_f32x8(lo_lo, lo_hi),
+            self.combine_f32x8(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> (f32x16<Self>, f32x16<Self>);
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn max_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn max_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn min_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn deinterleave_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> (f32x16<Self>, f32x16<Self>) {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        let lo_even = self.unzip_low_f32x8(a0, a1);
+        let lo_odd = self.unzip_high_f32x8(a0, a1);
+        let hi_even = self.unzip_low_f32x8(b0, b1);
+        let hi_odd = self.unzip_high_f32x8(b0, b1);
+        (
+            self.combine_f32x8(lo_even, hi_even),
+            self.combine_f32x8(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
-    fn mul_add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn mul_add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        let (c0, c1) = self.split_f32x16(c);
+        self.combine_f32x8(
+            self.mul_add_f32x8(a0, b0, c0),
+            self.mul_add_f32x8(a1, b1, c1),
+        )
+    }
     #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
-    fn mul_sub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn mul_sub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        let (c0, c1) = self.split_f32x16(c);
+        self.combine_f32x8(
+            self.mul_sub_f32x8(a0, b0, c0),
+            self.mul_sub_f32x8(a1, b1, c1),
+        )
+    }
     #[doc = "Return the largest integer less than or equal to each element, that is, round towards negative infinity."]
-    fn floor_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn floor_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f32x8(self.floor_f32x8(a0), self.floor_f32x8(a1))
+    }
     #[doc = "Return the smallest integer greater than or equal to each element, that is, round towards positive infinity."]
-    fn ceil_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn ceil_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f32x8(self.ceil_f32x8(a0), self.ceil_f32x8(a1))
+    }
     #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
-    fn round_ties_even_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn round_ties_even_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f32x8(
+            self.round_ties_even_f32x8(a0),
+            self.round_ties_even_f32x8(a1),
+        )
+    }
     #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `a - a.trunc()`."]
-    fn fract_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn fract_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f32x8(self.fract_f32x8(a0), self.fract_f32x8(a1))
+    }
     #[doc = "Return the integer part of each element, rounding towards zero."]
-    fn trunc_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn trunc_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f32x8(self.trunc_f32x8(a0), self.trunc_f32x8(a1))
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_f32x16(self, a: mask32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn select_f32x16(self, a: mask32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        let (c0, c1) = self.split_f32x16(c);
+        self.combine_f32x8(self.select_f32x8(a0, b0, c0), self.select_f32x8(a1, b1, c1))
+    }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f32x16(self, a: f32x16<Self>) -> (f32x8<Self>, f32x8<Self>);
     #[doc = "Widen every `f32` lane exactly into two same-width `f64` vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
-    fn widen_f32x16(self, a: f32x16<Self>) -> (f64x8<Self>, f64x8<Self>);
+    #[inline(always)]
+    fn widen_f32x16(self, a: f32x16<Self>) -> (f64x8<Self>, f64x8<Self>) {
+        let (a0, a1) = self.split_f32x16(a);
+        let (a00, a01) = self.widen_f32x8(a0);
+        let (a10, a11) = self.widen_f32x8(a1);
+        (self.combine_f64x4(a00, a01), self.combine_f64x4(a10, a11))
+    }
     #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms below AVX-512, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32`.\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
-    fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_u32x8(self.cvt_u32_f32x8(a0), self.cvt_u32_f32x8(a1))
+    }
     #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
-    fn cvt_u32_precise_f32x16(self, a: f32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn cvt_u32_precise_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_u32x8(
+            self.cvt_u32_precise_f32x8(a0),
+            self.cvt_u32_precise_f32x8(a1),
+        )
+    }
     #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
-    fn cvt_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn cvt_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_i32x8(self.cvt_i32_f32x8(a0), self.cvt_i32_f32x8(a1))
+    }
     #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
-    fn cvt_i32_precise_f32x16(self, a: f32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn cvt_i32_precise_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_i32x8(
+            self.cvt_i32_precise_f32x8(a0),
+            self.cvt_i32_precise_f32x8(a1),
+        )
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_i8x64(self, val: i8) -> i8x64<Self>;
+    #[inline(always)]
+    fn splat_i8x64(self, val: i8) -> i8x64<Self> {
+        let half = self.splat_i8x32(val);
+        self.combine_i8x32(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_i8x64<const SHIFT: usize>(
         self,
         a: i8x64<Self>,
         b: i8x64<Self>,
-    ) -> i8x64<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_i8x64<const OFFSET: usize>(self, a: i8x64<Self>) -> i8x64<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_i8x64<const OFFSET: usize>(self, a: i8x64<Self>) -> i8x64<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_i8x64<const OFFSET: usize>(
-        self,
-        a: i8x64<Self>,
-        padding: i8,
-    ) -> i8x64<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_i8x64<const OFFSET: usize>(
-        self,
-        a: i8x64<Self>,
-        padding: i8,
-    ) -> i8x64<Self>;
+    ) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(
+            self.slide_within_blocks_i8x32::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i8x32::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
-    fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(self.add_i8x32(a0, b0), self.add_i8x32(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
-    fn sub_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn sub_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(self.sub_i8x32(a0, b0), self.sub_i8x32(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
-    fn mul_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn mul_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(self.mul_i8x32(a0, b0), self.mul_i8x32(a1, b1))
+    }
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn and_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(self.and_i8x32(a0, b0), self.and_i8x32(a1, b1))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn or_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(self.or_i8x32(a0, b0), self.or_i8x32(a1, b1))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn xor_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(self.xor_i8x32(a0, b0), self.xor_i8x32(a1, b1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_i8x64(self, a: i8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn not_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        self.combine_i8x32(self.not_i8x32(a0), self.not_i8x32(a1))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shl_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self>;
+    #[inline(always)]
+    fn shl_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        self.combine_i8x32(self.shl_i8x32(a0, shift), self.shl_i8x32(a1, shift))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shlv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn shlv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(self.shlv_i8x32(a0, b0), self.shlv_i8x32(a1, b1))
+    }
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shr_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self>;
+    #[inline(always)]
+    fn shr_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        self.combine_i8x32(self.shr_i8x32(a0, shift), self.shr_i8x32(a1, shift))
+    }
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shrv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn shrv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(self.shrv_i8x32(a0, b0), self.shrv_i8x32(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(self.max_i8x32(a0, b0), self.max_i8x32(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(self.min_i8x32(a0, b0), self.min_i8x32(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
+    #[inline(always)]
+    fn simd_eq_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_mask8x32(self.simd_eq_i8x32(a0, b0), self.simd_eq_i8x32(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
+    #[inline(always)]
+    fn simd_lt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_mask8x32(self.simd_lt_i8x32(a0, b0), self.simd_lt_i8x32(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
+    #[inline(always)]
+    fn simd_le_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_mask8x32(self.simd_le_i8x32(a0, b0), self.simd_le_i8x32(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
+    #[inline(always)]
+    fn simd_ge_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
+        self.simd_le_i8x64(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
+    #[inline(always)]
+    fn simd_gt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
+        self.simd_lt_i8x64(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn zip_low_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        let (a0, _) = self.split_i8x64(a);
+        let (b0, _) = self.split_i8x64(b);
+        self.combine_i8x32(self.zip_low_i8x32(a0, b0), self.zip_high_i8x32(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn zip_high_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        let (_, a1) = self.split_i8x64(a);
+        let (_, b1) = self.split_i8x64(b);
+        self.combine_i8x32(self.zip_low_i8x32(a1, b1), self.zip_high_i8x32(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn unzip_low_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(self.unzip_low_i8x32(a0, a1), self.unzip_low_i8x32(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn unzip_high_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(self.unzip_high_i8x32(a0, a1), self.unzip_high_i8x32(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> (i8x64<Self>, i8x64<Self>);
+    #[inline(always)]
+    fn interleave_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> (i8x64<Self>, i8x64<Self>) {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        let lo_lo = self.zip_low_i8x32(a0, b0);
+        let lo_hi = self.zip_high_i8x32(a0, b0);
+        let hi_lo = self.zip_low_i8x32(a1, b1);
+        let hi_hi = self.zip_high_i8x32(a1, b1);
+        (
+            self.combine_i8x32(lo_lo, lo_hi),
+            self.combine_i8x32(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> (i8x64<Self>, i8x64<Self>);
+    #[inline(always)]
+    fn deinterleave_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> (i8x64<Self>, i8x64<Self>) {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        let lo_even = self.unzip_low_i8x32(a0, a1);
+        let lo_odd = self.unzip_high_i8x32(a0, a1);
+        let hi_even = self.unzip_low_i8x32(b0, b1);
+        let hi_odd = self.unzip_high_i8x32(b0, b1);
+        (
+            self.combine_i8x32(lo_even, hi_even),
+            self.combine_i8x32(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_i8x64(self, a: mask8x64<Self>, b: i8x64<Self>, c: i8x64<Self>) -> i8x64<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn select_i8x64(self, a: mask8x64<Self>, b: i8x64<Self>, c: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_mask8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        let (c0, c1) = self.split_i8x64(c);
+        self.combine_i8x32(self.select_i8x32(a0, b0, c0), self.select_i8x32(a1, b1, c1))
+    }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i8x64(self, a: i8x64<Self>) -> (i8x32<Self>, i8x32<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
-    fn neg_i8x64(self, a: i8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn neg_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        self.combine_i8x32(self.neg_i8x32(a0), self.neg_i8x32(a1))
+    }
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
-    fn widen_i8x64(self, a: i8x64<Self>) -> (i16x32<Self>, i16x32<Self>);
+    #[inline(always)]
+    fn widen_i8x64(self, a: i8x64<Self>) -> (i16x32<Self>, i16x32<Self>) {
+        let (a0, a1) = self.split_i8x64(a);
+        let (a00, a01) = self.widen_i8x32(a0);
+        let (a10, a11) = self.widen_i8x32(a1);
+        (self.combine_i16x16(a00, a01), self.combine_i16x16(a10, a11))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_u8x64(self, val: u8) -> u8x64<Self>;
+    #[inline(always)]
+    fn splat_u8x64(self, val: u8) -> u8x64<Self> {
+        let half = self.splat_u8x32(val);
+        self.combine_u8x32(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_u8x64<const SHIFT: usize>(
         self,
         a: u8x64<Self>,
         b: u8x64<Self>,
-    ) -> u8x64<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_u8x64<const OFFSET: usize>(self, a: u8x64<Self>) -> u8x64<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_u8x64<const OFFSET: usize>(self, a: u8x64<Self>) -> u8x64<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_u8x64<const OFFSET: usize>(
-        self,
-        a: u8x64<Self>,
-        padding: u8,
-    ) -> u8x64<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_u8x64<const OFFSET: usize>(
-        self,
-        a: u8x64<Self>,
-        padding: u8,
-    ) -> u8x64<Self>;
+    ) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(
+            self.slide_within_blocks_u8x32::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u8x32::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_u8x64(self, a: u8x64<Self>, indices: u8x64<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_u8x64(self, a: u8x64<Self>, indices: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (indices0, indices1) = self.split_u8x64(indices);
+        self.combine_u8x32(
+            self.swizzle_dyn_within_blocks_u8x32(a0, indices0),
+            self.swizzle_dyn_within_blocks_u8x32(a1, indices1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
     fn swizzle_dyn_u8x64(self, a: u8x64<Self>, indices: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
     fn swizzle_dyn_precise_u8x64(self, a: u8x64<Self>, indices: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
-    fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(self.add_u8x32(a0, b0), self.add_u8x32(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
-    fn sub_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn sub_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(self.sub_u8x32(a0, b0), self.sub_u8x32(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
-    fn mul_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn mul_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(self.mul_u8x32(a0, b0), self.mul_u8x32(a1, b1))
+    }
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn and_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(self.and_u8x32(a0, b0), self.and_u8x32(a1, b1))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn or_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(self.or_u8x32(a0, b0), self.or_u8x32(a1, b1))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn xor_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(self.xor_u8x32(a0, b0), self.xor_u8x32(a1, b1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_u8x64(self, a: u8x64<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn not_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        self.combine_u8x32(self.not_u8x32(a0), self.not_u8x32(a1))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shl_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self>;
+    #[inline(always)]
+    fn shl_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        self.combine_u8x32(self.shl_u8x32(a0, shift), self.shl_u8x32(a1, shift))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shlv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn shlv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(self.shlv_u8x32(a0, b0), self.shlv_u8x32(a1, b1))
+    }
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shr_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self>;
+    #[inline(always)]
+    fn shr_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        self.combine_u8x32(self.shr_u8x32(a0, shift), self.shr_u8x32(a1, shift))
+    }
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shrv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn shrv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(self.shrv_u8x32(a0, b0), self.shrv_u8x32(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(self.max_u8x32(a0, b0), self.max_u8x32(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(self.min_u8x32(a0, b0), self.min_u8x32(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
+    #[inline(always)]
+    fn simd_eq_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_mask8x32(self.simd_eq_u8x32(a0, b0), self.simd_eq_u8x32(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
+    #[inline(always)]
+    fn simd_lt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_mask8x32(self.simd_lt_u8x32(a0, b0), self.simd_lt_u8x32(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
+    #[inline(always)]
+    fn simd_le_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_mask8x32(self.simd_le_u8x32(a0, b0), self.simd_le_u8x32(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
+    #[inline(always)]
+    fn simd_ge_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
+        self.simd_le_u8x64(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
+    #[inline(always)]
+    fn simd_gt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
+        self.simd_lt_u8x64(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn zip_low_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        let (a0, _) = self.split_u8x64(a);
+        let (b0, _) = self.split_u8x64(b);
+        self.combine_u8x32(self.zip_low_u8x32(a0, b0), self.zip_high_u8x32(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn zip_high_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        let (_, a1) = self.split_u8x64(a);
+        let (_, b1) = self.split_u8x64(b);
+        self.combine_u8x32(self.zip_low_u8x32(a1, b1), self.zip_high_u8x32(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn unzip_low_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(self.unzip_low_u8x32(a0, a1), self.unzip_low_u8x32(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn unzip_high_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(self.unzip_high_u8x32(a0, a1), self.unzip_high_u8x32(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> (u8x64<Self>, u8x64<Self>);
+    #[inline(always)]
+    fn interleave_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> (u8x64<Self>, u8x64<Self>) {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        let lo_lo = self.zip_low_u8x32(a0, b0);
+        let lo_hi = self.zip_high_u8x32(a0, b0);
+        let hi_lo = self.zip_low_u8x32(a1, b1);
+        let hi_hi = self.zip_high_u8x32(a1, b1);
+        (
+            self.combine_u8x32(lo_lo, lo_hi),
+            self.combine_u8x32(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> (u8x64<Self>, u8x64<Self>);
+    #[inline(always)]
+    fn deinterleave_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> (u8x64<Self>, u8x64<Self>) {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        let lo_even = self.unzip_low_u8x32(a0, a1);
+        let lo_odd = self.unzip_high_u8x32(a0, a1);
+        let hi_even = self.unzip_low_u8x32(b0, b1);
+        let hi_odd = self.unzip_high_u8x32(b0, b1);
+        (
+            self.combine_u8x32(lo_even, hi_even),
+            self.combine_u8x32(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_u8x64(self, a: mask8x64<Self>, b: u8x64<Self>, c: u8x64<Self>) -> u8x64<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn select_u8x64(self, a: mask8x64<Self>, b: u8x64<Self>, c: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_mask8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        let (c0, c1) = self.split_u8x64(c);
+        self.combine_u8x32(self.select_u8x32(a0, b0, c0), self.select_u8x32(a1, b1, c1))
+    }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>);
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
-    fn widen_u8x64(self, a: u8x64<Self>) -> (u16x32<Self>, u16x32<Self>);
+    #[inline(always)]
+    fn widen_u8x64(self, a: u8x64<Self>) -> (u16x32<Self>, u16x32<Self>) {
+        let (a0, a1) = self.split_u8x64(a);
+        let (a00, a01) = self.widen_u8x32(a0);
+        let (a10, a11) = self.widen_u8x32(a1);
+        (self.combine_u16x16(a00, a01), self.combine_u16x16(a10, a11))
+    }
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
-    fn splat_mask8x64(self, val: bool) -> mask8x64<Self>;
+    #[inline(always)]
+    fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
+        let half = self.splat_mask8x32(val);
+        self.combine_mask8x32(half, half)
+    }
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
-    fn from_bitmask_mask8x64(self, bits: u64) -> mask8x64<Self>;
+    #[inline(always)]
+    fn from_bitmask_mask8x64(self, bits: u64) -> mask8x64<Self> {
+        let lo = self.from_bitmask_mask8x32(bits);
+        let hi = self.from_bitmask_mask8x32(bits >> 32usize);
+        self.combine_mask8x32(lo, hi)
+    }
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
-    fn to_bitmask_mask8x64(self, a: mask8x64<Self>) -> u64;
+    #[inline(always)]
+    fn to_bitmask_mask8x64(self, a: mask8x64<Self>) -> u64 {
+        let (lo, hi) = self.split_mask8x64(a);
+        let lo = self.to_bitmask_mask8x32(lo);
+        let hi = self.to_bitmask_mask8x32(hi);
+        lo | (hi << 32usize)
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask8x64(self, a: &mut mask8x64<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
-    fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self>;
+    #[inline(always)]
+    fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask8x64(a);
+        let (b0, b1) = self.split_mask8x64(b);
+        self.combine_mask8x32(self.and_mask8x32(a0, b0), self.and_mask8x32(a1, b1))
+    }
     #[doc = "Compute the logical OR of two masks."]
-    fn or_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self>;
+    #[inline(always)]
+    fn or_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask8x64(a);
+        let (b0, b1) = self.split_mask8x64(b);
+        self.combine_mask8x32(self.or_mask8x32(a0, b0), self.or_mask8x32(a1, b1))
+    }
     #[doc = "Compute the logical XOR of two masks."]
-    fn xor_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self>;
+    #[inline(always)]
+    fn xor_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask8x64(a);
+        let (b0, b1) = self.split_mask8x64(b);
+        self.combine_mask8x32(self.xor_mask8x32(a0, b0), self.xor_mask8x32(a1, b1))
+    }
     #[doc = "Compute the logical NOT of the mask."]
-    fn not_mask8x64(self, a: mask8x64<Self>) -> mask8x64<Self>;
+    #[inline(always)]
+    fn not_mask8x64(self, a: mask8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask8x64(a);
+        self.combine_mask8x32(self.not_mask8x32(a0), self.not_mask8x32(a1))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    #[inline(always)]
     fn select_mask8x64(
         self,
         a: mask8x64<Self>,
         b: mask8x64<Self>,
         c: mask8x64<Self>,
-    ) -> mask8x64<Self>;
+    ) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask8x64(a);
+        let (b0, b1) = self.split_mask8x64(b);
+        let (c0, c1) = self.split_mask8x64(c);
+        self.combine_mask8x32(
+            self.select_mask8x32(a0, b0, c0),
+            self.select_mask8x32(a1, b1, c1),
+        )
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self>;
+    #[inline(always)]
+    fn simd_eq_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask8x64(a);
+        let (b0, b1) = self.split_mask8x64(b);
+        self.combine_mask8x32(self.simd_eq_mask8x32(a0, b0), self.simd_eq_mask8x32(a1, b1))
+    }
     #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn any_true_mask8x64(self, a: mask8x64<Self>) -> bool;
+    #[inline(always)]
+    fn any_true_mask8x64(self, a: mask8x64<Self>) -> bool {
+        let (a0, a1) = self.split_mask8x64(a);
+        self.any_true_mask8x32(a0) || self.any_true_mask8x32(a1)
+    }
     #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn all_true_mask8x64(self, a: mask8x64<Self>) -> bool;
+    #[inline(always)]
+    fn all_true_mask8x64(self, a: mask8x64<Self>) -> bool {
+        let (a0, a1) = self.split_mask8x64(a);
+        self.all_true_mask8x32(a0) && self.all_true_mask8x32(a1)
+    }
     #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn any_false_mask8x64(self, a: mask8x64<Self>) -> bool;
+    #[inline(always)]
+    fn any_false_mask8x64(self, a: mask8x64<Self>) -> bool {
+        let (a0, a1) = self.split_mask8x64(a);
+        self.any_false_mask8x32(a0) || self.any_false_mask8x32(a1)
+    }
     #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn all_false_mask8x64(self, a: mask8x64<Self>) -> bool;
+    #[inline(always)]
+    fn all_false_mask8x64(self, a: mask8x64<Self>) -> bool {
+        let (a0, a1) = self.split_mask8x64(a);
+        self.all_false_mask8x32(a0) && self.all_false_mask8x32(a1)
+    }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask8x64(self, a: mask8x64<Self>) -> (mask8x32<Self>, mask8x32<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_i16x32(self, val: i16) -> i16x32<Self>;
+    #[inline(always)]
+    fn splat_i16x32(self, val: i16) -> i16x32<Self> {
+        let half = self.splat_i16x16(val);
+        self.combine_i16x16(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_i16x32<const SHIFT: usize>(
         self,
         a: i16x32<Self>,
         b: i16x32<Self>,
-    ) -> i16x32<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_i16x32<const OFFSET: usize>(self, a: i16x32<Self>) -> i16x32<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_i16x32<const OFFSET: usize>(self, a: i16x32<Self>) -> i16x32<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_i16x32<const OFFSET: usize>(
-        self,
-        a: i16x32<Self>,
-        padding: i16,
-    ) -> i16x32<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_i16x32<const OFFSET: usize>(
-        self,
-        a: i16x32<Self>,
-        padding: i16,
-    ) -> i16x32<Self>;
+    ) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(
+            self.slide_within_blocks_i16x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i16x16::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
+    #[inline(always)]
     fn swizzle_dyn_within_blocks_i16x32(
         self,
         a: i16x32<Self>,
         indices: u8x64<Self>,
-    ) -> i16x32<Self>;
+    ) -> i16x32<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_i16x32(self, a: i16x32<Self>, indices: u8x64<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_i16x32(self, a: i16x32<Self>, indices: u8x64<Self>) -> i16x32<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_i16x32(self, a: i16x32<Self>, indices: u8x64<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_i16x32(self, a: i16x32<Self>, indices: u8x64<Self>) -> i16x32<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
-    fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(self.add_i16x16(a0, b0), self.add_i16x16(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
-    fn sub_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn sub_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(self.sub_i16x16(a0, b0), self.sub_i16x16(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
-    fn mul_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn mul_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(self.mul_i16x16(a0, b0), self.mul_i16x16(a1, b1))
+    }
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn and_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(self.and_i16x16(a0, b0), self.and_i16x16(a1, b1))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn or_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(self.or_i16x16(a0, b0), self.or_i16x16(a1, b1))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn xor_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(self.xor_i16x16(a0, b0), self.xor_i16x16(a1, b1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_i16x32(self, a: i16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn not_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        self.combine_i16x16(self.not_i16x16(a0), self.not_i16x16(a1))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shl_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self>;
+    #[inline(always)]
+    fn shl_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        self.combine_i16x16(self.shl_i16x16(a0, shift), self.shl_i16x16(a1, shift))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shlv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn shlv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(self.shlv_i16x16(a0, b0), self.shlv_i16x16(a1, b1))
+    }
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shr_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self>;
+    #[inline(always)]
+    fn shr_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        self.combine_i16x16(self.shr_i16x16(a0, shift), self.shr_i16x16(a1, shift))
+    }
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shrv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn shrv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(self.shrv_i16x16(a0, b0), self.shrv_i16x16(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(self.max_i16x16(a0, b0), self.max_i16x16(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(self.min_i16x16(a0, b0), self.min_i16x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
+    #[inline(always)]
+    fn simd_eq_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_mask16x16(self.simd_eq_i16x16(a0, b0), self.simd_eq_i16x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
+    #[inline(always)]
+    fn simd_lt_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_mask16x16(self.simd_lt_i16x16(a0, b0), self.simd_lt_i16x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
+    #[inline(always)]
+    fn simd_le_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_mask16x16(self.simd_le_i16x16(a0, b0), self.simd_le_i16x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
+    #[inline(always)]
+    fn simd_ge_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
+        self.simd_le_i16x32(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
+    #[inline(always)]
+    fn simd_gt_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
+        self.simd_lt_i16x32(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn zip_low_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (a0, _) = self.split_i16x32(a);
+        let (b0, _) = self.split_i16x32(b);
+        self.combine_i16x16(self.zip_low_i16x16(a0, b0), self.zip_high_i16x16(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn zip_high_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (_, a1) = self.split_i16x32(a);
+        let (_, b1) = self.split_i16x32(b);
+        self.combine_i16x16(self.zip_low_i16x16(a1, b1), self.zip_high_i16x16(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn unzip_low_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(self.unzip_low_i16x16(a0, a1), self.unzip_low_i16x16(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn unzip_high_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(
+            self.unzip_high_i16x16(a0, a1),
+            self.unzip_high_i16x16(b0, b1),
+        )
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> (i16x32<Self>, i16x32<Self>);
+    #[inline(always)]
+    fn interleave_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> (i16x32<Self>, i16x32<Self>) {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        let lo_lo = self.zip_low_i16x16(a0, b0);
+        let lo_hi = self.zip_high_i16x16(a0, b0);
+        let hi_lo = self.zip_low_i16x16(a1, b1);
+        let hi_hi = self.zip_high_i16x16(a1, b1);
+        (
+            self.combine_i16x16(lo_lo, lo_hi),
+            self.combine_i16x16(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> (i16x32<Self>, i16x32<Self>);
+    #[inline(always)]
+    fn deinterleave_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> (i16x32<Self>, i16x32<Self>) {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        let lo_even = self.unzip_low_i16x16(a0, a1);
+        let lo_odd = self.unzip_high_i16x16(a0, a1);
+        let hi_even = self.unzip_low_i16x16(b0, b1);
+        let hi_odd = self.unzip_high_i16x16(b0, b1);
+        (
+            self.combine_i16x16(lo_even, hi_even),
+            self.combine_i16x16(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_i16x32(self, a: mask16x32<Self>, b: i16x32<Self>, c: i16x32<Self>) -> i16x32<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn select_i16x32(self, a: mask16x32<Self>, b: i16x32<Self>, c: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        let (c0, c1) = self.split_i16x32(c);
+        self.combine_i16x16(
+            self.select_i16x16(a0, b0, c0),
+            self.select_i16x16(a1, b1, c1),
+        )
+    }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i16x32(self, a: i16x32<Self>) -> (i16x16<Self>, i16x16<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
-    fn neg_i16x32(self, a: i16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn neg_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        self.combine_i16x16(self.neg_i16x16(a0), self.neg_i16x16(a1))
+    }
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
-    fn widen_i16x32(self, a: i16x32<Self>) -> (i32x16<Self>, i32x16<Self>);
+    #[inline(always)]
+    fn widen_i16x32(self, a: i16x32<Self>) -> (i32x16<Self>, i32x16<Self>) {
+        let (a0, a1) = self.split_i16x32(a);
+        let (a00, a01) = self.widen_i16x16(a0);
+        let (a10, a11) = self.widen_i16x16(a1);
+        (self.combine_i32x8(a00, a01), self.combine_i32x8(a10, a11))
+    }
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i8x32(self.narrow_i16x16(a0, a1), self.narrow_i16x16(b0, b1))
+    }
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn saturating_narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn saturating_narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i8x32(
+            self.saturating_narrow_i16x16(a0, a1),
+            self.saturating_narrow_i16x16(b0, b1),
+        )
+    }
     #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn relaxed_narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn relaxed_narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i8x32(
+            self.relaxed_narrow_i16x16(a0, a1),
+            self.relaxed_narrow_i16x16(b0, b1),
+        )
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_u16x32(self, val: u16) -> u16x32<Self>;
+    #[inline(always)]
+    fn splat_u16x32(self, val: u16) -> u16x32<Self> {
+        let half = self.splat_u16x16(val);
+        self.combine_u16x16(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_u16x32<const SHIFT: usize>(
         self,
         a: u16x32<Self>,
         b: u16x32<Self>,
-    ) -> u16x32<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_u16x32<const OFFSET: usize>(self, a: u16x32<Self>) -> u16x32<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_u16x32<const OFFSET: usize>(self, a: u16x32<Self>) -> u16x32<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_u16x32<const OFFSET: usize>(
-        self,
-        a: u16x32<Self>,
-        padding: u16,
-    ) -> u16x32<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_u16x32<const OFFSET: usize>(
-        self,
-        a: u16x32<Self>,
-        padding: u16,
-    ) -> u16x32<Self>;
+    ) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(
+            self.slide_within_blocks_u16x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u16x16::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
+    #[inline(always)]
     fn swizzle_dyn_within_blocks_u16x32(
         self,
         a: u16x32<Self>,
         indices: u8x64<Self>,
-    ) -> u16x32<Self>;
+    ) -> u16x32<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_u16x32(self, a: u16x32<Self>, indices: u8x64<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_u16x32(self, a: u16x32<Self>, indices: u8x64<Self>) -> u16x32<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_u16x32(self, a: u16x32<Self>, indices: u8x64<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_u16x32(self, a: u16x32<Self>, indices: u8x64<Self>) -> u16x32<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
-    fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(self.add_u16x16(a0, b0), self.add_u16x16(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
-    fn sub_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn sub_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(self.sub_u16x16(a0, b0), self.sub_u16x16(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
-    fn mul_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn mul_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(self.mul_u16x16(a0, b0), self.mul_u16x16(a1, b1))
+    }
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn and_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(self.and_u16x16(a0, b0), self.and_u16x16(a1, b1))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn or_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(self.or_u16x16(a0, b0), self.or_u16x16(a1, b1))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn xor_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(self.xor_u16x16(a0, b0), self.xor_u16x16(a1, b1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_u16x32(self, a: u16x32<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn not_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        self.combine_u16x16(self.not_u16x16(a0), self.not_u16x16(a1))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shl_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self>;
+    #[inline(always)]
+    fn shl_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        self.combine_u16x16(self.shl_u16x16(a0, shift), self.shl_u16x16(a1, shift))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shlv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn shlv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(self.shlv_u16x16(a0, b0), self.shlv_u16x16(a1, b1))
+    }
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shr_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self>;
+    #[inline(always)]
+    fn shr_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        self.combine_u16x16(self.shr_u16x16(a0, shift), self.shr_u16x16(a1, shift))
+    }
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shrv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn shrv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(self.shrv_u16x16(a0, b0), self.shrv_u16x16(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(self.max_u16x16(a0, b0), self.max_u16x16(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(self.min_u16x16(a0, b0), self.min_u16x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
+    #[inline(always)]
+    fn simd_eq_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_mask16x16(self.simd_eq_u16x16(a0, b0), self.simd_eq_u16x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
+    #[inline(always)]
+    fn simd_lt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_mask16x16(self.simd_lt_u16x16(a0, b0), self.simd_lt_u16x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
+    #[inline(always)]
+    fn simd_le_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_mask16x16(self.simd_le_u16x16(a0, b0), self.simd_le_u16x16(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
+    #[inline(always)]
+    fn simd_ge_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
+        self.simd_le_u16x32(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
+    #[inline(always)]
+    fn simd_gt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
+        self.simd_lt_u16x32(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn zip_low_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        let (a0, _) = self.split_u16x32(a);
+        let (b0, _) = self.split_u16x32(b);
+        self.combine_u16x16(self.zip_low_u16x16(a0, b0), self.zip_high_u16x16(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn zip_high_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        let (_, a1) = self.split_u16x32(a);
+        let (_, b1) = self.split_u16x32(b);
+        self.combine_u16x16(self.zip_low_u16x16(a1, b1), self.zip_high_u16x16(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn unzip_low_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(self.unzip_low_u16x16(a0, a1), self.unzip_low_u16x16(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn unzip_high_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(
+            self.unzip_high_u16x16(a0, a1),
+            self.unzip_high_u16x16(b0, b1),
+        )
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> (u16x32<Self>, u16x32<Self>);
+    #[inline(always)]
+    fn interleave_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> (u16x32<Self>, u16x32<Self>) {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        let lo_lo = self.zip_low_u16x16(a0, b0);
+        let lo_hi = self.zip_high_u16x16(a0, b0);
+        let hi_lo = self.zip_low_u16x16(a1, b1);
+        let hi_hi = self.zip_high_u16x16(a1, b1);
+        (
+            self.combine_u16x16(lo_lo, lo_hi),
+            self.combine_u16x16(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> (u16x32<Self>, u16x32<Self>);
+    #[inline(always)]
+    fn deinterleave_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> (u16x32<Self>, u16x32<Self>) {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        let lo_even = self.unzip_low_u16x16(a0, a1);
+        let lo_odd = self.unzip_high_u16x16(a0, a1);
+        let hi_even = self.unzip_low_u16x16(b0, b1);
+        let hi_odd = self.unzip_high_u16x16(b0, b1);
+        (
+            self.combine_u16x16(lo_even, hi_even),
+            self.combine_u16x16(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_u16x32(self, a: mask16x32<Self>, b: u16x32<Self>, c: u16x32<Self>) -> u16x32<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn select_u16x32(self, a: mask16x32<Self>, b: u16x32<Self>, c: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        let (c0, c1) = self.split_u16x32(c);
+        self.combine_u16x16(
+            self.select_u16x16(a0, b0, c0),
+            self.select_u16x16(a1, b1, c1),
+        )
+    }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>);
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
-    fn widen_u16x32(self, a: u16x32<Self>) -> (u32x16<Self>, u32x16<Self>);
+    #[inline(always)]
+    fn widen_u16x32(self, a: u16x32<Self>) -> (u32x16<Self>, u32x16<Self>) {
+        let (a0, a1) = self.split_u16x32(a);
+        let (a00, a01) = self.widen_u16x16(a0);
+        let (a10, a11) = self.widen_u16x16(a1);
+        (self.combine_u32x8(a00, a01), self.combine_u32x8(a10, a11))
+    }
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u8x32(self.narrow_u16x16(a0, a1), self.narrow_u16x16(b0, b1))
+    }
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn saturating_narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn saturating_narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u8x32(
+            self.saturating_narrow_u16x16(a0, a1),
+            self.saturating_narrow_u16x16(b0, b1),
+        )
+    }
     #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn relaxed_narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn relaxed_narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u8x32(
+            self.relaxed_narrow_u16x16(a0, a1),
+            self.relaxed_narrow_u16x16(b0, b1),
+        )
+    }
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
-    fn splat_mask16x32(self, val: bool) -> mask16x32<Self>;
+    #[inline(always)]
+    fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {
+        let half = self.splat_mask16x16(val);
+        self.combine_mask16x16(half, half)
+    }
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
-    fn from_bitmask_mask16x32(self, bits: u64) -> mask16x32<Self>;
+    #[inline(always)]
+    fn from_bitmask_mask16x32(self, bits: u64) -> mask16x32<Self> {
+        let lo = self.from_bitmask_mask16x16(bits);
+        let hi = self.from_bitmask_mask16x16(bits >> 16usize);
+        self.combine_mask16x16(lo, hi)
+    }
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
-    fn to_bitmask_mask16x32(self, a: mask16x32<Self>) -> u64;
+    #[inline(always)]
+    fn to_bitmask_mask16x32(self, a: mask16x32<Self>) -> u64 {
+        let (lo, hi) = self.split_mask16x32(a);
+        let lo = self.to_bitmask_mask16x16(lo);
+        let hi = self.to_bitmask_mask16x16(hi);
+        lo | (hi << 16usize)
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask16x32(self, a: &mut mask16x32<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
-    fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self>;
+    #[inline(always)]
+    fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        let (b0, b1) = self.split_mask16x32(b);
+        self.combine_mask16x16(self.and_mask16x16(a0, b0), self.and_mask16x16(a1, b1))
+    }
     #[doc = "Compute the logical OR of two masks."]
-    fn or_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self>;
+    #[inline(always)]
+    fn or_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        let (b0, b1) = self.split_mask16x32(b);
+        self.combine_mask16x16(self.or_mask16x16(a0, b0), self.or_mask16x16(a1, b1))
+    }
     #[doc = "Compute the logical XOR of two masks."]
-    fn xor_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self>;
+    #[inline(always)]
+    fn xor_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        let (b0, b1) = self.split_mask16x32(b);
+        self.combine_mask16x16(self.xor_mask16x16(a0, b0), self.xor_mask16x16(a1, b1))
+    }
     #[doc = "Compute the logical NOT of the mask."]
-    fn not_mask16x32(self, a: mask16x32<Self>) -> mask16x32<Self>;
+    #[inline(always)]
+    fn not_mask16x32(self, a: mask16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        self.combine_mask16x16(self.not_mask16x16(a0), self.not_mask16x16(a1))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    #[inline(always)]
     fn select_mask16x32(
         self,
         a: mask16x32<Self>,
         b: mask16x32<Self>,
         c: mask16x32<Self>,
-    ) -> mask16x32<Self>;
+    ) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        let (b0, b1) = self.split_mask16x32(b);
+        let (c0, c1) = self.split_mask16x32(c);
+        self.combine_mask16x16(
+            self.select_mask16x16(a0, b0, c0),
+            self.select_mask16x16(a1, b1, c1),
+        )
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self>;
+    #[inline(always)]
+    fn simd_eq_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        let (b0, b1) = self.split_mask16x32(b);
+        self.combine_mask16x16(
+            self.simd_eq_mask16x16(a0, b0),
+            self.simd_eq_mask16x16(a1, b1),
+        )
+    }
     #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn any_true_mask16x32(self, a: mask16x32<Self>) -> bool;
+    #[inline(always)]
+    fn any_true_mask16x32(self, a: mask16x32<Self>) -> bool {
+        let (a0, a1) = self.split_mask16x32(a);
+        self.any_true_mask16x16(a0) || self.any_true_mask16x16(a1)
+    }
     #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn all_true_mask16x32(self, a: mask16x32<Self>) -> bool;
+    #[inline(always)]
+    fn all_true_mask16x32(self, a: mask16x32<Self>) -> bool {
+        let (a0, a1) = self.split_mask16x32(a);
+        self.all_true_mask16x16(a0) && self.all_true_mask16x16(a1)
+    }
     #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn any_false_mask16x32(self, a: mask16x32<Self>) -> bool;
+    #[inline(always)]
+    fn any_false_mask16x32(self, a: mask16x32<Self>) -> bool {
+        let (a0, a1) = self.split_mask16x32(a);
+        self.any_false_mask16x16(a0) || self.any_false_mask16x16(a1)
+    }
     #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn all_false_mask16x32(self, a: mask16x32<Self>) -> bool;
+    #[inline(always)]
+    fn all_false_mask16x32(self, a: mask16x32<Self>) -> bool {
+        let (a0, a1) = self.split_mask16x32(a);
+        self.all_false_mask16x16(a0) && self.all_false_mask16x16(a1)
+    }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask16x32(self, a: mask16x32<Self>) -> (mask16x16<Self>, mask16x16<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_i32x16(self, val: i32) -> i32x16<Self>;
+    #[inline(always)]
+    fn splat_i32x16(self, val: i32) -> i32x16<Self> {
+        let half = self.splat_i32x8(val);
+        self.combine_i32x8(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_i32x16<const SHIFT: usize>(
         self,
         a: i32x16<Self>,
         b: i32x16<Self>,
-    ) -> i32x16<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_i32x16<const OFFSET: usize>(self, a: i32x16<Self>) -> i32x16<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_i32x16<const OFFSET: usize>(self, a: i32x16<Self>) -> i32x16<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_i32x16<const OFFSET: usize>(
-        self,
-        a: i32x16<Self>,
-        padding: i32,
-    ) -> i32x16<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_i32x16<const OFFSET: usize>(
-        self,
-        a: i32x16<Self>,
-        padding: i32,
-    ) -> i32x16<Self>;
+    ) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(
+            self.slide_within_blocks_i32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i32x8::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
+    #[inline(always)]
     fn swizzle_dyn_within_blocks_i32x16(
         self,
         a: i32x16<Self>,
         indices: u8x64<Self>,
-    ) -> i32x16<Self>;
+    ) -> i32x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_i32x16(self, a: i32x16<Self>, indices: u8x64<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_i32x16(self, a: i32x16<Self>, indices: u8x64<Self>) -> i32x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_i32x16(self, a: i32x16<Self>, indices: u8x64<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_i32x16(self, a: i32x16<Self>, indices: u8x64<Self>) -> i32x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
-    fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(self.add_i32x8(a0, b0), self.add_i32x8(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
-    fn sub_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn sub_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(self.sub_i32x8(a0, b0), self.sub_i32x8(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
-    fn mul_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn mul_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(self.mul_i32x8(a0, b0), self.mul_i32x8(a1, b1))
+    }
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn and_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(self.and_i32x8(a0, b0), self.and_i32x8(a1, b1))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn or_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(self.or_i32x8(a0, b0), self.or_i32x8(a1, b1))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn xor_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(self.xor_i32x8(a0, b0), self.xor_i32x8(a1, b1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_i32x16(self, a: i32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn not_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        self.combine_i32x8(self.not_i32x8(a0), self.not_i32x8(a1))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shl_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self>;
+    #[inline(always)]
+    fn shl_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        self.combine_i32x8(self.shl_i32x8(a0, shift), self.shl_i32x8(a1, shift))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shlv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn shlv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(self.shlv_i32x8(a0, b0), self.shlv_i32x8(a1, b1))
+    }
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shr_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self>;
+    #[inline(always)]
+    fn shr_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        self.combine_i32x8(self.shr_i32x8(a0, shift), self.shr_i32x8(a1, shift))
+    }
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shrv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn shrv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(self.shrv_i32x8(a0, b0), self.shrv_i32x8(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(self.max_i32x8(a0, b0), self.max_i32x8(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(self.min_i32x8(a0, b0), self.min_i32x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn simd_eq_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_mask32x8(self.simd_eq_i32x8(a0, b0), self.simd_eq_i32x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn simd_lt_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_mask32x8(self.simd_lt_i32x8(a0, b0), self.simd_lt_i32x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn simd_le_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_mask32x8(self.simd_le_i32x8(a0, b0), self.simd_le_i32x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn simd_ge_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
+        self.simd_le_i32x16(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn simd_gt_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
+        self.simd_lt_i32x16(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn zip_low_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        let (a0, _) = self.split_i32x16(a);
+        let (b0, _) = self.split_i32x16(b);
+        self.combine_i32x8(self.zip_low_i32x8(a0, b0), self.zip_high_i32x8(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn zip_high_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        let (_, a1) = self.split_i32x16(a);
+        let (_, b1) = self.split_i32x16(b);
+        self.combine_i32x8(self.zip_low_i32x8(a1, b1), self.zip_high_i32x8(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn unzip_low_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(self.unzip_low_i32x8(a0, a1), self.unzip_low_i32x8(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn unzip_high_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(self.unzip_high_i32x8(a0, a1), self.unzip_high_i32x8(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> (i32x16<Self>, i32x16<Self>);
+    #[inline(always)]
+    fn interleave_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> (i32x16<Self>, i32x16<Self>) {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        let lo_lo = self.zip_low_i32x8(a0, b0);
+        let lo_hi = self.zip_high_i32x8(a0, b0);
+        let hi_lo = self.zip_low_i32x8(a1, b1);
+        let hi_hi = self.zip_high_i32x8(a1, b1);
+        (
+            self.combine_i32x8(lo_lo, lo_hi),
+            self.combine_i32x8(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> (i32x16<Self>, i32x16<Self>);
+    #[inline(always)]
+    fn deinterleave_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> (i32x16<Self>, i32x16<Self>) {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        let lo_even = self.unzip_low_i32x8(a0, a1);
+        let lo_odd = self.unzip_high_i32x8(a0, a1);
+        let hi_even = self.unzip_low_i32x8(b0, b1);
+        let hi_odd = self.unzip_high_i32x8(b0, b1);
+        (
+            self.combine_i32x8(lo_even, hi_even),
+            self.combine_i32x8(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_i32x16(self, a: mask32x16<Self>, b: i32x16<Self>, c: i32x16<Self>) -> i32x16<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn select_i32x16(self, a: mask32x16<Self>, b: i32x16<Self>, c: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        let (c0, c1) = self.split_i32x16(c);
+        self.combine_i32x8(self.select_i32x8(a0, b0, c0), self.select_i32x8(a1, b1, c1))
+    }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
-    fn neg_i32x16(self, a: i32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn neg_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        self.combine_i32x8(self.neg_i32x8(a0), self.neg_i32x8(a1))
+    }
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
-    fn widen_i32x16(self, a: i32x16<Self>) -> (i64x8<Self>, i64x8<Self>);
+    #[inline(always)]
+    fn widen_i32x16(self, a: i32x16<Self>) -> (i64x8<Self>, i64x8<Self>) {
+        let (a0, a1) = self.split_i32x16(a);
+        let (a00, a01) = self.widen_i32x8(a0);
+        let (a10, a11) = self.widen_i32x8(a1);
+        (self.combine_i64x4(a00, a01), self.combine_i64x4(a10, a11))
+    }
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i16x16(self.narrow_i32x8(a0, a1), self.narrow_i32x8(b0, b1))
+    }
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn saturating_narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn saturating_narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i16x16(
+            self.saturating_narrow_i32x8(a0, a1),
+            self.saturating_narrow_i32x8(b0, b1),
+        )
+    }
     #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn relaxed_narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn relaxed_narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i16x16(
+            self.relaxed_narrow_i32x8(a0, a1),
+            self.relaxed_narrow_i32x8(b0, b1),
+        )
+    }
     #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
-    fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        self.combine_f32x8(self.cvt_f32_i32x8(a0), self.cvt_f32_i32x8(a1))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_u32x16(self, val: u32) -> u32x16<Self>;
+    #[inline(always)]
+    fn splat_u32x16(self, val: u32) -> u32x16<Self> {
+        let half = self.splat_u32x8(val);
+        self.combine_u32x8(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_u32x16<const SHIFT: usize>(
         self,
         a: u32x16<Self>,
         b: u32x16<Self>,
-    ) -> u32x16<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_u32x16<const OFFSET: usize>(self, a: u32x16<Self>) -> u32x16<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_u32x16<const OFFSET: usize>(self, a: u32x16<Self>) -> u32x16<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_u32x16<const OFFSET: usize>(
-        self,
-        a: u32x16<Self>,
-        padding: u32,
-    ) -> u32x16<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_u32x16<const OFFSET: usize>(
-        self,
-        a: u32x16<Self>,
-        padding: u32,
-    ) -> u32x16<Self>;
+    ) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(
+            self.slide_within_blocks_u32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u32x8::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
+    #[inline(always)]
     fn swizzle_dyn_within_blocks_u32x16(
         self,
         a: u32x16<Self>,
         indices: u8x64<Self>,
-    ) -> u32x16<Self>;
+    ) -> u32x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_u32x16(self, a: u32x16<Self>, indices: u8x64<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_u32x16(self, a: u32x16<Self>, indices: u8x64<Self>) -> u32x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_u32x16(self, a: u32x16<Self>, indices: u8x64<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_u32x16(self, a: u32x16<Self>, indices: u8x64<Self>) -> u32x16<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
-    fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(self.add_u32x8(a0, b0), self.add_u32x8(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
-    fn sub_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn sub_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(self.sub_u32x8(a0, b0), self.sub_u32x8(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
-    fn mul_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn mul_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(self.mul_u32x8(a0, b0), self.mul_u32x8(a1, b1))
+    }
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn and_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(self.and_u32x8(a0, b0), self.and_u32x8(a1, b1))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn or_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(self.or_u32x8(a0, b0), self.or_u32x8(a1, b1))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn xor_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(self.xor_u32x8(a0, b0), self.xor_u32x8(a1, b1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_u32x16(self, a: u32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn not_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        self.combine_u32x8(self.not_u32x8(a0), self.not_u32x8(a1))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shl_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self>;
+    #[inline(always)]
+    fn shl_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        self.combine_u32x8(self.shl_u32x8(a0, shift), self.shl_u32x8(a1, shift))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shlv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn shlv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(self.shlv_u32x8(a0, b0), self.shlv_u32x8(a1, b1))
+    }
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shr_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self>;
+    #[inline(always)]
+    fn shr_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        self.combine_u32x8(self.shr_u32x8(a0, shift), self.shr_u32x8(a1, shift))
+    }
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shrv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn shrv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(self.shrv_u32x8(a0, b0), self.shrv_u32x8(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(self.max_u32x8(a0, b0), self.max_u32x8(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(self.min_u32x8(a0, b0), self.min_u32x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn simd_eq_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_mask32x8(self.simd_eq_u32x8(a0, b0), self.simd_eq_u32x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn simd_lt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_mask32x8(self.simd_lt_u32x8(a0, b0), self.simd_lt_u32x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn simd_le_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_mask32x8(self.simd_le_u32x8(a0, b0), self.simd_le_u32x8(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn simd_ge_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
+        self.simd_le_u32x16(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn simd_gt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
+        self.simd_lt_u32x16(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn zip_low_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        let (a0, _) = self.split_u32x16(a);
+        let (b0, _) = self.split_u32x16(b);
+        self.combine_u32x8(self.zip_low_u32x8(a0, b0), self.zip_high_u32x8(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn zip_high_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        let (_, a1) = self.split_u32x16(a);
+        let (_, b1) = self.split_u32x16(b);
+        self.combine_u32x8(self.zip_low_u32x8(a1, b1), self.zip_high_u32x8(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn unzip_low_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(self.unzip_low_u32x8(a0, a1), self.unzip_low_u32x8(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn unzip_high_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(self.unzip_high_u32x8(a0, a1), self.unzip_high_u32x8(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> (u32x16<Self>, u32x16<Self>);
+    #[inline(always)]
+    fn interleave_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> (u32x16<Self>, u32x16<Self>) {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        let lo_lo = self.zip_low_u32x8(a0, b0);
+        let lo_hi = self.zip_high_u32x8(a0, b0);
+        let hi_lo = self.zip_low_u32x8(a1, b1);
+        let hi_hi = self.zip_high_u32x8(a1, b1);
+        (
+            self.combine_u32x8(lo_lo, lo_hi),
+            self.combine_u32x8(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> (u32x16<Self>, u32x16<Self>);
+    #[inline(always)]
+    fn deinterleave_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> (u32x16<Self>, u32x16<Self>) {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        let lo_even = self.unzip_low_u32x8(a0, a1);
+        let lo_odd = self.unzip_high_u32x8(a0, a1);
+        let hi_even = self.unzip_low_u32x8(b0, b1);
+        let hi_odd = self.unzip_high_u32x8(b0, b1);
+        (
+            self.combine_u32x8(lo_even, hi_even),
+            self.combine_u32x8(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_u32x16(self, a: mask32x16<Self>, b: u32x16<Self>, c: u32x16<Self>) -> u32x16<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn select_u32x16(self, a: mask32x16<Self>, b: u32x16<Self>, c: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        let (c0, c1) = self.split_u32x16(c);
+        self.combine_u32x8(self.select_u32x8(a0, b0, c0), self.select_u32x8(a1, b1, c1))
+    }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>);
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
-    fn widen_u32x16(self, a: u32x16<Self>) -> (u64x8<Self>, u64x8<Self>);
+    #[inline(always)]
+    fn widen_u32x16(self, a: u32x16<Self>) -> (u64x8<Self>, u64x8<Self>) {
+        let (a0, a1) = self.split_u32x16(a);
+        let (a00, a01) = self.widen_u32x8(a0);
+        let (a10, a11) = self.widen_u32x8(a1);
+        (self.combine_u64x4(a00, a01), self.combine_u64x4(a10, a11))
+    }
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u16x16(self.narrow_u32x8(a0, a1), self.narrow_u32x8(b0, b1))
+    }
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn saturating_narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn saturating_narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u16x16(
+            self.saturating_narrow_u32x8(a0, a1),
+            self.saturating_narrow_u32x8(b0, b1),
+        )
+    }
     #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn relaxed_narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn relaxed_narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u16x16(
+            self.relaxed_narrow_u32x8(a0, a1),
+            self.relaxed_narrow_u32x8(b0, b1),
+        )
+    }
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
-    fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        self.combine_f32x8(self.cvt_f32_u32x8(a0), self.cvt_f32_u32x8(a1))
+    }
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
-    fn splat_mask32x16(self, val: bool) -> mask32x16<Self>;
+    #[inline(always)]
+    fn splat_mask32x16(self, val: bool) -> mask32x16<Self> {
+        let half = self.splat_mask32x8(val);
+        self.combine_mask32x8(half, half)
+    }
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
-    fn from_bitmask_mask32x16(self, bits: u64) -> mask32x16<Self>;
+    #[inline(always)]
+    fn from_bitmask_mask32x16(self, bits: u64) -> mask32x16<Self> {
+        let lo = self.from_bitmask_mask32x8(bits);
+        let hi = self.from_bitmask_mask32x8(bits >> 8usize);
+        self.combine_mask32x8(lo, hi)
+    }
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
-    fn to_bitmask_mask32x16(self, a: mask32x16<Self>) -> u64;
+    #[inline(always)]
+    fn to_bitmask_mask32x16(self, a: mask32x16<Self>) -> u64 {
+        let (lo, hi) = self.split_mask32x16(a);
+        let lo = self.to_bitmask_mask32x8(lo);
+        let hi = self.to_bitmask_mask32x8(hi);
+        lo | (hi << 8usize)
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask32x16(self, a: &mut mask32x16<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
-    fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        let (b0, b1) = self.split_mask32x16(b);
+        self.combine_mask32x8(self.and_mask32x8(a0, b0), self.and_mask32x8(a1, b1))
+    }
     #[doc = "Compute the logical OR of two masks."]
-    fn or_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn or_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        let (b0, b1) = self.split_mask32x16(b);
+        self.combine_mask32x8(self.or_mask32x8(a0, b0), self.or_mask32x8(a1, b1))
+    }
     #[doc = "Compute the logical XOR of two masks."]
-    fn xor_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn xor_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        let (b0, b1) = self.split_mask32x16(b);
+        self.combine_mask32x8(self.xor_mask32x8(a0, b0), self.xor_mask32x8(a1, b1))
+    }
     #[doc = "Compute the logical NOT of the mask."]
-    fn not_mask32x16(self, a: mask32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn not_mask32x16(self, a: mask32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        self.combine_mask32x8(self.not_mask32x8(a0), self.not_mask32x8(a1))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    #[inline(always)]
     fn select_mask32x16(
         self,
         a: mask32x16<Self>,
         b: mask32x16<Self>,
         c: mask32x16<Self>,
-    ) -> mask32x16<Self>;
+    ) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        let (b0, b1) = self.split_mask32x16(b);
+        let (c0, c1) = self.split_mask32x16(c);
+        self.combine_mask32x8(
+            self.select_mask32x8(a0, b0, c0),
+            self.select_mask32x8(a1, b1, c1),
+        )
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn simd_eq_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        let (b0, b1) = self.split_mask32x16(b);
+        self.combine_mask32x8(self.simd_eq_mask32x8(a0, b0), self.simd_eq_mask32x8(a1, b1))
+    }
     #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn any_true_mask32x16(self, a: mask32x16<Self>) -> bool;
+    #[inline(always)]
+    fn any_true_mask32x16(self, a: mask32x16<Self>) -> bool {
+        let (a0, a1) = self.split_mask32x16(a);
+        self.any_true_mask32x8(a0) || self.any_true_mask32x8(a1)
+    }
     #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn all_true_mask32x16(self, a: mask32x16<Self>) -> bool;
+    #[inline(always)]
+    fn all_true_mask32x16(self, a: mask32x16<Self>) -> bool {
+        let (a0, a1) = self.split_mask32x16(a);
+        self.all_true_mask32x8(a0) && self.all_true_mask32x8(a1)
+    }
     #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn any_false_mask32x16(self, a: mask32x16<Self>) -> bool;
+    #[inline(always)]
+    fn any_false_mask32x16(self, a: mask32x16<Self>) -> bool {
+        let (a0, a1) = self.split_mask32x16(a);
+        self.any_false_mask32x8(a0) || self.any_false_mask32x8(a1)
+    }
     #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn all_false_mask32x16(self, a: mask32x16<Self>) -> bool;
+    #[inline(always)]
+    fn all_false_mask32x16(self, a: mask32x16<Self>) -> bool {
+        let (a0, a1) = self.split_mask32x16(a);
+        self.all_false_mask32x8(a0) && self.all_false_mask32x8(a1)
+    }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask32x16(self, a: mask32x16<Self>) -> (mask32x8<Self>, mask32x8<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_f64x8(self, val: f64) -> f64x8<Self>;
+    #[inline(always)]
+    fn splat_f64x8(self, val: f64) -> f64x8<Self> {
+        let half = self.splat_f64x4(val);
+        self.combine_f64x4(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_f64x8<const SHIFT: usize>(
         self,
         a: f64x8<Self>,
         b: f64x8<Self>,
-    ) -> f64x8<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_f64x8<const OFFSET: usize>(self, a: f64x8<Self>) -> f64x8<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_f64x8<const OFFSET: usize>(self, a: f64x8<Self>) -> f64x8<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_f64x8<const OFFSET: usize>(
-        self,
-        a: f64x8<Self>,
-        padding: f64,
-    ) -> f64x8<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_f64x8<const OFFSET: usize>(
-        self,
-        a: f64x8<Self>,
-        padding: f64,
-    ) -> f64x8<Self>;
+    ) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(
+            self.slide_within_blocks_f64x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f64x4::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Compute the absolute value of each element."]
-    fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f64x4(self.abs_f64x4(a0), self.abs_f64x4(a1))
+    }
     #[doc = "Negate each element of the vector."]
-    fn neg_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn neg_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f64x4(self.neg_f64x4(a0), self.neg_f64x4(a1))
+    }
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
-    fn sqrt_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn sqrt_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f64x4(self.sqrt_f64x4(a0), self.sqrt_f64x4(a1))
+    }
     #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
-    fn approximate_recip_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn approximate_recip_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f64x4(
+            self.approximate_recip_f64x4(a0),
+            self.approximate_recip_f64x4(a1),
+        )
+    }
     #[doc = "Add two vectors element-wise."]
-    fn add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(self.add_f64x4(a0, b0), self.add_f64x4(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise."]
-    fn sub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn sub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(self.sub_f64x4(a0, b0), self.sub_f64x4(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise."]
-    fn mul_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn mul_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(self.mul_f64x4(a0, b0), self.mul_f64x4(a1, b1))
+    }
     #[doc = "Divide two vectors element-wise."]
-    fn div_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn div_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(self.div_f64x4(a0, b0), self.div_f64x4(a1, b1))
+    }
     #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
-    fn copysign_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn copysign_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(self.copysign_f64x4(a0, b0), self.copysign_f64x4(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(self.max_f64x4(a0, b0), self.max_f64x4(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(self.min_f64x4(a0, b0), self.min_f64x4(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor integer vectors, this operation is the same as `max`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    #[inline(always)]
+    fn max_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(
+            self.max_precise_f64x4(a0, b0),
+            self.max_precise_f64x4(a1, b1),
+        )
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor integer vectors, this operation is the same as `min`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    #[inline(always)]
+    fn min_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(
+            self.min_precise_f64x4(a0, b0),
+            self.min_precise_f64x4(a1, b1),
+        )
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn simd_eq_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_mask64x4(self.simd_eq_f64x4(a0, b0), self.simd_eq_f64x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn simd_lt_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_mask64x4(self.simd_lt_f64x4(a0, b0), self.simd_lt_f64x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn simd_le_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_mask64x4(self.simd_le_f64x4(a0, b0), self.simd_le_f64x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn simd_ge_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
+        self.simd_le_f64x8(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn simd_gt_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
+        self.simd_lt_f64x8(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn zip_low_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, _) = self.split_f64x8(a);
+        let (b0, _) = self.split_f64x8(b);
+        self.combine_f64x4(self.zip_low_f64x4(a0, b0), self.zip_high_f64x4(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn zip_high_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (_, a1) = self.split_f64x8(a);
+        let (_, b1) = self.split_f64x8(b);
+        self.combine_f64x4(self.zip_low_f64x4(a1, b1), self.zip_high_f64x4(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn unzip_low_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(self.unzip_low_f64x4(a0, a1), self.unzip_low_f64x4(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn unzip_high_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(self.unzip_high_f64x4(a0, a1), self.unzip_high_f64x4(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> (f64x8<Self>, f64x8<Self>);
+    #[inline(always)]
+    fn interleave_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> (f64x8<Self>, f64x8<Self>) {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        let lo_lo = self.zip_low_f64x4(a0, b0);
+        let lo_hi = self.zip_high_f64x4(a0, b0);
+        let hi_lo = self.zip_low_f64x4(a1, b1);
+        let hi_hi = self.zip_high_f64x4(a1, b1);
+        (
+            self.combine_f64x4(lo_lo, lo_hi),
+            self.combine_f64x4(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> (f64x8<Self>, f64x8<Self>);
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn max_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn max_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn min_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn deinterleave_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> (f64x8<Self>, f64x8<Self>) {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        let lo_even = self.unzip_low_f64x4(a0, a1);
+        let lo_odd = self.unzip_high_f64x4(a0, a1);
+        let hi_even = self.unzip_low_f64x4(b0, b1);
+        let hi_odd = self.unzip_high_f64x4(b0, b1);
+        (
+            self.combine_f64x4(lo_even, hi_even),
+            self.combine_f64x4(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
-    fn mul_add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn mul_add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        let (c0, c1) = self.split_f64x8(c);
+        self.combine_f64x4(
+            self.mul_add_f64x4(a0, b0, c0),
+            self.mul_add_f64x4(a1, b1, c1),
+        )
+    }
     #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
-    fn mul_sub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn mul_sub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        let (c0, c1) = self.split_f64x8(c);
+        self.combine_f64x4(
+            self.mul_sub_f64x4(a0, b0, c0),
+            self.mul_sub_f64x4(a1, b1, c1),
+        )
+    }
     #[doc = "Return the largest integer less than or equal to each element, that is, round towards negative infinity."]
-    fn floor_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn floor_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f64x4(self.floor_f64x4(a0), self.floor_f64x4(a1))
+    }
     #[doc = "Return the smallest integer greater than or equal to each element, that is, round towards positive infinity."]
-    fn ceil_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn ceil_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f64x4(self.ceil_f64x4(a0), self.ceil_f64x4(a1))
+    }
     #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
-    fn round_ties_even_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn round_ties_even_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f64x4(
+            self.round_ties_even_f64x4(a0),
+            self.round_ties_even_f64x4(a1),
+        )
+    }
     #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `a - a.trunc()`."]
-    fn fract_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn fract_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f64x4(self.fract_f64x4(a0), self.fract_f64x4(a1))
+    }
     #[doc = "Return the integer part of each element, rounding towards zero."]
-    fn trunc_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn trunc_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f64x4(self.trunc_f64x4(a0), self.trunc_f64x4(a1))
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        let (c0, c1) = self.split_f64x8(c);
+        self.combine_f64x4(self.select_f64x4(a0, b0, c0), self.select_f64x4(a1, b1, c1))
+    }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>);
     #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nValues are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity.This is the same as the `as` operator, and follows the IEEE 754 narrowing behavior in round-to-even mode.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f32x8(self.narrow_f64x4(a0, a1), self.narrow_f64x4(b0, b1))
+    }
     #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn saturating_narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn saturating_narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f32x8(
+            self.saturating_narrow_f64x4(a0, a1),
+            self.saturating_narrow_f64x4(b0, b1),
+        )
+    }
     #[doc = "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn relaxed_narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn relaxed_narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f32x8(
+            self.relaxed_narrow_f64x4(a0, a1),
+            self.relaxed_narrow_f64x4(b0, b1),
+        )
+    }
     #[doc = "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
-    fn cvt_u64_f64x8(self, a: f64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn cvt_u64_f64x8(self, a: f64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_u64x4(self.cvt_u64_f64x4(a0), self.cvt_u64_f64x4(a1))
+    }
     #[doc = "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
-    fn cvt_u64_precise_f64x8(self, a: f64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn cvt_u64_precise_f64x8(self, a: f64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_u64x4(
+            self.cvt_u64_precise_f64x4(a0),
+            self.cvt_u64_precise_f64x4(a1),
+        )
+    }
     #[doc = "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
-    fn cvt_i64_f64x8(self, a: f64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn cvt_i64_f64x8(self, a: f64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_i64x4(self.cvt_i64_f64x4(a0), self.cvt_i64_f64x4(a1))
+    }
     #[doc = "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
-    fn cvt_i64_precise_f64x8(self, a: f64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn cvt_i64_precise_f64x8(self, a: f64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_i64x4(
+            self.cvt_i64_precise_f64x4(a0),
+            self.cvt_i64_precise_f64x4(a1),
+        )
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_i64x8(self, val: i64) -> i64x8<Self>;
+    #[inline(always)]
+    fn splat_i64x8(self, val: i64) -> i64x8<Self> {
+        let half = self.splat_i64x4(val);
+        self.combine_i64x4(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i64x8<const SHIFT: usize>(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_i64x8<const SHIFT: usize>(
         self,
         a: i64x8<Self>,
         b: i64x8<Self>,
-    ) -> i64x8<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_i64x8<const OFFSET: usize>(self, a: i64x8<Self>) -> i64x8<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_i64x8<const OFFSET: usize>(self, a: i64x8<Self>) -> i64x8<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_i64x8<const OFFSET: usize>(
-        self,
-        a: i64x8<Self>,
-        padding: i64,
-    ) -> i64x8<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_i64x8<const OFFSET: usize>(
-        self,
-        a: i64x8<Self>,
-        padding: i64,
-    ) -> i64x8<Self>;
+    ) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(
+            self.slide_within_blocks_i64x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i64x4::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
-    fn add_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn add_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.add_i64x4(a0, b0), self.add_i64x4(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
-    fn sub_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn sub_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.sub_i64x4(a0, b0), self.sub_i64x4(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
-    fn mul_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn mul_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.mul_i64x4(a0, b0), self.mul_i64x4(a1, b1))
+    }
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn and_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.and_i64x4(a0, b0), self.and_i64x4(a1, b1))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn or_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.or_i64x4(a0, b0), self.or_i64x4(a1, b1))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn xor_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.xor_i64x4(a0, b0), self.xor_i64x4(a1, b1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_i64x8(self, a: i64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn not_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        self.combine_i64x4(self.not_i64x4(a0), self.not_i64x4(a1))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shl_i64x8(self, a: i64x8<Self>, shift: u32) -> i64x8<Self>;
+    #[inline(always)]
+    fn shl_i64x8(self, a: i64x8<Self>, shift: u32) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        self.combine_i64x4(self.shl_i64x4(a0, shift), self.shl_i64x4(a1, shift))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shlv_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn shlv_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.shlv_i64x4(a0, b0), self.shlv_i64x4(a1, b1))
+    }
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shr_i64x8(self, a: i64x8<Self>, shift: u32) -> i64x8<Self>;
+    #[inline(always)]
+    fn shr_i64x8(self, a: i64x8<Self>, shift: u32) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        self.combine_i64x4(self.shr_i64x4(a0, shift), self.shr_i64x4(a1, shift))
+    }
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shrv_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn shrv_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.shrv_i64x4(a0, b0), self.shrv_i64x4(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.max_i64x4(a0, b0), self.max_i64x4(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.min_i64x4(a0, b0), self.min_i64x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn simd_eq_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_mask64x4(self.simd_eq_i64x4(a0, b0), self.simd_eq_i64x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn simd_lt_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_mask64x4(self.simd_lt_i64x4(a0, b0), self.simd_lt_i64x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn simd_le_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_mask64x4(self.simd_le_i64x4(a0, b0), self.simd_le_i64x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn simd_ge_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
+        self.simd_le_i64x8(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn simd_gt_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
+        self.simd_lt_i64x8(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn zip_low_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, _) = self.split_i64x8(a);
+        let (b0, _) = self.split_i64x8(b);
+        self.combine_i64x4(self.zip_low_i64x4(a0, b0), self.zip_high_i64x4(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn zip_high_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (_, a1) = self.split_i64x8(a);
+        let (_, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.zip_low_i64x4(a1, b1), self.zip_high_i64x4(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn unzip_low_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.unzip_low_i64x4(a0, a1), self.unzip_low_i64x4(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn unzip_high_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.unzip_high_i64x4(a0, a1), self.unzip_high_i64x4(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> (i64x8<Self>, i64x8<Self>);
+    #[inline(always)]
+    fn interleave_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> (i64x8<Self>, i64x8<Self>) {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        let lo_lo = self.zip_low_i64x4(a0, b0);
+        let lo_hi = self.zip_high_i64x4(a0, b0);
+        let hi_lo = self.zip_low_i64x4(a1, b1);
+        let hi_hi = self.zip_high_i64x4(a1, b1);
+        (
+            self.combine_i64x4(lo_lo, lo_hi),
+            self.combine_i64x4(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> (i64x8<Self>, i64x8<Self>);
+    #[inline(always)]
+    fn deinterleave_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> (i64x8<Self>, i64x8<Self>) {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        let lo_even = self.unzip_low_i64x4(a0, a1);
+        let lo_odd = self.unzip_high_i64x4(a0, a1);
+        let hi_even = self.unzip_low_i64x4(b0, b1);
+        let hi_odd = self.unzip_high_i64x4(b0, b1);
+        (
+            self.combine_i64x4(lo_even, hi_even),
+            self.combine_i64x4(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_i64x8(self, a: mask64x8<Self>, b: i64x8<Self>, c: i64x8<Self>) -> i64x8<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn select_i64x8(self, a: mask64x8<Self>, b: i64x8<Self>, c: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        let (c0, c1) = self.split_i64x8(c);
+        self.combine_i64x4(self.select_i64x4(a0, b0, c0), self.select_i64x4(a1, b1, c1))
+    }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i64x8(self, a: i64x8<Self>) -> (i64x4<Self>, i64x4<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
-    fn neg_i64x8(self, a: i64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn neg_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        self.combine_i64x4(self.neg_i64x4(a0), self.neg_i64x4(a1))
+    }
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i32x8(self.narrow_i64x4(a0, a1), self.narrow_i64x4(b0, b1))
+    }
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn saturating_narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn saturating_narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i32x8(
+            self.saturating_narrow_i64x4(a0, a1),
+            self.saturating_narrow_i64x4(b0, b1),
+        )
+    }
     #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn relaxed_narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn relaxed_narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i32x8(
+            self.relaxed_narrow_i64x4(a0, a1),
+            self.relaxed_narrow_i64x4(b0, b1),
+        )
+    }
     #[doc = "Convert each signed 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
-    fn cvt_f64_i64x8(self, a: i64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn cvt_f64_i64x8(self, a: i64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        self.combine_f64x4(self.cvt_f64_i64x4(a0), self.cvt_f64_i64x4(a1))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_u64x8(self, val: u64) -> u64x8<Self>;
+    #[inline(always)]
+    fn splat_u64x8(self, val: u64) -> u64x8<Self> {
+        let half = self.splat_u64x4(val);
+        self.combine_u64x4(half, half)
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u64x8<const SHIFT: usize>(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    #[inline(always)]
     fn slide_within_blocks_u64x8<const SHIFT: usize>(
         self,
         a: u64x8<Self>,
         b: u64x8<Self>,
-    ) -> u64x8<Self>;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left_u64x8<const OFFSET: usize>(self, a: u64x8<Self>) -> u64x8<Self>;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right_u64x8<const OFFSET: usize>(self, a: u64x8<Self>) -> u64x8<Self>;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left_u64x8<const OFFSET: usize>(
-        self,
-        a: u64x8<Self>,
-        padding: u64,
-    ) -> u64x8<Self>;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right_u64x8<const OFFSET: usize>(
-        self,
-        a: u64x8<Self>,
-        padding: u64,
-    ) -> u64x8<Self>;
+    ) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(
+            self.slide_within_blocks_u64x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u64x4::<SHIFT>(a1, b1),
+        )
+    }
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_within_blocks_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
-    fn swizzle_dyn_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
-    fn swizzle_dyn_precise_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn swizzle_dyn_precise_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
-    fn add_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn add_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.add_u64x4(a0, b0), self.add_u64x4(a1, b1))
+    }
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
-    fn sub_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn sub_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.sub_u64x4(a0, b0), self.sub_u64x4(a1, b1))
+    }
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
-    fn mul_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn mul_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.mul_u64x4(a0, b0), self.mul_u64x4(a1, b1))
+    }
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn and_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.and_u64x4(a0, b0), self.and_u64x4(a1, b1))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn or_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.or_u64x4(a0, b0), self.or_u64x4(a1, b1))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn xor_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.xor_u64x4(a0, b0), self.xor_u64x4(a1, b1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_u64x8(self, a: u64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn not_u64x8(self, a: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        self.combine_u64x4(self.not_u64x4(a0), self.not_u64x4(a1))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shl_u64x8(self, a: u64x8<Self>, shift: u32) -> u64x8<Self>;
+    #[inline(always)]
+    fn shl_u64x8(self, a: u64x8<Self>, shift: u32) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        self.combine_u64x4(self.shl_u64x4(a0, shift), self.shl_u64x4(a1, shift))
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shlv_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn shlv_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.shlv_u64x4(a0, b0), self.shlv_u64x4(a1, b1))
+    }
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
-    fn shr_u64x8(self, a: u64x8<Self>, shift: u32) -> u64x8<Self>;
+    #[inline(always)]
+    fn shr_u64x8(self, a: u64x8<Self>, shift: u32) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        self.combine_u64x4(self.shr_u64x4(a0, shift), self.shr_u64x4(a1, shift))
+    }
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
-    fn shrv_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn shrv_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.shrv_u64x4(a0, b0), self.shrv_u64x4(a1, b1))
+    }
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn max_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.max_u64x4(a0, b0), self.max_u64x4(a1, b1))
+    }
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    #[inline(always)]
+    fn min_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.min_u64x4(a0, b0), self.min_u64x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn simd_eq_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_mask64x4(self.simd_eq_u64x4(a0, b0), self.simd_eq_u64x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
-    fn simd_lt_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn simd_lt_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_mask64x4(self.simd_lt_u64x4(a0, b0), self.simd_lt_u64x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
-    fn simd_le_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn simd_le_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_mask64x4(self.simd_le_u64x4(a0, b0), self.simd_le_u64x4(a1, b1))
+    }
     #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
-    fn simd_ge_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn simd_ge_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
+        self.simd_le_u64x8(b, a)
+    }
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
-    fn simd_gt_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn simd_gt_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
+        self.simd_lt_u64x8(b, a)
+    }
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_low_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn zip_low_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, _) = self.split_u64x8(a);
+        let (b0, _) = self.split_u64x8(b);
+        self.combine_u64x4(self.zip_low_u64x4(a0, b0), self.zip_high_u64x4(a0, b0))
+    }
     #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
-    fn zip_high_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn zip_high_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (_, a1) = self.split_u64x8(a);
+        let (_, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.zip_low_u64x4(a1, b1), self.zip_high_u64x4(a1, b1))
+    }
     #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_low_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn unzip_low_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.unzip_low_u64x4(a0, a1), self.unzip_low_u64x4(b0, b1))
+    }
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
-    fn unzip_high_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn unzip_high_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.unzip_high_u64x4(a0, a1), self.unzip_high_u64x4(b0, b1))
+    }
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> (u64x8<Self>, u64x8<Self>);
+    #[inline(always)]
+    fn interleave_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> (u64x8<Self>, u64x8<Self>) {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        let lo_lo = self.zip_low_u64x4(a0, b0);
+        let lo_hi = self.zip_high_u64x4(a0, b0);
+        let hi_lo = self.zip_low_u64x4(a1, b1);
+        let hi_hi = self.zip_high_u64x4(a1, b1);
+        (
+            self.combine_u64x4(lo_lo, lo_hi),
+            self.combine_u64x4(hi_lo, hi_hi),
+        )
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> (u64x8<Self>, u64x8<Self>);
+    #[inline(always)]
+    fn deinterleave_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> (u64x8<Self>, u64x8<Self>) {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        let lo_even = self.unzip_low_u64x4(a0, a1);
+        let lo_odd = self.unzip_high_u64x4(a0, a1);
+        let hi_even = self.unzip_low_u64x4(b0, b1);
+        let hi_odd = self.unzip_high_u64x4(b0, b1);
+        (
+            self.combine_u64x4(lo_even, hi_even),
+            self.combine_u64x4(lo_odd, hi_odd),
+        )
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_u64x8(self, a: mask64x8<Self>, b: u64x8<Self>, c: u64x8<Self>) -> u64x8<Self>;
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn select_u64x8(self, a: mask64x8<Self>, b: u64x8<Self>, c: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        let (c0, c1) = self.split_u64x8(c);
+        self.combine_u64x4(self.select_u64x4(a0, b0, c0), self.select_u64x4(a1, b1, c1))
+    }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u64x8(self, a: u64x8<Self>) -> (u64x4<Self>, u64x4<Self>);
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u32x8(self.narrow_u64x4(a0, a1), self.narrow_u64x4(b0, b1))
+    }
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn saturating_narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn saturating_narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u32x8(
+            self.saturating_narrow_u64x4(a0, a1),
+            self.saturating_narrow_u64x4(b0, b1),
+        )
+    }
     #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
-    fn relaxed_narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn relaxed_narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u32x8(
+            self.relaxed_narrow_u64x4(a0, a1),
+            self.relaxed_narrow_u64x4(b0, b1),
+        )
+    }
     #[doc = "Convert each unsigned 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
-    fn cvt_f64_u64x8(self, a: u64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn cvt_f64_u64x8(self, a: u64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        self.combine_f64x4(self.cvt_f64_u64x4(a0), self.cvt_f64_u64x4(a1))
+    }
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
-    fn splat_mask64x8(self, val: bool) -> mask64x8<Self>;
+    #[inline(always)]
+    fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {
+        let half = self.splat_mask64x4(val);
+        self.combine_mask64x4(half, half)
+    }
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
-    fn from_bitmask_mask64x8(self, bits: u64) -> mask64x8<Self>;
+    #[inline(always)]
+    fn from_bitmask_mask64x8(self, bits: u64) -> mask64x8<Self> {
+        let lo = self.from_bitmask_mask64x4(bits);
+        let hi = self.from_bitmask_mask64x4(bits >> 4usize);
+        self.combine_mask64x4(lo, hi)
+    }
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
-    fn to_bitmask_mask64x8(self, a: mask64x8<Self>) -> u64;
+    #[inline(always)]
+    fn to_bitmask_mask64x8(self, a: mask64x8<Self>) -> u64 {
+        let (lo, hi) = self.split_mask64x8(a);
+        let lo = self.to_bitmask_mask64x4(lo);
+        let hi = self.to_bitmask_mask64x4(hi);
+        lo | (hi << 4usize)
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask64x8(self, a: &mut mask64x8<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
-    fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_mask64x8(b);
+        self.combine_mask64x4(self.and_mask64x4(a0, b0), self.and_mask64x4(a1, b1))
+    }
     #[doc = "Compute the logical OR of two masks."]
-    fn or_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn or_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_mask64x8(b);
+        self.combine_mask64x4(self.or_mask64x4(a0, b0), self.or_mask64x4(a1, b1))
+    }
     #[doc = "Compute the logical XOR of two masks."]
-    fn xor_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn xor_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_mask64x8(b);
+        self.combine_mask64x4(self.xor_mask64x4(a0, b0), self.xor_mask64x4(a1, b1))
+    }
     #[doc = "Compute the logical NOT of the mask."]
-    fn not_mask64x8(self, a: mask64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn not_mask64x8(self, a: mask64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        self.combine_mask64x4(self.not_mask64x4(a0), self.not_mask64x4(a1))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    #[inline(always)]
     fn select_mask64x8(
         self,
         a: mask64x8<Self>,
         b: mask64x8<Self>,
         c: mask64x8<Self>,
-    ) -> mask64x8<Self>;
+    ) -> mask64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_mask64x8(b);
+        let (c0, c1) = self.split_mask64x8(c);
+        self.combine_mask64x4(
+            self.select_mask64x4(a0, b0, c0),
+            self.select_mask64x4(a1, b1, c1),
+        )
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
-    fn simd_eq_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn simd_eq_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_mask64x8(b);
+        self.combine_mask64x4(self.simd_eq_mask64x4(a0, b0), self.simd_eq_mask64x4(a1, b1))
+    }
     #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn any_true_mask64x8(self, a: mask64x8<Self>) -> bool;
+    #[inline(always)]
+    fn any_true_mask64x8(self, a: mask64x8<Self>) -> bool {
+        let (a0, a1) = self.split_mask64x8(a);
+        self.any_true_mask64x4(a0) || self.any_true_mask64x4(a1)
+    }
     #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn all_true_mask64x8(self, a: mask64x8<Self>) -> bool;
+    #[inline(always)]
+    fn all_true_mask64x8(self, a: mask64x8<Self>) -> bool {
+        let (a0, a1) = self.split_mask64x8(a);
+        self.all_true_mask64x4(a0) && self.all_true_mask64x4(a1)
+    }
     #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn any_false_mask64x8(self, a: mask64x8<Self>) -> bool;
+    #[inline(always)]
+    fn any_false_mask64x8(self, a: mask64x8<Self>) -> bool {
+        let (a0, a1) = self.split_mask64x8(a);
+        self.any_false_mask64x4(a0) || self.any_false_mask64x4(a1)
+    }
     #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
-    fn all_false_mask64x8(self, a: mask64x8<Self>) -> bool;
+    #[inline(always)]
+    fn all_false_mask64x8(self, a: mask64x8<Self>) -> bool {
+        let (a0, a1) = self.split_mask64x8(a);
+        self.all_false_mask64x4(a0) && self.all_false_mask64x4(a1)
+    }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>);
 }
@@ -3914,26 +7936,321 @@ pub trait SimdBase<S: Simd>:
     #[doc = r" calling `f` with that element's lane index (from 0 to"]
     #[doc = r" [`SimdBase::N`] - 1)."]
     fn from_fn(simd: S, f: impl FnMut(usize) -> Self::Element) -> Self;
+    #[doc = r" Rotate the vector elements to the left by `OFFSET`."]
+    #[doc = r""]
+    #[doc = r" If `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[inline(always)]
+    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
+        match OFFSET % Self::N {
+            0 => self.slide::<0>(self),
+            1 => self.slide::<1>(self),
+            2 => self.slide::<2>(self),
+            3 => self.slide::<3>(self),
+            4 => self.slide::<4>(self),
+            5 => self.slide::<5>(self),
+            6 => self.slide::<6>(self),
+            7 => self.slide::<7>(self),
+            8 => self.slide::<8>(self),
+            9 => self.slide::<9>(self),
+            10 => self.slide::<10>(self),
+            11 => self.slide::<11>(self),
+            12 => self.slide::<12>(self),
+            13 => self.slide::<13>(self),
+            14 => self.slide::<14>(self),
+            15 => self.slide::<15>(self),
+            16 => self.slide::<16>(self),
+            17 => self.slide::<17>(self),
+            18 => self.slide::<18>(self),
+            19 => self.slide::<19>(self),
+            20 => self.slide::<20>(self),
+            21 => self.slide::<21>(self),
+            22 => self.slide::<22>(self),
+            23 => self.slide::<23>(self),
+            24 => self.slide::<24>(self),
+            25 => self.slide::<25>(self),
+            26 => self.slide::<26>(self),
+            27 => self.slide::<27>(self),
+            28 => self.slide::<28>(self),
+            29 => self.slide::<29>(self),
+            30 => self.slide::<30>(self),
+            31 => self.slide::<31>(self),
+            32 => self.slide::<32>(self),
+            33 => self.slide::<33>(self),
+            34 => self.slide::<34>(self),
+            35 => self.slide::<35>(self),
+            36 => self.slide::<36>(self),
+            37 => self.slide::<37>(self),
+            38 => self.slide::<38>(self),
+            39 => self.slide::<39>(self),
+            40 => self.slide::<40>(self),
+            41 => self.slide::<41>(self),
+            42 => self.slide::<42>(self),
+            43 => self.slide::<43>(self),
+            44 => self.slide::<44>(self),
+            45 => self.slide::<45>(self),
+            46 => self.slide::<46>(self),
+            47 => self.slide::<47>(self),
+            48 => self.slide::<48>(self),
+            49 => self.slide::<49>(self),
+            50 => self.slide::<50>(self),
+            51 => self.slide::<51>(self),
+            52 => self.slide::<52>(self),
+            53 => self.slide::<53>(self),
+            54 => self.slide::<54>(self),
+            55 => self.slide::<55>(self),
+            56 => self.slide::<56>(self),
+            57 => self.slide::<57>(self),
+            58 => self.slide::<58>(self),
+            59 => self.slide::<59>(self),
+            60 => self.slide::<60>(self),
+            61 => self.slide::<61>(self),
+            62 => self.slide::<62>(self),
+            63 => self.slide::<63>(self),
+            _ => unreachable!(),
+        }
+    }
+    #[doc = r" Rotate the vector elements to the right by `OFFSET`."]
+    #[doc = r""]
+    #[doc = r" If `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[inline(always)]
+    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
+        match Self::N - OFFSET % Self::N {
+            1 => self.slide::<1>(self),
+            2 => self.slide::<2>(self),
+            3 => self.slide::<3>(self),
+            4 => self.slide::<4>(self),
+            5 => self.slide::<5>(self),
+            6 => self.slide::<6>(self),
+            7 => self.slide::<7>(self),
+            8 => self.slide::<8>(self),
+            9 => self.slide::<9>(self),
+            10 => self.slide::<10>(self),
+            11 => self.slide::<11>(self),
+            12 => self.slide::<12>(self),
+            13 => self.slide::<13>(self),
+            14 => self.slide::<14>(self),
+            15 => self.slide::<15>(self),
+            16 => self.slide::<16>(self),
+            17 => self.slide::<17>(self),
+            18 => self.slide::<18>(self),
+            19 => self.slide::<19>(self),
+            20 => self.slide::<20>(self),
+            21 => self.slide::<21>(self),
+            22 => self.slide::<22>(self),
+            23 => self.slide::<23>(self),
+            24 => self.slide::<24>(self),
+            25 => self.slide::<25>(self),
+            26 => self.slide::<26>(self),
+            27 => self.slide::<27>(self),
+            28 => self.slide::<28>(self),
+            29 => self.slide::<29>(self),
+            30 => self.slide::<30>(self),
+            31 => self.slide::<31>(self),
+            32 => self.slide::<32>(self),
+            33 => self.slide::<33>(self),
+            34 => self.slide::<34>(self),
+            35 => self.slide::<35>(self),
+            36 => self.slide::<36>(self),
+            37 => self.slide::<37>(self),
+            38 => self.slide::<38>(self),
+            39 => self.slide::<39>(self),
+            40 => self.slide::<40>(self),
+            41 => self.slide::<41>(self),
+            42 => self.slide::<42>(self),
+            43 => self.slide::<43>(self),
+            44 => self.slide::<44>(self),
+            45 => self.slide::<45>(self),
+            46 => self.slide::<46>(self),
+            47 => self.slide::<47>(self),
+            48 => self.slide::<48>(self),
+            49 => self.slide::<49>(self),
+            50 => self.slide::<50>(self),
+            51 => self.slide::<51>(self),
+            52 => self.slide::<52>(self),
+            53 => self.slide::<53>(self),
+            54 => self.slide::<54>(self),
+            55 => self.slide::<55>(self),
+            56 => self.slide::<56>(self),
+            57 => self.slide::<57>(self),
+            58 => self.slide::<58>(self),
+            59 => self.slide::<59>(self),
+            60 => self.slide::<60>(self),
+            61 => self.slide::<61>(self),
+            62 => self.slide::<62>(self),
+            63 => self.slide::<63>(self),
+            64 => self.slide::<64>(self),
+            _ => unreachable!(),
+        }
+    }
+    #[doc = r" Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right."]
+    #[doc = r""]
+    #[doc = r" If `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    #[inline(always)]
+    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
+        match OFFSET.min(Self::N) {
+            0 => self.slide::<0>(padding),
+            1 => self.slide::<1>(padding),
+            2 => self.slide::<2>(padding),
+            3 => self.slide::<3>(padding),
+            4 => self.slide::<4>(padding),
+            5 => self.slide::<5>(padding),
+            6 => self.slide::<6>(padding),
+            7 => self.slide::<7>(padding),
+            8 => self.slide::<8>(padding),
+            9 => self.slide::<9>(padding),
+            10 => self.slide::<10>(padding),
+            11 => self.slide::<11>(padding),
+            12 => self.slide::<12>(padding),
+            13 => self.slide::<13>(padding),
+            14 => self.slide::<14>(padding),
+            15 => self.slide::<15>(padding),
+            16 => self.slide::<16>(padding),
+            17 => self.slide::<17>(padding),
+            18 => self.slide::<18>(padding),
+            19 => self.slide::<19>(padding),
+            20 => self.slide::<20>(padding),
+            21 => self.slide::<21>(padding),
+            22 => self.slide::<22>(padding),
+            23 => self.slide::<23>(padding),
+            24 => self.slide::<24>(padding),
+            25 => self.slide::<25>(padding),
+            26 => self.slide::<26>(padding),
+            27 => self.slide::<27>(padding),
+            28 => self.slide::<28>(padding),
+            29 => self.slide::<29>(padding),
+            30 => self.slide::<30>(padding),
+            31 => self.slide::<31>(padding),
+            32 => self.slide::<32>(padding),
+            33 => self.slide::<33>(padding),
+            34 => self.slide::<34>(padding),
+            35 => self.slide::<35>(padding),
+            36 => self.slide::<36>(padding),
+            37 => self.slide::<37>(padding),
+            38 => self.slide::<38>(padding),
+            39 => self.slide::<39>(padding),
+            40 => self.slide::<40>(padding),
+            41 => self.slide::<41>(padding),
+            42 => self.slide::<42>(padding),
+            43 => self.slide::<43>(padding),
+            44 => self.slide::<44>(padding),
+            45 => self.slide::<45>(padding),
+            46 => self.slide::<46>(padding),
+            47 => self.slide::<47>(padding),
+            48 => self.slide::<48>(padding),
+            49 => self.slide::<49>(padding),
+            50 => self.slide::<50>(padding),
+            51 => self.slide::<51>(padding),
+            52 => self.slide::<52>(padding),
+            53 => self.slide::<53>(padding),
+            54 => self.slide::<54>(padding),
+            55 => self.slide::<55>(padding),
+            56 => self.slide::<56>(padding),
+            57 => self.slide::<57>(padding),
+            58 => self.slide::<58>(padding),
+            59 => self.slide::<59>(padding),
+            60 => self.slide::<60>(padding),
+            61 => self.slide::<61>(padding),
+            62 => self.slide::<62>(padding),
+            63 => self.slide::<63>(padding),
+            64 => self.slide::<64>(padding),
+            _ => unreachable!(),
+        }
+    }
+    #[doc = r" Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left."]
+    #[doc = r""]
+    #[doc = r" If `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    #[inline(always)]
+    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
+        let padding = Self::splat(self.witness(), padding);
+        match Self::N.saturating_sub(OFFSET) {
+            0 => padding.slide::<0>(self),
+            1 => padding.slide::<1>(self),
+            2 => padding.slide::<2>(self),
+            3 => padding.slide::<3>(self),
+            4 => padding.slide::<4>(self),
+            5 => padding.slide::<5>(self),
+            6 => padding.slide::<6>(self),
+            7 => padding.slide::<7>(self),
+            8 => padding.slide::<8>(self),
+            9 => padding.slide::<9>(self),
+            10 => padding.slide::<10>(self),
+            11 => padding.slide::<11>(self),
+            12 => padding.slide::<12>(self),
+            13 => padding.slide::<13>(self),
+            14 => padding.slide::<14>(self),
+            15 => padding.slide::<15>(self),
+            16 => padding.slide::<16>(self),
+            17 => padding.slide::<17>(self),
+            18 => padding.slide::<18>(self),
+            19 => padding.slide::<19>(self),
+            20 => padding.slide::<20>(self),
+            21 => padding.slide::<21>(self),
+            22 => padding.slide::<22>(self),
+            23 => padding.slide::<23>(self),
+            24 => padding.slide::<24>(self),
+            25 => padding.slide::<25>(self),
+            26 => padding.slide::<26>(self),
+            27 => padding.slide::<27>(self),
+            28 => padding.slide::<28>(self),
+            29 => padding.slide::<29>(self),
+            30 => padding.slide::<30>(self),
+            31 => padding.slide::<31>(self),
+            32 => padding.slide::<32>(self),
+            33 => padding.slide::<33>(self),
+            34 => padding.slide::<34>(self),
+            35 => padding.slide::<35>(self),
+            36 => padding.slide::<36>(self),
+            37 => padding.slide::<37>(self),
+            38 => padding.slide::<38>(self),
+            39 => padding.slide::<39>(self),
+            40 => padding.slide::<40>(self),
+            41 => padding.slide::<41>(self),
+            42 => padding.slide::<42>(self),
+            43 => padding.slide::<43>(self),
+            44 => padding.slide::<44>(self),
+            45 => padding.slide::<45>(self),
+            46 => padding.slide::<46>(self),
+            47 => padding.slide::<47>(self),
+            48 => padding.slide::<48>(self),
+            49 => padding.slide::<49>(self),
+            50 => padding.slide::<50>(self),
+            51 => padding.slide::<51>(self),
+            52 => padding.slide::<52>(self),
+            53 => padding.slide::<53>(self),
+            54 => padding.slide::<54>(self),
+            55 => padding.slide::<55>(self),
+            56 => padding.slide::<56>(self),
+            57 => padding.slide::<57>(self),
+            58 => padding.slide::<58>(self),
+            59 => padding.slide::<59>(self),
+            60 => padding.slide::<60>(self),
+            61 => padding.slide::<61>(self),
+            62 => padding.slide::<62>(self),
+            63 => padding.slide::<63>(self),
+            64 => padding.slide::<64>(self),
+            _ => unreachable!(),
+        }
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat(simd: S, val: Self::Element) -> Self;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_left<const OFFSET: usize>(self) -> Self;
-    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
-    fn rotate_elements_right<const OFFSET: usize>(self) -> Self;
-    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self;
-    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
-    fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self;
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self;
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero."]
     fn swizzle_dyn(self, indices: impl SimdInto<Self::Bytes, S>) -> Self;
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
     fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn max(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
+    fn min(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nFor integer vectors, this operation is the same as `max`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nFor integer vectors, this operation is the same as `min`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
+    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
     #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `self` is less than `rhs`, and false if not."]
@@ -3998,14 +8315,6 @@ pub trait SimdFloat<S: Simd>:
     fn approximate_recip(self) -> Self;
     #[doc = "Return a vector with the magnitude of `self` and the sign of `rhs` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
-    fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self;
     #[doc = "Compute `(self * op1) + op2` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
     fn mul_add(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self;
     #[doc = "Compute `(self * op1) - op2` (fused multiply-subtract) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
@@ -4054,10 +8363,6 @@ pub trait SimdInt<S: Simd>:
     fn to_float<T: SimdCvtFloat<Self>>(self) -> T {
         T::float_from(self)
     }
-    #[doc = "Return the element-wise minimum of two vectors."]
-    fn min(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Return the element-wise maximum of two vectors."]
-    fn max(self, rhs: impl SimdInto<Self, S>) -> Self;
 }
 #[doc = r" Functionality implemented by SIMD masks."]
 #[doc = r""]

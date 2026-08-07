@@ -34,7 +34,7 @@ fn load_four_interleaved_f32x4<S: Simd>(simd: S) {
     ];
 
     // Note: f32::NAN != f32::NAN hence we compare the bit pattern.
-    let result = simd.load_four_interleaved_f32x4(&data);
+    let result = f32x4::load_four_interleaved(simd, &data);
     assert_eq!(
         result.map(|vector| (*vector).map(f32::to_bits)),
         expected.map(|vector| vector.map(f32::to_bits)),
@@ -61,7 +61,7 @@ fn load_four_interleaved_f64x2<S: Simd>(simd: S) {
     ];
 
     // Note: f64::NAN != f64::NAN hence we compare the bit pattern.
-    let result = simd.load_four_interleaved_f64x2(&data);
+    let result = f64x2::load_four_interleaved(simd, &data);
     assert_eq!(
         result.map(|vector| (*vector).map(f64::to_bits)),
         expected.map(|vector| vector.map(f64::to_bits)),
@@ -82,8 +82,7 @@ fn load_four_interleaved_i8x16<S: Simd>(simd: S) {
         24, 25, 26, 27, 28, 29, 30, i8::MAX,
     ];
     assert_eq!(
-        simd.load_four_interleaved_i8x16(&data)
-            .map(|vector| *vector),
+        i8x16::load_four_interleaved(simd, &data).map(|vector| *vector),
         [
             [
                 i8::MIN,
@@ -145,8 +144,7 @@ fn load_four_interleaved_u8x16<S: Simd>(simd: S) {
         56, 57, 58, 59, 60, 61, 62, u8::MAX,
     ];
     assert_eq!(
-        simd.load_four_interleaved_u8x16(&data)
-            .map(|vector| *vector),
+        u8x16::load_four_interleaved(simd, &data).map(|vector| *vector),
         [
             [0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60],
             [1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53, 57, 61],
@@ -210,8 +208,7 @@ fn load_four_interleaved_i16x8<S: Simd>(simd: S) {
         i16::MAX,
     ];
     assert_eq!(
-        simd.load_four_interleaved_i16x8(&data)
-            .map(|vector| *vector),
+        i16x8::load_four_interleaved(simd, &data).map(|vector| *vector),
         [
             [i16::MIN, -12, -8, -4, 0, 4, 8, 12],
             [-15, -11, -7, -3, 1, 5, 9, 13],
@@ -231,8 +228,7 @@ fn load_four_interleaved_u16x8<S: Simd>(simd: S) {
         1000, 2000, 3000, 4000, 5000, 6000, 7000, u16::MAX,
     ];
     assert_eq!(
-        simd.load_four_interleaved_u16x8(&data)
-            .map(|vector| *vector),
+        u16x8::load_four_interleaved(simd, &data).map(|vector| *vector),
         [
             [u16::MIN, 5, 10, 50, 100, 500, 1000, 5000],
             [2, 6, 20, 60, 200, 600, 2000, 6000],
@@ -263,8 +259,7 @@ fn load_four_interleaved_i32x4<S: Simd>(simd: S) {
         i32::MAX,
     ];
     assert_eq!(
-        simd.load_four_interleaved_i32x4(&data)
-            .map(|vector| *vector),
+        i32x4::load_four_interleaved(simd, &data).map(|vector| *vector),
         [
             [i32::MIN, -4, 0, 4],
             [-7, -3, 1, 5],
@@ -284,8 +279,7 @@ fn load_four_interleaved_u32x4<S: Simd>(simd: S) {
         1000, 2000, 3000, u32::MAX,
     ];
     assert_eq!(
-        simd.load_four_interleaved_u32x4(&data)
-            .map(|vector| *vector),
+        u32x4::load_four_interleaved(simd, &data).map(|vector| *vector),
         [
             [1, 10, 100, 1000],
             [2, 20, 200, 2000],
@@ -308,8 +302,7 @@ fn load_four_interleaved_i64x2<S: Simd>(simd: S) {
         i64::MAX,
     ];
     assert_eq!(
-        simd.load_four_interleaved_i64x2(&data)
-            .map(|vector| *vector),
+        i64x2::load_four_interleaved(simd, &data).map(|vector| *vector),
         [[i64::MIN, 0], [-3, 1], [-2, 2], [-1, i64::MAX]]
     );
 }
@@ -318,8 +311,7 @@ fn load_four_interleaved_i64x2<S: Simd>(simd: S) {
 fn load_four_interleaved_u64x2<S: Simd>(simd: S) {
     let data = [u64::MIN, 3_u64, 5_u64, 7_u64, 2_u64, 4_u64, 6_u64, u64::MAX];
     assert_eq!(
-        simd.load_four_interleaved_u64x2(&data)
-            .map(|vector| *vector),
+        u64x2::load_four_interleaved(simd, &data).map(|vector| *vector),
         [[u64::MIN, 2], [3, 4], [5, 6], [7, u64::MAX]]
     );
 }

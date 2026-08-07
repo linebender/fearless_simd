@@ -1,10 +1,11 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
+    generic::{byte_swizzle_op, generic_op, reversed_compare_op},
     ops::{
         CoreOpTrait, OpKind, OpSig, TyFlavor, base_trait_ops, ops_for_type, overloaded_ops_for,
         vec_trait_ops_for,
@@ -23,11 +24,36 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
             let doc_alias = op
                 .doc_alias()
                 .map(|alias| quote! { #[doc(alias = #alias)] });
-            methods.extend(quote! {
-                #[doc = #doc]
-                #doc_alias
-                #method_sig;
-            });
+            if op.sig.should_route_swizzle_through_bytes(vec_ty) {
+                let method = byte_swizzle_op(&op, vec_ty);
+                methods.extend(quote! {
+                    #[doc = #doc]
+                    #doc_alias
+                    #[inline(always)]
+                    #method
+                });
+            } else if let Some(method) = reversed_compare_op(&op, vec_ty) {
+                methods.extend(quote! {
+                    #[doc = #doc]
+                    #doc_alias
+                    #[inline(always)]
+                    #method
+                });
+            } else if op.sig.should_use_generic_op(vec_ty, 128) {
+                let method = generic_op(&op, vec_ty);
+                methods.extend(quote! {
+                    #[doc = #doc]
+                    #doc_alias
+                    #[inline(always)]
+                    #method
+                });
+            } else {
+                methods.extend(quote! {
+                    #[doc = #doc]
+                    #doc_alias
+                    #method_sig;
+                });
+            }
         }
     }
     let mut code = quote! {
@@ -43,7 +69,7 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
         /// This trait defines all the low-level SIMD operations (e.g. [`add_f32x4`](Simd::add_f32x4),
         /// [`mul_u32x4`](Simd::mul_u32x4)) that are implemented by each token type using platform-specific intrinsics.
         /// However, you typically won't call these methods directly. Instead, you'll probably be using the methods
-        /// defined on the vector types themselves.
+        /// defined on the vector types themselves, such as [`f32x4`] or [`u32x4`].
         ///
         /// # Associated Types
         ///
@@ -229,6 +255,23 @@ fn mk_simd_base() -> TokenStream {
     let op_traits = overloaded_ops
         .iter()
         .flat_map(|core_op| core_op.trait_bounds());
+    let max_lanes = SIMD_TYPES.iter().map(|ty| ty.len).max().unwrap();
+    let rotate_left_arms = (0..max_lanes).map(|shift| {
+        let shift = Literal::usize_unsuffixed(shift);
+        quote! { #shift => self.slide::<#shift>(self) }
+    });
+    let rotate_right_arms = (1..=max_lanes).map(|shift| {
+        let shift = Literal::usize_unsuffixed(shift);
+        quote! { #shift => self.slide::<#shift>(self) }
+    });
+    let shift_left_arms = (0..=max_lanes).map(|shift| {
+        let shift = Literal::usize_unsuffixed(shift);
+        quote! { #shift => self.slide::<#shift>(padding) }
+    });
+    let shift_right_arms = (0..=max_lanes).map(|shift| {
+        let shift = Literal::usize_unsuffixed(shift);
+        quote! { #shift => padding.slide::<#shift>(self) }
+    });
 
     quote! {
         /// Base functionality implemented by all SIMD vectors.
@@ -321,6 +364,51 @@ fn mk_simd_base() -> TokenStream {
             /// calling `f` with that element's lane index (from 0 to
             /// [`SimdBase::N`] - 1).
             fn from_fn(simd: S, f: impl FnMut(usize) -> Self::Element) -> Self;
+
+            /// Rotate the vector elements to the left by `OFFSET`.
+            ///
+            /// If `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`.
+            #[inline(always)]
+            fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
+                match OFFSET % Self::N {
+                    #(#rotate_left_arms,)*
+                    _ => unreachable!(),
+                }
+            }
+
+            /// Rotate the vector elements to the right by `OFFSET`.
+            ///
+            /// If `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`.
+            #[inline(always)]
+            fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
+                match Self::N - OFFSET % Self::N {
+                    #(#rotate_right_arms,)*
+                    _ => unreachable!(),
+                }
+            }
+
+            /// Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.
+            ///
+            /// If `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`.
+            #[inline(always)]
+            fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
+                match OFFSET.min(Self::N) {
+                    #(#shift_left_arms,)*
+                    _ => unreachable!(),
+                }
+            }
+
+            /// Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.
+            ///
+            /// If `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`.
+            #[inline(always)]
+            fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
+                let padding = Self::splat(self.witness(), padding);
+                match Self::N.saturating_sub(OFFSET) {
+                    #(#shift_right_arms,)*
+                    _ => unreachable!(),
+                }
+            }
 
             #( #methods )*
         }

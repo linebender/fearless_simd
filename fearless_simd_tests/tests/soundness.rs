@@ -130,6 +130,28 @@ fn store_slice_rejects_short_slice<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn load_four_interleaved_rejects_incorrect_slice_lengths<S: Simd>(simd: S) {
+    assert_panics("f32x4::load_four_interleaved with a short slice", || {
+        let _ = f32x4::load_four_interleaved(simd, &[0.0; 15]);
+    });
+    assert_panics("f32x4::load_four_interleaved with a long slice", || {
+        let _ = f32x4::load_four_interleaved(simd, &[0.0; 17]);
+    });
+}
+
+#[simd_test]
+fn store_four_interleaved_rejects_incorrect_slice_lengths<S: Simd>(simd: S) {
+    let vectors = [f32x4::splat(simd, 0.0); 4];
+
+    assert_panics("f32x4::store_four_interleaved with a short slice", || {
+        f32x4::store_four_interleaved(vectors, &mut [0.0; 15]);
+    });
+    assert_panics("f32x4::store_four_interleaved with a long slice", || {
+        f32x4::store_four_interleaved(vectors, &mut [0.0; 17]);
+    });
+}
+
+#[simd_test]
 fn mask_test_rejects_out_of_bounds<S: Simd>(simd: S) {
     for_each_mask_type!(check_mask_test_oob, simd);
 }

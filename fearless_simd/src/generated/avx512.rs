@@ -24,6 +24,10 @@ use core::arch::x86::*;
 use core::arch::x86_64::*;
 use core::ops::*;
 #[doc = "A token for AVX-512 intrinsics on `x86` and `x86_64`, representing an Ice Lake feature level."]
+#[doc = "# Browsing the documentation"]
+#[doc = "The method list on this struct is very verbose."]
+#[doc = "A better way to browse the docs is by looking at vector types such as [`u32x4`], [`f32x4`] or [`mask32x4`]."]
+#[doc = "They include all the operations listed here, and also provide some additional convenience methods."]
 #[derive(Clone, Copy, Debug)]
 pub struct Avx512 {
     _private: (),
@@ -412,113 +416,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_f32x4<const SHIFT: usize>(
-        self,
-        a: f32x4<Self>,
-        b: f32x4<Self>,
-    ) -> f32x4<Self> {
-        self.slide_f32x4::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn rotate_elements_left_f32x4<const OFFSET: usize>(self, a: f32x4<Self>) -> f32x4<Self> {
-        match OFFSET % 4 {
-            0 => self.slide_f32x4::<0>(a, a),
-            1 => self.slide_f32x4::<1>(a, a),
-            2 => self.slide_f32x4::<2>(a, a),
-            3 => self.slide_f32x4::<3>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_f32x4<const OFFSET: usize>(self, a: f32x4<Self>) -> f32x4<Self> {
-        match OFFSET % 4 {
-            0 => self.slide_f32x4::<4>(a, a),
-            1 => self.slide_f32x4::<3>(a, a),
-            2 => self.slide_f32x4::<2>(a, a),
-            3 => self.slide_f32x4::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_f32x4<const OFFSET: usize>(
-        self,
-        a: f32x4<Self>,
-        padding: f32,
-    ) -> f32x4<Self> {
-        let padding = self.splat_f32x4(padding);
-        match OFFSET {
-            0 => self.slide_f32x4::<0>(a, padding),
-            1 => self.slide_f32x4::<1>(a, padding),
-            2 => self.slide_f32x4::<2>(a, padding),
-            3 => self.slide_f32x4::<3>(a, padding),
-            4 => self.slide_f32x4::<4>(a, padding),
-            _ => self.slide_f32x4::<4>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_f32x4<const OFFSET: usize>(
-        self,
-        a: f32x4<Self>,
-        padding: f32,
-    ) -> f32x4<Self> {
-        let padding = self.splat_f32x4(padding);
-        match OFFSET {
-            0 => self.slide_f32x4::<4>(padding, a),
-            1 => self.slide_f32x4::<3>(padding, a),
-            2 => self.slide_f32x4::<2>(padding, a),
-            3 => self.slide_f32x4::<1>(padding, a),
-            4 => self.slide_f32x4::<0>(padding, a),
-            _ => self.slide_f32x4::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x4<Avx512>, indices: u8x16<Avx512>) -> f32x4<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x4<Avx512>, indices: u8x16<Avx512>) -> f32x4<Avx512> {
-                let result = _mm_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x4<Avx512>, indices: u8x16<Avx512>) -> f32x4<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
-                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -611,6 +508,46 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_max_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_min_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_range_ps::<5i32>(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_range_ps::<4i32>(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -643,32 +580,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> mask32x4<Avx512> {
                 mask32x4 {
                     val: _mm_cmp_ps_mask::<18i32>(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> mask32x4<Avx512> {
-                mask32x4 {
-                    val: _mm_cmp_ps_mask::<29i32>(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> mask32x4<Avx512> {
-                mask32x4 {
-                    val: _mm_cmp_ps_mask::<30i32>(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -722,46 +633,6 @@ impl Simd for Avx512 {
     #[inline(always)]
     fn deinterleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>) {
         (self.unzip_low_f32x4(a, b), self.unzip_high_f32x4(a, b))
-    }
-    #[inline(always)]
-    fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
-                _mm_max_ps(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
-                _mm_min_ps(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
-                _mm_range_ps::<5i32>(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn min_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
-                _mm_range_ps::<4i32>(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
@@ -1006,161 +877,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_i8x16<const SHIFT: usize>(
-        self,
-        a: i8x16<Self>,
-        b: i8x16<Self>,
-    ) -> i8x16<Self> {
-        self.slide_i8x16::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn rotate_elements_left_i8x16<const OFFSET: usize>(self, a: i8x16<Self>) -> i8x16<Self> {
-        match OFFSET % 16 {
-            0 => self.slide_i8x16::<0>(a, a),
-            1 => self.slide_i8x16::<1>(a, a),
-            2 => self.slide_i8x16::<2>(a, a),
-            3 => self.slide_i8x16::<3>(a, a),
-            4 => self.slide_i8x16::<4>(a, a),
-            5 => self.slide_i8x16::<5>(a, a),
-            6 => self.slide_i8x16::<6>(a, a),
-            7 => self.slide_i8x16::<7>(a, a),
-            8 => self.slide_i8x16::<8>(a, a),
-            9 => self.slide_i8x16::<9>(a, a),
-            10 => self.slide_i8x16::<10>(a, a),
-            11 => self.slide_i8x16::<11>(a, a),
-            12 => self.slide_i8x16::<12>(a, a),
-            13 => self.slide_i8x16::<13>(a, a),
-            14 => self.slide_i8x16::<14>(a, a),
-            15 => self.slide_i8x16::<15>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_i8x16<const OFFSET: usize>(self, a: i8x16<Self>) -> i8x16<Self> {
-        match OFFSET % 16 {
-            0 => self.slide_i8x16::<16>(a, a),
-            1 => self.slide_i8x16::<15>(a, a),
-            2 => self.slide_i8x16::<14>(a, a),
-            3 => self.slide_i8x16::<13>(a, a),
-            4 => self.slide_i8x16::<12>(a, a),
-            5 => self.slide_i8x16::<11>(a, a),
-            6 => self.slide_i8x16::<10>(a, a),
-            7 => self.slide_i8x16::<9>(a, a),
-            8 => self.slide_i8x16::<8>(a, a),
-            9 => self.slide_i8x16::<7>(a, a),
-            10 => self.slide_i8x16::<6>(a, a),
-            11 => self.slide_i8x16::<5>(a, a),
-            12 => self.slide_i8x16::<4>(a, a),
-            13 => self.slide_i8x16::<3>(a, a),
-            14 => self.slide_i8x16::<2>(a, a),
-            15 => self.slide_i8x16::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_i8x16<const OFFSET: usize>(
-        self,
-        a: i8x16<Self>,
-        padding: i8,
-    ) -> i8x16<Self> {
-        let padding = self.splat_i8x16(padding);
-        match OFFSET {
-            0 => self.slide_i8x16::<0>(a, padding),
-            1 => self.slide_i8x16::<1>(a, padding),
-            2 => self.slide_i8x16::<2>(a, padding),
-            3 => self.slide_i8x16::<3>(a, padding),
-            4 => self.slide_i8x16::<4>(a, padding),
-            5 => self.slide_i8x16::<5>(a, padding),
-            6 => self.slide_i8x16::<6>(a, padding),
-            7 => self.slide_i8x16::<7>(a, padding),
-            8 => self.slide_i8x16::<8>(a, padding),
-            9 => self.slide_i8x16::<9>(a, padding),
-            10 => self.slide_i8x16::<10>(a, padding),
-            11 => self.slide_i8x16::<11>(a, padding),
-            12 => self.slide_i8x16::<12>(a, padding),
-            13 => self.slide_i8x16::<13>(a, padding),
-            14 => self.slide_i8x16::<14>(a, padding),
-            15 => self.slide_i8x16::<15>(a, padding),
-            16 => self.slide_i8x16::<16>(a, padding),
-            _ => self.slide_i8x16::<16>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_i8x16<const OFFSET: usize>(
-        self,
-        a: i8x16<Self>,
-        padding: i8,
-    ) -> i8x16<Self> {
-        let padding = self.splat_i8x16(padding);
-        match OFFSET {
-            0 => self.slide_i8x16::<16>(padding, a),
-            1 => self.slide_i8x16::<15>(padding, a),
-            2 => self.slide_i8x16::<14>(padding, a),
-            3 => self.slide_i8x16::<13>(padding, a),
-            4 => self.slide_i8x16::<12>(padding, a),
-            5 => self.slide_i8x16::<11>(padding, a),
-            6 => self.slide_i8x16::<10>(padding, a),
-            7 => self.slide_i8x16::<9>(padding, a),
-            8 => self.slide_i8x16::<8>(padding, a),
-            9 => self.slide_i8x16::<7>(padding, a),
-            10 => self.slide_i8x16::<6>(padding, a),
-            11 => self.slide_i8x16::<5>(padding, a),
-            12 => self.slide_i8x16::<4>(padding, a),
-            13 => self.slide_i8x16::<3>(padding, a),
-            14 => self.slide_i8x16::<2>(padding, a),
-            15 => self.slide_i8x16::<1>(padding, a),
-            16 => self.slide_i8x16::<0>(padding, a),
-            _ => self.slide_i8x16::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x16<Avx512>, indices: u8x16<Avx512>) -> i8x16<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x16<Avx512>, indices: u8x16<Avx512>) -> i8x16<Avx512> {
-                let result = _mm_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x16<Avx512>, indices: u8x16<Avx512>) -> i8x16<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
-                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1307,6 +1023,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
+                _mm_max_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
+                _mm_min_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1339,32 +1075,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> mask8x16<Avx512> {
                 mask8x16 {
                     val: _mm_cmple_epi8_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> mask8x16<Avx512> {
-                mask8x16 {
-                    val: _mm_cmpge_epi8_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> mask8x16<Avx512> {
-                mask8x16 {
-                    val: _mm_cmpgt_epi8_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -1468,26 +1178,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
-                _mm_min_epi8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
-                _mm_max_epi8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x32<Self> {
@@ -1610,114 +1300,6 @@ impl Simd for Avx512 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_u8x16<const SHIFT: usize>(
-        self,
-        a: u8x16<Self>,
-        b: u8x16<Self>,
-    ) -> u8x16<Self> {
-        self.slide_u8x16::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn rotate_elements_left_u8x16<const OFFSET: usize>(self, a: u8x16<Self>) -> u8x16<Self> {
-        match OFFSET % 16 {
-            0 => self.slide_u8x16::<0>(a, a),
-            1 => self.slide_u8x16::<1>(a, a),
-            2 => self.slide_u8x16::<2>(a, a),
-            3 => self.slide_u8x16::<3>(a, a),
-            4 => self.slide_u8x16::<4>(a, a),
-            5 => self.slide_u8x16::<5>(a, a),
-            6 => self.slide_u8x16::<6>(a, a),
-            7 => self.slide_u8x16::<7>(a, a),
-            8 => self.slide_u8x16::<8>(a, a),
-            9 => self.slide_u8x16::<9>(a, a),
-            10 => self.slide_u8x16::<10>(a, a),
-            11 => self.slide_u8x16::<11>(a, a),
-            12 => self.slide_u8x16::<12>(a, a),
-            13 => self.slide_u8x16::<13>(a, a),
-            14 => self.slide_u8x16::<14>(a, a),
-            15 => self.slide_u8x16::<15>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_u8x16<const OFFSET: usize>(self, a: u8x16<Self>) -> u8x16<Self> {
-        match OFFSET % 16 {
-            0 => self.slide_u8x16::<16>(a, a),
-            1 => self.slide_u8x16::<15>(a, a),
-            2 => self.slide_u8x16::<14>(a, a),
-            3 => self.slide_u8x16::<13>(a, a),
-            4 => self.slide_u8x16::<12>(a, a),
-            5 => self.slide_u8x16::<11>(a, a),
-            6 => self.slide_u8x16::<10>(a, a),
-            7 => self.slide_u8x16::<9>(a, a),
-            8 => self.slide_u8x16::<8>(a, a),
-            9 => self.slide_u8x16::<7>(a, a),
-            10 => self.slide_u8x16::<6>(a, a),
-            11 => self.slide_u8x16::<5>(a, a),
-            12 => self.slide_u8x16::<4>(a, a),
-            13 => self.slide_u8x16::<3>(a, a),
-            14 => self.slide_u8x16::<2>(a, a),
-            15 => self.slide_u8x16::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_u8x16<const OFFSET: usize>(
-        self,
-        a: u8x16<Self>,
-        padding: u8,
-    ) -> u8x16<Self> {
-        let padding = self.splat_u8x16(padding);
-        match OFFSET {
-            0 => self.slide_u8x16::<0>(a, padding),
-            1 => self.slide_u8x16::<1>(a, padding),
-            2 => self.slide_u8x16::<2>(a, padding),
-            3 => self.slide_u8x16::<3>(a, padding),
-            4 => self.slide_u8x16::<4>(a, padding),
-            5 => self.slide_u8x16::<5>(a, padding),
-            6 => self.slide_u8x16::<6>(a, padding),
-            7 => self.slide_u8x16::<7>(a, padding),
-            8 => self.slide_u8x16::<8>(a, padding),
-            9 => self.slide_u8x16::<9>(a, padding),
-            10 => self.slide_u8x16::<10>(a, padding),
-            11 => self.slide_u8x16::<11>(a, padding),
-            12 => self.slide_u8x16::<12>(a, padding),
-            13 => self.slide_u8x16::<13>(a, padding),
-            14 => self.slide_u8x16::<14>(a, padding),
-            15 => self.slide_u8x16::<15>(a, padding),
-            16 => self.slide_u8x16::<16>(a, padding),
-            _ => self.slide_u8x16::<16>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_u8x16<const OFFSET: usize>(
-        self,
-        a: u8x16<Self>,
-        padding: u8,
-    ) -> u8x16<Self> {
-        let padding = self.splat_u8x16(padding);
-        match OFFSET {
-            0 => self.slide_u8x16::<16>(padding, a),
-            1 => self.slide_u8x16::<15>(padding, a),
-            2 => self.slide_u8x16::<14>(padding, a),
-            3 => self.slide_u8x16::<13>(padding, a),
-            4 => self.slide_u8x16::<12>(padding, a),
-            5 => self.slide_u8x16::<11>(padding, a),
-            6 => self.slide_u8x16::<10>(padding, a),
-            7 => self.slide_u8x16::<9>(padding, a),
-            8 => self.slide_u8x16::<8>(padding, a),
-            9 => self.slide_u8x16::<7>(padding, a),
-            10 => self.slide_u8x16::<6>(padding, a),
-            11 => self.slide_u8x16::<5>(padding, a),
-            12 => self.slide_u8x16::<4>(padding, a),
-            13 => self.slide_u8x16::<3>(padding, a),
-            14 => self.slide_u8x16::<2>(padding, a),
-            15 => self.slide_u8x16::<1>(padding, a),
-            16 => self.slide_u8x16::<0>(padding, a),
-            _ => self.slide_u8x16::<0>(padding, a),
-        }
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_u8x16(self, a: u8x16<Self>, indices: u8x16<Self>) -> u8x16<Self> {
@@ -1910,6 +1492,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
+                _mm_max_epu8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
+                _mm_min_epu8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1942,32 +1544,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> mask8x16<Avx512> {
                 mask8x16 {
                     val: _mm_cmple_epu8_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> mask8x16<Avx512> {
-                mask8x16 {
-                    val: _mm_cmpge_epu8_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> mask8x16<Avx512> {
-                mask8x16 {
-                    val: _mm_cmpgt_epu8_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -2071,26 +1647,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
-                _mm_min_epu8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
-                _mm_max_epu8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self> {
@@ -2315,129 +1871,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_i16x8<const SHIFT: usize>(
-        self,
-        a: i16x8<Self>,
-        b: i16x8<Self>,
-    ) -> i16x8<Self> {
-        self.slide_i16x8::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn rotate_elements_left_i16x8<const OFFSET: usize>(self, a: i16x8<Self>) -> i16x8<Self> {
-        match OFFSET % 8 {
-            0 => self.slide_i16x8::<0>(a, a),
-            1 => self.slide_i16x8::<1>(a, a),
-            2 => self.slide_i16x8::<2>(a, a),
-            3 => self.slide_i16x8::<3>(a, a),
-            4 => self.slide_i16x8::<4>(a, a),
-            5 => self.slide_i16x8::<5>(a, a),
-            6 => self.slide_i16x8::<6>(a, a),
-            7 => self.slide_i16x8::<7>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_i16x8<const OFFSET: usize>(self, a: i16x8<Self>) -> i16x8<Self> {
-        match OFFSET % 8 {
-            0 => self.slide_i16x8::<8>(a, a),
-            1 => self.slide_i16x8::<7>(a, a),
-            2 => self.slide_i16x8::<6>(a, a),
-            3 => self.slide_i16x8::<5>(a, a),
-            4 => self.slide_i16x8::<4>(a, a),
-            5 => self.slide_i16x8::<3>(a, a),
-            6 => self.slide_i16x8::<2>(a, a),
-            7 => self.slide_i16x8::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_i16x8<const OFFSET: usize>(
-        self,
-        a: i16x8<Self>,
-        padding: i16,
-    ) -> i16x8<Self> {
-        let padding = self.splat_i16x8(padding);
-        match OFFSET {
-            0 => self.slide_i16x8::<0>(a, padding),
-            1 => self.slide_i16x8::<1>(a, padding),
-            2 => self.slide_i16x8::<2>(a, padding),
-            3 => self.slide_i16x8::<3>(a, padding),
-            4 => self.slide_i16x8::<4>(a, padding),
-            5 => self.slide_i16x8::<5>(a, padding),
-            6 => self.slide_i16x8::<6>(a, padding),
-            7 => self.slide_i16x8::<7>(a, padding),
-            8 => self.slide_i16x8::<8>(a, padding),
-            _ => self.slide_i16x8::<8>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_i16x8<const OFFSET: usize>(
-        self,
-        a: i16x8<Self>,
-        padding: i16,
-    ) -> i16x8<Self> {
-        let padding = self.splat_i16x8(padding);
-        match OFFSET {
-            0 => self.slide_i16x8::<8>(padding, a),
-            1 => self.slide_i16x8::<7>(padding, a),
-            2 => self.slide_i16x8::<6>(padding, a),
-            3 => self.slide_i16x8::<5>(padding, a),
-            4 => self.slide_i16x8::<4>(padding, a),
-            5 => self.slide_i16x8::<3>(padding, a),
-            6 => self.slide_i16x8::<2>(padding, a),
-            7 => self.slide_i16x8::<1>(padding, a),
-            8 => self.slide_i16x8::<0>(padding, a),
-            _ => self.slide_i16x8::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x8<Avx512>, indices: u8x16<Avx512>) -> i16x8<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x8<Avx512>, indices: u8x16<Avx512>) -> i16x8<Avx512> {
-                let result = _mm_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x8<Avx512>, indices: u8x16<Avx512>) -> i16x8<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
-                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2542,6 +1975,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
+                _mm_max_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
+                _mm_min_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2574,32 +2027,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> mask16x8<Avx512> {
                 mask16x8 {
                     val: _mm_cmple_epi16_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> mask16x8<Avx512> {
-                mask16x8 {
-                    val: _mm_cmpge_epi16_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> mask16x8<Avx512> {
-                mask16x8 {
-                    val: _mm_cmpgt_epi16_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -2695,26 +2122,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
-                _mm_min_epi16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
-                _mm_max_epi16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x16<Self> {
@@ -2870,129 +2277,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_u16x8<const SHIFT: usize>(
-        self,
-        a: u16x8<Self>,
-        b: u16x8<Self>,
-    ) -> u16x8<Self> {
-        self.slide_u16x8::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn rotate_elements_left_u16x8<const OFFSET: usize>(self, a: u16x8<Self>) -> u16x8<Self> {
-        match OFFSET % 8 {
-            0 => self.slide_u16x8::<0>(a, a),
-            1 => self.slide_u16x8::<1>(a, a),
-            2 => self.slide_u16x8::<2>(a, a),
-            3 => self.slide_u16x8::<3>(a, a),
-            4 => self.slide_u16x8::<4>(a, a),
-            5 => self.slide_u16x8::<5>(a, a),
-            6 => self.slide_u16x8::<6>(a, a),
-            7 => self.slide_u16x8::<7>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_u16x8<const OFFSET: usize>(self, a: u16x8<Self>) -> u16x8<Self> {
-        match OFFSET % 8 {
-            0 => self.slide_u16x8::<8>(a, a),
-            1 => self.slide_u16x8::<7>(a, a),
-            2 => self.slide_u16x8::<6>(a, a),
-            3 => self.slide_u16x8::<5>(a, a),
-            4 => self.slide_u16x8::<4>(a, a),
-            5 => self.slide_u16x8::<3>(a, a),
-            6 => self.slide_u16x8::<2>(a, a),
-            7 => self.slide_u16x8::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_u16x8<const OFFSET: usize>(
-        self,
-        a: u16x8<Self>,
-        padding: u16,
-    ) -> u16x8<Self> {
-        let padding = self.splat_u16x8(padding);
-        match OFFSET {
-            0 => self.slide_u16x8::<0>(a, padding),
-            1 => self.slide_u16x8::<1>(a, padding),
-            2 => self.slide_u16x8::<2>(a, padding),
-            3 => self.slide_u16x8::<3>(a, padding),
-            4 => self.slide_u16x8::<4>(a, padding),
-            5 => self.slide_u16x8::<5>(a, padding),
-            6 => self.slide_u16x8::<6>(a, padding),
-            7 => self.slide_u16x8::<7>(a, padding),
-            8 => self.slide_u16x8::<8>(a, padding),
-            _ => self.slide_u16x8::<8>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_u16x8<const OFFSET: usize>(
-        self,
-        a: u16x8<Self>,
-        padding: u16,
-    ) -> u16x8<Self> {
-        let padding = self.splat_u16x8(padding);
-        match OFFSET {
-            0 => self.slide_u16x8::<8>(padding, a),
-            1 => self.slide_u16x8::<7>(padding, a),
-            2 => self.slide_u16x8::<6>(padding, a),
-            3 => self.slide_u16x8::<5>(padding, a),
-            4 => self.slide_u16x8::<4>(padding, a),
-            5 => self.slide_u16x8::<3>(padding, a),
-            6 => self.slide_u16x8::<2>(padding, a),
-            7 => self.slide_u16x8::<1>(padding, a),
-            8 => self.slide_u16x8::<0>(padding, a),
-            _ => self.slide_u16x8::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x8<Avx512>, indices: u8x16<Avx512>) -> u16x8<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x8<Avx512>, indices: u8x16<Avx512>) -> u16x8<Avx512> {
-                let result = _mm_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x8<Avx512>, indices: u8x16<Avx512>) -> u16x8<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
-                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3097,6 +2381,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
+                _mm_max_epu16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
+                _mm_min_epu16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3129,32 +2433,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> mask16x8<Avx512> {
                 mask16x8 {
                     val: _mm_cmple_epu16_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> mask16x8<Avx512> {
-                mask16x8 {
-                    val: _mm_cmpge_epu16_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> mask16x8<Avx512> {
-                mask16x8 {
-                    val: _mm_cmpgt_epu16_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -3250,26 +2528,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
-                _mm_min_epu16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
-                _mm_max_epu16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x16<Self> {
@@ -3525,113 +2783,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_i32x4<const SHIFT: usize>(
-        self,
-        a: i32x4<Self>,
-        b: i32x4<Self>,
-    ) -> i32x4<Self> {
-        self.slide_i32x4::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn rotate_elements_left_i32x4<const OFFSET: usize>(self, a: i32x4<Self>) -> i32x4<Self> {
-        match OFFSET % 4 {
-            0 => self.slide_i32x4::<0>(a, a),
-            1 => self.slide_i32x4::<1>(a, a),
-            2 => self.slide_i32x4::<2>(a, a),
-            3 => self.slide_i32x4::<3>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_i32x4<const OFFSET: usize>(self, a: i32x4<Self>) -> i32x4<Self> {
-        match OFFSET % 4 {
-            0 => self.slide_i32x4::<4>(a, a),
-            1 => self.slide_i32x4::<3>(a, a),
-            2 => self.slide_i32x4::<2>(a, a),
-            3 => self.slide_i32x4::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_i32x4<const OFFSET: usize>(
-        self,
-        a: i32x4<Self>,
-        padding: i32,
-    ) -> i32x4<Self> {
-        let padding = self.splat_i32x4(padding);
-        match OFFSET {
-            0 => self.slide_i32x4::<0>(a, padding),
-            1 => self.slide_i32x4::<1>(a, padding),
-            2 => self.slide_i32x4::<2>(a, padding),
-            3 => self.slide_i32x4::<3>(a, padding),
-            4 => self.slide_i32x4::<4>(a, padding),
-            _ => self.slide_i32x4::<4>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_i32x4<const OFFSET: usize>(
-        self,
-        a: i32x4<Self>,
-        padding: i32,
-    ) -> i32x4<Self> {
-        let padding = self.splat_i32x4(padding);
-        match OFFSET {
-            0 => self.slide_i32x4::<4>(padding, a),
-            1 => self.slide_i32x4::<3>(padding, a),
-            2 => self.slide_i32x4::<2>(padding, a),
-            3 => self.slide_i32x4::<1>(padding, a),
-            4 => self.slide_i32x4::<0>(padding, a),
-            _ => self.slide_i32x4::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x4<Avx512>, indices: u8x16<Avx512>) -> i32x4<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x4<Avx512>, indices: u8x16<Avx512>) -> i32x4<Avx512> {
-                let result = _mm_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x4<Avx512>, indices: u8x16<Avx512>) -> i32x4<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
-                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3736,6 +2887,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_max_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_min_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3768,32 +2939,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> mask32x4<Avx512> {
                 mask32x4 {
                     val: _mm_cmple_epi32_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> mask32x4<Avx512> {
-                mask32x4 {
-                    val: _mm_cmpge_epi32_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> mask32x4<Avx512> {
-                mask32x4 {
-                    val: _mm_cmpgt_epi32_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -3879,26 +3024,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
-                _mm_min_epi32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
-                _mm_max_epi32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x8<Self> {
@@ -4058,113 +3183,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_u32x4<const SHIFT: usize>(
-        self,
-        a: u32x4<Self>,
-        b: u32x4<Self>,
-    ) -> u32x4<Self> {
-        self.slide_u32x4::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn rotate_elements_left_u32x4<const OFFSET: usize>(self, a: u32x4<Self>) -> u32x4<Self> {
-        match OFFSET % 4 {
-            0 => self.slide_u32x4::<0>(a, a),
-            1 => self.slide_u32x4::<1>(a, a),
-            2 => self.slide_u32x4::<2>(a, a),
-            3 => self.slide_u32x4::<3>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_u32x4<const OFFSET: usize>(self, a: u32x4<Self>) -> u32x4<Self> {
-        match OFFSET % 4 {
-            0 => self.slide_u32x4::<4>(a, a),
-            1 => self.slide_u32x4::<3>(a, a),
-            2 => self.slide_u32x4::<2>(a, a),
-            3 => self.slide_u32x4::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_u32x4<const OFFSET: usize>(
-        self,
-        a: u32x4<Self>,
-        padding: u32,
-    ) -> u32x4<Self> {
-        let padding = self.splat_u32x4(padding);
-        match OFFSET {
-            0 => self.slide_u32x4::<0>(a, padding),
-            1 => self.slide_u32x4::<1>(a, padding),
-            2 => self.slide_u32x4::<2>(a, padding),
-            3 => self.slide_u32x4::<3>(a, padding),
-            4 => self.slide_u32x4::<4>(a, padding),
-            _ => self.slide_u32x4::<4>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_u32x4<const OFFSET: usize>(
-        self,
-        a: u32x4<Self>,
-        padding: u32,
-    ) -> u32x4<Self> {
-        let padding = self.splat_u32x4(padding);
-        match OFFSET {
-            0 => self.slide_u32x4::<4>(padding, a),
-            1 => self.slide_u32x4::<3>(padding, a),
-            2 => self.slide_u32x4::<2>(padding, a),
-            3 => self.slide_u32x4::<1>(padding, a),
-            4 => self.slide_u32x4::<0>(padding, a),
-            _ => self.slide_u32x4::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x4<Avx512>, indices: u8x16<Avx512>) -> u32x4<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x4<Avx512>, indices: u8x16<Avx512>) -> u32x4<Avx512> {
-                let result = _mm_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x4<Avx512>, indices: u8x16<Avx512>) -> u32x4<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
-                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4269,6 +3287,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
+                _mm_max_epu32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
+                _mm_min_epu32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4301,32 +3339,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> mask32x4<Avx512> {
                 mask32x4 {
                     val: _mm_cmple_epu32_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> mask32x4<Avx512> {
-                mask32x4 {
-                    val: _mm_cmpge_epu32_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> mask32x4<Avx512> {
-                mask32x4 {
-                    val: _mm_cmpgt_epu32_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -4412,26 +3424,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
-                _mm_min_epu32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
-                _mm_max_epu32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x8<Self> {
@@ -4692,105 +3684,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_f64x2<const SHIFT: usize>(
-        self,
-        a: f64x2<Self>,
-        b: f64x2<Self>,
-    ) -> f64x2<Self> {
-        self.slide_f64x2::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn rotate_elements_left_f64x2<const OFFSET: usize>(self, a: f64x2<Self>) -> f64x2<Self> {
-        match OFFSET % 2 {
-            0 => self.slide_f64x2::<0>(a, a),
-            1 => self.slide_f64x2::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_f64x2<const OFFSET: usize>(self, a: f64x2<Self>) -> f64x2<Self> {
-        match OFFSET % 2 {
-            0 => self.slide_f64x2::<2>(a, a),
-            1 => self.slide_f64x2::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_f64x2<const OFFSET: usize>(
-        self,
-        a: f64x2<Self>,
-        padding: f64,
-    ) -> f64x2<Self> {
-        let padding = self.splat_f64x2(padding);
-        match OFFSET {
-            0 => self.slide_f64x2::<0>(a, padding),
-            1 => self.slide_f64x2::<1>(a, padding),
-            2 => self.slide_f64x2::<2>(a, padding),
-            _ => self.slide_f64x2::<2>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_f64x2<const OFFSET: usize>(
-        self,
-        a: f64x2<Self>,
-        padding: f64,
-    ) -> f64x2<Self> {
-        let padding = self.splat_f64x2(padding);
-        match OFFSET {
-            0 => self.slide_f64x2::<2>(padding, a),
-            1 => self.slide_f64x2::<1>(padding, a),
-            2 => self.slide_f64x2::<0>(padding, a),
-            _ => self.slide_f64x2::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x2<Avx512>, indices: u8x16<Avx512>) -> f64x2<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x2<Avx512>, indices: u8x16<Avx512>) -> f64x2<Avx512> {
-                let result = _mm_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x2<Avx512>, indices: u8x16<Avx512>) -> f64x2<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
-                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4883,6 +3776,46 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_max_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_min_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_range_pd::<5i32>(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_range_pd::<4i32>(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4915,32 +3848,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> mask64x2<Avx512> {
                 mask64x2 {
                     val: _mm_cmp_pd_mask::<18i32>(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> mask64x2<Avx512> {
-                mask64x2 {
-                    val: _mm_cmp_pd_mask::<29i32>(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> mask64x2<Avx512> {
-                mask64x2 {
-                    val: _mm_cmp_pd_mask::<30i32>(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -4994,46 +3901,6 @@ impl Simd for Avx512 {
     #[inline(always)]
     fn deinterleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>) {
         (self.unzip_low_f64x2(a, b), self.unzip_high_f64x2(a, b))
-    }
-    #[inline(always)]
-    fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
-                _mm_max_pd(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
-                _mm_min_pd(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
-                _mm_range_pd::<5i32>(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn min_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
-                _mm_range_pd::<4i32>(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
@@ -5278,105 +4145,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_i64x2<const SHIFT: usize>(
-        self,
-        a: i64x2<Self>,
-        b: i64x2<Self>,
-    ) -> i64x2<Self> {
-        self.slide_i64x2::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn rotate_elements_left_i64x2<const OFFSET: usize>(self, a: i64x2<Self>) -> i64x2<Self> {
-        match OFFSET % 2 {
-            0 => self.slide_i64x2::<0>(a, a),
-            1 => self.slide_i64x2::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_i64x2<const OFFSET: usize>(self, a: i64x2<Self>) -> i64x2<Self> {
-        match OFFSET % 2 {
-            0 => self.slide_i64x2::<2>(a, a),
-            1 => self.slide_i64x2::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_i64x2<const OFFSET: usize>(
-        self,
-        a: i64x2<Self>,
-        padding: i64,
-    ) -> i64x2<Self> {
-        let padding = self.splat_i64x2(padding);
-        match OFFSET {
-            0 => self.slide_i64x2::<0>(a, padding),
-            1 => self.slide_i64x2::<1>(a, padding),
-            2 => self.slide_i64x2::<2>(a, padding),
-            _ => self.slide_i64x2::<2>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_i64x2<const OFFSET: usize>(
-        self,
-        a: i64x2<Self>,
-        padding: i64,
-    ) -> i64x2<Self> {
-        let padding = self.splat_i64x2(padding);
-        match OFFSET {
-            0 => self.slide_i64x2::<2>(padding, a),
-            1 => self.slide_i64x2::<1>(padding, a),
-            2 => self.slide_i64x2::<0>(padding, a),
-            _ => self.slide_i64x2::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x2<Avx512>, indices: u8x16<Avx512>) -> i64x2<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x2<Avx512>, indices: u8x16<Avx512>) -> i64x2<Avx512> {
-                let result = _mm_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x2<Avx512>, indices: u8x16<Avx512>) -> i64x2<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
-                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5481,6 +4249,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x2<Avx512>, b: i64x2<Avx512>) -> i64x2<Avx512> {
+                _mm_max_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x2<Avx512>, b: i64x2<Avx512>) -> i64x2<Avx512> {
+                _mm_min_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5513,32 +4301,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i64x2<Avx512>, b: i64x2<Avx512>) -> mask64x2<Avx512> {
                 mask64x2 {
                     val: _mm_cmple_epi64_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x2<Avx512>, b: i64x2<Avx512>) -> mask64x2<Avx512> {
-                mask64x2 {
-                    val: _mm_cmpge_epi64_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x2<Avx512>, b: i64x2<Avx512>) -> mask64x2<Avx512> {
-                mask64x2 {
-                    val: _mm_cmpgt_epi64_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -5622,26 +4384,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x2<Avx512>, b: i64x2<Avx512>) -> i64x2<Avx512> {
-                _mm_min_epi64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x2<Avx512>, b: i64x2<Avx512>) -> i64x2<Avx512> {
-                _mm_max_epi64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x4<Self> {
@@ -5783,105 +4525,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_u64x2<const SHIFT: usize>(
-        self,
-        a: u64x2<Self>,
-        b: u64x2<Self>,
-    ) -> u64x2<Self> {
-        self.slide_u64x2::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn rotate_elements_left_u64x2<const OFFSET: usize>(self, a: u64x2<Self>) -> u64x2<Self> {
-        match OFFSET % 2 {
-            0 => self.slide_u64x2::<0>(a, a),
-            1 => self.slide_u64x2::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_u64x2<const OFFSET: usize>(self, a: u64x2<Self>) -> u64x2<Self> {
-        match OFFSET % 2 {
-            0 => self.slide_u64x2::<2>(a, a),
-            1 => self.slide_u64x2::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_u64x2<const OFFSET: usize>(
-        self,
-        a: u64x2<Self>,
-        padding: u64,
-    ) -> u64x2<Self> {
-        let padding = self.splat_u64x2(padding);
-        match OFFSET {
-            0 => self.slide_u64x2::<0>(a, padding),
-            1 => self.slide_u64x2::<1>(a, padding),
-            2 => self.slide_u64x2::<2>(a, padding),
-            _ => self.slide_u64x2::<2>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_u64x2<const OFFSET: usize>(
-        self,
-        a: u64x2<Self>,
-        padding: u64,
-    ) -> u64x2<Self> {
-        let padding = self.splat_u64x2(padding);
-        match OFFSET {
-            0 => self.slide_u64x2::<2>(padding, a),
-            1 => self.slide_u64x2::<1>(padding, a),
-            2 => self.slide_u64x2::<0>(padding, a),
-            _ => self.slide_u64x2::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x2<Avx512>, indices: u8x16<Avx512>) -> u64x2<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x2<Avx512>, indices: u8x16<Avx512>) -> u64x2<Avx512> {
-                let result = _mm_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x2<Avx512>, indices: u8x16<Avx512>) -> u64x2<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
-                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5986,6 +4629,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x2<Avx512>, b: u64x2<Avx512>) -> u64x2<Avx512> {
+                _mm_max_epu64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x2<Avx512>, b: u64x2<Avx512>) -> u64x2<Avx512> {
+                _mm_min_epu64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6018,32 +4681,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u64x2<Avx512>, b: u64x2<Avx512>) -> mask64x2<Avx512> {
                 mask64x2 {
                     val: _mm_cmple_epu64_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x2<Avx512>, b: u64x2<Avx512>) -> mask64x2<Avx512> {
-                mask64x2 {
-                    val: _mm_cmpge_epu64_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x2<Avx512>, b: u64x2<Avx512>) -> mask64x2<Avx512> {
-                mask64x2 {
-                    val: _mm_cmpgt_epu64_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -6127,26 +4764,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x2<Avx512>, b: u64x2<Avx512>) -> u64x2<Avx512> {
-                _mm_min_epu64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x2<Avx512>, b: u64x2<Avx512>) -> u64x2<Avx512> {
-                _mm_max_epu64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x4<Self> {
@@ -6425,121 +5042,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_f32x8<const OFFSET: usize>(self, a: f32x8<Self>) -> f32x8<Self> {
-        match OFFSET % 8 {
-            0 => self.slide_f32x8::<0>(a, a),
-            1 => self.slide_f32x8::<1>(a, a),
-            2 => self.slide_f32x8::<2>(a, a),
-            3 => self.slide_f32x8::<3>(a, a),
-            4 => self.slide_f32x8::<4>(a, a),
-            5 => self.slide_f32x8::<5>(a, a),
-            6 => self.slide_f32x8::<6>(a, a),
-            7 => self.slide_f32x8::<7>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_f32x8<const OFFSET: usize>(self, a: f32x8<Self>) -> f32x8<Self> {
-        match OFFSET % 8 {
-            0 => self.slide_f32x8::<8>(a, a),
-            1 => self.slide_f32x8::<7>(a, a),
-            2 => self.slide_f32x8::<6>(a, a),
-            3 => self.slide_f32x8::<5>(a, a),
-            4 => self.slide_f32x8::<4>(a, a),
-            5 => self.slide_f32x8::<3>(a, a),
-            6 => self.slide_f32x8::<2>(a, a),
-            7 => self.slide_f32x8::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_f32x8<const OFFSET: usize>(
-        self,
-        a: f32x8<Self>,
-        padding: f32,
-    ) -> f32x8<Self> {
-        let padding = self.splat_f32x8(padding);
-        match OFFSET {
-            0 => self.slide_f32x8::<0>(a, padding),
-            1 => self.slide_f32x8::<1>(a, padding),
-            2 => self.slide_f32x8::<2>(a, padding),
-            3 => self.slide_f32x8::<3>(a, padding),
-            4 => self.slide_f32x8::<4>(a, padding),
-            5 => self.slide_f32x8::<5>(a, padding),
-            6 => self.slide_f32x8::<6>(a, padding),
-            7 => self.slide_f32x8::<7>(a, padding),
-            8 => self.slide_f32x8::<8>(a, padding),
-            _ => self.slide_f32x8::<8>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_f32x8<const OFFSET: usize>(
-        self,
-        a: f32x8<Self>,
-        padding: f32,
-    ) -> f32x8<Self> {
-        let padding = self.splat_f32x8(padding);
-        match OFFSET {
-            0 => self.slide_f32x8::<8>(padding, a),
-            1 => self.slide_f32x8::<7>(padding, a),
-            2 => self.slide_f32x8::<6>(padding, a),
-            3 => self.slide_f32x8::<5>(padding, a),
-            4 => self.slide_f32x8::<4>(padding, a),
-            5 => self.slide_f32x8::<3>(padding, a),
-            6 => self.slide_f32x8::<2>(padding, a),
-            7 => self.slide_f32x8::<1>(padding, a),
-            8 => self.slide_f32x8::<0>(padding, a),
-            _ => self.slide_f32x8::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x8<Avx512>, indices: u8x32<Avx512>) -> f32x8<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x8<Avx512>, indices: u8x32<Avx512>) -> f32x8<Avx512> {
-                let result = _mm256_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x8<Avx512>, indices: u8x32<Avx512>) -> f32x8<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
-                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6635,6 +5137,46 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_max_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_min_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn max_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_range_ps::<5i32>(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_range_ps::<4i32>(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6667,32 +5209,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> mask32x8<Avx512> {
                 mask32x8 {
                     val: _mm256_cmp_ps_mask::<18i32>(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> mask32x8<Avx512> {
-                mask32x8 {
-                    val: _mm256_cmp_ps_mask::<29i32>(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> mask32x8<Avx512> {
-                mask32x8 {
-                    val: _mm256_cmp_ps_mask::<30i32>(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -6797,46 +5313,6 @@ impl Simd for Avx512 {
                     _mm256_permutex2var_ps(a, _mm256_setr_epi32(1, 3, 5, 7, 9, 11, 13, 15), b)
                         .simd_into(token),
                 )
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> f32x8<Avx512> {
-                _mm256_max_ps(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn min_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> f32x8<Avx512> {
-                _mm256_min_ps(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> f32x8<Avx512> {
-                _mm256_range_ps::<5i32>(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn min_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> f32x8<Avx512> {
-                _mm256_range_ps::<4i32>(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -7083,217 +5559,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_i8x32<const OFFSET: usize>(self, a: i8x32<Self>) -> i8x32<Self> {
-        match OFFSET % 32 {
-            0 => self.slide_i8x32::<0>(a, a),
-            1 => self.slide_i8x32::<1>(a, a),
-            2 => self.slide_i8x32::<2>(a, a),
-            3 => self.slide_i8x32::<3>(a, a),
-            4 => self.slide_i8x32::<4>(a, a),
-            5 => self.slide_i8x32::<5>(a, a),
-            6 => self.slide_i8x32::<6>(a, a),
-            7 => self.slide_i8x32::<7>(a, a),
-            8 => self.slide_i8x32::<8>(a, a),
-            9 => self.slide_i8x32::<9>(a, a),
-            10 => self.slide_i8x32::<10>(a, a),
-            11 => self.slide_i8x32::<11>(a, a),
-            12 => self.slide_i8x32::<12>(a, a),
-            13 => self.slide_i8x32::<13>(a, a),
-            14 => self.slide_i8x32::<14>(a, a),
-            15 => self.slide_i8x32::<15>(a, a),
-            16 => self.slide_i8x32::<16>(a, a),
-            17 => self.slide_i8x32::<17>(a, a),
-            18 => self.slide_i8x32::<18>(a, a),
-            19 => self.slide_i8x32::<19>(a, a),
-            20 => self.slide_i8x32::<20>(a, a),
-            21 => self.slide_i8x32::<21>(a, a),
-            22 => self.slide_i8x32::<22>(a, a),
-            23 => self.slide_i8x32::<23>(a, a),
-            24 => self.slide_i8x32::<24>(a, a),
-            25 => self.slide_i8x32::<25>(a, a),
-            26 => self.slide_i8x32::<26>(a, a),
-            27 => self.slide_i8x32::<27>(a, a),
-            28 => self.slide_i8x32::<28>(a, a),
-            29 => self.slide_i8x32::<29>(a, a),
-            30 => self.slide_i8x32::<30>(a, a),
-            31 => self.slide_i8x32::<31>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_i8x32<const OFFSET: usize>(self, a: i8x32<Self>) -> i8x32<Self> {
-        match OFFSET % 32 {
-            0 => self.slide_i8x32::<32>(a, a),
-            1 => self.slide_i8x32::<31>(a, a),
-            2 => self.slide_i8x32::<30>(a, a),
-            3 => self.slide_i8x32::<29>(a, a),
-            4 => self.slide_i8x32::<28>(a, a),
-            5 => self.slide_i8x32::<27>(a, a),
-            6 => self.slide_i8x32::<26>(a, a),
-            7 => self.slide_i8x32::<25>(a, a),
-            8 => self.slide_i8x32::<24>(a, a),
-            9 => self.slide_i8x32::<23>(a, a),
-            10 => self.slide_i8x32::<22>(a, a),
-            11 => self.slide_i8x32::<21>(a, a),
-            12 => self.slide_i8x32::<20>(a, a),
-            13 => self.slide_i8x32::<19>(a, a),
-            14 => self.slide_i8x32::<18>(a, a),
-            15 => self.slide_i8x32::<17>(a, a),
-            16 => self.slide_i8x32::<16>(a, a),
-            17 => self.slide_i8x32::<15>(a, a),
-            18 => self.slide_i8x32::<14>(a, a),
-            19 => self.slide_i8x32::<13>(a, a),
-            20 => self.slide_i8x32::<12>(a, a),
-            21 => self.slide_i8x32::<11>(a, a),
-            22 => self.slide_i8x32::<10>(a, a),
-            23 => self.slide_i8x32::<9>(a, a),
-            24 => self.slide_i8x32::<8>(a, a),
-            25 => self.slide_i8x32::<7>(a, a),
-            26 => self.slide_i8x32::<6>(a, a),
-            27 => self.slide_i8x32::<5>(a, a),
-            28 => self.slide_i8x32::<4>(a, a),
-            29 => self.slide_i8x32::<3>(a, a),
-            30 => self.slide_i8x32::<2>(a, a),
-            31 => self.slide_i8x32::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_i8x32<const OFFSET: usize>(
-        self,
-        a: i8x32<Self>,
-        padding: i8,
-    ) -> i8x32<Self> {
-        let padding = self.splat_i8x32(padding);
-        match OFFSET {
-            0 => self.slide_i8x32::<0>(a, padding),
-            1 => self.slide_i8x32::<1>(a, padding),
-            2 => self.slide_i8x32::<2>(a, padding),
-            3 => self.slide_i8x32::<3>(a, padding),
-            4 => self.slide_i8x32::<4>(a, padding),
-            5 => self.slide_i8x32::<5>(a, padding),
-            6 => self.slide_i8x32::<6>(a, padding),
-            7 => self.slide_i8x32::<7>(a, padding),
-            8 => self.slide_i8x32::<8>(a, padding),
-            9 => self.slide_i8x32::<9>(a, padding),
-            10 => self.slide_i8x32::<10>(a, padding),
-            11 => self.slide_i8x32::<11>(a, padding),
-            12 => self.slide_i8x32::<12>(a, padding),
-            13 => self.slide_i8x32::<13>(a, padding),
-            14 => self.slide_i8x32::<14>(a, padding),
-            15 => self.slide_i8x32::<15>(a, padding),
-            16 => self.slide_i8x32::<16>(a, padding),
-            17 => self.slide_i8x32::<17>(a, padding),
-            18 => self.slide_i8x32::<18>(a, padding),
-            19 => self.slide_i8x32::<19>(a, padding),
-            20 => self.slide_i8x32::<20>(a, padding),
-            21 => self.slide_i8x32::<21>(a, padding),
-            22 => self.slide_i8x32::<22>(a, padding),
-            23 => self.slide_i8x32::<23>(a, padding),
-            24 => self.slide_i8x32::<24>(a, padding),
-            25 => self.slide_i8x32::<25>(a, padding),
-            26 => self.slide_i8x32::<26>(a, padding),
-            27 => self.slide_i8x32::<27>(a, padding),
-            28 => self.slide_i8x32::<28>(a, padding),
-            29 => self.slide_i8x32::<29>(a, padding),
-            30 => self.slide_i8x32::<30>(a, padding),
-            31 => self.slide_i8x32::<31>(a, padding),
-            32 => self.slide_i8x32::<32>(a, padding),
-            _ => self.slide_i8x32::<32>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_i8x32<const OFFSET: usize>(
-        self,
-        a: i8x32<Self>,
-        padding: i8,
-    ) -> i8x32<Self> {
-        let padding = self.splat_i8x32(padding);
-        match OFFSET {
-            0 => self.slide_i8x32::<32>(padding, a),
-            1 => self.slide_i8x32::<31>(padding, a),
-            2 => self.slide_i8x32::<30>(padding, a),
-            3 => self.slide_i8x32::<29>(padding, a),
-            4 => self.slide_i8x32::<28>(padding, a),
-            5 => self.slide_i8x32::<27>(padding, a),
-            6 => self.slide_i8x32::<26>(padding, a),
-            7 => self.slide_i8x32::<25>(padding, a),
-            8 => self.slide_i8x32::<24>(padding, a),
-            9 => self.slide_i8x32::<23>(padding, a),
-            10 => self.slide_i8x32::<22>(padding, a),
-            11 => self.slide_i8x32::<21>(padding, a),
-            12 => self.slide_i8x32::<20>(padding, a),
-            13 => self.slide_i8x32::<19>(padding, a),
-            14 => self.slide_i8x32::<18>(padding, a),
-            15 => self.slide_i8x32::<17>(padding, a),
-            16 => self.slide_i8x32::<16>(padding, a),
-            17 => self.slide_i8x32::<15>(padding, a),
-            18 => self.slide_i8x32::<14>(padding, a),
-            19 => self.slide_i8x32::<13>(padding, a),
-            20 => self.slide_i8x32::<12>(padding, a),
-            21 => self.slide_i8x32::<11>(padding, a),
-            22 => self.slide_i8x32::<10>(padding, a),
-            23 => self.slide_i8x32::<9>(padding, a),
-            24 => self.slide_i8x32::<8>(padding, a),
-            25 => self.slide_i8x32::<7>(padding, a),
-            26 => self.slide_i8x32::<6>(padding, a),
-            27 => self.slide_i8x32::<5>(padding, a),
-            28 => self.slide_i8x32::<4>(padding, a),
-            29 => self.slide_i8x32::<3>(padding, a),
-            30 => self.slide_i8x32::<2>(padding, a),
-            31 => self.slide_i8x32::<1>(padding, a),
-            32 => self.slide_i8x32::<0>(padding, a),
-            _ => self.slide_i8x32::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x32<Avx512>, indices: u8x32<Avx512>) -> i8x32<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x32<Avx512>, indices: u8x32<Avx512>) -> i8x32<Avx512> {
-                let result = _mm256_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x32<Avx512>, indices: u8x32<Avx512>) -> i8x32<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
-                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -7446,6 +5711,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> i8x32<Avx512> {
+                _mm256_max_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> i8x32<Avx512> {
+                _mm256_min_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -7478,32 +5763,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> mask8x32<Avx512> {
                 mask8x32 {
                     val: _mm256_cmple_epi8_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> mask8x32<Avx512> {
-                mask8x32 {
-                    val: _mm256_cmpge_epi8_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> mask8x32<Avx512> {
-                mask8x32 {
-                    val: _mm256_cmpgt_epi8_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -7668,26 +5927,6 @@ impl Simd for Avx512 {
         kernel(self, a, b, c)
     }
     #[inline(always)]
-    fn min_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> i8x32<Avx512> {
-                _mm256_min_epi8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> i8x32<Avx512> {
-                _mm256_max_epi8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
     fn combine_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -7796,170 +6035,6 @@ impl Simd for Avx512 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn rotate_elements_left_u8x32<const OFFSET: usize>(self, a: u8x32<Self>) -> u8x32<Self> {
-        match OFFSET % 32 {
-            0 => self.slide_u8x32::<0>(a, a),
-            1 => self.slide_u8x32::<1>(a, a),
-            2 => self.slide_u8x32::<2>(a, a),
-            3 => self.slide_u8x32::<3>(a, a),
-            4 => self.slide_u8x32::<4>(a, a),
-            5 => self.slide_u8x32::<5>(a, a),
-            6 => self.slide_u8x32::<6>(a, a),
-            7 => self.slide_u8x32::<7>(a, a),
-            8 => self.slide_u8x32::<8>(a, a),
-            9 => self.slide_u8x32::<9>(a, a),
-            10 => self.slide_u8x32::<10>(a, a),
-            11 => self.slide_u8x32::<11>(a, a),
-            12 => self.slide_u8x32::<12>(a, a),
-            13 => self.slide_u8x32::<13>(a, a),
-            14 => self.slide_u8x32::<14>(a, a),
-            15 => self.slide_u8x32::<15>(a, a),
-            16 => self.slide_u8x32::<16>(a, a),
-            17 => self.slide_u8x32::<17>(a, a),
-            18 => self.slide_u8x32::<18>(a, a),
-            19 => self.slide_u8x32::<19>(a, a),
-            20 => self.slide_u8x32::<20>(a, a),
-            21 => self.slide_u8x32::<21>(a, a),
-            22 => self.slide_u8x32::<22>(a, a),
-            23 => self.slide_u8x32::<23>(a, a),
-            24 => self.slide_u8x32::<24>(a, a),
-            25 => self.slide_u8x32::<25>(a, a),
-            26 => self.slide_u8x32::<26>(a, a),
-            27 => self.slide_u8x32::<27>(a, a),
-            28 => self.slide_u8x32::<28>(a, a),
-            29 => self.slide_u8x32::<29>(a, a),
-            30 => self.slide_u8x32::<30>(a, a),
-            31 => self.slide_u8x32::<31>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_u8x32<const OFFSET: usize>(self, a: u8x32<Self>) -> u8x32<Self> {
-        match OFFSET % 32 {
-            0 => self.slide_u8x32::<32>(a, a),
-            1 => self.slide_u8x32::<31>(a, a),
-            2 => self.slide_u8x32::<30>(a, a),
-            3 => self.slide_u8x32::<29>(a, a),
-            4 => self.slide_u8x32::<28>(a, a),
-            5 => self.slide_u8x32::<27>(a, a),
-            6 => self.slide_u8x32::<26>(a, a),
-            7 => self.slide_u8x32::<25>(a, a),
-            8 => self.slide_u8x32::<24>(a, a),
-            9 => self.slide_u8x32::<23>(a, a),
-            10 => self.slide_u8x32::<22>(a, a),
-            11 => self.slide_u8x32::<21>(a, a),
-            12 => self.slide_u8x32::<20>(a, a),
-            13 => self.slide_u8x32::<19>(a, a),
-            14 => self.slide_u8x32::<18>(a, a),
-            15 => self.slide_u8x32::<17>(a, a),
-            16 => self.slide_u8x32::<16>(a, a),
-            17 => self.slide_u8x32::<15>(a, a),
-            18 => self.slide_u8x32::<14>(a, a),
-            19 => self.slide_u8x32::<13>(a, a),
-            20 => self.slide_u8x32::<12>(a, a),
-            21 => self.slide_u8x32::<11>(a, a),
-            22 => self.slide_u8x32::<10>(a, a),
-            23 => self.slide_u8x32::<9>(a, a),
-            24 => self.slide_u8x32::<8>(a, a),
-            25 => self.slide_u8x32::<7>(a, a),
-            26 => self.slide_u8x32::<6>(a, a),
-            27 => self.slide_u8x32::<5>(a, a),
-            28 => self.slide_u8x32::<4>(a, a),
-            29 => self.slide_u8x32::<3>(a, a),
-            30 => self.slide_u8x32::<2>(a, a),
-            31 => self.slide_u8x32::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_u8x32<const OFFSET: usize>(
-        self,
-        a: u8x32<Self>,
-        padding: u8,
-    ) -> u8x32<Self> {
-        let padding = self.splat_u8x32(padding);
-        match OFFSET {
-            0 => self.slide_u8x32::<0>(a, padding),
-            1 => self.slide_u8x32::<1>(a, padding),
-            2 => self.slide_u8x32::<2>(a, padding),
-            3 => self.slide_u8x32::<3>(a, padding),
-            4 => self.slide_u8x32::<4>(a, padding),
-            5 => self.slide_u8x32::<5>(a, padding),
-            6 => self.slide_u8x32::<6>(a, padding),
-            7 => self.slide_u8x32::<7>(a, padding),
-            8 => self.slide_u8x32::<8>(a, padding),
-            9 => self.slide_u8x32::<9>(a, padding),
-            10 => self.slide_u8x32::<10>(a, padding),
-            11 => self.slide_u8x32::<11>(a, padding),
-            12 => self.slide_u8x32::<12>(a, padding),
-            13 => self.slide_u8x32::<13>(a, padding),
-            14 => self.slide_u8x32::<14>(a, padding),
-            15 => self.slide_u8x32::<15>(a, padding),
-            16 => self.slide_u8x32::<16>(a, padding),
-            17 => self.slide_u8x32::<17>(a, padding),
-            18 => self.slide_u8x32::<18>(a, padding),
-            19 => self.slide_u8x32::<19>(a, padding),
-            20 => self.slide_u8x32::<20>(a, padding),
-            21 => self.slide_u8x32::<21>(a, padding),
-            22 => self.slide_u8x32::<22>(a, padding),
-            23 => self.slide_u8x32::<23>(a, padding),
-            24 => self.slide_u8x32::<24>(a, padding),
-            25 => self.slide_u8x32::<25>(a, padding),
-            26 => self.slide_u8x32::<26>(a, padding),
-            27 => self.slide_u8x32::<27>(a, padding),
-            28 => self.slide_u8x32::<28>(a, padding),
-            29 => self.slide_u8x32::<29>(a, padding),
-            30 => self.slide_u8x32::<30>(a, padding),
-            31 => self.slide_u8x32::<31>(a, padding),
-            32 => self.slide_u8x32::<32>(a, padding),
-            _ => self.slide_u8x32::<32>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_u8x32<const OFFSET: usize>(
-        self,
-        a: u8x32<Self>,
-        padding: u8,
-    ) -> u8x32<Self> {
-        let padding = self.splat_u8x32(padding);
-        match OFFSET {
-            0 => self.slide_u8x32::<32>(padding, a),
-            1 => self.slide_u8x32::<31>(padding, a),
-            2 => self.slide_u8x32::<30>(padding, a),
-            3 => self.slide_u8x32::<29>(padding, a),
-            4 => self.slide_u8x32::<28>(padding, a),
-            5 => self.slide_u8x32::<27>(padding, a),
-            6 => self.slide_u8x32::<26>(padding, a),
-            7 => self.slide_u8x32::<25>(padding, a),
-            8 => self.slide_u8x32::<24>(padding, a),
-            9 => self.slide_u8x32::<23>(padding, a),
-            10 => self.slide_u8x32::<22>(padding, a),
-            11 => self.slide_u8x32::<21>(padding, a),
-            12 => self.slide_u8x32::<20>(padding, a),
-            13 => self.slide_u8x32::<19>(padding, a),
-            14 => self.slide_u8x32::<18>(padding, a),
-            15 => self.slide_u8x32::<17>(padding, a),
-            16 => self.slide_u8x32::<16>(padding, a),
-            17 => self.slide_u8x32::<15>(padding, a),
-            18 => self.slide_u8x32::<14>(padding, a),
-            19 => self.slide_u8x32::<13>(padding, a),
-            20 => self.slide_u8x32::<12>(padding, a),
-            21 => self.slide_u8x32::<11>(padding, a),
-            22 => self.slide_u8x32::<10>(padding, a),
-            23 => self.slide_u8x32::<9>(padding, a),
-            24 => self.slide_u8x32::<8>(padding, a),
-            25 => self.slide_u8x32::<7>(padding, a),
-            26 => self.slide_u8x32::<6>(padding, a),
-            27 => self.slide_u8x32::<5>(padding, a),
-            28 => self.slide_u8x32::<4>(padding, a),
-            29 => self.slide_u8x32::<3>(padding, a),
-            30 => self.slide_u8x32::<2>(padding, a),
-            31 => self.slide_u8x32::<1>(padding, a),
-            32 => self.slide_u8x32::<0>(padding, a),
-            _ => self.slide_u8x32::<0>(padding, a),
-        }
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_u8x32(self, a: u8x32<Self>, indices: u8x32<Self>) -> u8x32<Self> {
@@ -8158,6 +6233,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> u8x32<Avx512> {
+                _mm256_max_epu8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> u8x32<Avx512> {
+                _mm256_min_epu8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -8190,32 +6285,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> mask8x32<Avx512> {
                 mask8x32 {
                     val: _mm256_cmple_epu8_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> mask8x32<Avx512> {
-                mask8x32 {
-                    val: _mm256_cmpge_epu8_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> mask8x32<Avx512> {
-                mask8x32 {
-                    val: _mm256_cmpgt_epu8_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -8378,26 +6447,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> u8x32<Avx512> {
-                _mm256_min_epu8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> u8x32<Avx512> {
-                _mm256_max_epu8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self> {
@@ -8624,157 +6673,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_i16x16<const OFFSET: usize>(self, a: i16x16<Self>) -> i16x16<Self> {
-        match OFFSET % 16 {
-            0 => self.slide_i16x16::<0>(a, a),
-            1 => self.slide_i16x16::<1>(a, a),
-            2 => self.slide_i16x16::<2>(a, a),
-            3 => self.slide_i16x16::<3>(a, a),
-            4 => self.slide_i16x16::<4>(a, a),
-            5 => self.slide_i16x16::<5>(a, a),
-            6 => self.slide_i16x16::<6>(a, a),
-            7 => self.slide_i16x16::<7>(a, a),
-            8 => self.slide_i16x16::<8>(a, a),
-            9 => self.slide_i16x16::<9>(a, a),
-            10 => self.slide_i16x16::<10>(a, a),
-            11 => self.slide_i16x16::<11>(a, a),
-            12 => self.slide_i16x16::<12>(a, a),
-            13 => self.slide_i16x16::<13>(a, a),
-            14 => self.slide_i16x16::<14>(a, a),
-            15 => self.slide_i16x16::<15>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_i16x16<const OFFSET: usize>(self, a: i16x16<Self>) -> i16x16<Self> {
-        match OFFSET % 16 {
-            0 => self.slide_i16x16::<16>(a, a),
-            1 => self.slide_i16x16::<15>(a, a),
-            2 => self.slide_i16x16::<14>(a, a),
-            3 => self.slide_i16x16::<13>(a, a),
-            4 => self.slide_i16x16::<12>(a, a),
-            5 => self.slide_i16x16::<11>(a, a),
-            6 => self.slide_i16x16::<10>(a, a),
-            7 => self.slide_i16x16::<9>(a, a),
-            8 => self.slide_i16x16::<8>(a, a),
-            9 => self.slide_i16x16::<7>(a, a),
-            10 => self.slide_i16x16::<6>(a, a),
-            11 => self.slide_i16x16::<5>(a, a),
-            12 => self.slide_i16x16::<4>(a, a),
-            13 => self.slide_i16x16::<3>(a, a),
-            14 => self.slide_i16x16::<2>(a, a),
-            15 => self.slide_i16x16::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_i16x16<const OFFSET: usize>(
-        self,
-        a: i16x16<Self>,
-        padding: i16,
-    ) -> i16x16<Self> {
-        let padding = self.splat_i16x16(padding);
-        match OFFSET {
-            0 => self.slide_i16x16::<0>(a, padding),
-            1 => self.slide_i16x16::<1>(a, padding),
-            2 => self.slide_i16x16::<2>(a, padding),
-            3 => self.slide_i16x16::<3>(a, padding),
-            4 => self.slide_i16x16::<4>(a, padding),
-            5 => self.slide_i16x16::<5>(a, padding),
-            6 => self.slide_i16x16::<6>(a, padding),
-            7 => self.slide_i16x16::<7>(a, padding),
-            8 => self.slide_i16x16::<8>(a, padding),
-            9 => self.slide_i16x16::<9>(a, padding),
-            10 => self.slide_i16x16::<10>(a, padding),
-            11 => self.slide_i16x16::<11>(a, padding),
-            12 => self.slide_i16x16::<12>(a, padding),
-            13 => self.slide_i16x16::<13>(a, padding),
-            14 => self.slide_i16x16::<14>(a, padding),
-            15 => self.slide_i16x16::<15>(a, padding),
-            16 => self.slide_i16x16::<16>(a, padding),
-            _ => self.slide_i16x16::<16>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_i16x16<const OFFSET: usize>(
-        self,
-        a: i16x16<Self>,
-        padding: i16,
-    ) -> i16x16<Self> {
-        let padding = self.splat_i16x16(padding);
-        match OFFSET {
-            0 => self.slide_i16x16::<16>(padding, a),
-            1 => self.slide_i16x16::<15>(padding, a),
-            2 => self.slide_i16x16::<14>(padding, a),
-            3 => self.slide_i16x16::<13>(padding, a),
-            4 => self.slide_i16x16::<12>(padding, a),
-            5 => self.slide_i16x16::<11>(padding, a),
-            6 => self.slide_i16x16::<10>(padding, a),
-            7 => self.slide_i16x16::<9>(padding, a),
-            8 => self.slide_i16x16::<8>(padding, a),
-            9 => self.slide_i16x16::<7>(padding, a),
-            10 => self.slide_i16x16::<6>(padding, a),
-            11 => self.slide_i16x16::<5>(padding, a),
-            12 => self.slide_i16x16::<4>(padding, a),
-            13 => self.slide_i16x16::<3>(padding, a),
-            14 => self.slide_i16x16::<2>(padding, a),
-            15 => self.slide_i16x16::<1>(padding, a),
-            16 => self.slide_i16x16::<0>(padding, a),
-            _ => self.slide_i16x16::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i16x16(
-        self,
-        a: i16x16<Self>,
-        indices: u8x32<Self>,
-    ) -> i16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x16<Avx512>, indices: u8x32<Avx512>) -> i16x16<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i16x16(self, a: i16x16<Self>, indices: u8x32<Self>) -> i16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x16<Avx512>, indices: u8x32<Avx512>) -> i16x16<Avx512> {
-                let result = _mm256_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i16x16(self, a: i16x16<Self>, indices: u8x32<Self>) -> i16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x16<Avx512>, indices: u8x32<Avx512>) -> i16x16<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
-                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -8879,6 +6777,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i16x16<Avx512> {
+                _mm256_max_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i16x16<Avx512> {
+                _mm256_min_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -8911,32 +6829,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> mask16x16<Avx512> {
                 mask16x16 {
                     val: _mm256_cmple_epi16_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> mask16x16<Avx512> {
-                mask16x16 {
-                    val: _mm256_cmpge_epi16_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> mask16x16<Avx512> {
-                mask16x16 {
-                    val: _mm256_cmpgt_epi16_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -9081,26 +6973,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i16x16<Avx512> {
-                _mm256_min_epi16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i16x16<Avx512> {
-                _mm256_max_epi16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x32<Self> {
@@ -9248,157 +7120,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_u16x16<const OFFSET: usize>(self, a: u16x16<Self>) -> u16x16<Self> {
-        match OFFSET % 16 {
-            0 => self.slide_u16x16::<0>(a, a),
-            1 => self.slide_u16x16::<1>(a, a),
-            2 => self.slide_u16x16::<2>(a, a),
-            3 => self.slide_u16x16::<3>(a, a),
-            4 => self.slide_u16x16::<4>(a, a),
-            5 => self.slide_u16x16::<5>(a, a),
-            6 => self.slide_u16x16::<6>(a, a),
-            7 => self.slide_u16x16::<7>(a, a),
-            8 => self.slide_u16x16::<8>(a, a),
-            9 => self.slide_u16x16::<9>(a, a),
-            10 => self.slide_u16x16::<10>(a, a),
-            11 => self.slide_u16x16::<11>(a, a),
-            12 => self.slide_u16x16::<12>(a, a),
-            13 => self.slide_u16x16::<13>(a, a),
-            14 => self.slide_u16x16::<14>(a, a),
-            15 => self.slide_u16x16::<15>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_u16x16<const OFFSET: usize>(self, a: u16x16<Self>) -> u16x16<Self> {
-        match OFFSET % 16 {
-            0 => self.slide_u16x16::<16>(a, a),
-            1 => self.slide_u16x16::<15>(a, a),
-            2 => self.slide_u16x16::<14>(a, a),
-            3 => self.slide_u16x16::<13>(a, a),
-            4 => self.slide_u16x16::<12>(a, a),
-            5 => self.slide_u16x16::<11>(a, a),
-            6 => self.slide_u16x16::<10>(a, a),
-            7 => self.slide_u16x16::<9>(a, a),
-            8 => self.slide_u16x16::<8>(a, a),
-            9 => self.slide_u16x16::<7>(a, a),
-            10 => self.slide_u16x16::<6>(a, a),
-            11 => self.slide_u16x16::<5>(a, a),
-            12 => self.slide_u16x16::<4>(a, a),
-            13 => self.slide_u16x16::<3>(a, a),
-            14 => self.slide_u16x16::<2>(a, a),
-            15 => self.slide_u16x16::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_u16x16<const OFFSET: usize>(
-        self,
-        a: u16x16<Self>,
-        padding: u16,
-    ) -> u16x16<Self> {
-        let padding = self.splat_u16x16(padding);
-        match OFFSET {
-            0 => self.slide_u16x16::<0>(a, padding),
-            1 => self.slide_u16x16::<1>(a, padding),
-            2 => self.slide_u16x16::<2>(a, padding),
-            3 => self.slide_u16x16::<3>(a, padding),
-            4 => self.slide_u16x16::<4>(a, padding),
-            5 => self.slide_u16x16::<5>(a, padding),
-            6 => self.slide_u16x16::<6>(a, padding),
-            7 => self.slide_u16x16::<7>(a, padding),
-            8 => self.slide_u16x16::<8>(a, padding),
-            9 => self.slide_u16x16::<9>(a, padding),
-            10 => self.slide_u16x16::<10>(a, padding),
-            11 => self.slide_u16x16::<11>(a, padding),
-            12 => self.slide_u16x16::<12>(a, padding),
-            13 => self.slide_u16x16::<13>(a, padding),
-            14 => self.slide_u16x16::<14>(a, padding),
-            15 => self.slide_u16x16::<15>(a, padding),
-            16 => self.slide_u16x16::<16>(a, padding),
-            _ => self.slide_u16x16::<16>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_u16x16<const OFFSET: usize>(
-        self,
-        a: u16x16<Self>,
-        padding: u16,
-    ) -> u16x16<Self> {
-        let padding = self.splat_u16x16(padding);
-        match OFFSET {
-            0 => self.slide_u16x16::<16>(padding, a),
-            1 => self.slide_u16x16::<15>(padding, a),
-            2 => self.slide_u16x16::<14>(padding, a),
-            3 => self.slide_u16x16::<13>(padding, a),
-            4 => self.slide_u16x16::<12>(padding, a),
-            5 => self.slide_u16x16::<11>(padding, a),
-            6 => self.slide_u16x16::<10>(padding, a),
-            7 => self.slide_u16x16::<9>(padding, a),
-            8 => self.slide_u16x16::<8>(padding, a),
-            9 => self.slide_u16x16::<7>(padding, a),
-            10 => self.slide_u16x16::<6>(padding, a),
-            11 => self.slide_u16x16::<5>(padding, a),
-            12 => self.slide_u16x16::<4>(padding, a),
-            13 => self.slide_u16x16::<3>(padding, a),
-            14 => self.slide_u16x16::<2>(padding, a),
-            15 => self.slide_u16x16::<1>(padding, a),
-            16 => self.slide_u16x16::<0>(padding, a),
-            _ => self.slide_u16x16::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u16x16(
-        self,
-        a: u16x16<Self>,
-        indices: u8x32<Self>,
-    ) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x16<Avx512>, indices: u8x32<Avx512>) -> u16x16<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u16x16(self, a: u16x16<Self>, indices: u8x32<Self>) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x16<Avx512>, indices: u8x32<Avx512>) -> u16x16<Avx512> {
-                let result = _mm256_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u16x16(self, a: u16x16<Self>, indices: u8x32<Self>) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x16<Avx512>, indices: u8x32<Avx512>) -> u16x16<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
-                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9503,6 +7224,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u16x16<Avx512> {
+                _mm256_max_epu16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u16x16<Avx512> {
+                _mm256_min_epu16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9535,32 +7276,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> mask16x16<Avx512> {
                 mask16x16 {
                     val: _mm256_cmple_epu16_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> mask16x16<Avx512> {
-                mask16x16 {
-                    val: _mm256_cmpge_epu16_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> mask16x16<Avx512> {
-                mask16x16 {
-                    val: _mm256_cmpgt_epu16_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -9705,26 +7420,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u16x16<Avx512> {
-                _mm256_min_epu16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u16x16<Avx512> {
-                _mm256_max_epu16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x32<Self> {
@@ -9986,121 +7681,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_i32x8<const OFFSET: usize>(self, a: i32x8<Self>) -> i32x8<Self> {
-        match OFFSET % 8 {
-            0 => self.slide_i32x8::<0>(a, a),
-            1 => self.slide_i32x8::<1>(a, a),
-            2 => self.slide_i32x8::<2>(a, a),
-            3 => self.slide_i32x8::<3>(a, a),
-            4 => self.slide_i32x8::<4>(a, a),
-            5 => self.slide_i32x8::<5>(a, a),
-            6 => self.slide_i32x8::<6>(a, a),
-            7 => self.slide_i32x8::<7>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_i32x8<const OFFSET: usize>(self, a: i32x8<Self>) -> i32x8<Self> {
-        match OFFSET % 8 {
-            0 => self.slide_i32x8::<8>(a, a),
-            1 => self.slide_i32x8::<7>(a, a),
-            2 => self.slide_i32x8::<6>(a, a),
-            3 => self.slide_i32x8::<5>(a, a),
-            4 => self.slide_i32x8::<4>(a, a),
-            5 => self.slide_i32x8::<3>(a, a),
-            6 => self.slide_i32x8::<2>(a, a),
-            7 => self.slide_i32x8::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_i32x8<const OFFSET: usize>(
-        self,
-        a: i32x8<Self>,
-        padding: i32,
-    ) -> i32x8<Self> {
-        let padding = self.splat_i32x8(padding);
-        match OFFSET {
-            0 => self.slide_i32x8::<0>(a, padding),
-            1 => self.slide_i32x8::<1>(a, padding),
-            2 => self.slide_i32x8::<2>(a, padding),
-            3 => self.slide_i32x8::<3>(a, padding),
-            4 => self.slide_i32x8::<4>(a, padding),
-            5 => self.slide_i32x8::<5>(a, padding),
-            6 => self.slide_i32x8::<6>(a, padding),
-            7 => self.slide_i32x8::<7>(a, padding),
-            8 => self.slide_i32x8::<8>(a, padding),
-            _ => self.slide_i32x8::<8>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_i32x8<const OFFSET: usize>(
-        self,
-        a: i32x8<Self>,
-        padding: i32,
-    ) -> i32x8<Self> {
-        let padding = self.splat_i32x8(padding);
-        match OFFSET {
-            0 => self.slide_i32x8::<8>(padding, a),
-            1 => self.slide_i32x8::<7>(padding, a),
-            2 => self.slide_i32x8::<6>(padding, a),
-            3 => self.slide_i32x8::<5>(padding, a),
-            4 => self.slide_i32x8::<4>(padding, a),
-            5 => self.slide_i32x8::<3>(padding, a),
-            6 => self.slide_i32x8::<2>(padding, a),
-            7 => self.slide_i32x8::<1>(padding, a),
-            8 => self.slide_i32x8::<0>(padding, a),
-            _ => self.slide_i32x8::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x8<Avx512>, indices: u8x32<Avx512>) -> i32x8<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x8<Avx512>, indices: u8x32<Avx512>) -> i32x8<Avx512> {
-                let result = _mm256_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x8<Avx512>, indices: u8x32<Avx512>) -> i32x8<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
-                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10205,6 +7785,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i32x8<Avx512> {
+                _mm256_max_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i32x8<Avx512> {
+                _mm256_min_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10237,32 +7837,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> mask32x8<Avx512> {
                 mask32x8 {
                     val: _mm256_cmple_epi32_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> mask32x8<Avx512> {
-                mask32x8 {
-                    val: _mm256_cmpge_epi32_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> mask32x8<Avx512> {
-                mask32x8 {
-                    val: _mm256_cmpgt_epi32_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -10385,26 +7959,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i32x8<Avx512> {
-                _mm256_min_epi32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i32x8<Avx512> {
-                _mm256_max_epi32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x16<Self> {
@@ -10562,121 +8116,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_u32x8<const OFFSET: usize>(self, a: u32x8<Self>) -> u32x8<Self> {
-        match OFFSET % 8 {
-            0 => self.slide_u32x8::<0>(a, a),
-            1 => self.slide_u32x8::<1>(a, a),
-            2 => self.slide_u32x8::<2>(a, a),
-            3 => self.slide_u32x8::<3>(a, a),
-            4 => self.slide_u32x8::<4>(a, a),
-            5 => self.slide_u32x8::<5>(a, a),
-            6 => self.slide_u32x8::<6>(a, a),
-            7 => self.slide_u32x8::<7>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_u32x8<const OFFSET: usize>(self, a: u32x8<Self>) -> u32x8<Self> {
-        match OFFSET % 8 {
-            0 => self.slide_u32x8::<8>(a, a),
-            1 => self.slide_u32x8::<7>(a, a),
-            2 => self.slide_u32x8::<6>(a, a),
-            3 => self.slide_u32x8::<5>(a, a),
-            4 => self.slide_u32x8::<4>(a, a),
-            5 => self.slide_u32x8::<3>(a, a),
-            6 => self.slide_u32x8::<2>(a, a),
-            7 => self.slide_u32x8::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_u32x8<const OFFSET: usize>(
-        self,
-        a: u32x8<Self>,
-        padding: u32,
-    ) -> u32x8<Self> {
-        let padding = self.splat_u32x8(padding);
-        match OFFSET {
-            0 => self.slide_u32x8::<0>(a, padding),
-            1 => self.slide_u32x8::<1>(a, padding),
-            2 => self.slide_u32x8::<2>(a, padding),
-            3 => self.slide_u32x8::<3>(a, padding),
-            4 => self.slide_u32x8::<4>(a, padding),
-            5 => self.slide_u32x8::<5>(a, padding),
-            6 => self.slide_u32x8::<6>(a, padding),
-            7 => self.slide_u32x8::<7>(a, padding),
-            8 => self.slide_u32x8::<8>(a, padding),
-            _ => self.slide_u32x8::<8>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_u32x8<const OFFSET: usize>(
-        self,
-        a: u32x8<Self>,
-        padding: u32,
-    ) -> u32x8<Self> {
-        let padding = self.splat_u32x8(padding);
-        match OFFSET {
-            0 => self.slide_u32x8::<8>(padding, a),
-            1 => self.slide_u32x8::<7>(padding, a),
-            2 => self.slide_u32x8::<6>(padding, a),
-            3 => self.slide_u32x8::<5>(padding, a),
-            4 => self.slide_u32x8::<4>(padding, a),
-            5 => self.slide_u32x8::<3>(padding, a),
-            6 => self.slide_u32x8::<2>(padding, a),
-            7 => self.slide_u32x8::<1>(padding, a),
-            8 => self.slide_u32x8::<0>(padding, a),
-            _ => self.slide_u32x8::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x8<Avx512>, indices: u8x32<Avx512>) -> u32x8<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x8<Avx512>, indices: u8x32<Avx512>) -> u32x8<Avx512> {
-                let result = _mm256_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x8<Avx512>, indices: u8x32<Avx512>) -> u32x8<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
-                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10781,6 +8220,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u32x8<Avx512> {
+                _mm256_max_epu32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u32x8<Avx512> {
+                _mm256_min_epu32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10813,32 +8272,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> mask32x8<Avx512> {
                 mask32x8 {
                     val: _mm256_cmple_epu32_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> mask32x8<Avx512> {
-                mask32x8 {
-                    val: _mm256_cmpge_epu32_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> mask32x8<Avx512> {
-                mask32x8 {
-                    val: _mm256_cmpgt_epu32_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -10961,26 +8394,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u32x8<Avx512> {
-                _mm256_min_epu32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u32x8<Avx512> {
-                _mm256_max_epu32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x16<Self> {
@@ -11253,105 +8666,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_f64x4<const OFFSET: usize>(self, a: f64x4<Self>) -> f64x4<Self> {
-        match OFFSET % 4 {
-            0 => self.slide_f64x4::<0>(a, a),
-            1 => self.slide_f64x4::<1>(a, a),
-            2 => self.slide_f64x4::<2>(a, a),
-            3 => self.slide_f64x4::<3>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_f64x4<const OFFSET: usize>(self, a: f64x4<Self>) -> f64x4<Self> {
-        match OFFSET % 4 {
-            0 => self.slide_f64x4::<4>(a, a),
-            1 => self.slide_f64x4::<3>(a, a),
-            2 => self.slide_f64x4::<2>(a, a),
-            3 => self.slide_f64x4::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_f64x4<const OFFSET: usize>(
-        self,
-        a: f64x4<Self>,
-        padding: f64,
-    ) -> f64x4<Self> {
-        let padding = self.splat_f64x4(padding);
-        match OFFSET {
-            0 => self.slide_f64x4::<0>(a, padding),
-            1 => self.slide_f64x4::<1>(a, padding),
-            2 => self.slide_f64x4::<2>(a, padding),
-            3 => self.slide_f64x4::<3>(a, padding),
-            4 => self.slide_f64x4::<4>(a, padding),
-            _ => self.slide_f64x4::<4>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_f64x4<const OFFSET: usize>(
-        self,
-        a: f64x4<Self>,
-        padding: f64,
-    ) -> f64x4<Self> {
-        let padding = self.splat_f64x4(padding);
-        match OFFSET {
-            0 => self.slide_f64x4::<4>(padding, a),
-            1 => self.slide_f64x4::<3>(padding, a),
-            2 => self.slide_f64x4::<2>(padding, a),
-            3 => self.slide_f64x4::<1>(padding, a),
-            4 => self.slide_f64x4::<0>(padding, a),
-            _ => self.slide_f64x4::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x4<Avx512>, indices: u8x32<Avx512>) -> f64x4<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x4<Avx512>, indices: u8x32<Avx512>) -> f64x4<Avx512> {
-                let result = _mm256_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x4<Avx512>, indices: u8x32<Avx512>) -> f64x4<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
-                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11447,6 +8761,46 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_max_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_min_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn max_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_range_pd::<5i32>(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_range_pd::<4i32>(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11479,32 +8833,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> mask64x4<Avx512> {
                 mask64x4 {
                     val: _mm256_cmp_pd_mask::<18i32>(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> mask64x4<Avx512> {
-                mask64x4 {
-                    val: _mm256_cmp_pd_mask::<29i32>(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> mask64x4<Avx512> {
-                mask64x4 {
-                    val: _mm256_cmp_pd_mask::<30i32>(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -11589,46 +8917,6 @@ impl Simd for Avx512 {
                     _mm256_permutex2var_pd(a, _mm256_setr_epi64x(0, 2, 4, 6), b).simd_into(token),
                     _mm256_permutex2var_pd(a, _mm256_setr_epi64x(1, 3, 5, 7), b).simd_into(token),
                 )
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> f64x4<Avx512> {
-                _mm256_max_pd(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn min_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> f64x4<Avx512> {
-                _mm256_min_pd(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> f64x4<Avx512> {
-                _mm256_range_pd::<5i32>(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn min_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> f64x4<Avx512> {
-                _mm256_range_pd::<4i32>(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -11882,105 +9170,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_i64x4<const OFFSET: usize>(self, a: i64x4<Self>) -> i64x4<Self> {
-        match OFFSET % 4 {
-            0 => self.slide_i64x4::<0>(a, a),
-            1 => self.slide_i64x4::<1>(a, a),
-            2 => self.slide_i64x4::<2>(a, a),
-            3 => self.slide_i64x4::<3>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_i64x4<const OFFSET: usize>(self, a: i64x4<Self>) -> i64x4<Self> {
-        match OFFSET % 4 {
-            0 => self.slide_i64x4::<4>(a, a),
-            1 => self.slide_i64x4::<3>(a, a),
-            2 => self.slide_i64x4::<2>(a, a),
-            3 => self.slide_i64x4::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_i64x4<const OFFSET: usize>(
-        self,
-        a: i64x4<Self>,
-        padding: i64,
-    ) -> i64x4<Self> {
-        let padding = self.splat_i64x4(padding);
-        match OFFSET {
-            0 => self.slide_i64x4::<0>(a, padding),
-            1 => self.slide_i64x4::<1>(a, padding),
-            2 => self.slide_i64x4::<2>(a, padding),
-            3 => self.slide_i64x4::<3>(a, padding),
-            4 => self.slide_i64x4::<4>(a, padding),
-            _ => self.slide_i64x4::<4>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_i64x4<const OFFSET: usize>(
-        self,
-        a: i64x4<Self>,
-        padding: i64,
-    ) -> i64x4<Self> {
-        let padding = self.splat_i64x4(padding);
-        match OFFSET {
-            0 => self.slide_i64x4::<4>(padding, a),
-            1 => self.slide_i64x4::<3>(padding, a),
-            2 => self.slide_i64x4::<2>(padding, a),
-            3 => self.slide_i64x4::<1>(padding, a),
-            4 => self.slide_i64x4::<0>(padding, a),
-            _ => self.slide_i64x4::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x4<Avx512>, indices: u8x32<Avx512>) -> i64x4<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x4<Avx512>, indices: u8x32<Avx512>) -> i64x4<Avx512> {
-                let result = _mm256_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x4<Avx512>, indices: u8x32<Avx512>) -> i64x4<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
-                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12085,6 +9274,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x4<Avx512>, b: i64x4<Avx512>) -> i64x4<Avx512> {
+                _mm256_max_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x4<Avx512>, b: i64x4<Avx512>) -> i64x4<Avx512> {
+                _mm256_min_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12117,32 +9326,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i64x4<Avx512>, b: i64x4<Avx512>) -> mask64x4<Avx512> {
                 mask64x4 {
                     val: _mm256_cmple_epi64_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x4<Avx512>, b: i64x4<Avx512>) -> mask64x4<Avx512> {
-                mask64x4 {
-                    val: _mm256_cmpge_epi64_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x4<Avx512>, b: i64x4<Avx512>) -> mask64x4<Avx512> {
-                mask64x4 {
-                    val: _mm256_cmpgt_epi64_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -12249,26 +9432,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x4<Avx512>, b: i64x4<Avx512>) -> i64x4<Avx512> {
-                _mm256_min_epi64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x4<Avx512>, b: i64x4<Avx512>) -> i64x4<Avx512> {
-                _mm256_max_epi64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x8<Self> {
@@ -12412,105 +9575,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_u64x4<const OFFSET: usize>(self, a: u64x4<Self>) -> u64x4<Self> {
-        match OFFSET % 4 {
-            0 => self.slide_u64x4::<0>(a, a),
-            1 => self.slide_u64x4::<1>(a, a),
-            2 => self.slide_u64x4::<2>(a, a),
-            3 => self.slide_u64x4::<3>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_u64x4<const OFFSET: usize>(self, a: u64x4<Self>) -> u64x4<Self> {
-        match OFFSET % 4 {
-            0 => self.slide_u64x4::<4>(a, a),
-            1 => self.slide_u64x4::<3>(a, a),
-            2 => self.slide_u64x4::<2>(a, a),
-            3 => self.slide_u64x4::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_u64x4<const OFFSET: usize>(
-        self,
-        a: u64x4<Self>,
-        padding: u64,
-    ) -> u64x4<Self> {
-        let padding = self.splat_u64x4(padding);
-        match OFFSET {
-            0 => self.slide_u64x4::<0>(a, padding),
-            1 => self.slide_u64x4::<1>(a, padding),
-            2 => self.slide_u64x4::<2>(a, padding),
-            3 => self.slide_u64x4::<3>(a, padding),
-            4 => self.slide_u64x4::<4>(a, padding),
-            _ => self.slide_u64x4::<4>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_u64x4<const OFFSET: usize>(
-        self,
-        a: u64x4<Self>,
-        padding: u64,
-    ) -> u64x4<Self> {
-        let padding = self.splat_u64x4(padding);
-        match OFFSET {
-            0 => self.slide_u64x4::<4>(padding, a),
-            1 => self.slide_u64x4::<3>(padding, a),
-            2 => self.slide_u64x4::<2>(padding, a),
-            3 => self.slide_u64x4::<1>(padding, a),
-            4 => self.slide_u64x4::<0>(padding, a),
-            _ => self.slide_u64x4::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x4<Avx512>, indices: u8x32<Avx512>) -> u64x4<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x4<Avx512>, indices: u8x32<Avx512>) -> u64x4<Avx512> {
-                let result = _mm256_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x4<Avx512>, indices: u8x32<Avx512>) -> u64x4<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
-                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12615,6 +9679,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x4<Avx512>, b: u64x4<Avx512>) -> u64x4<Avx512> {
+                _mm256_max_epu64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x4<Avx512>, b: u64x4<Avx512>) -> u64x4<Avx512> {
+                _mm256_min_epu64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12647,32 +9731,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u64x4<Avx512>, b: u64x4<Avx512>) -> mask64x4<Avx512> {
                 mask64x4 {
                     val: _mm256_cmple_epu64_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x4<Avx512>, b: u64x4<Avx512>) -> mask64x4<Avx512> {
-                mask64x4 {
-                    val: _mm256_cmpge_epu64_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x4<Avx512>, b: u64x4<Avx512>) -> mask64x4<Avx512> {
-                mask64x4 {
-                    val: _mm256_cmpgt_epu64_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -12779,26 +9837,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x4<Avx512>, b: u64x4<Avx512>) -> u64x4<Avx512> {
-                _mm256_min_epu64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x4<Avx512>, b: u64x4<Avx512>) -> u64x4<Avx512> {
-                _mm256_max_epu64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x8<Self> {
@@ -13058,156 +10096,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_f32x16<const OFFSET: usize>(self, a: f32x16<Self>) -> f32x16<Self> {
-        match OFFSET % 16 {
-            0 => self.slide_f32x16::<0>(a, a),
-            1 => self.slide_f32x16::<1>(a, a),
-            2 => self.slide_f32x16::<2>(a, a),
-            3 => self.slide_f32x16::<3>(a, a),
-            4 => self.slide_f32x16::<4>(a, a),
-            5 => self.slide_f32x16::<5>(a, a),
-            6 => self.slide_f32x16::<6>(a, a),
-            7 => self.slide_f32x16::<7>(a, a),
-            8 => self.slide_f32x16::<8>(a, a),
-            9 => self.slide_f32x16::<9>(a, a),
-            10 => self.slide_f32x16::<10>(a, a),
-            11 => self.slide_f32x16::<11>(a, a),
-            12 => self.slide_f32x16::<12>(a, a),
-            13 => self.slide_f32x16::<13>(a, a),
-            14 => self.slide_f32x16::<14>(a, a),
-            15 => self.slide_f32x16::<15>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_f32x16<const OFFSET: usize>(self, a: f32x16<Self>) -> f32x16<Self> {
-        match OFFSET % 16 {
-            0 => self.slide_f32x16::<16>(a, a),
-            1 => self.slide_f32x16::<15>(a, a),
-            2 => self.slide_f32x16::<14>(a, a),
-            3 => self.slide_f32x16::<13>(a, a),
-            4 => self.slide_f32x16::<12>(a, a),
-            5 => self.slide_f32x16::<11>(a, a),
-            6 => self.slide_f32x16::<10>(a, a),
-            7 => self.slide_f32x16::<9>(a, a),
-            8 => self.slide_f32x16::<8>(a, a),
-            9 => self.slide_f32x16::<7>(a, a),
-            10 => self.slide_f32x16::<6>(a, a),
-            11 => self.slide_f32x16::<5>(a, a),
-            12 => self.slide_f32x16::<4>(a, a),
-            13 => self.slide_f32x16::<3>(a, a),
-            14 => self.slide_f32x16::<2>(a, a),
-            15 => self.slide_f32x16::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_f32x16<const OFFSET: usize>(
-        self,
-        a: f32x16<Self>,
-        padding: f32,
-    ) -> f32x16<Self> {
-        let padding = self.splat_f32x16(padding);
-        match OFFSET {
-            0 => self.slide_f32x16::<0>(a, padding),
-            1 => self.slide_f32x16::<1>(a, padding),
-            2 => self.slide_f32x16::<2>(a, padding),
-            3 => self.slide_f32x16::<3>(a, padding),
-            4 => self.slide_f32x16::<4>(a, padding),
-            5 => self.slide_f32x16::<5>(a, padding),
-            6 => self.slide_f32x16::<6>(a, padding),
-            7 => self.slide_f32x16::<7>(a, padding),
-            8 => self.slide_f32x16::<8>(a, padding),
-            9 => self.slide_f32x16::<9>(a, padding),
-            10 => self.slide_f32x16::<10>(a, padding),
-            11 => self.slide_f32x16::<11>(a, padding),
-            12 => self.slide_f32x16::<12>(a, padding),
-            13 => self.slide_f32x16::<13>(a, padding),
-            14 => self.slide_f32x16::<14>(a, padding),
-            15 => self.slide_f32x16::<15>(a, padding),
-            16 => self.slide_f32x16::<16>(a, padding),
-            _ => self.slide_f32x16::<16>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_f32x16<const OFFSET: usize>(
-        self,
-        a: f32x16<Self>,
-        padding: f32,
-    ) -> f32x16<Self> {
-        let padding = self.splat_f32x16(padding);
-        match OFFSET {
-            0 => self.slide_f32x16::<16>(padding, a),
-            1 => self.slide_f32x16::<15>(padding, a),
-            2 => self.slide_f32x16::<14>(padding, a),
-            3 => self.slide_f32x16::<13>(padding, a),
-            4 => self.slide_f32x16::<12>(padding, a),
-            5 => self.slide_f32x16::<11>(padding, a),
-            6 => self.slide_f32x16::<10>(padding, a),
-            7 => self.slide_f32x16::<9>(padding, a),
-            8 => self.slide_f32x16::<8>(padding, a),
-            9 => self.slide_f32x16::<7>(padding, a),
-            10 => self.slide_f32x16::<6>(padding, a),
-            11 => self.slide_f32x16::<5>(padding, a),
-            12 => self.slide_f32x16::<4>(padding, a),
-            13 => self.slide_f32x16::<3>(padding, a),
-            14 => self.slide_f32x16::<2>(padding, a),
-            15 => self.slide_f32x16::<1>(padding, a),
-            16 => self.slide_f32x16::<0>(padding, a),
-            _ => self.slide_f32x16::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_f32x16(
-        self,
-        a: f32x16<Self>,
-        indices: u8x64<Self>,
-    ) -> f32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x16<Avx512>, indices: u8x64<Avx512>) -> f32x16<Avx512> {
-                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x16<Avx512>, indices: u8x64<Avx512>) -> f32x16<Avx512> {
-                let result = _mm512_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x16<Avx512>, indices: u8x64<Avx512>) -> f32x16<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
-                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
-                let result_bytes = u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -13303,6 +10191,46 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> f32x16<Avx512> {
+                _mm512_max_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> f32x16<Avx512> {
+                _mm512_min_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn max_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> f32x16<Avx512> {
+                _mm512_range_ps::<5i32>(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> f32x16<Avx512> {
+                _mm512_range_ps::<4i32>(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -13335,32 +10263,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> mask32x16<Avx512> {
                 mask32x16 {
                     val: _mm512_cmp_ps_mask::<18i32>(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> mask32x16<Avx512> {
-                mask32x16 {
-                    val: _mm512_cmp_ps_mask::<29i32>(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> mask32x16<Avx512> {
-                mask32x16 {
-                    val: _mm512_cmp_ps_mask::<30i32>(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -13487,46 +10389,6 @@ impl Simd for Avx512 {
                     )
                     .simd_into(token),
                 )
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> f32x16<Avx512> {
-                _mm512_max_ps(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> f32x16<Avx512> {
-                _mm512_min_ps(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> f32x16<Avx512> {
-                _mm512_range_ps::<5i32>(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn min_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> f32x16<Avx512> {
-                _mm512_range_ps::<4i32>(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -13765,344 +10627,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_i8x64<const OFFSET: usize>(self, a: i8x64<Self>) -> i8x64<Self> {
-        match OFFSET % 64 {
-            0 => self.slide_i8x64::<0>(a, a),
-            1 => self.slide_i8x64::<1>(a, a),
-            2 => self.slide_i8x64::<2>(a, a),
-            3 => self.slide_i8x64::<3>(a, a),
-            4 => self.slide_i8x64::<4>(a, a),
-            5 => self.slide_i8x64::<5>(a, a),
-            6 => self.slide_i8x64::<6>(a, a),
-            7 => self.slide_i8x64::<7>(a, a),
-            8 => self.slide_i8x64::<8>(a, a),
-            9 => self.slide_i8x64::<9>(a, a),
-            10 => self.slide_i8x64::<10>(a, a),
-            11 => self.slide_i8x64::<11>(a, a),
-            12 => self.slide_i8x64::<12>(a, a),
-            13 => self.slide_i8x64::<13>(a, a),
-            14 => self.slide_i8x64::<14>(a, a),
-            15 => self.slide_i8x64::<15>(a, a),
-            16 => self.slide_i8x64::<16>(a, a),
-            17 => self.slide_i8x64::<17>(a, a),
-            18 => self.slide_i8x64::<18>(a, a),
-            19 => self.slide_i8x64::<19>(a, a),
-            20 => self.slide_i8x64::<20>(a, a),
-            21 => self.slide_i8x64::<21>(a, a),
-            22 => self.slide_i8x64::<22>(a, a),
-            23 => self.slide_i8x64::<23>(a, a),
-            24 => self.slide_i8x64::<24>(a, a),
-            25 => self.slide_i8x64::<25>(a, a),
-            26 => self.slide_i8x64::<26>(a, a),
-            27 => self.slide_i8x64::<27>(a, a),
-            28 => self.slide_i8x64::<28>(a, a),
-            29 => self.slide_i8x64::<29>(a, a),
-            30 => self.slide_i8x64::<30>(a, a),
-            31 => self.slide_i8x64::<31>(a, a),
-            32 => self.slide_i8x64::<32>(a, a),
-            33 => self.slide_i8x64::<33>(a, a),
-            34 => self.slide_i8x64::<34>(a, a),
-            35 => self.slide_i8x64::<35>(a, a),
-            36 => self.slide_i8x64::<36>(a, a),
-            37 => self.slide_i8x64::<37>(a, a),
-            38 => self.slide_i8x64::<38>(a, a),
-            39 => self.slide_i8x64::<39>(a, a),
-            40 => self.slide_i8x64::<40>(a, a),
-            41 => self.slide_i8x64::<41>(a, a),
-            42 => self.slide_i8x64::<42>(a, a),
-            43 => self.slide_i8x64::<43>(a, a),
-            44 => self.slide_i8x64::<44>(a, a),
-            45 => self.slide_i8x64::<45>(a, a),
-            46 => self.slide_i8x64::<46>(a, a),
-            47 => self.slide_i8x64::<47>(a, a),
-            48 => self.slide_i8x64::<48>(a, a),
-            49 => self.slide_i8x64::<49>(a, a),
-            50 => self.slide_i8x64::<50>(a, a),
-            51 => self.slide_i8x64::<51>(a, a),
-            52 => self.slide_i8x64::<52>(a, a),
-            53 => self.slide_i8x64::<53>(a, a),
-            54 => self.slide_i8x64::<54>(a, a),
-            55 => self.slide_i8x64::<55>(a, a),
-            56 => self.slide_i8x64::<56>(a, a),
-            57 => self.slide_i8x64::<57>(a, a),
-            58 => self.slide_i8x64::<58>(a, a),
-            59 => self.slide_i8x64::<59>(a, a),
-            60 => self.slide_i8x64::<60>(a, a),
-            61 => self.slide_i8x64::<61>(a, a),
-            62 => self.slide_i8x64::<62>(a, a),
-            63 => self.slide_i8x64::<63>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_i8x64<const OFFSET: usize>(self, a: i8x64<Self>) -> i8x64<Self> {
-        match OFFSET % 64 {
-            0 => self.slide_i8x64::<64>(a, a),
-            1 => self.slide_i8x64::<63>(a, a),
-            2 => self.slide_i8x64::<62>(a, a),
-            3 => self.slide_i8x64::<61>(a, a),
-            4 => self.slide_i8x64::<60>(a, a),
-            5 => self.slide_i8x64::<59>(a, a),
-            6 => self.slide_i8x64::<58>(a, a),
-            7 => self.slide_i8x64::<57>(a, a),
-            8 => self.slide_i8x64::<56>(a, a),
-            9 => self.slide_i8x64::<55>(a, a),
-            10 => self.slide_i8x64::<54>(a, a),
-            11 => self.slide_i8x64::<53>(a, a),
-            12 => self.slide_i8x64::<52>(a, a),
-            13 => self.slide_i8x64::<51>(a, a),
-            14 => self.slide_i8x64::<50>(a, a),
-            15 => self.slide_i8x64::<49>(a, a),
-            16 => self.slide_i8x64::<48>(a, a),
-            17 => self.slide_i8x64::<47>(a, a),
-            18 => self.slide_i8x64::<46>(a, a),
-            19 => self.slide_i8x64::<45>(a, a),
-            20 => self.slide_i8x64::<44>(a, a),
-            21 => self.slide_i8x64::<43>(a, a),
-            22 => self.slide_i8x64::<42>(a, a),
-            23 => self.slide_i8x64::<41>(a, a),
-            24 => self.slide_i8x64::<40>(a, a),
-            25 => self.slide_i8x64::<39>(a, a),
-            26 => self.slide_i8x64::<38>(a, a),
-            27 => self.slide_i8x64::<37>(a, a),
-            28 => self.slide_i8x64::<36>(a, a),
-            29 => self.slide_i8x64::<35>(a, a),
-            30 => self.slide_i8x64::<34>(a, a),
-            31 => self.slide_i8x64::<33>(a, a),
-            32 => self.slide_i8x64::<32>(a, a),
-            33 => self.slide_i8x64::<31>(a, a),
-            34 => self.slide_i8x64::<30>(a, a),
-            35 => self.slide_i8x64::<29>(a, a),
-            36 => self.slide_i8x64::<28>(a, a),
-            37 => self.slide_i8x64::<27>(a, a),
-            38 => self.slide_i8x64::<26>(a, a),
-            39 => self.slide_i8x64::<25>(a, a),
-            40 => self.slide_i8x64::<24>(a, a),
-            41 => self.slide_i8x64::<23>(a, a),
-            42 => self.slide_i8x64::<22>(a, a),
-            43 => self.slide_i8x64::<21>(a, a),
-            44 => self.slide_i8x64::<20>(a, a),
-            45 => self.slide_i8x64::<19>(a, a),
-            46 => self.slide_i8x64::<18>(a, a),
-            47 => self.slide_i8x64::<17>(a, a),
-            48 => self.slide_i8x64::<16>(a, a),
-            49 => self.slide_i8x64::<15>(a, a),
-            50 => self.slide_i8x64::<14>(a, a),
-            51 => self.slide_i8x64::<13>(a, a),
-            52 => self.slide_i8x64::<12>(a, a),
-            53 => self.slide_i8x64::<11>(a, a),
-            54 => self.slide_i8x64::<10>(a, a),
-            55 => self.slide_i8x64::<9>(a, a),
-            56 => self.slide_i8x64::<8>(a, a),
-            57 => self.slide_i8x64::<7>(a, a),
-            58 => self.slide_i8x64::<6>(a, a),
-            59 => self.slide_i8x64::<5>(a, a),
-            60 => self.slide_i8x64::<4>(a, a),
-            61 => self.slide_i8x64::<3>(a, a),
-            62 => self.slide_i8x64::<2>(a, a),
-            63 => self.slide_i8x64::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_i8x64<const OFFSET: usize>(
-        self,
-        a: i8x64<Self>,
-        padding: i8,
-    ) -> i8x64<Self> {
-        let padding = self.splat_i8x64(padding);
-        match OFFSET {
-            0 => self.slide_i8x64::<0>(a, padding),
-            1 => self.slide_i8x64::<1>(a, padding),
-            2 => self.slide_i8x64::<2>(a, padding),
-            3 => self.slide_i8x64::<3>(a, padding),
-            4 => self.slide_i8x64::<4>(a, padding),
-            5 => self.slide_i8x64::<5>(a, padding),
-            6 => self.slide_i8x64::<6>(a, padding),
-            7 => self.slide_i8x64::<7>(a, padding),
-            8 => self.slide_i8x64::<8>(a, padding),
-            9 => self.slide_i8x64::<9>(a, padding),
-            10 => self.slide_i8x64::<10>(a, padding),
-            11 => self.slide_i8x64::<11>(a, padding),
-            12 => self.slide_i8x64::<12>(a, padding),
-            13 => self.slide_i8x64::<13>(a, padding),
-            14 => self.slide_i8x64::<14>(a, padding),
-            15 => self.slide_i8x64::<15>(a, padding),
-            16 => self.slide_i8x64::<16>(a, padding),
-            17 => self.slide_i8x64::<17>(a, padding),
-            18 => self.slide_i8x64::<18>(a, padding),
-            19 => self.slide_i8x64::<19>(a, padding),
-            20 => self.slide_i8x64::<20>(a, padding),
-            21 => self.slide_i8x64::<21>(a, padding),
-            22 => self.slide_i8x64::<22>(a, padding),
-            23 => self.slide_i8x64::<23>(a, padding),
-            24 => self.slide_i8x64::<24>(a, padding),
-            25 => self.slide_i8x64::<25>(a, padding),
-            26 => self.slide_i8x64::<26>(a, padding),
-            27 => self.slide_i8x64::<27>(a, padding),
-            28 => self.slide_i8x64::<28>(a, padding),
-            29 => self.slide_i8x64::<29>(a, padding),
-            30 => self.slide_i8x64::<30>(a, padding),
-            31 => self.slide_i8x64::<31>(a, padding),
-            32 => self.slide_i8x64::<32>(a, padding),
-            33 => self.slide_i8x64::<33>(a, padding),
-            34 => self.slide_i8x64::<34>(a, padding),
-            35 => self.slide_i8x64::<35>(a, padding),
-            36 => self.slide_i8x64::<36>(a, padding),
-            37 => self.slide_i8x64::<37>(a, padding),
-            38 => self.slide_i8x64::<38>(a, padding),
-            39 => self.slide_i8x64::<39>(a, padding),
-            40 => self.slide_i8x64::<40>(a, padding),
-            41 => self.slide_i8x64::<41>(a, padding),
-            42 => self.slide_i8x64::<42>(a, padding),
-            43 => self.slide_i8x64::<43>(a, padding),
-            44 => self.slide_i8x64::<44>(a, padding),
-            45 => self.slide_i8x64::<45>(a, padding),
-            46 => self.slide_i8x64::<46>(a, padding),
-            47 => self.slide_i8x64::<47>(a, padding),
-            48 => self.slide_i8x64::<48>(a, padding),
-            49 => self.slide_i8x64::<49>(a, padding),
-            50 => self.slide_i8x64::<50>(a, padding),
-            51 => self.slide_i8x64::<51>(a, padding),
-            52 => self.slide_i8x64::<52>(a, padding),
-            53 => self.slide_i8x64::<53>(a, padding),
-            54 => self.slide_i8x64::<54>(a, padding),
-            55 => self.slide_i8x64::<55>(a, padding),
-            56 => self.slide_i8x64::<56>(a, padding),
-            57 => self.slide_i8x64::<57>(a, padding),
-            58 => self.slide_i8x64::<58>(a, padding),
-            59 => self.slide_i8x64::<59>(a, padding),
-            60 => self.slide_i8x64::<60>(a, padding),
-            61 => self.slide_i8x64::<61>(a, padding),
-            62 => self.slide_i8x64::<62>(a, padding),
-            63 => self.slide_i8x64::<63>(a, padding),
-            64 => self.slide_i8x64::<64>(a, padding),
-            _ => self.slide_i8x64::<64>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_i8x64<const OFFSET: usize>(
-        self,
-        a: i8x64<Self>,
-        padding: i8,
-    ) -> i8x64<Self> {
-        let padding = self.splat_i8x64(padding);
-        match OFFSET {
-            0 => self.slide_i8x64::<64>(padding, a),
-            1 => self.slide_i8x64::<63>(padding, a),
-            2 => self.slide_i8x64::<62>(padding, a),
-            3 => self.slide_i8x64::<61>(padding, a),
-            4 => self.slide_i8x64::<60>(padding, a),
-            5 => self.slide_i8x64::<59>(padding, a),
-            6 => self.slide_i8x64::<58>(padding, a),
-            7 => self.slide_i8x64::<57>(padding, a),
-            8 => self.slide_i8x64::<56>(padding, a),
-            9 => self.slide_i8x64::<55>(padding, a),
-            10 => self.slide_i8x64::<54>(padding, a),
-            11 => self.slide_i8x64::<53>(padding, a),
-            12 => self.slide_i8x64::<52>(padding, a),
-            13 => self.slide_i8x64::<51>(padding, a),
-            14 => self.slide_i8x64::<50>(padding, a),
-            15 => self.slide_i8x64::<49>(padding, a),
-            16 => self.slide_i8x64::<48>(padding, a),
-            17 => self.slide_i8x64::<47>(padding, a),
-            18 => self.slide_i8x64::<46>(padding, a),
-            19 => self.slide_i8x64::<45>(padding, a),
-            20 => self.slide_i8x64::<44>(padding, a),
-            21 => self.slide_i8x64::<43>(padding, a),
-            22 => self.slide_i8x64::<42>(padding, a),
-            23 => self.slide_i8x64::<41>(padding, a),
-            24 => self.slide_i8x64::<40>(padding, a),
-            25 => self.slide_i8x64::<39>(padding, a),
-            26 => self.slide_i8x64::<38>(padding, a),
-            27 => self.slide_i8x64::<37>(padding, a),
-            28 => self.slide_i8x64::<36>(padding, a),
-            29 => self.slide_i8x64::<35>(padding, a),
-            30 => self.slide_i8x64::<34>(padding, a),
-            31 => self.slide_i8x64::<33>(padding, a),
-            32 => self.slide_i8x64::<32>(padding, a),
-            33 => self.slide_i8x64::<31>(padding, a),
-            34 => self.slide_i8x64::<30>(padding, a),
-            35 => self.slide_i8x64::<29>(padding, a),
-            36 => self.slide_i8x64::<28>(padding, a),
-            37 => self.slide_i8x64::<27>(padding, a),
-            38 => self.slide_i8x64::<26>(padding, a),
-            39 => self.slide_i8x64::<25>(padding, a),
-            40 => self.slide_i8x64::<24>(padding, a),
-            41 => self.slide_i8x64::<23>(padding, a),
-            42 => self.slide_i8x64::<22>(padding, a),
-            43 => self.slide_i8x64::<21>(padding, a),
-            44 => self.slide_i8x64::<20>(padding, a),
-            45 => self.slide_i8x64::<19>(padding, a),
-            46 => self.slide_i8x64::<18>(padding, a),
-            47 => self.slide_i8x64::<17>(padding, a),
-            48 => self.slide_i8x64::<16>(padding, a),
-            49 => self.slide_i8x64::<15>(padding, a),
-            50 => self.slide_i8x64::<14>(padding, a),
-            51 => self.slide_i8x64::<13>(padding, a),
-            52 => self.slide_i8x64::<12>(padding, a),
-            53 => self.slide_i8x64::<11>(padding, a),
-            54 => self.slide_i8x64::<10>(padding, a),
-            55 => self.slide_i8x64::<9>(padding, a),
-            56 => self.slide_i8x64::<8>(padding, a),
-            57 => self.slide_i8x64::<7>(padding, a),
-            58 => self.slide_i8x64::<6>(padding, a),
-            59 => self.slide_i8x64::<5>(padding, a),
-            60 => self.slide_i8x64::<4>(padding, a),
-            61 => self.slide_i8x64::<3>(padding, a),
-            62 => self.slide_i8x64::<2>(padding, a),
-            63 => self.slide_i8x64::<1>(padding, a),
-            64 => self.slide_i8x64::<0>(padding, a),
-            _ => self.slide_i8x64::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x64<Avx512>, indices: u8x64<Avx512>) -> i8x64<Avx512> {
-                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x64<Avx512>, indices: u8x64<Avx512>) -> i8x64<Avx512> {
-                let result = _mm512_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x64<Avx512>, indices: u8x64<Avx512>) -> i8x64<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
-                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
-                let result_bytes = u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -14256,6 +10780,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> i8x64<Avx512> {
+                _mm512_max_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> i8x64<Avx512> {
+                _mm512_min_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -14288,32 +10832,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> mask8x64<Avx512> {
                 mask8x64 {
                     val: _mm512_cmple_epi8_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> mask8x64<Avx512> {
-                mask8x64 {
-                    val: _mm512_cmpge_epi8_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> mask8x64<Avx512> {
-                mask8x64 {
-                    val: _mm512_cmpgt_epi8_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -14494,26 +11012,6 @@ impl Simd for Avx512 {
         kernel(self, a, b, c)
     }
     #[inline(always)]
-    fn min_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> i8x64<Avx512> {
-                _mm512_min_epi8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> i8x64<Avx512> {
-                _mm512_max_epi8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
     fn split_i8x64(self, a: i8x64<Self>) -> (i8x32<Self>, i8x32<Self>) {
         crate::kernel!(
             #[inline(always)]
@@ -14614,298 +11112,6 @@ impl Simd for Avx512 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn rotate_elements_left_u8x64<const OFFSET: usize>(self, a: u8x64<Self>) -> u8x64<Self> {
-        match OFFSET % 64 {
-            0 => self.slide_u8x64::<0>(a, a),
-            1 => self.slide_u8x64::<1>(a, a),
-            2 => self.slide_u8x64::<2>(a, a),
-            3 => self.slide_u8x64::<3>(a, a),
-            4 => self.slide_u8x64::<4>(a, a),
-            5 => self.slide_u8x64::<5>(a, a),
-            6 => self.slide_u8x64::<6>(a, a),
-            7 => self.slide_u8x64::<7>(a, a),
-            8 => self.slide_u8x64::<8>(a, a),
-            9 => self.slide_u8x64::<9>(a, a),
-            10 => self.slide_u8x64::<10>(a, a),
-            11 => self.slide_u8x64::<11>(a, a),
-            12 => self.slide_u8x64::<12>(a, a),
-            13 => self.slide_u8x64::<13>(a, a),
-            14 => self.slide_u8x64::<14>(a, a),
-            15 => self.slide_u8x64::<15>(a, a),
-            16 => self.slide_u8x64::<16>(a, a),
-            17 => self.slide_u8x64::<17>(a, a),
-            18 => self.slide_u8x64::<18>(a, a),
-            19 => self.slide_u8x64::<19>(a, a),
-            20 => self.slide_u8x64::<20>(a, a),
-            21 => self.slide_u8x64::<21>(a, a),
-            22 => self.slide_u8x64::<22>(a, a),
-            23 => self.slide_u8x64::<23>(a, a),
-            24 => self.slide_u8x64::<24>(a, a),
-            25 => self.slide_u8x64::<25>(a, a),
-            26 => self.slide_u8x64::<26>(a, a),
-            27 => self.slide_u8x64::<27>(a, a),
-            28 => self.slide_u8x64::<28>(a, a),
-            29 => self.slide_u8x64::<29>(a, a),
-            30 => self.slide_u8x64::<30>(a, a),
-            31 => self.slide_u8x64::<31>(a, a),
-            32 => self.slide_u8x64::<32>(a, a),
-            33 => self.slide_u8x64::<33>(a, a),
-            34 => self.slide_u8x64::<34>(a, a),
-            35 => self.slide_u8x64::<35>(a, a),
-            36 => self.slide_u8x64::<36>(a, a),
-            37 => self.slide_u8x64::<37>(a, a),
-            38 => self.slide_u8x64::<38>(a, a),
-            39 => self.slide_u8x64::<39>(a, a),
-            40 => self.slide_u8x64::<40>(a, a),
-            41 => self.slide_u8x64::<41>(a, a),
-            42 => self.slide_u8x64::<42>(a, a),
-            43 => self.slide_u8x64::<43>(a, a),
-            44 => self.slide_u8x64::<44>(a, a),
-            45 => self.slide_u8x64::<45>(a, a),
-            46 => self.slide_u8x64::<46>(a, a),
-            47 => self.slide_u8x64::<47>(a, a),
-            48 => self.slide_u8x64::<48>(a, a),
-            49 => self.slide_u8x64::<49>(a, a),
-            50 => self.slide_u8x64::<50>(a, a),
-            51 => self.slide_u8x64::<51>(a, a),
-            52 => self.slide_u8x64::<52>(a, a),
-            53 => self.slide_u8x64::<53>(a, a),
-            54 => self.slide_u8x64::<54>(a, a),
-            55 => self.slide_u8x64::<55>(a, a),
-            56 => self.slide_u8x64::<56>(a, a),
-            57 => self.slide_u8x64::<57>(a, a),
-            58 => self.slide_u8x64::<58>(a, a),
-            59 => self.slide_u8x64::<59>(a, a),
-            60 => self.slide_u8x64::<60>(a, a),
-            61 => self.slide_u8x64::<61>(a, a),
-            62 => self.slide_u8x64::<62>(a, a),
-            63 => self.slide_u8x64::<63>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_u8x64<const OFFSET: usize>(self, a: u8x64<Self>) -> u8x64<Self> {
-        match OFFSET % 64 {
-            0 => self.slide_u8x64::<64>(a, a),
-            1 => self.slide_u8x64::<63>(a, a),
-            2 => self.slide_u8x64::<62>(a, a),
-            3 => self.slide_u8x64::<61>(a, a),
-            4 => self.slide_u8x64::<60>(a, a),
-            5 => self.slide_u8x64::<59>(a, a),
-            6 => self.slide_u8x64::<58>(a, a),
-            7 => self.slide_u8x64::<57>(a, a),
-            8 => self.slide_u8x64::<56>(a, a),
-            9 => self.slide_u8x64::<55>(a, a),
-            10 => self.slide_u8x64::<54>(a, a),
-            11 => self.slide_u8x64::<53>(a, a),
-            12 => self.slide_u8x64::<52>(a, a),
-            13 => self.slide_u8x64::<51>(a, a),
-            14 => self.slide_u8x64::<50>(a, a),
-            15 => self.slide_u8x64::<49>(a, a),
-            16 => self.slide_u8x64::<48>(a, a),
-            17 => self.slide_u8x64::<47>(a, a),
-            18 => self.slide_u8x64::<46>(a, a),
-            19 => self.slide_u8x64::<45>(a, a),
-            20 => self.slide_u8x64::<44>(a, a),
-            21 => self.slide_u8x64::<43>(a, a),
-            22 => self.slide_u8x64::<42>(a, a),
-            23 => self.slide_u8x64::<41>(a, a),
-            24 => self.slide_u8x64::<40>(a, a),
-            25 => self.slide_u8x64::<39>(a, a),
-            26 => self.slide_u8x64::<38>(a, a),
-            27 => self.slide_u8x64::<37>(a, a),
-            28 => self.slide_u8x64::<36>(a, a),
-            29 => self.slide_u8x64::<35>(a, a),
-            30 => self.slide_u8x64::<34>(a, a),
-            31 => self.slide_u8x64::<33>(a, a),
-            32 => self.slide_u8x64::<32>(a, a),
-            33 => self.slide_u8x64::<31>(a, a),
-            34 => self.slide_u8x64::<30>(a, a),
-            35 => self.slide_u8x64::<29>(a, a),
-            36 => self.slide_u8x64::<28>(a, a),
-            37 => self.slide_u8x64::<27>(a, a),
-            38 => self.slide_u8x64::<26>(a, a),
-            39 => self.slide_u8x64::<25>(a, a),
-            40 => self.slide_u8x64::<24>(a, a),
-            41 => self.slide_u8x64::<23>(a, a),
-            42 => self.slide_u8x64::<22>(a, a),
-            43 => self.slide_u8x64::<21>(a, a),
-            44 => self.slide_u8x64::<20>(a, a),
-            45 => self.slide_u8x64::<19>(a, a),
-            46 => self.slide_u8x64::<18>(a, a),
-            47 => self.slide_u8x64::<17>(a, a),
-            48 => self.slide_u8x64::<16>(a, a),
-            49 => self.slide_u8x64::<15>(a, a),
-            50 => self.slide_u8x64::<14>(a, a),
-            51 => self.slide_u8x64::<13>(a, a),
-            52 => self.slide_u8x64::<12>(a, a),
-            53 => self.slide_u8x64::<11>(a, a),
-            54 => self.slide_u8x64::<10>(a, a),
-            55 => self.slide_u8x64::<9>(a, a),
-            56 => self.slide_u8x64::<8>(a, a),
-            57 => self.slide_u8x64::<7>(a, a),
-            58 => self.slide_u8x64::<6>(a, a),
-            59 => self.slide_u8x64::<5>(a, a),
-            60 => self.slide_u8x64::<4>(a, a),
-            61 => self.slide_u8x64::<3>(a, a),
-            62 => self.slide_u8x64::<2>(a, a),
-            63 => self.slide_u8x64::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_u8x64<const OFFSET: usize>(
-        self,
-        a: u8x64<Self>,
-        padding: u8,
-    ) -> u8x64<Self> {
-        let padding = self.splat_u8x64(padding);
-        match OFFSET {
-            0 => self.slide_u8x64::<0>(a, padding),
-            1 => self.slide_u8x64::<1>(a, padding),
-            2 => self.slide_u8x64::<2>(a, padding),
-            3 => self.slide_u8x64::<3>(a, padding),
-            4 => self.slide_u8x64::<4>(a, padding),
-            5 => self.slide_u8x64::<5>(a, padding),
-            6 => self.slide_u8x64::<6>(a, padding),
-            7 => self.slide_u8x64::<7>(a, padding),
-            8 => self.slide_u8x64::<8>(a, padding),
-            9 => self.slide_u8x64::<9>(a, padding),
-            10 => self.slide_u8x64::<10>(a, padding),
-            11 => self.slide_u8x64::<11>(a, padding),
-            12 => self.slide_u8x64::<12>(a, padding),
-            13 => self.slide_u8x64::<13>(a, padding),
-            14 => self.slide_u8x64::<14>(a, padding),
-            15 => self.slide_u8x64::<15>(a, padding),
-            16 => self.slide_u8x64::<16>(a, padding),
-            17 => self.slide_u8x64::<17>(a, padding),
-            18 => self.slide_u8x64::<18>(a, padding),
-            19 => self.slide_u8x64::<19>(a, padding),
-            20 => self.slide_u8x64::<20>(a, padding),
-            21 => self.slide_u8x64::<21>(a, padding),
-            22 => self.slide_u8x64::<22>(a, padding),
-            23 => self.slide_u8x64::<23>(a, padding),
-            24 => self.slide_u8x64::<24>(a, padding),
-            25 => self.slide_u8x64::<25>(a, padding),
-            26 => self.slide_u8x64::<26>(a, padding),
-            27 => self.slide_u8x64::<27>(a, padding),
-            28 => self.slide_u8x64::<28>(a, padding),
-            29 => self.slide_u8x64::<29>(a, padding),
-            30 => self.slide_u8x64::<30>(a, padding),
-            31 => self.slide_u8x64::<31>(a, padding),
-            32 => self.slide_u8x64::<32>(a, padding),
-            33 => self.slide_u8x64::<33>(a, padding),
-            34 => self.slide_u8x64::<34>(a, padding),
-            35 => self.slide_u8x64::<35>(a, padding),
-            36 => self.slide_u8x64::<36>(a, padding),
-            37 => self.slide_u8x64::<37>(a, padding),
-            38 => self.slide_u8x64::<38>(a, padding),
-            39 => self.slide_u8x64::<39>(a, padding),
-            40 => self.slide_u8x64::<40>(a, padding),
-            41 => self.slide_u8x64::<41>(a, padding),
-            42 => self.slide_u8x64::<42>(a, padding),
-            43 => self.slide_u8x64::<43>(a, padding),
-            44 => self.slide_u8x64::<44>(a, padding),
-            45 => self.slide_u8x64::<45>(a, padding),
-            46 => self.slide_u8x64::<46>(a, padding),
-            47 => self.slide_u8x64::<47>(a, padding),
-            48 => self.slide_u8x64::<48>(a, padding),
-            49 => self.slide_u8x64::<49>(a, padding),
-            50 => self.slide_u8x64::<50>(a, padding),
-            51 => self.slide_u8x64::<51>(a, padding),
-            52 => self.slide_u8x64::<52>(a, padding),
-            53 => self.slide_u8x64::<53>(a, padding),
-            54 => self.slide_u8x64::<54>(a, padding),
-            55 => self.slide_u8x64::<55>(a, padding),
-            56 => self.slide_u8x64::<56>(a, padding),
-            57 => self.slide_u8x64::<57>(a, padding),
-            58 => self.slide_u8x64::<58>(a, padding),
-            59 => self.slide_u8x64::<59>(a, padding),
-            60 => self.slide_u8x64::<60>(a, padding),
-            61 => self.slide_u8x64::<61>(a, padding),
-            62 => self.slide_u8x64::<62>(a, padding),
-            63 => self.slide_u8x64::<63>(a, padding),
-            64 => self.slide_u8x64::<64>(a, padding),
-            _ => self.slide_u8x64::<64>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_u8x64<const OFFSET: usize>(
-        self,
-        a: u8x64<Self>,
-        padding: u8,
-    ) -> u8x64<Self> {
-        let padding = self.splat_u8x64(padding);
-        match OFFSET {
-            0 => self.slide_u8x64::<64>(padding, a),
-            1 => self.slide_u8x64::<63>(padding, a),
-            2 => self.slide_u8x64::<62>(padding, a),
-            3 => self.slide_u8x64::<61>(padding, a),
-            4 => self.slide_u8x64::<60>(padding, a),
-            5 => self.slide_u8x64::<59>(padding, a),
-            6 => self.slide_u8x64::<58>(padding, a),
-            7 => self.slide_u8x64::<57>(padding, a),
-            8 => self.slide_u8x64::<56>(padding, a),
-            9 => self.slide_u8x64::<55>(padding, a),
-            10 => self.slide_u8x64::<54>(padding, a),
-            11 => self.slide_u8x64::<53>(padding, a),
-            12 => self.slide_u8x64::<52>(padding, a),
-            13 => self.slide_u8x64::<51>(padding, a),
-            14 => self.slide_u8x64::<50>(padding, a),
-            15 => self.slide_u8x64::<49>(padding, a),
-            16 => self.slide_u8x64::<48>(padding, a),
-            17 => self.slide_u8x64::<47>(padding, a),
-            18 => self.slide_u8x64::<46>(padding, a),
-            19 => self.slide_u8x64::<45>(padding, a),
-            20 => self.slide_u8x64::<44>(padding, a),
-            21 => self.slide_u8x64::<43>(padding, a),
-            22 => self.slide_u8x64::<42>(padding, a),
-            23 => self.slide_u8x64::<41>(padding, a),
-            24 => self.slide_u8x64::<40>(padding, a),
-            25 => self.slide_u8x64::<39>(padding, a),
-            26 => self.slide_u8x64::<38>(padding, a),
-            27 => self.slide_u8x64::<37>(padding, a),
-            28 => self.slide_u8x64::<36>(padding, a),
-            29 => self.slide_u8x64::<35>(padding, a),
-            30 => self.slide_u8x64::<34>(padding, a),
-            31 => self.slide_u8x64::<33>(padding, a),
-            32 => self.slide_u8x64::<32>(padding, a),
-            33 => self.slide_u8x64::<31>(padding, a),
-            34 => self.slide_u8x64::<30>(padding, a),
-            35 => self.slide_u8x64::<29>(padding, a),
-            36 => self.slide_u8x64::<28>(padding, a),
-            37 => self.slide_u8x64::<27>(padding, a),
-            38 => self.slide_u8x64::<26>(padding, a),
-            39 => self.slide_u8x64::<25>(padding, a),
-            40 => self.slide_u8x64::<24>(padding, a),
-            41 => self.slide_u8x64::<23>(padding, a),
-            42 => self.slide_u8x64::<22>(padding, a),
-            43 => self.slide_u8x64::<21>(padding, a),
-            44 => self.slide_u8x64::<20>(padding, a),
-            45 => self.slide_u8x64::<19>(padding, a),
-            46 => self.slide_u8x64::<18>(padding, a),
-            47 => self.slide_u8x64::<17>(padding, a),
-            48 => self.slide_u8x64::<16>(padding, a),
-            49 => self.slide_u8x64::<15>(padding, a),
-            50 => self.slide_u8x64::<14>(padding, a),
-            51 => self.slide_u8x64::<13>(padding, a),
-            52 => self.slide_u8x64::<12>(padding, a),
-            53 => self.slide_u8x64::<11>(padding, a),
-            54 => self.slide_u8x64::<10>(padding, a),
-            55 => self.slide_u8x64::<9>(padding, a),
-            56 => self.slide_u8x64::<8>(padding, a),
-            57 => self.slide_u8x64::<7>(padding, a),
-            58 => self.slide_u8x64::<6>(padding, a),
-            59 => self.slide_u8x64::<5>(padding, a),
-            60 => self.slide_u8x64::<4>(padding, a),
-            61 => self.slide_u8x64::<3>(padding, a),
-            62 => self.slide_u8x64::<2>(padding, a),
-            63 => self.slide_u8x64::<1>(padding, a),
-            64 => self.slide_u8x64::<0>(padding, a),
-            _ => self.slide_u8x64::<0>(padding, a),
-        }
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_u8x64(self, a: u8x64<Self>, indices: u8x64<Self>) -> u8x64<Self> {
@@ -15103,6 +11309,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> u8x64<Avx512> {
+                _mm512_max_epu8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> u8x64<Avx512> {
+                _mm512_min_epu8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -15135,32 +11361,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> mask8x64<Avx512> {
                 mask8x64 {
                     val: _mm512_cmple_epu8_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> mask8x64<Avx512> {
-                mask8x64 {
-                    val: _mm512_cmpge_epu8_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> mask8x64<Avx512> {
-                mask8x64 {
-                    val: _mm512_cmpgt_epu8_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -15339,26 +11539,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> u8x64<Avx512> {
-                _mm512_min_epu8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> u8x64<Avx512> {
-                _mm512_max_epu8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>) {
@@ -15569,220 +11749,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_i16x32<const OFFSET: usize>(self, a: i16x32<Self>) -> i16x32<Self> {
-        match OFFSET % 32 {
-            0 => self.slide_i16x32::<0>(a, a),
-            1 => self.slide_i16x32::<1>(a, a),
-            2 => self.slide_i16x32::<2>(a, a),
-            3 => self.slide_i16x32::<3>(a, a),
-            4 => self.slide_i16x32::<4>(a, a),
-            5 => self.slide_i16x32::<5>(a, a),
-            6 => self.slide_i16x32::<6>(a, a),
-            7 => self.slide_i16x32::<7>(a, a),
-            8 => self.slide_i16x32::<8>(a, a),
-            9 => self.slide_i16x32::<9>(a, a),
-            10 => self.slide_i16x32::<10>(a, a),
-            11 => self.slide_i16x32::<11>(a, a),
-            12 => self.slide_i16x32::<12>(a, a),
-            13 => self.slide_i16x32::<13>(a, a),
-            14 => self.slide_i16x32::<14>(a, a),
-            15 => self.slide_i16x32::<15>(a, a),
-            16 => self.slide_i16x32::<16>(a, a),
-            17 => self.slide_i16x32::<17>(a, a),
-            18 => self.slide_i16x32::<18>(a, a),
-            19 => self.slide_i16x32::<19>(a, a),
-            20 => self.slide_i16x32::<20>(a, a),
-            21 => self.slide_i16x32::<21>(a, a),
-            22 => self.slide_i16x32::<22>(a, a),
-            23 => self.slide_i16x32::<23>(a, a),
-            24 => self.slide_i16x32::<24>(a, a),
-            25 => self.slide_i16x32::<25>(a, a),
-            26 => self.slide_i16x32::<26>(a, a),
-            27 => self.slide_i16x32::<27>(a, a),
-            28 => self.slide_i16x32::<28>(a, a),
-            29 => self.slide_i16x32::<29>(a, a),
-            30 => self.slide_i16x32::<30>(a, a),
-            31 => self.slide_i16x32::<31>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_i16x32<const OFFSET: usize>(self, a: i16x32<Self>) -> i16x32<Self> {
-        match OFFSET % 32 {
-            0 => self.slide_i16x32::<32>(a, a),
-            1 => self.slide_i16x32::<31>(a, a),
-            2 => self.slide_i16x32::<30>(a, a),
-            3 => self.slide_i16x32::<29>(a, a),
-            4 => self.slide_i16x32::<28>(a, a),
-            5 => self.slide_i16x32::<27>(a, a),
-            6 => self.slide_i16x32::<26>(a, a),
-            7 => self.slide_i16x32::<25>(a, a),
-            8 => self.slide_i16x32::<24>(a, a),
-            9 => self.slide_i16x32::<23>(a, a),
-            10 => self.slide_i16x32::<22>(a, a),
-            11 => self.slide_i16x32::<21>(a, a),
-            12 => self.slide_i16x32::<20>(a, a),
-            13 => self.slide_i16x32::<19>(a, a),
-            14 => self.slide_i16x32::<18>(a, a),
-            15 => self.slide_i16x32::<17>(a, a),
-            16 => self.slide_i16x32::<16>(a, a),
-            17 => self.slide_i16x32::<15>(a, a),
-            18 => self.slide_i16x32::<14>(a, a),
-            19 => self.slide_i16x32::<13>(a, a),
-            20 => self.slide_i16x32::<12>(a, a),
-            21 => self.slide_i16x32::<11>(a, a),
-            22 => self.slide_i16x32::<10>(a, a),
-            23 => self.slide_i16x32::<9>(a, a),
-            24 => self.slide_i16x32::<8>(a, a),
-            25 => self.slide_i16x32::<7>(a, a),
-            26 => self.slide_i16x32::<6>(a, a),
-            27 => self.slide_i16x32::<5>(a, a),
-            28 => self.slide_i16x32::<4>(a, a),
-            29 => self.slide_i16x32::<3>(a, a),
-            30 => self.slide_i16x32::<2>(a, a),
-            31 => self.slide_i16x32::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_i16x32<const OFFSET: usize>(
-        self,
-        a: i16x32<Self>,
-        padding: i16,
-    ) -> i16x32<Self> {
-        let padding = self.splat_i16x32(padding);
-        match OFFSET {
-            0 => self.slide_i16x32::<0>(a, padding),
-            1 => self.slide_i16x32::<1>(a, padding),
-            2 => self.slide_i16x32::<2>(a, padding),
-            3 => self.slide_i16x32::<3>(a, padding),
-            4 => self.slide_i16x32::<4>(a, padding),
-            5 => self.slide_i16x32::<5>(a, padding),
-            6 => self.slide_i16x32::<6>(a, padding),
-            7 => self.slide_i16x32::<7>(a, padding),
-            8 => self.slide_i16x32::<8>(a, padding),
-            9 => self.slide_i16x32::<9>(a, padding),
-            10 => self.slide_i16x32::<10>(a, padding),
-            11 => self.slide_i16x32::<11>(a, padding),
-            12 => self.slide_i16x32::<12>(a, padding),
-            13 => self.slide_i16x32::<13>(a, padding),
-            14 => self.slide_i16x32::<14>(a, padding),
-            15 => self.slide_i16x32::<15>(a, padding),
-            16 => self.slide_i16x32::<16>(a, padding),
-            17 => self.slide_i16x32::<17>(a, padding),
-            18 => self.slide_i16x32::<18>(a, padding),
-            19 => self.slide_i16x32::<19>(a, padding),
-            20 => self.slide_i16x32::<20>(a, padding),
-            21 => self.slide_i16x32::<21>(a, padding),
-            22 => self.slide_i16x32::<22>(a, padding),
-            23 => self.slide_i16x32::<23>(a, padding),
-            24 => self.slide_i16x32::<24>(a, padding),
-            25 => self.slide_i16x32::<25>(a, padding),
-            26 => self.slide_i16x32::<26>(a, padding),
-            27 => self.slide_i16x32::<27>(a, padding),
-            28 => self.slide_i16x32::<28>(a, padding),
-            29 => self.slide_i16x32::<29>(a, padding),
-            30 => self.slide_i16x32::<30>(a, padding),
-            31 => self.slide_i16x32::<31>(a, padding),
-            32 => self.slide_i16x32::<32>(a, padding),
-            _ => self.slide_i16x32::<32>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_i16x32<const OFFSET: usize>(
-        self,
-        a: i16x32<Self>,
-        padding: i16,
-    ) -> i16x32<Self> {
-        let padding = self.splat_i16x32(padding);
-        match OFFSET {
-            0 => self.slide_i16x32::<32>(padding, a),
-            1 => self.slide_i16x32::<31>(padding, a),
-            2 => self.slide_i16x32::<30>(padding, a),
-            3 => self.slide_i16x32::<29>(padding, a),
-            4 => self.slide_i16x32::<28>(padding, a),
-            5 => self.slide_i16x32::<27>(padding, a),
-            6 => self.slide_i16x32::<26>(padding, a),
-            7 => self.slide_i16x32::<25>(padding, a),
-            8 => self.slide_i16x32::<24>(padding, a),
-            9 => self.slide_i16x32::<23>(padding, a),
-            10 => self.slide_i16x32::<22>(padding, a),
-            11 => self.slide_i16x32::<21>(padding, a),
-            12 => self.slide_i16x32::<20>(padding, a),
-            13 => self.slide_i16x32::<19>(padding, a),
-            14 => self.slide_i16x32::<18>(padding, a),
-            15 => self.slide_i16x32::<17>(padding, a),
-            16 => self.slide_i16x32::<16>(padding, a),
-            17 => self.slide_i16x32::<15>(padding, a),
-            18 => self.slide_i16x32::<14>(padding, a),
-            19 => self.slide_i16x32::<13>(padding, a),
-            20 => self.slide_i16x32::<12>(padding, a),
-            21 => self.slide_i16x32::<11>(padding, a),
-            22 => self.slide_i16x32::<10>(padding, a),
-            23 => self.slide_i16x32::<9>(padding, a),
-            24 => self.slide_i16x32::<8>(padding, a),
-            25 => self.slide_i16x32::<7>(padding, a),
-            26 => self.slide_i16x32::<6>(padding, a),
-            27 => self.slide_i16x32::<5>(padding, a),
-            28 => self.slide_i16x32::<4>(padding, a),
-            29 => self.slide_i16x32::<3>(padding, a),
-            30 => self.slide_i16x32::<2>(padding, a),
-            31 => self.slide_i16x32::<1>(padding, a),
-            32 => self.slide_i16x32::<0>(padding, a),
-            _ => self.slide_i16x32::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i16x32(
-        self,
-        a: i16x32<Self>,
-        indices: u8x64<Self>,
-    ) -> i16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x32<Avx512>, indices: u8x64<Avx512>) -> i16x32<Avx512> {
-                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i16x32(self, a: i16x32<Self>, indices: u8x64<Self>) -> i16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x32<Avx512>, indices: u8x64<Avx512>) -> i16x32<Avx512> {
-                let result = _mm512_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i16x32(self, a: i16x32<Self>, indices: u8x64<Self>) -> i16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x32<Avx512>, indices: u8x64<Avx512>) -> i16x32<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
-                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
-                let result_bytes = u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -15887,6 +11853,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i16x32<Avx512> {
+                _mm512_max_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i16x32<Avx512> {
+                _mm512_min_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -15919,32 +11905,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> mask16x32<Avx512> {
                 mask16x32 {
                     val: _mm512_cmple_epi16_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> mask16x32<Avx512> {
-                mask16x32 {
-                    val: _mm512_cmpge_epi16_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> mask16x32<Avx512> {
-                mask16x32 {
-                    val: _mm512_cmpgt_epi16_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -16109,26 +12069,6 @@ impl Simd for Avx512 {
         kernel(self, a, b, c)
     }
     #[inline(always)]
-    fn min_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i16x32<Avx512> {
-                _mm512_min_epi16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i16x32<Avx512> {
-                _mm512_max_epi16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
     fn split_i16x32(self, a: i16x32<Self>) -> (i16x16<Self>, i16x16<Self>) {
         crate::kernel!(
             #[inline(always)]
@@ -16266,220 +12206,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_u16x32<const OFFSET: usize>(self, a: u16x32<Self>) -> u16x32<Self> {
-        match OFFSET % 32 {
-            0 => self.slide_u16x32::<0>(a, a),
-            1 => self.slide_u16x32::<1>(a, a),
-            2 => self.slide_u16x32::<2>(a, a),
-            3 => self.slide_u16x32::<3>(a, a),
-            4 => self.slide_u16x32::<4>(a, a),
-            5 => self.slide_u16x32::<5>(a, a),
-            6 => self.slide_u16x32::<6>(a, a),
-            7 => self.slide_u16x32::<7>(a, a),
-            8 => self.slide_u16x32::<8>(a, a),
-            9 => self.slide_u16x32::<9>(a, a),
-            10 => self.slide_u16x32::<10>(a, a),
-            11 => self.slide_u16x32::<11>(a, a),
-            12 => self.slide_u16x32::<12>(a, a),
-            13 => self.slide_u16x32::<13>(a, a),
-            14 => self.slide_u16x32::<14>(a, a),
-            15 => self.slide_u16x32::<15>(a, a),
-            16 => self.slide_u16x32::<16>(a, a),
-            17 => self.slide_u16x32::<17>(a, a),
-            18 => self.slide_u16x32::<18>(a, a),
-            19 => self.slide_u16x32::<19>(a, a),
-            20 => self.slide_u16x32::<20>(a, a),
-            21 => self.slide_u16x32::<21>(a, a),
-            22 => self.slide_u16x32::<22>(a, a),
-            23 => self.slide_u16x32::<23>(a, a),
-            24 => self.slide_u16x32::<24>(a, a),
-            25 => self.slide_u16x32::<25>(a, a),
-            26 => self.slide_u16x32::<26>(a, a),
-            27 => self.slide_u16x32::<27>(a, a),
-            28 => self.slide_u16x32::<28>(a, a),
-            29 => self.slide_u16x32::<29>(a, a),
-            30 => self.slide_u16x32::<30>(a, a),
-            31 => self.slide_u16x32::<31>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_u16x32<const OFFSET: usize>(self, a: u16x32<Self>) -> u16x32<Self> {
-        match OFFSET % 32 {
-            0 => self.slide_u16x32::<32>(a, a),
-            1 => self.slide_u16x32::<31>(a, a),
-            2 => self.slide_u16x32::<30>(a, a),
-            3 => self.slide_u16x32::<29>(a, a),
-            4 => self.slide_u16x32::<28>(a, a),
-            5 => self.slide_u16x32::<27>(a, a),
-            6 => self.slide_u16x32::<26>(a, a),
-            7 => self.slide_u16x32::<25>(a, a),
-            8 => self.slide_u16x32::<24>(a, a),
-            9 => self.slide_u16x32::<23>(a, a),
-            10 => self.slide_u16x32::<22>(a, a),
-            11 => self.slide_u16x32::<21>(a, a),
-            12 => self.slide_u16x32::<20>(a, a),
-            13 => self.slide_u16x32::<19>(a, a),
-            14 => self.slide_u16x32::<18>(a, a),
-            15 => self.slide_u16x32::<17>(a, a),
-            16 => self.slide_u16x32::<16>(a, a),
-            17 => self.slide_u16x32::<15>(a, a),
-            18 => self.slide_u16x32::<14>(a, a),
-            19 => self.slide_u16x32::<13>(a, a),
-            20 => self.slide_u16x32::<12>(a, a),
-            21 => self.slide_u16x32::<11>(a, a),
-            22 => self.slide_u16x32::<10>(a, a),
-            23 => self.slide_u16x32::<9>(a, a),
-            24 => self.slide_u16x32::<8>(a, a),
-            25 => self.slide_u16x32::<7>(a, a),
-            26 => self.slide_u16x32::<6>(a, a),
-            27 => self.slide_u16x32::<5>(a, a),
-            28 => self.slide_u16x32::<4>(a, a),
-            29 => self.slide_u16x32::<3>(a, a),
-            30 => self.slide_u16x32::<2>(a, a),
-            31 => self.slide_u16x32::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_u16x32<const OFFSET: usize>(
-        self,
-        a: u16x32<Self>,
-        padding: u16,
-    ) -> u16x32<Self> {
-        let padding = self.splat_u16x32(padding);
-        match OFFSET {
-            0 => self.slide_u16x32::<0>(a, padding),
-            1 => self.slide_u16x32::<1>(a, padding),
-            2 => self.slide_u16x32::<2>(a, padding),
-            3 => self.slide_u16x32::<3>(a, padding),
-            4 => self.slide_u16x32::<4>(a, padding),
-            5 => self.slide_u16x32::<5>(a, padding),
-            6 => self.slide_u16x32::<6>(a, padding),
-            7 => self.slide_u16x32::<7>(a, padding),
-            8 => self.slide_u16x32::<8>(a, padding),
-            9 => self.slide_u16x32::<9>(a, padding),
-            10 => self.slide_u16x32::<10>(a, padding),
-            11 => self.slide_u16x32::<11>(a, padding),
-            12 => self.slide_u16x32::<12>(a, padding),
-            13 => self.slide_u16x32::<13>(a, padding),
-            14 => self.slide_u16x32::<14>(a, padding),
-            15 => self.slide_u16x32::<15>(a, padding),
-            16 => self.slide_u16x32::<16>(a, padding),
-            17 => self.slide_u16x32::<17>(a, padding),
-            18 => self.slide_u16x32::<18>(a, padding),
-            19 => self.slide_u16x32::<19>(a, padding),
-            20 => self.slide_u16x32::<20>(a, padding),
-            21 => self.slide_u16x32::<21>(a, padding),
-            22 => self.slide_u16x32::<22>(a, padding),
-            23 => self.slide_u16x32::<23>(a, padding),
-            24 => self.slide_u16x32::<24>(a, padding),
-            25 => self.slide_u16x32::<25>(a, padding),
-            26 => self.slide_u16x32::<26>(a, padding),
-            27 => self.slide_u16x32::<27>(a, padding),
-            28 => self.slide_u16x32::<28>(a, padding),
-            29 => self.slide_u16x32::<29>(a, padding),
-            30 => self.slide_u16x32::<30>(a, padding),
-            31 => self.slide_u16x32::<31>(a, padding),
-            32 => self.slide_u16x32::<32>(a, padding),
-            _ => self.slide_u16x32::<32>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_u16x32<const OFFSET: usize>(
-        self,
-        a: u16x32<Self>,
-        padding: u16,
-    ) -> u16x32<Self> {
-        let padding = self.splat_u16x32(padding);
-        match OFFSET {
-            0 => self.slide_u16x32::<32>(padding, a),
-            1 => self.slide_u16x32::<31>(padding, a),
-            2 => self.slide_u16x32::<30>(padding, a),
-            3 => self.slide_u16x32::<29>(padding, a),
-            4 => self.slide_u16x32::<28>(padding, a),
-            5 => self.slide_u16x32::<27>(padding, a),
-            6 => self.slide_u16x32::<26>(padding, a),
-            7 => self.slide_u16x32::<25>(padding, a),
-            8 => self.slide_u16x32::<24>(padding, a),
-            9 => self.slide_u16x32::<23>(padding, a),
-            10 => self.slide_u16x32::<22>(padding, a),
-            11 => self.slide_u16x32::<21>(padding, a),
-            12 => self.slide_u16x32::<20>(padding, a),
-            13 => self.slide_u16x32::<19>(padding, a),
-            14 => self.slide_u16x32::<18>(padding, a),
-            15 => self.slide_u16x32::<17>(padding, a),
-            16 => self.slide_u16x32::<16>(padding, a),
-            17 => self.slide_u16x32::<15>(padding, a),
-            18 => self.slide_u16x32::<14>(padding, a),
-            19 => self.slide_u16x32::<13>(padding, a),
-            20 => self.slide_u16x32::<12>(padding, a),
-            21 => self.slide_u16x32::<11>(padding, a),
-            22 => self.slide_u16x32::<10>(padding, a),
-            23 => self.slide_u16x32::<9>(padding, a),
-            24 => self.slide_u16x32::<8>(padding, a),
-            25 => self.slide_u16x32::<7>(padding, a),
-            26 => self.slide_u16x32::<6>(padding, a),
-            27 => self.slide_u16x32::<5>(padding, a),
-            28 => self.slide_u16x32::<4>(padding, a),
-            29 => self.slide_u16x32::<3>(padding, a),
-            30 => self.slide_u16x32::<2>(padding, a),
-            31 => self.slide_u16x32::<1>(padding, a),
-            32 => self.slide_u16x32::<0>(padding, a),
-            _ => self.slide_u16x32::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u16x32(
-        self,
-        a: u16x32<Self>,
-        indices: u8x64<Self>,
-    ) -> u16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x32<Avx512>, indices: u8x64<Avx512>) -> u16x32<Avx512> {
-                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u16x32(self, a: u16x32<Self>, indices: u8x64<Self>) -> u16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x32<Avx512>, indices: u8x64<Avx512>) -> u16x32<Avx512> {
-                let result = _mm512_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u16x32(self, a: u16x32<Self>, indices: u8x64<Self>) -> u16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x32<Avx512>, indices: u8x64<Avx512>) -> u16x32<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
-                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
-                let result_bytes = u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -16584,6 +12310,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u16x32<Avx512> {
+                _mm512_max_epu16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u16x32<Avx512> {
+                _mm512_min_epu16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -16616,32 +12362,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> mask16x32<Avx512> {
                 mask16x32 {
                     val: _mm512_cmple_epu16_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> mask16x32<Avx512> {
-                mask16x32 {
-                    val: _mm512_cmpge_epu16_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> mask16x32<Avx512> {
-                mask16x32 {
-                    val: _mm512_cmpgt_epu16_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -16804,26 +12524,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u16x32<Avx512> {
-                _mm512_min_epu16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u16x32<Avx512> {
-                _mm512_max_epu16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>) {
@@ -17069,156 +12769,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_i32x16<const OFFSET: usize>(self, a: i32x16<Self>) -> i32x16<Self> {
-        match OFFSET % 16 {
-            0 => self.slide_i32x16::<0>(a, a),
-            1 => self.slide_i32x16::<1>(a, a),
-            2 => self.slide_i32x16::<2>(a, a),
-            3 => self.slide_i32x16::<3>(a, a),
-            4 => self.slide_i32x16::<4>(a, a),
-            5 => self.slide_i32x16::<5>(a, a),
-            6 => self.slide_i32x16::<6>(a, a),
-            7 => self.slide_i32x16::<7>(a, a),
-            8 => self.slide_i32x16::<8>(a, a),
-            9 => self.slide_i32x16::<9>(a, a),
-            10 => self.slide_i32x16::<10>(a, a),
-            11 => self.slide_i32x16::<11>(a, a),
-            12 => self.slide_i32x16::<12>(a, a),
-            13 => self.slide_i32x16::<13>(a, a),
-            14 => self.slide_i32x16::<14>(a, a),
-            15 => self.slide_i32x16::<15>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_i32x16<const OFFSET: usize>(self, a: i32x16<Self>) -> i32x16<Self> {
-        match OFFSET % 16 {
-            0 => self.slide_i32x16::<16>(a, a),
-            1 => self.slide_i32x16::<15>(a, a),
-            2 => self.slide_i32x16::<14>(a, a),
-            3 => self.slide_i32x16::<13>(a, a),
-            4 => self.slide_i32x16::<12>(a, a),
-            5 => self.slide_i32x16::<11>(a, a),
-            6 => self.slide_i32x16::<10>(a, a),
-            7 => self.slide_i32x16::<9>(a, a),
-            8 => self.slide_i32x16::<8>(a, a),
-            9 => self.slide_i32x16::<7>(a, a),
-            10 => self.slide_i32x16::<6>(a, a),
-            11 => self.slide_i32x16::<5>(a, a),
-            12 => self.slide_i32x16::<4>(a, a),
-            13 => self.slide_i32x16::<3>(a, a),
-            14 => self.slide_i32x16::<2>(a, a),
-            15 => self.slide_i32x16::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_i32x16<const OFFSET: usize>(
-        self,
-        a: i32x16<Self>,
-        padding: i32,
-    ) -> i32x16<Self> {
-        let padding = self.splat_i32x16(padding);
-        match OFFSET {
-            0 => self.slide_i32x16::<0>(a, padding),
-            1 => self.slide_i32x16::<1>(a, padding),
-            2 => self.slide_i32x16::<2>(a, padding),
-            3 => self.slide_i32x16::<3>(a, padding),
-            4 => self.slide_i32x16::<4>(a, padding),
-            5 => self.slide_i32x16::<5>(a, padding),
-            6 => self.slide_i32x16::<6>(a, padding),
-            7 => self.slide_i32x16::<7>(a, padding),
-            8 => self.slide_i32x16::<8>(a, padding),
-            9 => self.slide_i32x16::<9>(a, padding),
-            10 => self.slide_i32x16::<10>(a, padding),
-            11 => self.slide_i32x16::<11>(a, padding),
-            12 => self.slide_i32x16::<12>(a, padding),
-            13 => self.slide_i32x16::<13>(a, padding),
-            14 => self.slide_i32x16::<14>(a, padding),
-            15 => self.slide_i32x16::<15>(a, padding),
-            16 => self.slide_i32x16::<16>(a, padding),
-            _ => self.slide_i32x16::<16>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_i32x16<const OFFSET: usize>(
-        self,
-        a: i32x16<Self>,
-        padding: i32,
-    ) -> i32x16<Self> {
-        let padding = self.splat_i32x16(padding);
-        match OFFSET {
-            0 => self.slide_i32x16::<16>(padding, a),
-            1 => self.slide_i32x16::<15>(padding, a),
-            2 => self.slide_i32x16::<14>(padding, a),
-            3 => self.slide_i32x16::<13>(padding, a),
-            4 => self.slide_i32x16::<12>(padding, a),
-            5 => self.slide_i32x16::<11>(padding, a),
-            6 => self.slide_i32x16::<10>(padding, a),
-            7 => self.slide_i32x16::<9>(padding, a),
-            8 => self.slide_i32x16::<8>(padding, a),
-            9 => self.slide_i32x16::<7>(padding, a),
-            10 => self.slide_i32x16::<6>(padding, a),
-            11 => self.slide_i32x16::<5>(padding, a),
-            12 => self.slide_i32x16::<4>(padding, a),
-            13 => self.slide_i32x16::<3>(padding, a),
-            14 => self.slide_i32x16::<2>(padding, a),
-            15 => self.slide_i32x16::<1>(padding, a),
-            16 => self.slide_i32x16::<0>(padding, a),
-            _ => self.slide_i32x16::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i32x16(
-        self,
-        a: i32x16<Self>,
-        indices: u8x64<Self>,
-    ) -> i32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x16<Avx512>, indices: u8x64<Avx512>) -> i32x16<Avx512> {
-                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i32x16(self, a: i32x16<Self>, indices: u8x64<Self>) -> i32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x16<Avx512>, indices: u8x64<Avx512>) -> i32x16<Avx512> {
-                let result = _mm512_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i32x16(self, a: i32x16<Self>, indices: u8x64<Self>) -> i32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x16<Avx512>, indices: u8x64<Avx512>) -> i32x16<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
-                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
-                let result_bytes = u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -17323,6 +12873,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i32x16<Avx512> {
+                _mm512_max_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i32x16<Avx512> {
+                _mm512_min_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -17355,32 +12925,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> mask32x16<Avx512> {
                 mask32x16 {
                     val: _mm512_cmple_epi32_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> mask32x16<Avx512> {
-                mask32x16 {
-                    val: _mm512_cmpge_epi32_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> mask32x16<Avx512> {
-                mask32x16 {
-                    val: _mm512_cmpgt_epi32_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -17525,26 +13069,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i32x16<Avx512> {
-                _mm512_min_epi32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i32x16<Avx512> {
-                _mm512_max_epi32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
@@ -17694,156 +13218,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_u32x16<const OFFSET: usize>(self, a: u32x16<Self>) -> u32x16<Self> {
-        match OFFSET % 16 {
-            0 => self.slide_u32x16::<0>(a, a),
-            1 => self.slide_u32x16::<1>(a, a),
-            2 => self.slide_u32x16::<2>(a, a),
-            3 => self.slide_u32x16::<3>(a, a),
-            4 => self.slide_u32x16::<4>(a, a),
-            5 => self.slide_u32x16::<5>(a, a),
-            6 => self.slide_u32x16::<6>(a, a),
-            7 => self.slide_u32x16::<7>(a, a),
-            8 => self.slide_u32x16::<8>(a, a),
-            9 => self.slide_u32x16::<9>(a, a),
-            10 => self.slide_u32x16::<10>(a, a),
-            11 => self.slide_u32x16::<11>(a, a),
-            12 => self.slide_u32x16::<12>(a, a),
-            13 => self.slide_u32x16::<13>(a, a),
-            14 => self.slide_u32x16::<14>(a, a),
-            15 => self.slide_u32x16::<15>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_u32x16<const OFFSET: usize>(self, a: u32x16<Self>) -> u32x16<Self> {
-        match OFFSET % 16 {
-            0 => self.slide_u32x16::<16>(a, a),
-            1 => self.slide_u32x16::<15>(a, a),
-            2 => self.slide_u32x16::<14>(a, a),
-            3 => self.slide_u32x16::<13>(a, a),
-            4 => self.slide_u32x16::<12>(a, a),
-            5 => self.slide_u32x16::<11>(a, a),
-            6 => self.slide_u32x16::<10>(a, a),
-            7 => self.slide_u32x16::<9>(a, a),
-            8 => self.slide_u32x16::<8>(a, a),
-            9 => self.slide_u32x16::<7>(a, a),
-            10 => self.slide_u32x16::<6>(a, a),
-            11 => self.slide_u32x16::<5>(a, a),
-            12 => self.slide_u32x16::<4>(a, a),
-            13 => self.slide_u32x16::<3>(a, a),
-            14 => self.slide_u32x16::<2>(a, a),
-            15 => self.slide_u32x16::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_u32x16<const OFFSET: usize>(
-        self,
-        a: u32x16<Self>,
-        padding: u32,
-    ) -> u32x16<Self> {
-        let padding = self.splat_u32x16(padding);
-        match OFFSET {
-            0 => self.slide_u32x16::<0>(a, padding),
-            1 => self.slide_u32x16::<1>(a, padding),
-            2 => self.slide_u32x16::<2>(a, padding),
-            3 => self.slide_u32x16::<3>(a, padding),
-            4 => self.slide_u32x16::<4>(a, padding),
-            5 => self.slide_u32x16::<5>(a, padding),
-            6 => self.slide_u32x16::<6>(a, padding),
-            7 => self.slide_u32x16::<7>(a, padding),
-            8 => self.slide_u32x16::<8>(a, padding),
-            9 => self.slide_u32x16::<9>(a, padding),
-            10 => self.slide_u32x16::<10>(a, padding),
-            11 => self.slide_u32x16::<11>(a, padding),
-            12 => self.slide_u32x16::<12>(a, padding),
-            13 => self.slide_u32x16::<13>(a, padding),
-            14 => self.slide_u32x16::<14>(a, padding),
-            15 => self.slide_u32x16::<15>(a, padding),
-            16 => self.slide_u32x16::<16>(a, padding),
-            _ => self.slide_u32x16::<16>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_u32x16<const OFFSET: usize>(
-        self,
-        a: u32x16<Self>,
-        padding: u32,
-    ) -> u32x16<Self> {
-        let padding = self.splat_u32x16(padding);
-        match OFFSET {
-            0 => self.slide_u32x16::<16>(padding, a),
-            1 => self.slide_u32x16::<15>(padding, a),
-            2 => self.slide_u32x16::<14>(padding, a),
-            3 => self.slide_u32x16::<13>(padding, a),
-            4 => self.slide_u32x16::<12>(padding, a),
-            5 => self.slide_u32x16::<11>(padding, a),
-            6 => self.slide_u32x16::<10>(padding, a),
-            7 => self.slide_u32x16::<9>(padding, a),
-            8 => self.slide_u32x16::<8>(padding, a),
-            9 => self.slide_u32x16::<7>(padding, a),
-            10 => self.slide_u32x16::<6>(padding, a),
-            11 => self.slide_u32x16::<5>(padding, a),
-            12 => self.slide_u32x16::<4>(padding, a),
-            13 => self.slide_u32x16::<3>(padding, a),
-            14 => self.slide_u32x16::<2>(padding, a),
-            15 => self.slide_u32x16::<1>(padding, a),
-            16 => self.slide_u32x16::<0>(padding, a),
-            _ => self.slide_u32x16::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u32x16(
-        self,
-        a: u32x16<Self>,
-        indices: u8x64<Self>,
-    ) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x16<Avx512>, indices: u8x64<Avx512>) -> u32x16<Avx512> {
-                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u32x16(self, a: u32x16<Self>, indices: u8x64<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x16<Avx512>, indices: u8x64<Avx512>) -> u32x16<Avx512> {
-                let result = _mm512_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u32x16(self, a: u32x16<Self>, indices: u8x64<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x16<Avx512>, indices: u8x64<Avx512>) -> u32x16<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
-                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
-                let result_bytes = u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -17948,6 +13322,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u32x16<Avx512> {
+                _mm512_max_epu32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u32x16<Avx512> {
+                _mm512_min_epu32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -17980,32 +13374,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> mask32x16<Avx512> {
                 mask32x16 {
                     val: _mm512_cmple_epu32_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> mask32x16<Avx512> {
-                mask32x16 {
-                    val: _mm512_cmpge_epu32_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> mask32x16<Avx512> {
-                mask32x16 {
-                    val: _mm512_cmpgt_epu32_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -18150,26 +13518,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u32x16<Avx512> {
-                _mm512_min_epu32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u32x16<Avx512> {
-                _mm512_max_epu32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>) {
@@ -18425,120 +13773,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_f64x8<const OFFSET: usize>(self, a: f64x8<Self>) -> f64x8<Self> {
-        match OFFSET % 8 {
-            0 => self.slide_f64x8::<0>(a, a),
-            1 => self.slide_f64x8::<1>(a, a),
-            2 => self.slide_f64x8::<2>(a, a),
-            3 => self.slide_f64x8::<3>(a, a),
-            4 => self.slide_f64x8::<4>(a, a),
-            5 => self.slide_f64x8::<5>(a, a),
-            6 => self.slide_f64x8::<6>(a, a),
-            7 => self.slide_f64x8::<7>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_f64x8<const OFFSET: usize>(self, a: f64x8<Self>) -> f64x8<Self> {
-        match OFFSET % 8 {
-            0 => self.slide_f64x8::<8>(a, a),
-            1 => self.slide_f64x8::<7>(a, a),
-            2 => self.slide_f64x8::<6>(a, a),
-            3 => self.slide_f64x8::<5>(a, a),
-            4 => self.slide_f64x8::<4>(a, a),
-            5 => self.slide_f64x8::<3>(a, a),
-            6 => self.slide_f64x8::<2>(a, a),
-            7 => self.slide_f64x8::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_f64x8<const OFFSET: usize>(
-        self,
-        a: f64x8<Self>,
-        padding: f64,
-    ) -> f64x8<Self> {
-        let padding = self.splat_f64x8(padding);
-        match OFFSET {
-            0 => self.slide_f64x8::<0>(a, padding),
-            1 => self.slide_f64x8::<1>(a, padding),
-            2 => self.slide_f64x8::<2>(a, padding),
-            3 => self.slide_f64x8::<3>(a, padding),
-            4 => self.slide_f64x8::<4>(a, padding),
-            5 => self.slide_f64x8::<5>(a, padding),
-            6 => self.slide_f64x8::<6>(a, padding),
-            7 => self.slide_f64x8::<7>(a, padding),
-            8 => self.slide_f64x8::<8>(a, padding),
-            _ => self.slide_f64x8::<8>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_f64x8<const OFFSET: usize>(
-        self,
-        a: f64x8<Self>,
-        padding: f64,
-    ) -> f64x8<Self> {
-        let padding = self.splat_f64x8(padding);
-        match OFFSET {
-            0 => self.slide_f64x8::<8>(padding, a),
-            1 => self.slide_f64x8::<7>(padding, a),
-            2 => self.slide_f64x8::<6>(padding, a),
-            3 => self.slide_f64x8::<5>(padding, a),
-            4 => self.slide_f64x8::<4>(padding, a),
-            5 => self.slide_f64x8::<3>(padding, a),
-            6 => self.slide_f64x8::<2>(padding, a),
-            7 => self.slide_f64x8::<1>(padding, a),
-            8 => self.slide_f64x8::<0>(padding, a),
-            _ => self.slide_f64x8::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x8<Avx512>, indices: u8x64<Avx512>) -> f64x8<Avx512> {
-                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x8<Avx512>, indices: u8x64<Avx512>) -> f64x8<Avx512> {
-                let result = _mm512_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x8<Avx512>, indices: u8x64<Avx512>) -> f64x8<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
-                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
-                let result_bytes = u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -18634,6 +13868,46 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> f64x8<Avx512> {
+                _mm512_max_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> f64x8<Avx512> {
+                _mm512_min_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn max_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> f64x8<Avx512> {
+                _mm512_range_pd::<5i32>(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> f64x8<Avx512> {
+                _mm512_range_pd::<4i32>(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -18666,32 +13940,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> mask64x8<Avx512> {
                 mask64x8 {
                     val: _mm512_cmp_pd_mask::<18i32>(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> mask64x8<Avx512> {
-                mask64x8 {
-                    val: _mm512_cmp_pd_mask::<29i32>(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> mask64x8<Avx512> {
-                mask64x8 {
-                    val: _mm512_cmp_pd_mask::<30i32>(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -18796,46 +14044,6 @@ impl Simd for Avx512 {
                     _mm512_permutex2var_pd(a, _mm512_setr_epi64(1, 3, 5, 7, 9, 11, 13, 15), b)
                         .simd_into(token),
                 )
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> f64x8<Avx512> {
-                _mm512_max_pd(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> f64x8<Avx512> {
-                _mm512_min_pd(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> f64x8<Avx512> {
-                _mm512_range_pd::<5i32>(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn min_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> f64x8<Avx512> {
-                _mm512_range_pd::<4i32>(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -19081,120 +14289,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_i64x8<const OFFSET: usize>(self, a: i64x8<Self>) -> i64x8<Self> {
-        match OFFSET % 8 {
-            0 => self.slide_i64x8::<0>(a, a),
-            1 => self.slide_i64x8::<1>(a, a),
-            2 => self.slide_i64x8::<2>(a, a),
-            3 => self.slide_i64x8::<3>(a, a),
-            4 => self.slide_i64x8::<4>(a, a),
-            5 => self.slide_i64x8::<5>(a, a),
-            6 => self.slide_i64x8::<6>(a, a),
-            7 => self.slide_i64x8::<7>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_i64x8<const OFFSET: usize>(self, a: i64x8<Self>) -> i64x8<Self> {
-        match OFFSET % 8 {
-            0 => self.slide_i64x8::<8>(a, a),
-            1 => self.slide_i64x8::<7>(a, a),
-            2 => self.slide_i64x8::<6>(a, a),
-            3 => self.slide_i64x8::<5>(a, a),
-            4 => self.slide_i64x8::<4>(a, a),
-            5 => self.slide_i64x8::<3>(a, a),
-            6 => self.slide_i64x8::<2>(a, a),
-            7 => self.slide_i64x8::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_i64x8<const OFFSET: usize>(
-        self,
-        a: i64x8<Self>,
-        padding: i64,
-    ) -> i64x8<Self> {
-        let padding = self.splat_i64x8(padding);
-        match OFFSET {
-            0 => self.slide_i64x8::<0>(a, padding),
-            1 => self.slide_i64x8::<1>(a, padding),
-            2 => self.slide_i64x8::<2>(a, padding),
-            3 => self.slide_i64x8::<3>(a, padding),
-            4 => self.slide_i64x8::<4>(a, padding),
-            5 => self.slide_i64x8::<5>(a, padding),
-            6 => self.slide_i64x8::<6>(a, padding),
-            7 => self.slide_i64x8::<7>(a, padding),
-            8 => self.slide_i64x8::<8>(a, padding),
-            _ => self.slide_i64x8::<8>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_i64x8<const OFFSET: usize>(
-        self,
-        a: i64x8<Self>,
-        padding: i64,
-    ) -> i64x8<Self> {
-        let padding = self.splat_i64x8(padding);
-        match OFFSET {
-            0 => self.slide_i64x8::<8>(padding, a),
-            1 => self.slide_i64x8::<7>(padding, a),
-            2 => self.slide_i64x8::<6>(padding, a),
-            3 => self.slide_i64x8::<5>(padding, a),
-            4 => self.slide_i64x8::<4>(padding, a),
-            5 => self.slide_i64x8::<3>(padding, a),
-            6 => self.slide_i64x8::<2>(padding, a),
-            7 => self.slide_i64x8::<1>(padding, a),
-            8 => self.slide_i64x8::<0>(padding, a),
-            _ => self.slide_i64x8::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x8<Avx512>, indices: u8x64<Avx512>) -> i64x8<Avx512> {
-                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x8<Avx512>, indices: u8x64<Avx512>) -> i64x8<Avx512> {
-                let result = _mm512_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x8<Avx512>, indices: u8x64<Avx512>) -> i64x8<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
-                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
-                let result_bytes = u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -19299,6 +14393,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x8<Avx512>, b: i64x8<Avx512>) -> i64x8<Avx512> {
+                _mm512_max_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x8<Avx512>, b: i64x8<Avx512>) -> i64x8<Avx512> {
+                _mm512_min_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -19331,32 +14445,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i64x8<Avx512>, b: i64x8<Avx512>) -> mask64x8<Avx512> {
                 mask64x8 {
                     val: _mm512_cmple_epi64_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x8<Avx512>, b: i64x8<Avx512>) -> mask64x8<Avx512> {
-                mask64x8 {
-                    val: _mm512_cmpge_epi64_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x8<Avx512>, b: i64x8<Avx512>) -> mask64x8<Avx512> {
-                mask64x8 {
-                    val: _mm512_cmpgt_epi64_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -19479,26 +14567,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x8<Avx512>, b: i64x8<Avx512>) -> i64x8<Avx512> {
-                _mm512_min_epi64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x8<Avx512>, b: i64x8<Avx512>) -> i64x8<Avx512> {
-                _mm512_max_epi64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn split_i64x8(self, a: i64x8<Self>) -> (i64x4<Self>, i64x4<Self>) {
@@ -19634,120 +14702,6 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
-    fn rotate_elements_left_u64x8<const OFFSET: usize>(self, a: u64x8<Self>) -> u64x8<Self> {
-        match OFFSET % 8 {
-            0 => self.slide_u64x8::<0>(a, a),
-            1 => self.slide_u64x8::<1>(a, a),
-            2 => self.slide_u64x8::<2>(a, a),
-            3 => self.slide_u64x8::<3>(a, a),
-            4 => self.slide_u64x8::<4>(a, a),
-            5 => self.slide_u64x8::<5>(a, a),
-            6 => self.slide_u64x8::<6>(a, a),
-            7 => self.slide_u64x8::<7>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_u64x8<const OFFSET: usize>(self, a: u64x8<Self>) -> u64x8<Self> {
-        match OFFSET % 8 {
-            0 => self.slide_u64x8::<8>(a, a),
-            1 => self.slide_u64x8::<7>(a, a),
-            2 => self.slide_u64x8::<6>(a, a),
-            3 => self.slide_u64x8::<5>(a, a),
-            4 => self.slide_u64x8::<4>(a, a),
-            5 => self.slide_u64x8::<3>(a, a),
-            6 => self.slide_u64x8::<2>(a, a),
-            7 => self.slide_u64x8::<1>(a, a),
-            _ => unreachable!(),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_left_u64x8<const OFFSET: usize>(
-        self,
-        a: u64x8<Self>,
-        padding: u64,
-    ) -> u64x8<Self> {
-        let padding = self.splat_u64x8(padding);
-        match OFFSET {
-            0 => self.slide_u64x8::<0>(a, padding),
-            1 => self.slide_u64x8::<1>(a, padding),
-            2 => self.slide_u64x8::<2>(a, padding),
-            3 => self.slide_u64x8::<3>(a, padding),
-            4 => self.slide_u64x8::<4>(a, padding),
-            5 => self.slide_u64x8::<5>(a, padding),
-            6 => self.slide_u64x8::<6>(a, padding),
-            7 => self.slide_u64x8::<7>(a, padding),
-            8 => self.slide_u64x8::<8>(a, padding),
-            _ => self.slide_u64x8::<8>(a, padding),
-        }
-    }
-    #[inline(always)]
-    fn shift_elements_right_u64x8<const OFFSET: usize>(
-        self,
-        a: u64x8<Self>,
-        padding: u64,
-    ) -> u64x8<Self> {
-        let padding = self.splat_u64x8(padding);
-        match OFFSET {
-            0 => self.slide_u64x8::<8>(padding, a),
-            1 => self.slide_u64x8::<7>(padding, a),
-            2 => self.slide_u64x8::<6>(padding, a),
-            3 => self.slide_u64x8::<5>(padding, a),
-            4 => self.slide_u64x8::<4>(padding, a),
-            5 => self.slide_u64x8::<3>(padding, a),
-            6 => self.slide_u64x8::<2>(padding, a),
-            7 => self.slide_u64x8::<1>(padding, a),
-            8 => self.slide_u64x8::<0>(padding, a),
-            _ => self.slide_u64x8::<0>(padding, a),
-        }
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x8<Avx512>, indices: u8x64<Avx512>) -> u64x8<Avx512> {
-                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x8<Avx512>, indices: u8x64<Avx512>) -> u64x8<Avx512> {
-                let result = _mm512_permutexvar_epi8(indices.into(), Bytes::to_bytes(a).val.0);
-                Bytes::from_bytes(u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x8<Avx512>, indices: u8x64<Avx512>) -> u64x8<Avx512> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
-                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
-                let result_bytes = u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -19852,6 +14806,26 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x8<Avx512>, b: u64x8<Avx512>) -> u64x8<Avx512> {
+                _mm512_max_epu64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x8<Avx512>, b: u64x8<Avx512>) -> u64x8<Avx512> {
+                _mm512_min_epu64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -19884,32 +14858,6 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u64x8<Avx512>, b: u64x8<Avx512>) -> mask64x8<Avx512> {
                 mask64x8 {
                     val: _mm512_cmple_epu64_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x8<Avx512>, b: u64x8<Avx512>) -> mask64x8<Avx512> {
-                mask64x8 {
-                    val: _mm512_cmpge_epu64_mask(a.into(), b.into()),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x8<Avx512>, b: u64x8<Avx512>) -> mask64x8<Avx512> {
-                mask64x8 {
-                    val: _mm512_cmpgt_epu64_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -20032,26 +14980,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x8<Avx512>, b: u64x8<Avx512>) -> u64x8<Avx512> {
-                _mm512_min_epu64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x8<Avx512>, b: u64x8<Avx512>) -> u64x8<Avx512> {
-                _mm512_max_epu64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn split_u64x8(self, a: u64x8<Self>) -> (u64x4<Self>, u64x4<Self>) {
