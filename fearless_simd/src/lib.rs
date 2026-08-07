@@ -367,6 +367,11 @@ fn detect_x86_level() -> Level {
 pub enum Level {
     /// Scalar fallback level, i.e. no supported SIMD features are to be used.
     ///
+    /// This variant is **absent** on targets that supports a higher baseline
+    /// (`aarch64-*`, `i686-*`, `x86_64-*`, WASM with SIMD) unless the `force_support_fallback`
+    /// Cargo feature is enabled. Instead of matching on this variant,
+    /// call [`is_fallback`](Level::is_fallback) which is always available.
+    ///
     /// This can be created with [`Level::fallback`].
     // Keep this predicate in sync with the fallback module and `dispatch!`.
     #[cfg(any(
