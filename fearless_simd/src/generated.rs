@@ -3,7 +3,6 @@
 
 #![expect(
     missing_docs,
-    trivial_numeric_casts,
     clippy::unnecessary_cast,
     clippy::cast_possible_truncation,
     clippy::unseparated_literal_suffix,
@@ -11,8 +10,18 @@
     clippy::wrong_self_convention,
     reason = "Simplifies the generator and has no effect on the machine code"
 )]
+#![allow(
+    trivial_numeric_casts,
+    reason = "Not every conditionally compiled backend contains a trivial cast"
+)]
 #![cfg_attr(
-    target_arch = "x86_64",
+    all(
+        target_arch = "x86_64",
+        any(
+            not(all(target_feature = "sse2", target_feature = "fxsr")),
+            feature = "force_support_fallback"
+        )
+    ),
     expect(
         clippy::new_without_default,
         reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
@@ -44,6 +53,22 @@
 mod avx2;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod avx512;
+// Keep this predicate in sync with `Level::Fallback`, `is_fallback`, and `dispatch!`.
+#[cfg(any(
+    all(target_arch = "aarch64", not(target_feature = "neon")),
+    all(
+        any(target_arch = "x86", target_arch = "x86_64"),
+        not(all(target_feature = "sse2", target_feature = "fxsr"))
+    ),
+    all(target_arch = "wasm32", not(target_feature = "simd128")),
+    not(any(
+        target_arch = "x86",
+        target_arch = "x86_64",
+        target_arch = "aarch64",
+        target_arch = "wasm32"
+    )),
+    feature = "force_support_fallback"
+))]
 mod fallback;
 #[cfg(target_arch = "aarch64")]
 mod neon;
@@ -61,6 +86,21 @@ mod wasm;
 pub use avx2::*;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use avx512::*;
+#[cfg(any(
+    all(target_arch = "aarch64", not(target_feature = "neon")),
+    all(
+        any(target_arch = "x86", target_arch = "x86_64"),
+        not(all(target_feature = "sse2", target_feature = "fxsr"))
+    ),
+    all(target_arch = "wasm32", not(target_feature = "simd128")),
+    not(any(
+        target_arch = "x86",
+        target_arch = "x86_64",
+        target_arch = "aarch64",
+        target_arch = "wasm32"
+    )),
+    feature = "force_support_fallback"
+))]
 pub use fallback::*;
 #[cfg(target_arch = "aarch64")]
 pub use neon::*;

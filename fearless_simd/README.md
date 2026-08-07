@@ -199,6 +199,8 @@ As a last resort, you can turn off multiversioning for specific SIMD instruction
 These configuration flags only control automatic multiversioning. Disabling one does not remove its token type, its
 [`Simd`] implementation, or explicit [`kernel`] support; for example, an `Avx2` token can still be used to call an
 AVX2 kernel when the CPU supports it.
+`disable_dispatch_sse2` has no effect when SSE2 is part of the ambient target baseline, because
+that baseline remains the terminal dispatch backend.
 
 Note that later extensions can be beneficial even if you are only using 128-bit vectors:
 AVX2 and AVX-512 provide more efficient instructions for some operations,

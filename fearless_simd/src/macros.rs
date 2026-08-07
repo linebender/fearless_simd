@@ -49,6 +49,9 @@
 #[macro_export]
 macro_rules! dispatch {
     ($level:expr, $simd:pat => $op:expr) => {{
+        $crate::__fearless_simd_dispatch_inner!($level, $simd => $op)
+    }};
+    (@impl $level:expr, $simd:pat => $op:expr; $forced_fallback_arm:literal) => {{
         match $crate::Level::__dispatch_target($level) {
             #[cfg(target_arch = "aarch64")]
             $crate::Level::Neon(neon) => {
@@ -74,12 +77,54 @@ macro_rules! dispatch {
             $crate::Level::Avx512(avx512) => {
                 $crate::__fearless_simd_dispatch_dispatch_avx512!(avx512, $simd => $op)
             }
-            $crate::Level::Fallback(fb) => {
-                $crate::__fearless_simd_dispatch_dispatch_fallback!(fb, $simd => $op)
+            // Keep this predicate in sync with `Level::Fallback`, the fallback module, and
+            // `Level::is_fallback`. The literal carries fearless_simd's feature selection into
+            // expansion in a downstream crate, where `cfg(feature = ...)` would be incorrect.
+            #[cfg(any(
+                all(target_arch = "aarch64", not(target_feature = "neon")),
+                all(
+                    any(target_arch = "x86", target_arch = "x86_64"),
+                    not(all(target_feature = "sse2", target_feature = "fxsr"))
+                ),
+                all(target_arch = "wasm32", not(target_feature = "simd128")),
+                not(any(
+                    target_arch = "x86",
+                    target_arch = "x86_64",
+                    target_arch = "aarch64",
+                    target_arch = "wasm32"
+                )),
+                $forced_fallback_arm
+            ))]
+            $crate::Level::Fallback(fallback) => {
+                $crate::__fearless_simd_dispatch_with_token!(fallback, $simd => $op)
             }
             _ => unreachable!(),
         }
     }};
+}
+
+// This macro turns whether `force_support_fallback` is enabled into a boolean literal in
+// `dispatch!`. Exported macro bodies are expanded in the downstream crate, so evaluating the
+// feature cfg directly in `dispatch!` would inspect the wrong crate's features.
+
+/// Implementation detail of [`crate::dispatch`]; this is not public API.
+#[macro_export]
+#[doc(hidden)]
+#[cfg(feature = "force_support_fallback")]
+macro_rules! __fearless_simd_dispatch_inner {
+    ($level:expr, $simd:pat => $op:expr) => {
+        $crate::dispatch!(@impl $level, $simd => $op; true)
+    };
+}
+
+/// Implementation detail of [`crate::dispatch`]; this is not public API.
+#[macro_export]
+#[doc(hidden)]
+#[cfg(not(feature = "force_support_fallback"))]
+macro_rules! __fearless_simd_dispatch_inner {
+    ($level:expr, $simd:pat => $op:expr) => {
+        $crate::dispatch!(@impl $level, $simd => $op; false)
+    };
 }
 
 // The dispatch helpers are split into cfg-selected macro definitions
@@ -124,58 +169,6 @@ macro_rules! __fearless_simd_dispatch_pruned {
         let _ = __fearless_simd_proof;
         unreachable!("this SIMD level was pruned from dispatch")
     }};
-}
-
-/// Implementation detail of [`crate::dispatch`]; this is not public API.
-#[macro_export]
-#[doc(hidden)]
-#[cfg(any(
-    all(target_arch = "aarch64", not(target_feature = "neon")),
-    all(
-        any(target_arch = "x86", target_arch = "x86_64"),
-        any(
-            disable_dispatch_sse2,
-            not(all(target_feature = "sse2", target_feature = "fxsr"))
-        ),
-    ),
-    all(target_arch = "wasm32", not(target_feature = "simd128")),
-    not(any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "aarch64",
-        target_arch = "wasm32"
-    )),
-    feature = "force_support_fallback"
-))]
-macro_rules! __fearless_simd_dispatch_dispatch_fallback {
-    ($fallback:expr, $simd:pat => $op:expr) => {
-        $crate::__fearless_simd_dispatch_with_token!($fallback, $simd => $op)
-    };
-}
-
-/// Implementation detail of [`crate::dispatch`]; this is not public API.
-#[macro_export]
-#[doc(hidden)]
-#[cfg(not(any(
-    all(target_arch = "aarch64", not(target_feature = "neon")),
-    all(
-        any(target_arch = "x86", target_arch = "x86_64"),
-        any(
-            disable_dispatch_sse2,
-            not(all(target_feature = "sse2", target_feature = "fxsr"))
-        ),
-    ),
-    all(target_arch = "wasm32", not(target_feature = "simd128")),
-    not(any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "aarch64",
-        target_arch = "wasm32"
-    )),
-    feature = "force_support_fallback"
-)))]
-macro_rules! __fearless_simd_dispatch_dispatch_fallback {
-    ($fallback:expr, $simd:pat => $op:expr) => {{ $crate::__fearless_simd_dispatch_pruned!($fallback) }};
 }
 
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
@@ -344,7 +337,10 @@ macro_rules! __fearless_simd_dispatch_dispatch_sse4_2 {
 #[macro_export]
 #[doc(hidden)]
 #[cfg(all(
-    not(disable_dispatch_sse2),
+    any(
+        not(disable_dispatch_sse2),
+        all(target_feature = "sse2", target_feature = "fxsr")
+    ),
     any(
         disable_dispatch_sse4_2,
         not(all(
@@ -365,7 +361,10 @@ macro_rules! __fearless_simd_dispatch_dispatch_sse2 {
 #[macro_export]
 #[doc(hidden)]
 #[cfg(any(
-    disable_dispatch_sse2,
+    all(
+        disable_dispatch_sse2,
+        not(all(target_feature = "sse2", target_feature = "fxsr"))
+    ),
     all(
         not(disable_dispatch_sse4_2),
         target_feature = "fxsr",
@@ -401,9 +400,15 @@ mod tests {
     fn x86_dispatch_backend<S: Simd>(_: S) -> X86DispatchBackend {
         use core::any::TypeId;
 
+        #[cfg(any(
+            not(all(target_feature = "sse2", target_feature = "fxsr")),
+            feature = "force_support_fallback"
+        ))]
         if TypeId::of::<S>() == TypeId::of::<crate::Fallback>() {
-            X86DispatchBackend::Fallback
-        } else if TypeId::of::<S>() == TypeId::of::<crate::Sse2>() {
+            return X86DispatchBackend::Fallback;
+        }
+
+        if TypeId::of::<S>() == TypeId::of::<crate::Sse2>() {
             X86DispatchBackend::Sse2
         } else if TypeId::of::<S>() == TypeId::of::<crate::Sse4_2>() {
             X86DispatchBackend::Sse4_2
@@ -424,7 +429,11 @@ mod tests {
             X86DispatchBackend::Avx2
         } else if cfg!(not(disable_dispatch_sse4_2)) && level.as_sse4_2().is_some() {
             X86DispatchBackend::Sse4_2
-        } else if cfg!(not(disable_dispatch_sse2)) && level.as_sse2().is_some() {
+        } else if cfg!(any(
+            not(disable_dispatch_sse2),
+            all(target_feature = "sse2", target_feature = "fxsr")
+        )) && level.as_sse2().is_some()
+        {
             X86DispatchBackend::Sse2
         } else {
             X86DispatchBackend::Fallback
@@ -514,6 +523,20 @@ mod tests {
         let _ = level.as_avx512().is_some();
     }
 
+    #[cfg(all(
+        feature = "std",
+        any(target_arch = "x86", target_arch = "x86_64"),
+        disable_dispatch_sse2,
+        target_feature = "sse2",
+        target_feature = "fxsr"
+    ))]
+    #[test]
+    fn ambient_sse2_is_the_terminal_backend_when_dispatch_is_disabled() {
+        let actual = dispatch!(Level::new(), simd => x86_dispatch_backend(simd));
+
+        assert_ne!(actual, X86DispatchBackend::Fallback);
+    }
+
     /// Mostly useful with `RUSTFLAGS='-C target-cpu=x86-64-v3'` and higher, doesn't do much otherwise
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[test]
@@ -533,7 +556,8 @@ mod tests {
 
     #[cfg(all(
         not(feature = "force_support_fallback"),
-        any(target_arch = "x86", target_arch = "x86_64")
+        any(target_arch = "x86", target_arch = "x86_64"),
+        not(all(target_feature = "sse2", target_feature = "fxsr"))
     ))]
     #[test]
     fn fallback_dispatches_as_baseline() {

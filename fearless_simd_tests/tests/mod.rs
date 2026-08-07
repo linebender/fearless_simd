@@ -19,6 +19,13 @@ mod harness;
 mod soundness;
 mod token_soundness;
 
+#[test]
+fn dispatches_forced_fallback_across_crates() {
+    let is_fallback = dispatch!(Level::fallback(), simd => simd.level().is_fallback());
+
+    assert!(is_fallback);
+}
+
 #[allow(clippy::allow_attributes, reason = "Only needed in some cfgs.")]
 #[allow(
     unused_variables,
