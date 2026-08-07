@@ -261,6 +261,41 @@ pub trait SimdCvtFloat<T: Seal>: Seal {
     fn float_from(x: T) -> Self;
 }
 
+/// Interleaved loads and stores for SIMD vectors.
+///
+/// This trait is currently implemented only for numeric 128-bit vector types.
+/// These operations load/store up to 512 bits in one go, and loading into wider vectors
+/// usually degrades performance by causing more register pressure.
+///
+/// If processing in wider vectors is desirable, combine the 128-bit vectors into larger ones
+/// and process them together as a single vector. This avoids issues with register pressure.
+/// ```
+pub trait SimdInterleaved<S: Simd>: SimdBase<S> {
+    /// The exact-sized flat scalar array exchanged by four-way interleaved operations.
+    ///
+    /// This contains four times as many elements as one vector.
+    type FourInterleavedArray: Copy + AsRef<[Self::Element]> + AsMut<[Self::Element]>;
+
+    /// Load four 128-bit vectors from an array with 4-way interleaving
+    ///
+    /// This is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.
+    ///
+    /// For example, with 32-bit lanes, memory laid out as
+    /// `[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as
+    /// `[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`.",
+    fn load_four_interleaved(simd: S, src: &Self::FourInterleavedArray) -> [Self; 4];
+
+    /// Store four vectors into a scalar array with four-way interleaving.
+    ///
+    /// This is the inverse of [`load_four_interleaved`](Self::load_four_interleaved).
+    ///
+    /// This is useful e.g. in image processing to turn vectors of each color component into interleaved RGBA pixels.
+    /// For example, with 32-bit lanes, vectors containing
+    /// `[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]` get stored as
+    /// `[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]`.",
+    fn store_four_interleaved(vectors: [Self; 4], dest: &mut Self::FourInterleavedArray);
+}
+
 /// Concatenation of two SIMD vectors.
 ///
 /// This is implemented on all vectors 256 bits and lower, producing vectors of up to 512 bits.

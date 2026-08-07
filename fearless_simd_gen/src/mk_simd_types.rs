@@ -15,7 +15,7 @@ use crate::{
 
 pub(crate) fn mk_simd_types() -> TokenStream {
     let mut result = quote! {
-        use crate::{Bytes, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdMask, SimdCvtFloat, SimdCvtTruncate, SimdWiden, SimdNarrow, seal::Seal};
+        use crate::{Bytes, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdMask, SimdCvtFloat, SimdCvtTruncate, SimdInterleaved, SimdWiden, SimdNarrow, seal::Seal};
     };
     for ty in SIMD_TYPES {
         let name = ty.rust();
@@ -252,6 +252,32 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     #[inline(always)]
                     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
                         self.simd.#combine_method(self, rhs.simd_into(self.simd))
+                    }
+                }
+            });
+        }
+        if ty.n_bits() == 128 {
+            let four_interleaved_len = Literal::usize_unsuffixed(ty.len * 4);
+            let load_four_interleaved = generic_op_name("load_four_interleaved", ty);
+            let store_four_interleaved = generic_op_name("store_four_interleaved", ty);
+            conditional_impls.push(quote! {
+                impl<S: Simd> SimdInterleaved<S> for #name<S> {
+                    type FourInterleavedArray = [#rust_scalar; #four_interleaved_len];
+
+                    #[inline(always)]
+                    fn load_four_interleaved(
+                        simd: S,
+                        src: &Self::FourInterleavedArray,
+                    ) -> [Self; 4] {
+                        simd.#load_four_interleaved(src)
+                    }
+
+                    #[inline(always)]
+                    fn store_four_interleaved(
+                        vectors: [Self; 4],
+                        dest: &mut Self::FourInterleavedArray,
+                    ) {
+                        vectors[0].simd.#store_four_interleaved(vectors, dest);
                     }
                 }
             });

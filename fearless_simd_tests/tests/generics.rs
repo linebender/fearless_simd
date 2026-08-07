@@ -44,6 +44,21 @@ fn generic_block_splat<S: Simd, V: SimdBase<S>>(block: V::Block) -> V::Block {
     V::Block::block_splat(block)
 }
 
+// Ensure that four-way interleaved operations can be used with a generic 128-bit vector type.
+fn generic_load_four_interleaved<S: Simd, V: SimdInterleaved<S>>(
+    simd: S,
+    src: &V::FourInterleavedArray,
+) -> [V; 4] {
+    V::load_four_interleaved(simd, src)
+}
+
+fn generic_store_four_interleaved<S: Simd, V: SimdInterleaved<S>>(
+    vectors: [V; 4],
+    dest: &mut V::FourInterleavedArray,
+) {
+    V::store_four_interleaved(vectors, dest);
+}
+
 // Ensure that a mask lane's signed integer encoding type is its own mask lane encoding type
 fn generic_mask_lane_encoding_idempotent<E: SimdElement>(
     lane_encoding: E::Mask,
