@@ -281,7 +281,7 @@ pub trait SimdInterleaved<S: Simd>: SimdBase<S> {
     ///
     /// For example, with 32-bit lanes, memory laid out as
     /// `[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as
-    /// `[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`.",
+    /// `[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."
     fn load_four_interleaved(simd: S, src: &Self::FourInterleavedArray) -> [Self; 4];
 
     /// Store four vectors into a scalar array with four-way interleaving.
