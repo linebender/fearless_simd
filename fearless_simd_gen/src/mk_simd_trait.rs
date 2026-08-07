@@ -69,7 +69,7 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
         /// This trait defines all the low-level SIMD operations (e.g. [`add_f32x4`](Simd::add_f32x4),
         /// [`mul_u32x4`](Simd::mul_u32x4)) that are implemented by each token type using platform-specific intrinsics.
         /// However, you typically won't call these methods directly. Instead, you'll probably be using the methods
-        /// defined on the vector types themselves.
+        /// defined on the vector types themselves, such as [`f32x4`] or [`u32x4`].
         ///
         /// # Associated Types
         ///

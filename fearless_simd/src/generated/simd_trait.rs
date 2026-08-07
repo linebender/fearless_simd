@@ -23,7 +23,7 @@ use core::fmt::Debug;
 #[doc = r" This trait defines all the low-level SIMD operations (e.g. [`add_f32x4`](Simd::add_f32x4),"]
 #[doc = r" [`mul_u32x4`](Simd::mul_u32x4)) that are implemented by each token type using platform-specific intrinsics."]
 #[doc = r" However, you typically won't call these methods directly. Instead, you'll probably be using the methods"]
-#[doc = r" defined on the vector types themselves."]
+#[doc = r" defined on the vector types themselves, such as [`f32x4`] or [`u32x4`]."]
 #[doc = r""]
 #[doc = r" # Associated Types"]
 #[doc = r""]

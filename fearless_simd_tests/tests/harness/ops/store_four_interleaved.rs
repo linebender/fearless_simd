@@ -15,7 +15,7 @@ fn store_four_interleaved_f32x4<S: Simd>(simd: S) {
         f32x4::from_slice(simd, &[f32::MIN, 13.0, f32::MAX, 15.0]),
     ];
     let mut dest = [0.0_f32; 16];
-    simd.store_four_interleaved_f32x4(vectors, &mut dest);
+    f32x4::store_four_interleaved(vectors, &mut dest);
 
     let expected = [
         0.0,
@@ -49,7 +49,7 @@ fn store_four_interleaved_f64x2<S: Simd>(simd: S) {
         f64x2::from_slice(simd, &[-3.0, f64::MAX]),
     ];
     let mut dest = [0.0_f64; 8];
-    simd.store_four_interleaved_f64x2(vectors, &mut dest);
+    f64x2::store_four_interleaved(vectors, &mut dest);
 
     let expected = [
         0.0,
@@ -123,7 +123,7 @@ fn store_four_interleaved_i8x16<S: Simd>(simd: S) {
         ),
     ];
     let mut dest = [0_i8; 64];
-    simd.store_four_interleaved_i8x16(vectors, &mut dest);
+    i8x16::store_four_interleaved(vectors, &mut dest);
 
     let expected = [
         i8::MIN,
@@ -237,7 +237,7 @@ fn store_four_interleaved_u8x16<S: Simd>(simd: S) {
         ),
     ];
     let mut dest = [0_u8; 64];
-    simd.store_four_interleaved_u8x16(vectors, &mut dest);
+    u8x16::store_four_interleaved(vectors, &mut dest);
 
     let expected = [
         0,
@@ -318,7 +318,7 @@ fn store_four_interleaved_i16x8<S: Simd>(simd: S) {
         i16x8::from_slice(simd, &[8, 9, 10, 11, 12, 13, 14, i16::MAX]),
     ];
     let mut dest = [0_i16; 32];
-    simd.store_four_interleaved_i16x8(vectors, &mut dest);
+    i16x8::store_four_interleaved(vectors, &mut dest);
 
     let expected = [
         i16::MIN,
@@ -367,7 +367,7 @@ fn store_four_interleaved_u16x8<S: Simd>(simd: S) {
         u16x8::from_slice(simd, &[300, 301, 302, 303, 304, 305, 306, u16::MAX]),
     ];
     let mut dest = [0_u16; 32];
-    simd.store_four_interleaved_u16x8(vectors, &mut dest);
+    u16x8::store_four_interleaved(vectors, &mut dest);
 
     let expected = [
         0,
@@ -416,7 +416,7 @@ fn store_four_interleaved_i32x4<S: Simd>(simd: S) {
         i32x4::from_slice(simd, &[4, 5, 6, i32::MAX]),
     ];
     let mut dest = [0_i32; 16];
-    simd.store_four_interleaved_i32x4(vectors, &mut dest);
+    i32x4::store_four_interleaved(vectors, &mut dest);
     assert_eq!(
         dest,
         [
@@ -449,7 +449,7 @@ fn store_four_interleaved_u32x4<S: Simd>(simd: S) {
         u32x4::from_slice(simd, &[u32::MIN, 3001, 3002, u32::MAX - 1]),
     ];
     let mut dest = [0_u32; 16];
-    simd.store_four_interleaved_u32x4(vectors, &mut dest);
+    u32x4::store_four_interleaved(vectors, &mut dest);
     assert_eq!(
         dest,
         [
@@ -482,7 +482,7 @@ fn store_four_interleaved_i64x2<S: Simd>(simd: S) {
         i64x2::from_slice(simd, &[2, i64::MAX]),
     ];
     let mut dest = [0_i64; 8];
-    simd.store_four_interleaved_i64x2(vectors, &mut dest);
+    i64x2::store_four_interleaved(vectors, &mut dest);
     assert_eq!(dest, [i64::MIN, -2, 0, 2, -3, -1, 1, i64::MAX]);
 }
 
@@ -495,6 +495,6 @@ fn store_four_interleaved_u64x2<S: Simd>(simd: S) {
         u64x2::from_slice(simd, &[7, u64::MAX]),
     ];
     let mut dest = [0_u64; 8];
-    simd.store_four_interleaved_u64x2(vectors, &mut dest);
+    u64x2::store_four_interleaved(vectors, &mut dest);
     assert_eq!(dest, [u64::MIN, 3, 5, 7, 2, 4, 6, u64::MAX]);
 }

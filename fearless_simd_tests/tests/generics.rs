@@ -44,6 +44,23 @@ fn generic_block_splat<S: Simd, V: SimdBase<S>>(block: V::Block) -> V::Block {
     V::Block::block_splat(block)
 }
 
+// Ensure that a generic four-way interleaved workload can iterate over a scalar slice.
+// This color transform swaps the red and blue channels of complete RGBA pixels.
+fn generic_four_interleaved_color_transform<S: Simd, V: SimdInterleaved<S>>(
+    simd: S,
+    pixels: &mut [V::Element],
+) {
+    let mut chunks = pixels.chunks_exact_mut(V::N * 4);
+    for chunk in &mut chunks {
+        let [red, green, blue, alpha] = V::load_four_interleaved(simd, chunk);
+        V::store_four_interleaved([blue, green, red, alpha], chunk);
+    }
+
+    for pixel in chunks.into_remainder().chunks_exact_mut(4) {
+        pixel.swap(0, 2);
+    }
+}
+
 // Ensure that a mask lane's signed integer encoding type is its own mask lane encoding type
 fn generic_mask_lane_encoding_idempotent<E: SimdElement>(
     lane_encoding: E::Mask,
