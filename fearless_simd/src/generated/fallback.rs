@@ -79,6 +79,10 @@ impl FloatExt for f64 {
     }
 }
 #[doc = "A token for scalar fallback SIMD, representing the \"fallback\" level."]
+#[doc = "# Browsing the documentation"]
+#[doc = "The method list on this struct is very verbose."]
+#[doc = "A better way to browse the docs is by looking at vector types such as [`u32x4`], [`f32x4`] or [`mask32x4`]."]
+#[doc = "They include all the operations listed here, and also provide some additional convenience methods."]
 #[derive(Clone, Copy, Debug)]
 pub struct Fallback {
     _private: (),

@@ -304,6 +304,10 @@ pub(crate) trait Level {
             #module_prelude
 
             #[doc = #token_doc]
+            #[doc = "# Browsing the documentation"]
+            #[doc = "The method list on this struct is very verbose."]
+            #[doc = "A better way to browse the docs is by looking at vector types such as [`u32x4`], [`f32x4`] or [`mask32x4`]."]
+            #[doc = "They include all the operations listed here, and also provide some additional convenience methods."]
             #[derive(Clone, Copy, Debug)]
             pub struct #level_tok {
                 _private: (),
