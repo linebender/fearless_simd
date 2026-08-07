@@ -368,21 +368,18 @@ pub enum Level {
     /// Scalar fallback level, i.e. no supported SIMD features are to be used.
     ///
     /// This can be created with [`Level::fallback`].
-    // Keep this predicate in sync with the fallback module, `is_fallback`, and `dispatch!`.
+    // Keep this predicate in sync with the fallback module and `dispatch!`.
     #[cfg(any(
-        all(target_arch = "aarch64", not(target_feature = "neon")),
-        all(
-            any(target_arch = "x86", target_arch = "x86_64"),
-            not(all(target_feature = "sse2", target_feature = "fxsr"))
-        ),
-        all(target_arch = "wasm32", not(target_feature = "simd128")),
+        feature = "force_support_fallback",
         not(any(
-            target_arch = "x86",
-            target_arch = "x86_64",
-            target_arch = "aarch64",
-            target_arch = "wasm32"
-        )),
-        feature = "force_support_fallback"
+            all(target_arch = "aarch64", target_feature = "neon"),
+            all(
+                any(target_arch = "x86", target_arch = "x86_64"),
+                target_feature = "sse2",
+                target_feature = "fxsr"
+            ),
+            all(target_arch = "wasm32", target_feature = "simd128")
+        ))
     ))]
     Fallback(Fallback),
     /// The Neon instruction set on 64 bit ARM.
@@ -472,26 +469,25 @@ impl Level {
     /// This method is always available, even when the fallback backend is not compiled. In that
     /// case, it always returns `false`.
     pub fn is_fallback(self) -> bool {
-        // Keep this predicate in sync with `Level::Fallback`, the fallback module, and `dispatch!`.
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        return self.as_sse2().is_none();
+
+        #[cfg(target_arch = "aarch64")]
+        return self.as_neon().is_none();
+
+        #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+        return self.as_wasm_simd128().is_none();
+
         #[cfg(any(
-            all(target_arch = "aarch64", not(target_feature = "neon")),
-            all(
-                any(target_arch = "x86", target_arch = "x86_64"),
-                not(all(target_feature = "sse2", target_feature = "fxsr"))
-            ),
             all(target_arch = "wasm32", not(target_feature = "simd128")),
             not(any(
                 target_arch = "x86",
                 target_arch = "x86_64",
                 target_arch = "aarch64",
                 target_arch = "wasm32"
-            )),
-            feature = "force_support_fallback"
+            ))
         ))]
-        return matches!(self, Self::Fallback(_));
-
-        #[allow(unreachable_code, reason = "Fallback is unavailable in some cfgs.")]
-        false
+        return true;
     }
 
     /// If this is a proof that Neon (or better) is available, access that instruction set.
@@ -869,40 +865,6 @@ impl Level {
             }
         }
 
-        // Keep this predicate in sync with `Level::Fallback`, the fallback module, and
-        // `dispatch!`.
-        #[cfg(any(
-            all(target_arch = "aarch64", not(target_feature = "neon")),
-            all(
-                any(target_arch = "x86", target_arch = "x86_64"),
-                not(all(target_feature = "sse2", target_feature = "fxsr"))
-            ),
-            all(target_arch = "wasm32", not(target_feature = "simd128")),
-            not(any(
-                target_arch = "x86",
-                target_arch = "x86_64",
-                target_arch = "aarch64",
-                target_arch = "wasm32"
-            )),
-            feature = "force_support_fallback"
-        ))]
-        return Self::Fallback(Fallback::new());
-
-        #[cfg(not(any(
-            all(target_arch = "aarch64", not(target_feature = "neon")),
-            all(
-                any(target_arch = "x86", target_arch = "x86_64"),
-                not(all(target_feature = "sse2", target_feature = "fxsr"))
-            ),
-            all(target_arch = "wasm32", not(target_feature = "simd128")),
-            not(any(
-                target_arch = "x86",
-                target_arch = "x86_64",
-                target_arch = "aarch64",
-                target_arch = "wasm32"
-            )),
-            feature = "force_support_fallback"
-        )))]
         Self::baseline()
     }
 
@@ -931,24 +893,19 @@ mod tests {
         assert_is_send_sync::<Level>();
     }
 
-    #[cfg(not(any(
-        all(target_arch = "aarch64", not(target_feature = "neon")),
-        all(
-            any(target_arch = "x86", target_arch = "x86_64"),
-            not(all(target_feature = "sse2", target_feature = "fxsr"))
-        ),
-        all(target_arch = "wasm32", not(target_feature = "simd128")),
-        not(any(
-            target_arch = "x86",
-            target_arch = "x86_64",
-            target_arch = "aarch64",
-            target_arch = "wasm32"
-        )),
-        feature = "force_support_fallback"
-    )))]
     #[test]
-    fn is_fallback_is_false_when_fallback_is_unavailable() {
-        assert!(!Level::baseline().is_fallback());
+    fn baseline_reports_whether_fallback_is_required() {
+        let has_simd_baseline = cfg!(any(
+            all(target_arch = "aarch64", target_feature = "neon"),
+            all(
+                any(target_arch = "x86", target_arch = "x86_64"),
+                target_feature = "sse2",
+                target_feature = "fxsr"
+            ),
+            all(target_arch = "wasm32", target_feature = "simd128")
+        ));
+
+        assert_eq!(Level::baseline().is_fallback(), !has_simd_baseline);
     }
 
     #[cfg(all(

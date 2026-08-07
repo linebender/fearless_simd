@@ -77,23 +77,20 @@ macro_rules! dispatch {
             $crate::Level::Avx512(avx512) => {
                 $crate::__fearless_simd_dispatch_dispatch_avx512!(avx512, $simd => $op)
             }
-            // Keep this predicate in sync with `Level::Fallback`, the fallback module, and
-            // `Level::is_fallback`. The literal carries fearless_simd's feature selection into
-            // expansion in a downstream crate, where `cfg(feature = ...)` would be incorrect.
+            // Keep this predicate in sync with `Level::Fallback` and the fallback module. The
+            // literal carries fearless_simd's feature selection into expansion in a downstream
+            // crate, where `cfg(feature = ...)` would be incorrect.
             #[cfg(any(
-                all(target_arch = "aarch64", not(target_feature = "neon")),
-                all(
-                    any(target_arch = "x86", target_arch = "x86_64"),
-                    not(all(target_feature = "sse2", target_feature = "fxsr"))
-                ),
-                all(target_arch = "wasm32", not(target_feature = "simd128")),
+                $forced_fallback_arm,
                 not(any(
-                    target_arch = "x86",
-                    target_arch = "x86_64",
-                    target_arch = "aarch64",
-                    target_arch = "wasm32"
-                )),
-                $forced_fallback_arm
+                    all(target_arch = "aarch64", target_feature = "neon"),
+                    all(
+                        any(target_arch = "x86", target_arch = "x86_64"),
+                        target_feature = "sse2",
+                        target_feature = "fxsr"
+                    ),
+                    all(target_arch = "wasm32", target_feature = "simd128")
+                ))
             ))]
             $crate::Level::Fallback(fallback) => {
                 $crate::__fearless_simd_dispatch_with_token!(fallback, $simd => $op)
