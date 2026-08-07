@@ -10,7 +10,7 @@ use crate::generic::{
     integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
 };
 use crate::level::Level;
-use crate::ops::{Op, Quantifier, SlideGranularity};
+use crate::ops::{NarrowingMode, Op, Quantifier, SlideGranularity, relaxed_narrow_method};
 use crate::{
     arch::wasm::{self, simple_intrinsic},
     ops::OpSig,
@@ -194,6 +194,133 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
+            OpSig::Widen { target_ty } => {
+                if vec_ty.scalar == ScalarType::Float {
+                    return quote! {
+                        #method_sig {
+                            let a = a.into();
+                            (
+                                f64x2_promote_low_f32x4(a).simd_into(self),
+                                f64x2_promote_low_f32x4(i64x2_shuffle::<1, 1>(a, a))
+                                    .simd_into(self),
+                            )
+                        }
+                    };
+                }
+
+                let target = format!("i{}x{}", target_ty.scalar_bits, target_ty.len);
+                let source = vec_ty.rust_name();
+                let low = Ident::new(&format!("{target}_extend_low_{source}"), Span::call_site());
+                let high = Ident::new(&format!("{target}_extend_high_{source}"), Span::call_site());
+                quote! {
+                    #method_sig {
+                        (
+                            #low(a.into()).simd_into(self),
+                            #high(a.into()).simd_into(self),
+                        )
+                    }
+                }
+            }
+            OpSig::Narrow { target_ty, mode } if vec_ty.scalar == ScalarType::Float => {
+                if mode == NarrowingMode::Relaxed {
+                    relaxed_narrow_method(op, vec_ty, target_ty, "narrow")
+                } else if mode == NarrowingMode::Saturate {
+                    let narrow = generic_op_name("narrow", vec_ty);
+                    quote! {
+                        #method_sig {
+                            self.#narrow(a, b)
+                        }
+                    }
+                } else {
+                    quote! {
+                        #method_sig {
+                            let low = f32x4_demote_f64x2_zero(a.into());
+                            let high = f32x4_demote_f64x2_zero(b.into());
+                            i64x2_shuffle::<0, 2>(low, high).simd_into(self)
+                        }
+                    }
+                }
+            }
+            OpSig::Narrow { target_ty, mode } if target_ty.scalar_bits <= 16 => {
+                if mode == NarrowingMode::Relaxed {
+                    let implementation = if vec_ty.scalar == ScalarType::Int {
+                        "saturating_narrow"
+                    } else {
+                        "narrow"
+                    };
+                    return relaxed_narrow_method(op, vec_ty, target_ty, implementation);
+                }
+
+                let saturating = mode == NarrowingMode::Saturate;
+                let target = if saturating {
+                    target_ty.rust_name()
+                } else {
+                    format!("u{}x{}", target_ty.scalar_bits, target_ty.len)
+                };
+                let source = format!("i{}x{}", vec_ty.scalar_bits, vec_ty.len);
+                let narrow = Ident::new(&format!("{target}_narrow_{source}"), Span::call_site());
+                if saturating && vec_ty.scalar == ScalarType::Unsigned {
+                    // The unsigned WASM narrowing instructions clamp to an unsigned
+                    // destination, but still interpret their source lanes as signed.
+                    // Clamp first so every source lane is representable as a positive
+                    // signed value before narrowing.
+                    let min = simple_intrinsic("min", vec_ty);
+                    let splat = simple_intrinsic("splat", vec_ty);
+                    let max_value = Literal::u64_unsuffixed((1_u64 << target_ty.scalar_bits) - 1);
+                    quote! {
+                        #method_sig {
+                            let max = #splat(#max_value);
+                            #narrow(
+                                #min(a.into(), max),
+                                #min(b.into(), max),
+                            ).simd_into(self)
+                        }
+                    }
+                } else if saturating {
+                    quote! {
+                        #method_sig {
+                            #narrow(a.into(), b.into()).simd_into(self)
+                        }
+                    }
+                } else {
+                    let mask = simple_intrinsic("splat", vec_ty);
+                    let mask_value = Literal::u64_unsuffixed((1_u64 << target_ty.scalar_bits) - 1);
+                    quote! {
+                        #method_sig {
+                            let mask = #mask(#mask_value);
+                            #narrow(
+                                v128_and(a.into(), mask),
+                                v128_and(b.into(), mask),
+                            ).simd_into(self)
+                        }
+                    }
+                }
+            }
+            OpSig::Narrow {
+                target_ty,
+                mode: NarrowingMode::Wrap,
+            } => {
+                assert_eq!(
+                    target_ty.scalar_bits, 32,
+                    "WASM truncating narrow only reaches this arm for 64-bit source lanes"
+                );
+                quote! {
+                    #method_sig {
+                        i8x16_shuffle::<0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27>(
+                            a.into(),
+                            b.into(),
+                        ).simd_into(self)
+                    }
+                }
+            }
+            OpSig::Narrow {
+                mode: NarrowingMode::Saturate,
+                ..
+            } => fallback_method(op, vec_ty),
+            OpSig::Narrow {
+                target_ty,
+                mode: NarrowingMode::Relaxed,
+            } => relaxed_narrow_method(op, vec_ty, target_ty, "narrow"),
             OpSig::Binary => {
                 if matches!(method, "shlv" | "shrv")
                     || (matches!(method, "min" | "max")
@@ -595,54 +722,6 @@ impl Level for WasmSimd128 {
                             #conversion_fn(a.into()).simd_into(self)
                         }
                     }
-                }
-            }
-            OpSig::WidenNarrow { target_ty } => {
-                match method {
-                    "widen" => {
-                        assert_eq!(
-                            vec_ty.rust_name(),
-                            "u8x16",
-                            "Currently only u8x16 -> u16x16 widening is supported"
-                        );
-                        assert_eq!(
-                            target_ty.rust_name(),
-                            "u16x16",
-                            "Currently only u8x16 -> u16x16 widening is supported"
-                        );
-                        quote! {
-                            #method_sig {
-                                let low = u16x8_extend_low_u8x16(a.into());
-                                let high = u16x8_extend_high_u8x16(a.into());
-                                self.combine_u16x8(low.simd_into(self), high.simd_into(self))
-                            }
-                        }
-                    }
-                    "narrow" => {
-                        assert_eq!(
-                            vec_ty.rust_name(),
-                            "u16x16",
-                            "Currently only u16x16 -> u8x16 narrowing is supported"
-                        );
-                        assert_eq!(
-                            target_ty.rust_name(),
-                            "u8x16",
-                            "Currently only u16x16 -> u8x16 narrowing is supported"
-                        );
-                        // WASM SIMD only has saturating narrowing instructions, so we emulate
-                        // truncated narrowing by masking out the
-                        quote! {
-                            #method_sig {
-                                let mask = u16x8_splat(0xFF);
-                                let (low, high) = self.split_u16x16(a);
-                                let low_masked = v128_and(low.into(), mask);
-                                let high_masked = v128_and(high.into(), mask);
-                                let result = u8x16_narrow_i16x8(low_masked, high_masked);
-                                result.simd_into(self)
-                            }
-                        }
-                    }
-                    _ => unimplemented!(),
                 }
             }
             OpSig::MaskReduce {

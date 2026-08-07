@@ -919,6 +919,20 @@ impl Simd for Avx512 {
         kernel(self, vectors, dest);
     }
     #[inline(always)]
+    fn widen_f32x4(self, a: f32x4<Self>) -> (f64x2<Self>, f64x2<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> (f64x2<Avx512>, f64x2<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm_cvtps_pd(raw).simd_into(token),
+                    _mm_cvtps_pd(_mm_movehl_ps(raw, raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1558,6 +1572,20 @@ impl Simd for Avx512 {
         kernel(self, vectors, dest);
     }
     #[inline(always)]
+    fn widen_i8x16(self, a: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>) -> (i16x8<Avx512>, i16x8<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm_cvtepi8_epi16(raw).simd_into(token),
+                    _mm_cvtepi8_epi16(_mm_srli_si128::<8>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2137,11 +2165,15 @@ impl Simd for Avx512 {
         kernel(self, vectors, dest);
     }
     #[inline(always)]
-    fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {
+    fn widen_u8x16(self, a: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>) {
         crate::kernel!(
             #[inline(always)]
-            fn kernel(token: Avx512, a: u8x16<Avx512>) -> u16x16<Avx512> {
-                _mm256_cvtepu8_epi16(a.into()).simd_into(token)
+            fn kernel(token: Avx512, a: u8x16<Avx512>) -> (u16x8<Avx512>, u16x8<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm_cvtepu8_epi16(raw).simd_into(token),
+                    _mm_cvtepu8_epi16(_mm_srli_si128::<8>(raw)).simd_into(token),
+                )
             }
         );
         kernel(self, a)
@@ -2763,6 +2795,55 @@ impl Simd for Avx512 {
         kernel(self, vectors, dest);
     }
     #[inline(always)]
+    fn widen_i16x8(self, a: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>) -> (i32x4<Avx512>, i32x4<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm_cvtepi16_epi32(raw).simd_into(token),
+                    _mm_cvtepi16_epi32(_mm_srli_si128::<8>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i8x16<Avx512> {
+                let low = _mm_cvtepi16_epi8(a.into());
+                let high = _mm_cvtepi16_epi8(b.into());
+                _mm_unpacklo_epi64(low, high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i8x16<Avx512> {
+                let low = _mm_cvtsepi16_epi8(a.into());
+                let high = _mm_cvtsepi16_epi8(b.into());
+                _mm_unpacklo_epi64(low, high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= i8::MIN as i16 && value <= i8::MAX as i16 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_i16x8(a, b)
+    }
+    #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3257,6 +3338,55 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, vectors, dest);
+    }
+    #[inline(always)]
+    fn widen_u16x8(self, a: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>) -> (u32x4<Avx512>, u32x4<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm_cvtepu16_epi32(raw).simd_into(token),
+                    _mm_cvtepu16_epi32(_mm_srli_si128::<8>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u8x16<Avx512> {
+                let low = _mm_cvtepi16_epi8(a.into());
+                let high = _mm_cvtepi16_epi8(b.into());
+                _mm_unpacklo_epi64(low, high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u8x16<Avx512> {
+                let low = _mm_cvtusepi16_epi8(a.into());
+                let high = _mm_cvtusepi16_epi8(b.into());
+                _mm_unpacklo_epi64(low, high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= u8::MIN as u16 && value <= u8::MAX as u16 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_u16x8(a, b)
     }
     #[inline(always)]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {
@@ -3843,6 +3973,55 @@ impl Simd for Avx512 {
         kernel(self, vectors, dest);
     }
     #[inline(always)]
+    fn widen_i32x4(self, a: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>) -> (i64x2<Avx512>, i64x2<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm_cvtepi32_epi64(raw).simd_into(token),
+                    _mm_cvtepi32_epi64(_mm_srli_si128::<8>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i16x8<Avx512> {
+                let low = _mm_cvtepi32_epi16(a.into());
+                let high = _mm_cvtepi32_epi16(b.into());
+                _mm_unpacklo_epi64(low, high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i16x8<Avx512> {
+                let low = _mm_cvtsepi32_epi16(a.into());
+                let high = _mm_cvtsepi32_epi16(b.into());
+                _mm_unpacklo_epi64(low, high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= i16::MIN as i32 && value <= i16::MAX as i32 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_i32x4(a, b)
+    }
+    #[inline(always)]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4315,6 +4494,55 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, vectors, dest);
+    }
+    #[inline(always)]
+    fn widen_u32x4(self, a: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>) -> (u64x2<Avx512>, u64x2<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm_cvtepu32_epi64(raw).simd_into(token),
+                    _mm_cvtepu32_epi64(_mm_srli_si128::<8>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u16x8<Avx512> {
+                let low = _mm_cvtepi32_epi16(a.into());
+                let high = _mm_cvtepi32_epi16(b.into());
+                _mm_unpacklo_epi64(low, high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u16x8<Avx512> {
+                let low = _mm_cvtusepi32_epi16(a.into());
+                let high = _mm_cvtusepi32_epi16(b.into());
+                _mm_unpacklo_epi64(low, high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= u16::MIN as u32 && value <= u16::MAX as u32 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_u32x4(a, b)
     }
     #[inline(always)]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self> {
@@ -4957,6 +5185,26 @@ impl Simd for Avx512 {
         kernel(self, vectors, dest);
     }
     #[inline(always)]
+    fn narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f32x4<Avx512> {
+                let low = _mm_cvtpd_ps(a.into());
+                let high = _mm_cvtpd_ps(b.into());
+                _mm_movelh_ps(low, high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self> {
+        self.narrow_f64x2(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self> {
+        self.narrow_f64x2(a, b)
+    }
+    #[inline(always)]
     fn cvt_u64_f64x2(self, a: f64x2<Self>) -> u64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5464,6 +5712,41 @@ impl Simd for Avx512 {
         kernel(self, vectors, dest);
     }
     #[inline(always)]
+    fn narrow_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x2<Avx512>, b: i64x2<Avx512>) -> i32x4<Avx512> {
+                let low = _mm_cvtepi64_epi32(a.into());
+                let high = _mm_cvtepi64_epi32(b.into());
+                _mm_unpacklo_epi64(low, high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x2<Avx512>, b: i64x2<Avx512>) -> i32x4<Avx512> {
+                let low = _mm_cvtsepi64_epi32(a.into());
+                let high = _mm_cvtsepi64_epi32(b.into());
+                _mm_unpacklo_epi64(low, high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i32x4<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= i32::MIN as i64 && value <= i32::MAX as i64 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_i64x2(a, b)
+    }
+    #[inline(always)]
     fn cvt_f64_i64x2(self, a: i64x2<Self>) -> f64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5922,6 +6205,41 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, vectors, dest);
+    }
+    #[inline(always)]
+    fn narrow_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x2<Avx512>, b: u64x2<Avx512>) -> u32x4<Avx512> {
+                let low = _mm_cvtepi64_epi32(a.into());
+                let high = _mm_cvtepi64_epi32(b.into());
+                _mm_unpacklo_epi64(low, high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x2<Avx512>, b: u64x2<Avx512>) -> u32x4<Avx512> {
+                let low = _mm_cvtusepi64_epi32(a.into());
+                let high = _mm_cvtusepi64_epi32(b.into());
+                _mm_unpacklo_epi64(low, high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u32x4<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= u32::MIN as u64 && value <= u32::MAX as u64 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_u64x2(a, b)
     }
     #[inline(always)]
     fn cvt_f64_u64x2(self, a: u64x2<Self>) -> f64x2<Self> {
@@ -6634,6 +6952,20 @@ impl Simd for Avx512 {
                 (
                     _mm256_extractf128_ps::<0>(a.into()).simd_into(token),
                     _mm256_extractf128_ps::<1>(a.into()).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn widen_f32x8(self, a: f32x8<Self>) -> (f64x4<Self>, f64x4<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> (f64x4<Avx512>, f64x4<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm256_cvtps_pd(_mm256_castps256_ps128(raw)).simd_into(token),
+                    _mm256_cvtps_pd(_mm256_extractf128_ps::<1>(raw)).simd_into(token),
                 )
             }
         );
@@ -7389,6 +7721,20 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widen_i8x32(self, a: i8x32<Self>) -> (i16x16<Self>, i16x16<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>) -> (i16x16<Avx512>, i16x16<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm256_cvtepi8_epi16(_mm256_castsi256_si128(raw)).simd_into(token),
+                    _mm256_cvtepi8_epi16(_mm256_extracti128_si256::<1>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_u8x32(self, val: u8) -> u8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -8077,11 +8423,15 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self> {
+    fn widen_u8x32(self, a: u8x32<Self>) -> (u16x16<Self>, u16x16<Self>) {
         crate::kernel!(
             #[inline(always)]
-            fn kernel(token: Avx512, a: u8x32<Avx512>) -> u16x32<Avx512> {
-                _mm512_cvtepu8_epi16(a.into()).simd_into(token)
+            fn kernel(token: Avx512, a: u8x32<Avx512>) -> (u16x16<Avx512>, u16x16<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm256_cvtepu8_epi16(_mm256_castsi256_si128(raw)).simd_into(token),
+                    _mm256_cvtepu8_epi16(_mm256_extracti128_si256::<1>(raw)).simd_into(token),
+                )
             }
         );
         kernel(self, a)
@@ -8786,6 +9136,55 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widen_i16x16(self, a: i16x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>) -> (i32x8<Avx512>, i32x8<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm256_cvtepi16_epi32(_mm256_castsi256_si128(raw)).simd_into(token),
+                    _mm256_cvtepi16_epi32(_mm256_extracti128_si256::<1>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i8x32<Avx512> {
+                let low = _mm256_cvtepi16_epi8(a.into());
+                let high = _mm256_cvtepi16_epi8(b.into());
+                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i8x32<Avx512> {
+                let low = _mm256_cvtsepi16_epi8(a.into());
+                let high = _mm256_cvtsepi16_epi8(b.into());
+                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= i8::MIN as i16 && value <= i8::MAX as i16 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_i16x16(a, b)
+    }
+    #[inline(always)]
     fn splat_u16x16(self, val: u16) -> u16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9351,14 +9750,53 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn narrow_u16x16(self, a: u16x16<Self>) -> u8x16<Self> {
+    fn widen_u16x16(self, a: u16x16<Self>) -> (u32x8<Self>, u32x8<Self>) {
         crate::kernel!(
             #[inline(always)]
-            fn kernel(token: Avx512, a: u16x16<Avx512>) -> u8x16<Avx512> {
-                _mm256_cvtepi16_epi8(a.into()).simd_into(token)
+            fn kernel(token: Avx512, a: u16x16<Avx512>) -> (u32x8<Avx512>, u32x8<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm256_cvtepu16_epi32(_mm256_castsi256_si128(raw)).simd_into(token),
+                    _mm256_cvtepu16_epi32(_mm256_extracti128_si256::<1>(raw)).simd_into(token),
+                )
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u8x32<Avx512> {
+                let low = _mm256_cvtepi16_epi8(a.into());
+                let high = _mm256_cvtepi16_epi8(b.into());
+                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u8x32<Avx512> {
+                let low = _mm256_cvtusepi16_epi8(a.into());
+                let high = _mm256_cvtusepi16_epi8(b.into());
+                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= u8::MIN as u16 && value <= u8::MAX as u16 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_u16x16(a, b)
     }
     #[inline(always)]
     fn splat_mask16x16(self, val: bool) -> mask16x16<Self> {
@@ -10002,6 +10440,55 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widen_i32x8(self, a: i32x8<Self>) -> (i64x4<Self>, i64x4<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>) -> (i64x4<Avx512>, i64x4<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm256_cvtepi32_epi64(_mm256_castsi256_si128(raw)).simd_into(token),
+                    _mm256_cvtepi32_epi64(_mm256_extracti128_si256::<1>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i16x16<Avx512> {
+                let low = _mm256_cvtepi32_epi16(a.into());
+                let high = _mm256_cvtepi32_epi16(b.into());
+                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i16x16<Avx512> {
+                let low = _mm256_cvtsepi32_epi16(a.into());
+                let high = _mm256_cvtsepi32_epi16(b.into());
+                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= i16::MIN as i32 && value <= i16::MAX as i32 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_i32x8(a, b)
+    }
+    #[inline(always)]
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10517,6 +11004,55 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn widen_u32x8(self, a: u32x8<Self>) -> (u64x4<Self>, u64x4<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>) -> (u64x4<Avx512>, u64x4<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm256_cvtepu32_epi64(_mm256_castsi256_si128(raw)).simd_into(token),
+                    _mm256_cvtepu32_epi64(_mm256_extracti128_si256::<1>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u16x16<Avx512> {
+                let low = _mm256_cvtepi32_epi16(a.into());
+                let high = _mm256_cvtepi32_epi16(b.into());
+                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u16x16<Avx512> {
+                let low = _mm256_cvtusepi32_epi16(a.into());
+                let high = _mm256_cvtusepi32_epi16(b.into());
+                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= u16::MIN as u32 && value <= u16::MAX as u32 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_u32x8(a, b)
     }
     #[inline(always)]
     fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self> {
@@ -11214,6 +11750,26 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> f32x8<Avx512> {
+                let low = _mm256_cvtpd_ps(a.into());
+                let high = _mm256_cvtpd_ps(b.into());
+                _mm256_insertf128_ps::<1>(_mm256_castps128_ps256(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self> {
+        self.narrow_f64x4(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self> {
+        self.narrow_f64x4(a, b)
+    }
+    #[inline(always)]
     fn cvt_u64_f64x4(self, a: f64x4<Self>) -> u64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11748,6 +12304,41 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x4<Avx512>, b: i64x4<Avx512>) -> i32x8<Avx512> {
+                let low = _mm256_cvtepi64_epi32(a.into());
+                let high = _mm256_cvtepi64_epi32(b.into());
+                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x4<Avx512>, b: i64x4<Avx512>) -> i32x8<Avx512> {
+                let low = _mm256_cvtsepi64_epi32(a.into());
+                let high = _mm256_cvtsepi64_epi32(b.into());
+                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= i32::MIN as i64 && value <= i32::MAX as i64 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_i64x4(a, b)
+    }
+    #[inline(always)]
     fn cvt_f64_i64x4(self, a: i64x4<Self>) -> f64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12231,6 +12822,41 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x4<Avx512>, b: u64x4<Avx512>) -> u32x8<Avx512> {
+                let low = _mm256_cvtepi64_epi32(a.into());
+                let high = _mm256_cvtepi64_epi32(b.into());
+                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x4<Avx512>, b: u64x4<Avx512>) -> u32x8<Avx512> {
+                let low = _mm256_cvtusepi64_epi32(a.into());
+                let high = _mm256_cvtusepi64_epi32(b.into());
+                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= u32::MIN as u64 && value <= u32::MAX as u64 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_u64x4(a, b)
     }
     #[inline(always)]
     fn cvt_f64_u64x4(self, a: u64x4<Self>) -> f64x4<Self> {
@@ -13006,6 +13632,20 @@ impl Simd for Avx512 {
                 (
                     _mm512_castps512_ps256(a.into()).simd_into(token),
                     _mm512_extractf32x8_ps::<1>(a.into()).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn widen_f32x16(self, a: f32x16<Self>) -> (f64x8<Self>, f64x8<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>) -> (f64x8<Avx512>, f64x8<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm512_cvtps_pd(_mm512_castps512_ps256(raw)).simd_into(token),
+                    _mm512_cvtps_pd(_mm512_extractf32x8_ps::<1>(raw)).simd_into(token),
                 )
             }
         );
@@ -13897,6 +14537,20 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widen_i8x64(self, a: i8x64<Self>) -> (i16x32<Self>, i16x32<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>) -> (i16x32<Avx512>, i16x32<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm512_cvtepi8_epi16(_mm512_castsi512_si256(raw)).simd_into(token),
+                    _mm512_cvtepi8_epi16(_mm512_extracti64x4_epi64::<1>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_u8x64(self, val: u8) -> u8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -14720,6 +15374,20 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widen_u8x64(self, a: u8x64<Self>) -> (u16x32<Self>, u16x32<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>) -> (u16x32<Avx512>, u16x32<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm512_cvtepu8_epi16(_mm512_castsi512_si256(raw)).simd_into(token),
+                    _mm512_cvtepu8_epi16(_mm512_extracti64x4_epi64::<1>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
         mask8x64 {
             val: if val { u64::MAX } else { 0 },
@@ -15484,6 +16152,55 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widen_i16x32(self, a: i16x32<Self>) -> (i32x16<Self>, i32x16<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>) -> (i32x16<Avx512>, i32x16<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm512_cvtepi16_epi32(_mm512_castsi512_si256(raw)).simd_into(token),
+                    _mm512_cvtepi16_epi32(_mm512_extracti64x4_epi64::<1>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i8x64<Avx512> {
+                let low = _mm512_cvtepi16_epi8(a.into());
+                let high = _mm512_cvtepi16_epi8(b.into());
+                _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i8x64<Avx512> {
+                let low = _mm512_cvtsepi16_epi8(a.into());
+                let high = _mm512_cvtsepi16_epi8(b.into());
+                _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= i8::MIN as i16 && value <= i8::MAX as i16 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_i16x32(a, b)
+    }
+    #[inline(always)]
     fn splat_u16x32(self, val: u16) -> u16x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -16122,14 +16839,53 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
+    fn widen_u16x32(self, a: u16x32<Self>) -> (u32x16<Self>, u32x16<Self>) {
         crate::kernel!(
             #[inline(always)]
-            fn kernel(token: Avx512, a: u16x32<Avx512>) -> u8x32<Avx512> {
-                _mm512_cvtepi16_epi8(a.into()).simd_into(token)
+            fn kernel(token: Avx512, a: u16x32<Avx512>) -> (u32x16<Avx512>, u32x16<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm512_cvtepu16_epi32(_mm512_castsi512_si256(raw)).simd_into(token),
+                    _mm512_cvtepu16_epi32(_mm512_extracti64x4_epi64::<1>(raw)).simd_into(token),
+                )
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u8x64<Avx512> {
+                let low = _mm512_cvtepi16_epi8(a.into());
+                let high = _mm512_cvtepi16_epi8(b.into());
+                _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u8x64<Avx512> {
+                let low = _mm512_cvtusepi16_epi8(a.into());
+                let high = _mm512_cvtusepi16_epi8(b.into());
+                _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= u8::MIN as u16 && value <= u8::MAX as u16 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_u16x32(a, b)
     }
     #[inline(always)]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {
@@ -16814,6 +17570,55 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widen_i32x16(self, a: i32x16<Self>) -> (i64x8<Self>, i64x8<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>) -> (i64x8<Avx512>, i64x8<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm512_cvtepi32_epi64(_mm512_castsi512_si256(raw)).simd_into(token),
+                    _mm512_cvtepi32_epi64(_mm512_extracti64x4_epi64::<1>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i16x32<Avx512> {
+                let low = _mm512_cvtepi32_epi16(a.into());
+                let high = _mm512_cvtepi32_epi16(b.into());
+                _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i16x32<Avx512> {
+                let low = _mm512_cvtsepi32_epi16(a.into());
+                let high = _mm512_cvtsepi32_epi16(b.into());
+                _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= i16::MIN as i32 && value <= i16::MAX as i32 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_i32x16(a, b)
+    }
+    #[inline(always)]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -17378,6 +18183,55 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn widen_u32x16(self, a: u32x16<Self>) -> (u64x8<Self>, u64x8<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>) -> (u64x8<Avx512>, u64x8<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm512_cvtepu32_epi64(_mm512_castsi512_si256(raw)).simd_into(token),
+                    _mm512_cvtepu32_epi64(_mm512_extracti64x4_epi64::<1>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u16x32<Avx512> {
+                let low = _mm512_cvtepi32_epi16(a.into());
+                let high = _mm512_cvtepi32_epi16(b.into());
+                _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u16x32<Avx512> {
+                let low = _mm512_cvtusepi32_epi16(a.into());
+                let high = _mm512_cvtusepi32_epi16(b.into());
+                _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= u16::MIN as u32 && value <= u16::MAX as u32 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_u32x16(a, b)
     }
     #[inline(always)]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self> {
@@ -18093,6 +18947,26 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> f32x16<Avx512> {
+                let low = _mm512_cvtpd_ps(a.into());
+                let high = _mm512_cvtpd_ps(b.into());
+                _mm512_insertf32x8::<1>(_mm512_castps256_ps512(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
+        self.narrow_f64x8(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
+        self.narrow_f64x8(a, b)
+    }
+    #[inline(always)]
     fn cvt_u64_f64x8(self, a: f64x8<Self>) -> u64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -18650,6 +19524,41 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x8<Avx512>, b: i64x8<Avx512>) -> i32x16<Avx512> {
+                let low = _mm512_cvtepi64_epi32(a.into());
+                let high = _mm512_cvtepi64_epi32(b.into());
+                _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x8<Avx512>, b: i64x8<Avx512>) -> i32x16<Avx512> {
+                let low = _mm512_cvtsepi64_epi32(a.into());
+                let high = _mm512_cvtsepi64_epi32(b.into());
+                _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= i32::MIN as i64 && value <= i32::MAX as i64 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_i64x8(a, b)
+    }
+    #[inline(always)]
     fn cvt_f64_i64x8(self, a: i64x8<Self>) -> f64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -19156,6 +20065,41 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x8<Avx512>, b: u64x8<Avx512>) -> u32x16<Avx512> {
+                let low = _mm512_cvtepi64_epi32(a.into());
+                let high = _mm512_cvtepi64_epi32(b.into());
+                _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x8<Avx512>, b: u64x8<Avx512>) -> u32x16<Avx512> {
+                let low = _mm512_cvtusepi64_epi32(a.into());
+                let high = _mm512_cvtusepi64_epi32(b.into());
+                _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= u32::MIN as u64 && value <= u32::MAX as u64 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_u64x8(a, b)
     }
     #[inline(always)]
     fn cvt_f64_u64x8(self, a: u64x8<Self>) -> f64x8<Self> {

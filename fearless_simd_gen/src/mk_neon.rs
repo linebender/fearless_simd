@@ -8,7 +8,7 @@ use crate::generic::{
     fallback_method, generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
-use crate::ops::{Op, SlideGranularity};
+use crate::ops::{NarrowingMode, Op, SlideGranularity, relaxed_narrow_method};
 use crate::{
     arch::neon::{self, cvt_intrinsic, simple_intrinsic, split_intrinsic},
     ops::OpSig,
@@ -192,42 +192,77 @@ impl Level for Neon {
                     }
                 }
             }
-            OpSig::WidenNarrow { target_ty } => {
-                let vec_scalar_ty = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                let target_scalar_ty = target_ty.scalar.rust(target_ty.scalar_bits);
-
-                if method == "narrow" {
-                    let arch = self.arch_ty(vec_ty);
-
-                    let id1 = Ident::new(&format!("vmovn_{}", vec_scalar_ty), Span::call_site());
-                    let id2 =
-                        Ident::new(&format!("vcombine_{}", target_scalar_ty), Span::call_site());
-
-                    self.kernel_method(op, vec_ty, |token| {
+            OpSig::Widen { target_ty: _ } => {
+                if vec_ty.scalar == ScalarType::Float {
+                    return self.kernel_method(op, vec_ty, |token| {
                         quote! {
-                            let converted: #arch = a.into();
-                            let low = #id1(converted.0);
-                            let high = #id1(converted.1);
-
-                            #id2(low, high).simd_into(#token)
+                            (
+                                vcvt_f64_f32(vget_low_f32(a.into())).simd_into(#token),
+                                vcvt_high_f64_f32(a.into()).simd_into(#token),
+                            )
                         }
-                    })
-                } else {
-                    let arch = self.arch_ty(&target_ty);
-                    let id1 = Ident::new(&format!("vmovl_{}", vec_scalar_ty), Span::call_site());
-                    let id2 = Ident::new(&format!("vget_low_{}", vec_scalar_ty), Span::call_site());
-                    let id3 =
-                        Ident::new(&format!("vget_high_{}", vec_scalar_ty), Span::call_site());
-
-                    self.kernel_method(op, vec_ty, |token| {
-                        quote! {
-                            let low = #id1(#id2(a.into()));
-                            let high = #id1(#id3(a.into()));
-
-                            #arch(low, high).simd_into(#token)
-                        }
-                    })
+                    });
                 }
+
+                let src_scalar = match vec_ty.scalar {
+                    ScalarType::Int => format!("s{}", vec_ty.scalar_bits),
+                    ScalarType::Unsigned => format!("u{}", vec_ty.scalar_bits),
+                    _ => unreachable!(),
+                };
+                let movl = Ident::new(&format!("vmovl_{src_scalar}"), Span::call_site());
+                let get_low = Ident::new(&format!("vget_low_{src_scalar}"), Span::call_site());
+                let get_high = Ident::new(&format!("vget_high_{src_scalar}"), Span::call_site());
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        (
+                            #movl(#get_low(a.into())).simd_into(#token),
+                            #movl(#get_high(a.into())).simd_into(#token),
+                        )
+                    }
+                })
+            }
+            OpSig::Narrow { target_ty, mode } => {
+                if mode == NarrowingMode::Relaxed {
+                    return relaxed_narrow_method(op, vec_ty, target_ty, "narrow");
+                }
+
+                if vec_ty.scalar == ScalarType::Float {
+                    if mode == NarrowingMode::Saturate {
+                        let narrow = generic_op_name("narrow", vec_ty);
+                        return quote! {
+                            #method_sig {
+                                self.#narrow(a, b)
+                            }
+                        };
+                    }
+
+                    return self.kernel_method(op, vec_ty, |token| {
+                        quote! {
+                            vcvt_high_f32_f64(vcvt_f32_f64(a.into()), b.into()).simd_into(#token)
+                        }
+                    });
+                }
+
+                let prefix = match vec_ty.scalar {
+                    ScalarType::Int => "s",
+                    ScalarType::Unsigned => "u",
+                    _ => unreachable!(),
+                };
+                let src_scalar = format!("{prefix}{}", vec_ty.scalar_bits);
+                let target_scalar = format!("{prefix}{}", target_ty.scalar_bits);
+                let method_prefix = if mode == NarrowingMode::Saturate {
+                    "vqmovn"
+                } else {
+                    "vmovn"
+                };
+                let narrow =
+                    Ident::new(&format!("{method_prefix}_{src_scalar}"), Span::call_site());
+                let combine = Ident::new(&format!("vcombine_{target_scalar}"), Span::call_site());
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        #combine(#narrow(a.into()), #narrow(b.into())).simd_into(#token)
+                    }
+                })
             }
             OpSig::Binary => {
                 if vec_ty.scalar_bits == 64

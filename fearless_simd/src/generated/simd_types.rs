@@ -5,7 +5,7 @@
 
 use crate::{
     Bytes, Select, Simd, SimdBase, SimdCvtFloat, SimdCvtTruncate, SimdFrom, SimdInto, SimdMask,
-    seal::Seal,
+    SimdNarrow, SimdWiden, seal::Seal,
 };
 #[doc = "A SIMD vector of 4 [`f32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f32x4};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f32x4::splat(simd, 1.0);\n    let b = f32x4::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f32x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);\n\n    // From an array:\n    let d = f32x4::simd_from(simd, [1.0, 2.0, 3.0, 4.0]);\n\n    // From an element-wise function:\n    let e = f32x4::from_fn(simd, |i| i as f32);\n}\n```"]
 #[derive(Clone, Copy)]
@@ -294,6 +294,13 @@ impl<S: Simd> SimdCvtFloat<i32x4<S>> for f32x4<S> {
         x.simd.cvt_f32_i32x4(x)
     }
 }
+impl<S: Simd> SimdWiden<S> for f32x4<S> {
+    type Widened = f64x2<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_f32x4(self)
+    }
+}
 impl<S: Simd> crate::SimdCombine<S> for f32x4<S> {
     type Combined = f32x8<S>;
     #[inline(always)]
@@ -540,6 +547,13 @@ impl<S: Simd> crate::SimdInt<S> for i8x16<S> {
         self.simd.max_i8x16(self, rhs.simd_into(self.simd))
     }
 }
+impl<S: Simd> SimdWiden<S> for i8x16<S> {
+    type Widened = i16x8<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_i8x16(self)
+    }
+}
 impl<S: Simd> crate::SimdCombine<S> for i8x16<S> {
     type Combined = i8x32<S>;
     #[inline(always)]
@@ -784,6 +798,13 @@ impl<S: Simd> crate::SimdInt<S> for u8x16<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_u8x16(self, rhs.simd_into(self.simd))
+    }
+}
+impl<S: Simd> SimdWiden<S> for u8x16<S> {
+    type Widened = u16x8<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_u8x16(self)
     }
 }
 impl<S: Simd> crate::SimdCombine<S> for u8x16<S> {
@@ -1118,6 +1139,28 @@ impl<S: Simd> crate::SimdInt<S> for i16x8<S> {
         self.simd.max_i16x8(self, rhs.simd_into(self.simd))
     }
 }
+impl<S: Simd> SimdWiden<S> for i16x8<S> {
+    type Widened = i32x4<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_i16x8(self)
+    }
+}
+impl<S: Simd> SimdNarrow<S> for i16x8<S> {
+    type Narrowed = i8x16<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_i16x8(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_i16x8(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_i16x8(self, high)
+    }
+}
 impl<S: Simd> crate::SimdCombine<S> for i16x8<S> {
     type Combined = i16x16<S>;
     #[inline(always)]
@@ -1354,6 +1397,28 @@ impl<S: Simd> crate::SimdInt<S> for u16x8<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_u16x8(self, rhs.simd_into(self.simd))
+    }
+}
+impl<S: Simd> SimdWiden<S> for u16x8<S> {
+    type Widened = u32x4<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_u16x8(self)
+    }
+}
+impl<S: Simd> SimdNarrow<S> for u16x8<S> {
+    type Narrowed = u8x16<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_u16x8(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_u16x8(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_u16x8(self, high)
     }
 }
 impl<S: Simd> crate::SimdCombine<S> for u16x8<S> {
@@ -1688,6 +1753,28 @@ impl<S: Simd> SimdCvtTruncate<f32x4<S>> for i32x4<S> {
         x.simd.cvt_i32_precise_f32x4(x)
     }
 }
+impl<S: Simd> SimdWiden<S> for i32x4<S> {
+    type Widened = i64x2<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_i32x4(self)
+    }
+}
+impl<S: Simd> SimdNarrow<S> for i32x4<S> {
+    type Narrowed = i16x8<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_i32x4(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_i32x4(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_i32x4(self, high)
+    }
+}
 impl<S: Simd> crate::SimdCombine<S> for i32x4<S> {
     type Combined = i32x8<S>;
     #[inline(always)]
@@ -1924,6 +2011,28 @@ impl<S: Simd> SimdCvtTruncate<f32x4<S>> for u32x4<S> {
     #[inline(always)]
     fn truncate_from_precise(x: f32x4<S>) -> Self {
         x.simd.cvt_u32_precise_f32x4(x)
+    }
+}
+impl<S: Simd> SimdWiden<S> for u32x4<S> {
+    type Widened = u64x2<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_u32x4(self)
+    }
+}
+impl<S: Simd> SimdNarrow<S> for u32x4<S> {
+    type Narrowed = u16x8<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_u32x4(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_u32x4(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_u32x4(self, high)
     }
 }
 impl<S: Simd> crate::SimdCombine<S> for u32x4<S> {
@@ -2314,6 +2423,21 @@ impl<S: Simd> SimdCvtFloat<i64x2<S>> for f64x2<S> {
         x.simd.cvt_f64_i64x2(x)
     }
 }
+impl<S: Simd> SimdNarrow<S> for f64x2<S> {
+    type Narrowed = f32x4<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_f64x2(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_f64x2(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_f64x2(self, high)
+    }
+}
 impl<S: Simd> crate::SimdCombine<S> for f64x2<S> {
     type Combined = f64x4<S>;
     #[inline(always)]
@@ -2552,6 +2676,21 @@ impl<S: Simd> SimdCvtTruncate<f64x2<S>> for i64x2<S> {
         x.simd.cvt_i64_precise_f64x2(x)
     }
 }
+impl<S: Simd> SimdNarrow<S> for i64x2<S> {
+    type Narrowed = i32x4<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_i64x2(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_i64x2(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_i64x2(self, high)
+    }
+}
 impl<S: Simd> crate::SimdCombine<S> for i64x2<S> {
     type Combined = i64x4<S>;
     #[inline(always)]
@@ -2788,6 +2927,21 @@ impl<S: Simd> SimdCvtTruncate<f64x2<S>> for u64x2<S> {
     #[inline(always)]
     fn truncate_from_precise(x: f64x2<S>) -> Self {
         x.simd.cvt_u64_precise_f64x2(x)
+    }
+}
+impl<S: Simd> SimdNarrow<S> for u64x2<S> {
+    type Narrowed = u32x4<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_u64x2(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_u64x2(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_u64x2(self, high)
     }
 }
 impl<S: Simd> crate::SimdCombine<S> for u64x2<S> {
@@ -3190,6 +3344,13 @@ impl<S: Simd> SimdCvtFloat<i32x8<S>> for f32x8<S> {
         x.simd.cvt_f32_i32x8(x)
     }
 }
+impl<S: Simd> SimdWiden<S> for f32x8<S> {
+    type Widened = f64x4<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_f32x8(self)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for f32x8<S> {
     type Split = f32x4<S>;
     #[inline(always)]
@@ -3459,6 +3620,13 @@ impl<S: Simd> crate::SimdInt<S> for i8x32<S> {
         self.simd.max_i8x32(self, rhs.simd_into(self.simd))
     }
 }
+impl<S: Simd> SimdWiden<S> for i8x32<S> {
+    type Widened = i16x16<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_i8x32(self)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for i8x32<S> {
     type Split = i8x16<S>;
     #[inline(always)]
@@ -3726,6 +3894,13 @@ impl<S: Simd> crate::SimdInt<S> for u8x32<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_u8x32(self, rhs.simd_into(self.simd))
+    }
+}
+impl<S: Simd> SimdWiden<S> for u8x32<S> {
+    type Widened = u16x16<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_u8x32(self)
     }
 }
 impl<S: Simd> crate::SimdSplit<S> for u8x32<S> {
@@ -4077,6 +4252,28 @@ impl<S: Simd> crate::SimdInt<S> for i16x16<S> {
         self.simd.max_i16x16(self, rhs.simd_into(self.simd))
     }
 }
+impl<S: Simd> SimdWiden<S> for i16x16<S> {
+    type Widened = i32x8<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_i16x16(self)
+    }
+}
+impl<S: Simd> SimdNarrow<S> for i16x16<S> {
+    type Narrowed = i8x32<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_i16x16(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_i16x16(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_i16x16(self, high)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for i16x16<S> {
     type Split = i16x8<S>;
     #[inline(always)]
@@ -4330,6 +4527,28 @@ impl<S: Simd> crate::SimdInt<S> for u16x16<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_u16x16(self, rhs.simd_into(self.simd))
+    }
+}
+impl<S: Simd> SimdWiden<S> for u16x16<S> {
+    type Widened = u32x8<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_u16x16(self)
+    }
+}
+impl<S: Simd> SimdNarrow<S> for u16x16<S> {
+    type Narrowed = u8x32<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_u16x16(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_u16x16(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_u16x16(self, high)
     }
 }
 impl<S: Simd> crate::SimdSplit<S> for u16x16<S> {
@@ -4683,6 +4902,28 @@ impl<S: Simd> SimdCvtTruncate<f32x8<S>> for i32x8<S> {
         x.simd.cvt_i32_precise_f32x8(x)
     }
 }
+impl<S: Simd> SimdWiden<S> for i32x8<S> {
+    type Widened = i64x4<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_i32x8(self)
+    }
+}
+impl<S: Simd> SimdNarrow<S> for i32x8<S> {
+    type Narrowed = i16x16<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_i32x8(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_i32x8(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_i32x8(self, high)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for i32x8<S> {
     type Split = i32x4<S>;
     #[inline(always)]
@@ -4938,6 +5179,28 @@ impl<S: Simd> SimdCvtTruncate<f32x8<S>> for u32x8<S> {
     #[inline(always)]
     fn truncate_from_precise(x: f32x8<S>) -> Self {
         x.simd.cvt_u32_precise_f32x8(x)
+    }
+}
+impl<S: Simd> SimdWiden<S> for u32x8<S> {
+    type Widened = u64x4<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_u32x8(self)
+    }
+}
+impl<S: Simd> SimdNarrow<S> for u32x8<S> {
+    type Narrowed = u16x16<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_u32x8(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_u32x8(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_u32x8(self, high)
     }
 }
 impl<S: Simd> crate::SimdSplit<S> for u32x8<S> {
@@ -5335,6 +5598,21 @@ impl<S: Simd> SimdCvtFloat<i64x4<S>> for f64x4<S> {
         x.simd.cvt_f64_i64x4(x)
     }
 }
+impl<S: Simd> SimdNarrow<S> for f64x4<S> {
+    type Narrowed = f32x8<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_f64x4(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_f64x4(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_f64x4(self, high)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for f64x4<S> {
     type Split = f64x2<S>;
     #[inline(always)]
@@ -5580,6 +5858,21 @@ impl<S: Simd> SimdCvtTruncate<f64x4<S>> for i64x4<S> {
         x.simd.cvt_i64_precise_f64x4(x)
     }
 }
+impl<S: Simd> SimdNarrow<S> for i64x4<S> {
+    type Narrowed = i32x8<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_i64x4(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_i64x4(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_i64x4(self, high)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for i64x4<S> {
     type Split = i64x2<S>;
     #[inline(always)]
@@ -5823,6 +6116,21 @@ impl<S: Simd> SimdCvtTruncate<f64x4<S>> for u64x4<S> {
     #[inline(always)]
     fn truncate_from_precise(x: f64x4<S>) -> Self {
         x.simd.cvt_u64_precise_f64x4(x)
+    }
+}
+impl<S: Simd> SimdNarrow<S> for u64x4<S> {
+    type Narrowed = u32x8<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_u64x4(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_u64x4(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_u64x4(self, high)
     }
 }
 impl<S: Simd> crate::SimdSplit<S> for u64x4<S> {
@@ -6243,6 +6551,13 @@ impl<S: Simd> SimdCvtFloat<i32x16<S>> for f32x16<S> {
         x.simd.cvt_f32_i32x16(x)
     }
 }
+impl<S: Simd> SimdWiden<S> for f32x16<S> {
+    type Widened = f64x8<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_f32x16(self)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for f32x16<S> {
     type Split = f32x8<S>;
     #[inline(always)]
@@ -6538,6 +6853,13 @@ impl<S: Simd> crate::SimdInt<S> for i8x64<S> {
         self.simd.max_i8x64(self, rhs.simd_into(self.simd))
     }
 }
+impl<S: Simd> SimdWiden<S> for i8x64<S> {
+    type Widened = i16x32<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_i8x64(self)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for i8x64<S> {
     type Split = i8x32<S>;
     #[inline(always)]
@@ -6831,6 +7153,13 @@ impl<S: Simd> crate::SimdInt<S> for u8x64<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_u8x64(self, rhs.simd_into(self.simd))
+    }
+}
+impl<S: Simd> SimdWiden<S> for u8x64<S> {
+    type Widened = u16x32<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_u8x64(self)
     }
 }
 impl<S: Simd> crate::SimdSplit<S> for u8x64<S> {
@@ -7192,6 +7521,28 @@ impl<S: Simd> crate::SimdInt<S> for i16x32<S> {
         self.simd.max_i16x32(self, rhs.simd_into(self.simd))
     }
 }
+impl<S: Simd> SimdWiden<S> for i16x32<S> {
+    type Widened = i32x16<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_i16x32(self)
+    }
+}
+impl<S: Simd> SimdNarrow<S> for i16x32<S> {
+    type Narrowed = i8x64<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_i16x32(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_i16x32(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_i16x32(self, high)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for i16x32<S> {
     type Split = i16x16<S>;
     #[inline(always)]
@@ -7455,6 +7806,28 @@ impl<S: Simd> crate::SimdInt<S> for u16x32<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_u16x32(self, rhs.simd_into(self.simd))
+    }
+}
+impl<S: Simd> SimdWiden<S> for u16x32<S> {
+    type Widened = u32x16<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_u16x32(self)
+    }
+}
+impl<S: Simd> SimdNarrow<S> for u16x32<S> {
+    type Narrowed = u8x64<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_u16x32(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_u16x32(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_u16x32(self, high)
     }
 }
 impl<S: Simd> crate::SimdSplit<S> for u16x32<S> {
@@ -7812,6 +8185,28 @@ impl<S: Simd> SimdCvtTruncate<f32x16<S>> for i32x16<S> {
         x.simd.cvt_i32_precise_f32x16(x)
     }
 }
+impl<S: Simd> SimdWiden<S> for i32x16<S> {
+    type Widened = i64x8<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_i32x16(self)
+    }
+}
+impl<S: Simd> SimdNarrow<S> for i32x16<S> {
+    type Narrowed = i16x32<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_i32x16(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_i32x16(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_i32x16(self, high)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for i32x16<S> {
     type Split = i32x8<S>;
     #[inline(always)]
@@ -8071,6 +8466,28 @@ impl<S: Simd> SimdCvtTruncate<f32x16<S>> for u32x16<S> {
     #[inline(always)]
     fn truncate_from_precise(x: f32x16<S>) -> Self {
         x.simd.cvt_u32_precise_f32x16(x)
+    }
+}
+impl<S: Simd> SimdWiden<S> for u32x16<S> {
+    type Widened = u64x8<S>;
+    #[inline(always)]
+    fn widen(self) -> (Self::Widened, Self::Widened) {
+        self.simd.widen_u32x16(self)
+    }
+}
+impl<S: Simd> SimdNarrow<S> for u32x16<S> {
+    type Narrowed = u16x32<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_u32x16(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_u32x16(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_u32x16(self, high)
     }
 }
 impl<S: Simd> crate::SimdSplit<S> for u32x16<S> {
@@ -8474,6 +8891,21 @@ impl<S: Simd> SimdCvtFloat<i64x8<S>> for f64x8<S> {
         x.simd.cvt_f64_i64x8(x)
     }
 }
+impl<S: Simd> SimdNarrow<S> for f64x8<S> {
+    type Narrowed = f32x16<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_f64x8(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_f64x8(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_f64x8(self, high)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for f64x8<S> {
     type Split = f64x4<S>;
     #[inline(always)]
@@ -8725,6 +9157,21 @@ impl<S: Simd> SimdCvtTruncate<f64x8<S>> for i64x8<S> {
         x.simd.cvt_i64_precise_f64x8(x)
     }
 }
+impl<S: Simd> SimdNarrow<S> for i64x8<S> {
+    type Narrowed = i32x16<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_i64x8(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_i64x8(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_i64x8(self, high)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for i64x8<S> {
     type Split = i64x4<S>;
     #[inline(always)]
@@ -8974,6 +9421,21 @@ impl<S: Simd> SimdCvtTruncate<f64x8<S>> for u64x8<S> {
     #[inline(always)]
     fn truncate_from_precise(x: f64x8<S>) -> Self {
         x.simd.cvt_u64_precise_f64x8(x)
+    }
+}
+impl<S: Simd> SimdNarrow<S> for u64x8<S> {
+    type Narrowed = u32x16<S>;
+    #[inline(always)]
+    fn narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.narrow_u64x8(self, high)
+    }
+    #[inline(always)]
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.saturating_narrow_u64x8(self, high)
+    }
+    #[inline(always)]
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+        self.simd.relaxed_narrow_u64x8(self, high)
     }
 }
 impl<S: Simd> crate::SimdSplit<S> for u64x8<S> {

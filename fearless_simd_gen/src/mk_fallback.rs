@@ -7,7 +7,7 @@ use crate::generic::{
     integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
-use crate::ops::{Op, OpSig};
+use crate::ops::{NarrowingMode, Op, OpSig, relaxed_narrow_method};
 use crate::types::{ScalarType, VecType};
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -182,17 +182,53 @@ impl Level for Fallback {
                     }
                 }
             }
-            OpSig::WidenNarrow { target_ty } => {
-                let items = make_list(
-                    (0..vec_ty.len)
+            OpSig::Widen { target_ty } => {
+                let scalar = target_ty.scalar.rust(target_ty.scalar_bits);
+                let half_len = vec_ty.len / 2;
+                let low = make_list(
+                    (0..half_len)
                         .map(|idx| {
-                            let scalar_ty = target_ty.scalar.rust(target_ty.scalar_bits);
                             let a = lane(quote! { a }, vec_ty, idx);
-                            quote! { #a as #scalar_ty }
+                            quote! { #a as #scalar }
                         })
                         .collect::<Vec<_>>(),
                 );
+                let high = make_list(
+                    (half_len..vec_ty.len)
+                        .map(|idx| {
+                            let a = lane(quote! { a }, vec_ty, idx);
+                            quote! { #a as #scalar }
+                        })
+                        .collect::<Vec<_>>(),
+                );
+                quote! {
+                    #method_sig {
+                        (#low.simd_into(self), #high.simd_into(self))
+                    }
+                }
+            }
+            OpSig::Narrow { target_ty, mode } => {
+                if mode == NarrowingMode::Relaxed {
+                    return relaxed_narrow_method(op, vec_ty, target_ty, "narrow");
+                }
 
+                let scalar = target_ty.scalar.rust(target_ty.scalar_bits);
+                let src_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                let convert = |value: TokenStream| {
+                    if vec_ty.scalar == ScalarType::Float || mode == NarrowingMode::Wrap {
+                        quote! { #value as #scalar }
+                    } else {
+                        quote! {
+                            #value.clamp(#scalar::MIN as #src_scalar, #scalar::MAX as #src_scalar) as #scalar
+                        }
+                    }
+                };
+                let items = make_list(
+                    (0..vec_ty.len)
+                        .map(|idx| convert(lane(quote! { a }, vec_ty, idx)))
+                        .chain((0..vec_ty.len).map(|idx| convert(lane(quote! { b }, vec_ty, idx))))
+                        .collect::<Vec<_>>(),
+                );
                 quote! {
                     #method_sig {
                         #items.simd_into(self)

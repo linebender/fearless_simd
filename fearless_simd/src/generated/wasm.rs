@@ -426,6 +426,14 @@ impl Simd for WasmSimd128 {
         crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
+    fn widen_f32x4(self, a: f32x4<Self>) -> (f64x2<Self>, f64x2<Self>) {
+        let a = a.into();
+        (
+            f64x2_promote_low_f32x4(a).simd_into(self),
+            f64x2_promote_low_f32x4(i64x2_shuffle::<1, 1>(a, a)).simd_into(self),
+        )
+    }
+    #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         #[cfg(target_feature = "relaxed-simd")]
         {
@@ -843,6 +851,13 @@ impl Simd for WasmSimd128 {
         crate::transmute::checked_transmute_store::<v128, [i8; 16usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
+    fn widen_i8x16(self, a: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>) {
+        (
+            i16x8_extend_low_i8x16(a.into()).simd_into(self),
+            i16x8_extend_high_i8x16(a.into()).simd_into(self),
+        )
+    }
+    #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
         u8x16_splat(val).simd_into(self)
     }
@@ -1226,10 +1241,11 @@ impl Simd for WasmSimd128 {
         crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
-    fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {
-        let low = u16x8_extend_low_u8x16(a.into());
-        let high = u16x8_extend_high_u8x16(a.into());
-        self.combine_u16x8(low.simd_into(self), high.simd_into(self))
+    fn widen_u8x16(self, a: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>) {
+        (
+            i16x8_extend_low_u8x16(a.into()).simd_into(self),
+            i16x8_extend_high_u8x16(a.into()).simd_into(self),
+        )
     }
     #[inline(always)]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
@@ -1623,6 +1639,33 @@ impl Simd for WasmSimd128 {
         crate::transmute::checked_transmute_store::<v128, [i16; 8usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
+    fn widen_i16x8(self, a: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
+        (
+            i32x4_extend_low_i16x8(a.into()).simd_into(self),
+            i32x4_extend_high_i16x8(a.into()).simd_into(self),
+        )
+    }
+    #[inline(always)]
+    fn narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self> {
+        let mask = i16x8_splat(255);
+        u8x16_narrow_i16x8(v128_and(a.into(), mask), v128_and(b.into(), mask)).simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self> {
+        i8x16_narrow_i16x8(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= i8::MIN as i16 && value <= i8::MAX as i16 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.saturating_narrow_i16x8(a, b)
+    }
+    #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
         u16x8_splat(val).simd_into(self)
     }
@@ -1920,6 +1963,34 @@ impl Simd for WasmSimd128 {
         crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out1, &mut chunks[1]);
         crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out2, &mut chunks[2]);
         crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
+    fn widen_u16x8(self, a: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
+        (
+            i32x4_extend_low_u16x8(a.into()).simd_into(self),
+            i32x4_extend_high_u16x8(a.into()).simd_into(self),
+        )
+    }
+    #[inline(always)]
+    fn narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self> {
+        let mask = u16x8_splat(255);
+        u8x16_narrow_i16x8(v128_and(a.into(), mask), v128_and(b.into(), mask)).simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self> {
+        let max = u16x8_splat(255);
+        u8x16_narrow_i16x8(u16x8_min(a.into(), max), u16x8_min(b.into(), max)).simd_into(self)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= u8::MIN as u16 && value <= u8::MAX as u16 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_u16x8(a, b)
     }
     #[inline(always)]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {
@@ -2287,6 +2358,33 @@ impl Simd for WasmSimd128 {
         crate::transmute::checked_transmute_store::<v128, [i32; 4usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
+    fn widen_i32x4(self, a: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>) {
+        (
+            i64x2_extend_low_i32x4(a.into()).simd_into(self),
+            i64x2_extend_high_i32x4(a.into()).simd_into(self),
+        )
+    }
+    #[inline(always)]
+    fn narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self> {
+        let mask = i32x4_splat(65535);
+        u16x8_narrow_i32x4(v128_and(a.into(), mask), v128_and(b.into(), mask)).simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self> {
+        i16x8_narrow_i32x4(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= i16::MIN as i32 && value <= i16::MAX as i32 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.saturating_narrow_i32x4(a, b)
+    }
+    #[inline(always)]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self> {
         f32x4_convert_i32x4(a.into()).simd_into(self)
     }
@@ -2564,6 +2662,34 @@ impl Simd for WasmSimd128 {
         crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out1, &mut chunks[1]);
         crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out2, &mut chunks[2]);
         crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
+    fn widen_u32x4(self, a: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>) {
+        (
+            i64x2_extend_low_u32x4(a.into()).simd_into(self),
+            i64x2_extend_high_u32x4(a.into()).simd_into(self),
+        )
+    }
+    #[inline(always)]
+    fn narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self> {
+        let mask = u32x4_splat(65535);
+        u16x8_narrow_i32x4(v128_and(a.into(), mask), v128_and(b.into(), mask)).simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self> {
+        let max = u32x4_splat(65535);
+        u16x8_narrow_i32x4(u32x4_min(a.into(), max), u32x4_min(b.into(), max)).simd_into(self)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= u16::MIN as u32 && value <= u16::MAX as u32 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_u32x4(a, b)
     }
     #[inline(always)]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self> {
@@ -2966,6 +3092,20 @@ impl Simd for WasmSimd128 {
         crate::transmute::checked_transmute_store::<v128, [f64; 2usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
+    fn narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self> {
+        let low = f32x4_demote_f64x2_zero(a.into());
+        let high = f32x4_demote_f64x2_zero(b.into());
+        i64x2_shuffle::<0, 2>(low, high).simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self> {
+        self.narrow_f64x2(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self> {
+        self.narrow_f64x2(a, b)
+    }
+    #[inline(always)]
     fn cvt_u64_f64x2(self, a: f64x2<Self>) -> u64x2<Self> {
         [a[0usize] as u64, a[1usize] as u64].simd_into(self)
     }
@@ -3247,6 +3387,35 @@ impl Simd for WasmSimd128 {
         crate::transmute::checked_transmute_store::<v128, [i64; 2usize]>(out1, &mut chunks[1]);
         crate::transmute::checked_transmute_store::<v128, [i64; 2usize]>(out2, &mut chunks[2]);
         crate::transmute::checked_transmute_store::<v128, [i64; 2usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
+    fn narrow_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i32x4<Self> {
+        i8x16_shuffle::<0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27>(
+            a.into(),
+            b.into(),
+        )
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_narrow_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i32x4<Self> {
+        [
+            a[0usize].clamp(i32::MIN as i64, i32::MAX as i64) as i32,
+            a[1usize].clamp(i32::MIN as i64, i32::MAX as i64) as i32,
+            b[0usize].clamp(i32::MIN as i64, i32::MAX as i64) as i32,
+            b[1usize].clamp(i32::MIN as i64, i32::MAX as i64) as i32,
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i32x4<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= i32::MIN as i64 && value <= i32::MAX as i64 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_i64x2(a, b)
     }
     #[inline(always)]
     fn cvt_f64_i64x2(self, a: i64x2<Self>) -> f64x2<Self> {
@@ -3534,6 +3703,35 @@ impl Simd for WasmSimd128 {
         crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out1, &mut chunks[1]);
         crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out2, &mut chunks[2]);
         crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
+    fn narrow_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u32x4<Self> {
+        i8x16_shuffle::<0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27>(
+            a.into(),
+            b.into(),
+        )
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_narrow_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u32x4<Self> {
+        [
+            a[0usize].clamp(u32::MIN as u64, u32::MAX as u64) as u32,
+            a[1usize].clamp(u32::MIN as u64, u32::MAX as u64) as u32,
+            b[0usize].clamp(u32::MIN as u64, u32::MAX as u64) as u32,
+            b[1usize].clamp(u32::MIN as u64, u32::MAX as u64) as u32,
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u32x4<Self> {
+        debug_assert!(
+            a.as_slice()
+                .iter()
+                .chain(b.as_slice())
+                .all(|&value| { value >= u32::MIN as u64 && value <= u32::MAX as u64 }),
+            "relaxed_narrow inputs must fit in the destination type",
+        );
+        self.narrow_u64x2(a, b)
     }
     #[inline(always)]
     fn cvt_f64_u64x2(self, a: u64x2<Self>) -> f64x2<Self> {
@@ -3995,6 +4193,13 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
+    fn widen_f32x8(self, a: f32x8<Self>) -> (f64x4<Self>, f64x4<Self>) {
+        let (a0, a1) = self.split_f32x8(a);
+        let (a00, a01) = self.widen_f32x4(a0);
+        let (a10, a11) = self.widen_f32x4(a1);
+        (self.combine_f64x2(a00, a01), self.combine_f64x2(a10, a11))
+    }
+    #[inline(always)]
     fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
         self.combine_u32x4(self.cvt_u32_f32x4(a0), self.cvt_u32_f32x4(a1))
@@ -4432,6 +4637,13 @@ impl Simd for WasmSimd128 {
         self.combine_i8x16(self.neg_i8x16(a0), self.neg_i8x16(a1))
     }
     #[inline(always)]
+    fn widen_i8x32(self, a: i8x32<Self>) -> (i16x16<Self>, i16x16<Self>) {
+        let (a0, a1) = self.split_i8x32(a);
+        let (a00, a01) = self.widen_i8x16(a0);
+        let (a10, a11) = self.widen_i8x16(a1);
+        (self.combine_i16x8(a00, a01), self.combine_i16x8(a10, a11))
+    }
+    #[inline(always)]
     fn splat_u8x32(self, val: u8) -> u8x32<Self> {
         let half = self.splat_u8x16(val);
         self.combine_u8x16(half, half)
@@ -4838,9 +5050,11 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self> {
+    fn widen_u8x32(self, a: u8x32<Self>) -> (u16x16<Self>, u16x16<Self>) {
         let (a0, a1) = self.split_u8x32(a);
-        self.combine_u16x16(self.widen_u8x16(a0), self.widen_u8x16(a1))
+        let (a00, a01) = self.widen_u8x16(a0);
+        let (a10, a11) = self.widen_u8x16(a1);
+        (self.combine_u16x8(a00, a01), self.combine_u16x8(a10, a11))
     }
     #[inline(always)]
     fn splat_mask8x32(self, val: bool) -> mask8x32<Self> {
@@ -5310,6 +5524,37 @@ impl Simd for WasmSimd128 {
         self.combine_i16x8(self.neg_i16x8(a0), self.neg_i16x8(a1))
     }
     #[inline(always)]
+    fn widen_i16x16(self, a: i16x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
+        let (a0, a1) = self.split_i16x16(a);
+        let (a00, a01) = self.widen_i16x8(a0);
+        let (a10, a11) = self.widen_i16x8(a1);
+        (self.combine_i32x4(a00, a01), self.combine_i32x4(a10, a11))
+    }
+    #[inline(always)]
+    fn narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i8x16(self.narrow_i16x8(a0, a1), self.narrow_i16x8(b0, b1))
+    }
+    #[inline(always)]
+    fn saturating_narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i8x16(
+            self.saturating_narrow_i16x8(a0, a1),
+            self.saturating_narrow_i16x8(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i8x16(
+            self.relaxed_narrow_i16x8(a0, a1),
+            self.relaxed_narrow_i16x8(b0, b1),
+        )
+    }
+    #[inline(always)]
     fn splat_u16x16(self, val: u16) -> u16x16<Self> {
         let half = self.splat_u16x8(val);
         self.combine_u16x8(half, half)
@@ -5659,13 +5904,35 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn narrow_u16x16(self, a: u16x16<Self>) -> u8x16<Self> {
-        let mask = u16x8_splat(0xFF);
-        let (low, high) = self.split_u16x16(a);
-        let low_masked = v128_and(low.into(), mask);
-        let high_masked = v128_and(high.into(), mask);
-        let result = u8x16_narrow_i16x8(low_masked, high_masked);
-        result.simd_into(self)
+    fn widen_u16x16(self, a: u16x16<Self>) -> (u32x8<Self>, u32x8<Self>) {
+        let (a0, a1) = self.split_u16x16(a);
+        let (a00, a01) = self.widen_u16x8(a0);
+        let (a10, a11) = self.widen_u16x8(a1);
+        (self.combine_u32x4(a00, a01), self.combine_u32x4(a10, a11))
+    }
+    #[inline(always)]
+    fn narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u8x16(self.narrow_u16x8(a0, a1), self.narrow_u16x8(b0, b1))
+    }
+    #[inline(always)]
+    fn saturating_narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u8x16(
+            self.saturating_narrow_u16x8(a0, a1),
+            self.saturating_narrow_u16x8(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u8x16(
+            self.relaxed_narrow_u16x8(a0, a1),
+            self.relaxed_narrow_u16x8(b0, b1),
+        )
     }
     #[inline(always)]
     fn splat_mask16x16(self, val: bool) -> mask16x16<Self> {
@@ -6099,6 +6366,37 @@ impl Simd for WasmSimd128 {
         self.combine_i32x4(self.neg_i32x4(a0), self.neg_i32x4(a1))
     }
     #[inline(always)]
+    fn widen_i32x8(self, a: i32x8<Self>) -> (i64x4<Self>, i64x4<Self>) {
+        let (a0, a1) = self.split_i32x8(a);
+        let (a00, a01) = self.widen_i32x4(a0);
+        let (a10, a11) = self.widen_i32x4(a1);
+        (self.combine_i64x2(a00, a01), self.combine_i64x2(a10, a11))
+    }
+    #[inline(always)]
+    fn narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i16x8(self.narrow_i32x4(a0, a1), self.narrow_i32x4(b0, b1))
+    }
+    #[inline(always)]
+    fn saturating_narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i16x8(
+            self.saturating_narrow_i32x4(a0, a1),
+            self.saturating_narrow_i32x4(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i16x8(
+            self.relaxed_narrow_i32x4(a0, a1),
+            self.relaxed_narrow_i32x4(b0, b1),
+        )
+    }
+    #[inline(always)]
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_i32x8(a);
         self.combine_f32x4(self.cvt_f32_i32x4(a0), self.cvt_f32_i32x4(a1))
@@ -6414,6 +6712,37 @@ impl Simd for WasmSimd128 {
                 val: crate::support::Aligned128(a.val.0[1]),
                 simd: self,
             },
+        )
+    }
+    #[inline(always)]
+    fn widen_u32x8(self, a: u32x8<Self>) -> (u64x4<Self>, u64x4<Self>) {
+        let (a0, a1) = self.split_u32x8(a);
+        let (a00, a01) = self.widen_u32x4(a0);
+        let (a10, a11) = self.widen_u32x4(a1);
+        (self.combine_u64x2(a00, a01), self.combine_u64x2(a10, a11))
+    }
+    #[inline(always)]
+    fn narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u16x8(self.narrow_u32x4(a0, a1), self.narrow_u32x4(b0, b1))
+    }
+    #[inline(always)]
+    fn saturating_narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u16x8(
+            self.saturating_narrow_u32x4(a0, a1),
+            self.saturating_narrow_u32x4(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u16x8(
+            self.relaxed_narrow_u32x4(a0, a1),
+            self.relaxed_narrow_u32x4(b0, b1),
         )
     }
     #[inline(always)]
@@ -6888,6 +7217,30 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
+    fn narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f32x4(self.narrow_f64x2(a0, a1), self.narrow_f64x2(b0, b1))
+    }
+    #[inline(always)]
+    fn saturating_narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f32x4(
+            self.saturating_narrow_f64x2(a0, a1),
+            self.saturating_narrow_f64x2(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f32x4(
+            self.relaxed_narrow_f64x2(a0, a1),
+            self.relaxed_narrow_f64x2(b0, b1),
+        )
+    }
+    #[inline(always)]
     fn cvt_u64_f64x4(self, a: f64x4<Self>) -> u64x4<Self> {
         let (a0, a1) = self.split_f64x4(a);
         self.combine_u64x2(self.cvt_u64_f64x2(a0), self.cvt_u64_f64x2(a1))
@@ -7216,6 +7569,30 @@ impl Simd for WasmSimd128 {
         self.combine_i64x2(self.neg_i64x2(a0), self.neg_i64x2(a1))
     }
     #[inline(always)]
+    fn narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i32x4(self.narrow_i64x2(a0, a1), self.narrow_i64x2(b0, b1))
+    }
+    #[inline(always)]
+    fn saturating_narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i32x4(
+            self.saturating_narrow_i64x2(a0, a1),
+            self.saturating_narrow_i64x2(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_i32x4(
+            self.relaxed_narrow_i64x2(a0, a1),
+            self.relaxed_narrow_i64x2(b0, b1),
+        )
+    }
+    #[inline(always)]
     fn cvt_f64_i64x4(self, a: i64x4<Self>) -> f64x4<Self> {
         let (a0, a1) = self.split_i64x4(a);
         self.combine_f64x2(self.cvt_f64_i64x2(a0), self.cvt_f64_i64x2(a1))
@@ -7515,6 +7892,30 @@ impl Simd for WasmSimd128 {
                 val: crate::support::Aligned128(a.val.0[1]),
                 simd: self,
             },
+        )
+    }
+    #[inline(always)]
+    fn narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u32x4(self.narrow_u64x2(a0, a1), self.narrow_u64x2(b0, b1))
+    }
+    #[inline(always)]
+    fn saturating_narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u32x4(
+            self.saturating_narrow_u64x2(a0, a1),
+            self.saturating_narrow_u64x2(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_u32x4(
+            self.relaxed_narrow_u64x2(a0, a1),
+            self.relaxed_narrow_u64x2(b0, b1),
         )
     }
     #[inline(always)]
@@ -8027,6 +8428,13 @@ impl Simd for WasmSimd128 {
                 simd: self,
             },
         )
+    }
+    #[inline(always)]
+    fn widen_f32x16(self, a: f32x16<Self>) -> (f64x8<Self>, f64x8<Self>) {
+        let (a0, a1) = self.split_f32x16(a);
+        let (a00, a01) = self.widen_f32x8(a0);
+        let (a10, a11) = self.widen_f32x8(a1);
+        (self.combine_f64x4(a00, a01), self.combine_f64x4(a10, a11))
     }
     #[inline(always)]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
@@ -8582,6 +8990,13 @@ impl Simd for WasmSimd128 {
         self.combine_i8x32(self.neg_i8x32(a0), self.neg_i8x32(a1))
     }
     #[inline(always)]
+    fn widen_i8x64(self, a: i8x64<Self>) -> (i16x32<Self>, i16x32<Self>) {
+        let (a0, a1) = self.split_i8x64(a);
+        let (a00, a01) = self.widen_i8x32(a0);
+        let (a10, a11) = self.widen_i8x32(a1);
+        (self.combine_i16x16(a00, a01), self.combine_i16x16(a10, a11))
+    }
+    #[inline(always)]
     fn splat_u8x64(self, val: u8) -> u8x64<Self> {
         let half = self.splat_u8x32(val);
         self.combine_u8x32(half, half)
@@ -9104,6 +9519,13 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
+    fn widen_u8x64(self, a: u8x64<Self>) -> (u16x32<Self>, u16x32<Self>) {
+        let (a0, a1) = self.split_u8x64(a);
+        let (a00, a01) = self.widen_u8x32(a0);
+        let (a10, a11) = self.widen_u8x32(a1);
+        (self.combine_u16x16(a00, a01), self.combine_u16x16(a10, a11))
+    }
+    #[inline(always)]
     fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
         let half = self.splat_mask8x32(val);
         self.combine_mask8x32(half, half)
@@ -9622,6 +10044,37 @@ impl Simd for WasmSimd128 {
         self.combine_i16x16(self.neg_i16x16(a0), self.neg_i16x16(a1))
     }
     #[inline(always)]
+    fn widen_i16x32(self, a: i16x32<Self>) -> (i32x16<Self>, i32x16<Self>) {
+        let (a0, a1) = self.split_i16x32(a);
+        let (a00, a01) = self.widen_i16x16(a0);
+        let (a10, a11) = self.widen_i16x16(a1);
+        (self.combine_i32x8(a00, a01), self.combine_i32x8(a10, a11))
+    }
+    #[inline(always)]
+    fn narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i8x32(self.narrow_i16x16(a0, a1), self.narrow_i16x16(b0, b1))
+    }
+    #[inline(always)]
+    fn saturating_narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i8x32(
+            self.saturating_narrow_i16x16(a0, a1),
+            self.saturating_narrow_i16x16(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i8x32(
+            self.relaxed_narrow_i16x16(a0, a1),
+            self.relaxed_narrow_i16x16(b0, b1),
+        )
+    }
+    #[inline(always)]
     fn splat_u16x32(self, val: u16) -> u16x32<Self> {
         let half = self.splat_u16x16(val);
         self.combine_u16x16(half, half)
@@ -10029,9 +10482,35 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
+    fn widen_u16x32(self, a: u16x32<Self>) -> (u32x16<Self>, u32x16<Self>) {
         let (a0, a1) = self.split_u16x32(a);
-        self.combine_u8x16(self.narrow_u16x16(a0), self.narrow_u16x16(a1))
+        let (a00, a01) = self.widen_u16x16(a0);
+        let (a10, a11) = self.widen_u16x16(a1);
+        (self.combine_u32x8(a00, a01), self.combine_u32x8(a10, a11))
+    }
+    #[inline(always)]
+    fn narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u8x32(self.narrow_u16x16(a0, a1), self.narrow_u16x16(b0, b1))
+    }
+    #[inline(always)]
+    fn saturating_narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u8x32(
+            self.saturating_narrow_u16x16(a0, a1),
+            self.saturating_narrow_u16x16(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u8x32(
+            self.relaxed_narrow_u16x16(a0, a1),
+            self.relaxed_narrow_u16x16(b0, b1),
+        )
     }
     #[inline(always)]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {
@@ -10485,6 +10964,37 @@ impl Simd for WasmSimd128 {
         self.combine_i32x8(self.neg_i32x8(a0), self.neg_i32x8(a1))
     }
     #[inline(always)]
+    fn widen_i32x16(self, a: i32x16<Self>) -> (i64x8<Self>, i64x8<Self>) {
+        let (a0, a1) = self.split_i32x16(a);
+        let (a00, a01) = self.widen_i32x8(a0);
+        let (a10, a11) = self.widen_i32x8(a1);
+        (self.combine_i64x4(a00, a01), self.combine_i64x4(a10, a11))
+    }
+    #[inline(always)]
+    fn narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i16x16(self.narrow_i32x8(a0, a1), self.narrow_i32x8(b0, b1))
+    }
+    #[inline(always)]
+    fn saturating_narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i16x16(
+            self.saturating_narrow_i32x8(a0, a1),
+            self.saturating_narrow_i32x8(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i16x16(
+            self.relaxed_narrow_i32x8(a0, a1),
+            self.relaxed_narrow_i32x8(b0, b1),
+        )
+    }
+    #[inline(always)]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_i32x16(a);
         self.combine_f32x8(self.cvt_f32_i32x8(a0), self.cvt_f32_i32x8(a1))
@@ -10824,6 +11334,37 @@ impl Simd for WasmSimd128 {
                 val: crate::support::Aligned256([a.val.0[2], a.val.0[3]]),
                 simd: self,
             },
+        )
+    }
+    #[inline(always)]
+    fn widen_u32x16(self, a: u32x16<Self>) -> (u64x8<Self>, u64x8<Self>) {
+        let (a0, a1) = self.split_u32x16(a);
+        let (a00, a01) = self.widen_u32x8(a0);
+        let (a10, a11) = self.widen_u32x8(a1);
+        (self.combine_u64x4(a00, a01), self.combine_u64x4(a10, a11))
+    }
+    #[inline(always)]
+    fn narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u16x16(self.narrow_u32x8(a0, a1), self.narrow_u32x8(b0, b1))
+    }
+    #[inline(always)]
+    fn saturating_narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u16x16(
+            self.saturating_narrow_u32x8(a0, a1),
+            self.saturating_narrow_u32x8(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u16x16(
+            self.relaxed_narrow_u32x8(a0, a1),
+            self.relaxed_narrow_u32x8(b0, b1),
         )
     }
     #[inline(always)]
@@ -11295,6 +11836,30 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
+    fn narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f32x8(self.narrow_f64x4(a0, a1), self.narrow_f64x4(b0, b1))
+    }
+    #[inline(always)]
+    fn saturating_narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f32x8(
+            self.saturating_narrow_f64x4(a0, a1),
+            self.saturating_narrow_f64x4(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f32x8(
+            self.relaxed_narrow_f64x4(a0, a1),
+            self.relaxed_narrow_f64x4(b0, b1),
+        )
+    }
+    #[inline(always)]
     fn cvt_u64_f64x8(self, a: f64x8<Self>) -> u64x8<Self> {
         let (a0, a1) = self.split_f64x8(a);
         self.combine_u64x4(self.cvt_u64_f64x4(a0), self.cvt_u64_f64x4(a1))
@@ -11627,6 +12192,30 @@ impl Simd for WasmSimd128 {
         self.combine_i64x4(self.neg_i64x4(a0), self.neg_i64x4(a1))
     }
     #[inline(always)]
+    fn narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i32x8(self.narrow_i64x4(a0, a1), self.narrow_i64x4(b0, b1))
+    }
+    #[inline(always)]
+    fn saturating_narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i32x8(
+            self.saturating_narrow_i64x4(a0, a1),
+            self.saturating_narrow_i64x4(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i32x8(
+            self.relaxed_narrow_i64x4(a0, a1),
+            self.relaxed_narrow_i64x4(b0, b1),
+        )
+    }
+    #[inline(always)]
     fn cvt_f64_i64x8(self, a: i64x8<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_i64x8(a);
         self.combine_f64x4(self.cvt_f64_i64x4(a0), self.cvt_f64_i64x4(a1))
@@ -11930,6 +12519,30 @@ impl Simd for WasmSimd128 {
                 val: crate::support::Aligned256([a.val.0[2], a.val.0[3]]),
                 simd: self,
             },
+        )
+    }
+    #[inline(always)]
+    fn narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u32x8(self.narrow_u64x4(a0, a1), self.narrow_u64x4(b0, b1))
+    }
+    #[inline(always)]
+    fn saturating_narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u32x8(
+            self.saturating_narrow_u64x4(a0, a1),
+            self.saturating_narrow_u64x4(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn relaxed_narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u32x8(
+            self.relaxed_narrow_u64x4(a0, a1),
+            self.relaxed_narrow_u64x4(b0, b1),
         )
     }
     #[inline(always)]

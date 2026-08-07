@@ -32,7 +32,7 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
     }
     let mut code = quote! {
         use core::fmt::Debug;
-        use crate::{seal::Seal, Level, SimdElement, SimdIntElement, SimdFloatElement, SimdFrom, SimdInto, SimdCvtTruncate, SimdCvtFloat, Select, Bytes};
+        use crate::{seal::Seal, Level, SimdElement, SimdIntElement, SimdFloatElement, SimdFrom, SimdInto, SimdCvtTruncate, SimdCvtFloat, SimdWiden, SimdNarrow, Select, Bytes};
         #imports
         /// The main SIMD trait, implemented by all SIMD token types.
         ///
@@ -71,26 +71,41 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
         /// ```
         pub trait Simd: Sized + Clone + Copy + Send + Sync + Debug + Seal + arch_types::ArchTypes + 'static {
             /// A native-width SIMD vector of [`f32`]s.
-            type f32s: SimdFloat<Self, Element = f32, Block = f32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s> + SimdCvtFloat<Self::u32s> + SimdCvtFloat<Self::i32s>;
+            type f32s: SimdFloat<Self, Element = f32, Block = f32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s> + SimdCvtFloat<Self::u32s> + SimdCvtFloat<Self::i32s>
+                + SimdWiden<Self, Widened = Self::f64s>;
             /// A native-width SIMD vector of [`f64`]s.
-            type f64s: SimdFloat<Self, Element = f64, Block = f64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s> + SimdCvtFloat<Self::u64s> + SimdCvtFloat<Self::i64s>;
+            type f64s: SimdFloat<Self, Element = f64, Block = f64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>
+                + SimdCvtFloat<Self::u64s> + SimdCvtFloat<Self::i64s>
+                + SimdNarrow<Self, Narrowed = Self::f32s>;
             /// A native-width SIMD vector of [`u8`]s.
-            type u8s: SimdInt<Self, Element = u8, Block = u8x16<Self>, Mask = Self::mask8s, ByteVector = Self::u8s>;
+            type u8s: SimdInt<Self, Element = u8, Block = u8x16<Self>, Mask = Self::mask8s, ByteVector = Self::u8s>
+                + SimdWiden<Self, Widened = Self::u16s>;
             /// A native-width SIMD vector of [`i8`]s.
-            type i8s: SimdInt<Self, Element = i8, Block = i8x16<Self>, Mask = Self::mask8s, ByteVector = Self::u8s> + core::ops::Neg<Output = Self::i8s>;
+            type i8s: SimdInt<Self, Element = i8, Block = i8x16<Self>, Mask = Self::mask8s, ByteVector = Self::u8s>
+                + SimdWiden<Self, Widened = Self::i16s> + core::ops::Neg<Output = Self::i8s>;
             /// A native-width SIMD vector of [`u16`]s.
-            type u16s: SimdInt<Self, Element = u16, Block = u16x8<Self>, Mask = Self::mask16s, ByteVector = Self::u8s>;
+            type u16s: SimdInt<Self, Element = u16, Block = u16x8<Self>, Mask = Self::mask16s, ByteVector = Self::u8s>
+                + SimdNarrow<Self, Narrowed = Self::u8s> + SimdWiden<Self, Widened = Self::u32s>;
             /// A native-width SIMD vector of [`i16`]s.
-            type i16s: SimdInt<Self, Element = i16, Block = i16x8<Self>, Mask = Self::mask16s, ByteVector = Self::u8s> + core::ops::Neg<Output = Self::i16s>;
+            type i16s: SimdInt<Self, Element = i16, Block = i16x8<Self>, Mask = Self::mask16s, ByteVector = Self::u8s>
+                + SimdNarrow<Self, Narrowed = Self::i8s> + SimdWiden<Self, Widened = Self::i32s>
+                + core::ops::Neg<Output = Self::i16s>;
             /// A native-width SIMD vector of [`u32`]s.
-            type u32s: SimdInt<Self, Element = u32, Block = u32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s> + SimdCvtTruncate<Self::f32s>;
+            type u32s: SimdInt<Self, Element = u32, Block = u32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s>
+                + SimdCvtTruncate<Self::f32s> + SimdNarrow<Self, Narrowed = Self::u16s>
+                + SimdWiden<Self, Widened = Self::u64s>;
             /// A native-width SIMD vector of [`i32`]s.
             type i32s: SimdInt<Self, Element = i32, Block = i32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s> + SimdCvtTruncate<Self::f32s>
+                + SimdNarrow<Self, Narrowed = Self::i16s> + SimdWiden<Self, Widened = Self::i64s>
                 + core::ops::Neg<Output = Self::i32s>;
             /// A native-width SIMD vector of [`u64`]s.
-            type u64s: SimdInt<Self, Element = u64, Block = u64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s> + SimdCvtTruncate<Self::f64s>;
+            type u64s: SimdInt<Self, Element = u64, Block = u64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>
+                + SimdCvtTruncate<Self::f64s>
+                + SimdNarrow<Self, Narrowed = Self::u32s>;
             /// A native-width SIMD vector of [`i64`]s.
-            type i64s: SimdInt<Self, Element = i64, Block = i64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s> + SimdCvtTruncate<Self::f64s>
+            type i64s: SimdInt<Self, Element = i64, Block = i64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>
+                + SimdCvtTruncate<Self::f64s>
+                + SimdNarrow<Self, Narrowed = Self::i32s>
                 + core::ops::Neg<Output = Self::i64s>;
             /// A native-width SIMD mask with 8-bit lanes.
             type mask8s: SimdMask<Self, Element = i8> + Select<Self::u8s> + Select<Self::i8s> + Select<Self::mask8s>;
@@ -104,9 +119,46 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
             /// This SIMD token's feature level.
             fn level(self) -> Level;
 
-            /// Call function with CPU features enabled.
+            /// Call function with SIMD instructions enabled, without forcing [inlining](https://matklad.github.io/2021/07/09/inline-in-rust.html).
             ///
-            /// For performance, the provided function should be `#[inline(always)]`.
+            /// `vectorize()` will set the correct `#[target_feature]` annotations for the SIMD level.
+            /// The provided function should be `#[inline(always)]`, otherwise it may not
+            /// be able to utilize the best SIMD instructions available.
+            /// `vectorize()` itself acts as the function boundary in machine code.
+            ///
+            /// This is useful when the SIMD implementation has already been selected and you want
+            /// to keep a SIMD-generic function outlined instead of forcing the entire function to
+            /// be inlined into its caller.
+            ///
+            /// # Example
+            ///
+            /// `double_u32s` is deliberately not marked `#[inline(always)]`. Instead, only its
+            /// closure is inlined into the target-feature-enabled boundary created by `vectorize()`.
+            ///
+            /// ```
+            /// use fearless_simd::{dispatch, prelude::*, Level};
+            ///
+            /// fn double_u32s<S: Simd>(simd: S, values: &mut [u32]) {
+            ///     simd.vectorize(
+            ///         #[inline(always)]
+            ///         || {
+            ///             let mut chunks = values.chunks_exact_mut(S::u32s::N);
+            ///             for chunk in &mut chunks {
+            ///                 let value = S::u32s::from_slice(simd, chunk);
+            ///                 (value * 2).store_slice(chunk);
+            ///             }
+            ///             for value in chunks.into_remainder() {
+            ///                 *value *= 2;
+            ///             }
+            ///         },
+            ///     );
+            /// }
+            ///
+            /// let mut values = [1, 2, 3, 4, 5];
+            /// let level = Level::new();
+            /// dispatch!(level, simd => double_u32s(simd, &mut values));
+            /// assert_eq!(values, [2, 4, 6, 8, 10]);
+            /// ```
             fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R;
             #( #methods )*
         }

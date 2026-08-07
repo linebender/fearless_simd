@@ -38,6 +38,13 @@ pub(crate) enum ElementDirection {
     Right,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum NarrowingMode {
+    Wrap,
+    Saturate,
+    Relaxed,
+}
+
 #[derive(Clone, Copy)]
 pub(crate) enum OpSig {
     /// Takes a single scalar argument, and returns the corresponding vector type.
@@ -92,9 +99,13 @@ pub(crate) enum OpSig {
         scalar_bits: usize,
         precise: bool,
     },
-    /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
-    /// same length.
-    WidenNarrow { target_ty: VecType },
+    /// Widens every lane, returning the lower and upper halves as two same-width vectors.
+    Widen { target_ty: VecType },
+    /// Narrows two vectors and concatenates them into one same-width vector.
+    Narrow {
+        target_ty: VecType,
+        mode: NarrowingMode,
+    },
     /// Takes an argument of a vector type and another u32 argument (the shift amount), and returns that same vector
     /// type.
     Shift,
@@ -314,9 +325,13 @@ impl Op {
                 let result = vec_ty.reinterpret(*target_ty, *scalar_bits).rust();
                 (vec![vec], quote! { #result<#simd_ty> })
             }
-            OpSig::WidenNarrow { target_ty } => {
+            OpSig::Widen { target_ty } => {
                 let result = target_ty.rust();
-                (vec![vec], quote! { #result<#simd_ty> })
+                (vec![vec], quote! { (#result<#simd_ty>, #result<#simd_ty>) })
+            }
+            OpSig::Narrow { target_ty, .. } => {
+                let result = target_ty.rust();
+                (vec![vec.clone(), vec], quote! { #result<#simd_ty> })
             }
             OpSig::MaskReduce { .. } => (vec![vec], quote! { bool }),
             OpSig::MaskFromBitmask => (vec![quote! { u64 }], vec),
@@ -362,7 +377,7 @@ impl Op {
                 return None;
             }
             OpSig::MaskFromBitmask | OpSig::MaskToBitmask | OpSig::MaskSet => return None,
-            OpSig::Unary | OpSig::Cvt { .. } | OpSig::WidenNarrow { .. } => {
+            OpSig::Unary | OpSig::Cvt { .. } => {
                 let arg0 = &arg_names[0];
                 quote! { (#arg0) -> Self }
             }
@@ -380,6 +395,7 @@ impl Op {
                 let arg1 = &arg_names[1];
                 quote! { (#arg0, #arg1: impl SimdInto<Self, S>) -> (Self, Self) }
             }
+            OpSig::Widen { .. } | OpSig::Narrow { .. } => return None,
             OpSig::ElementRotate { .. } => {
                 let arg0 = &arg_names[0];
                 quote! { <const OFFSET: usize>(#arg0) -> Self }
@@ -468,6 +484,49 @@ impl Op {
         }
 
         dest
+    }
+}
+
+pub(crate) fn relaxed_narrow_method(
+    op: Op,
+    vec_ty: &VecType,
+    target_ty: VecType,
+    implementation: &'static str,
+) -> TokenStream {
+    assert!(
+        matches!(
+            op.sig,
+            OpSig::Narrow {
+                mode: NarrowingMode::Relaxed,
+                ..
+            }
+        ),
+        "This method only handles Relaxed mode"
+    );
+
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let implementation = generic_op_name(implementation, vec_ty);
+    let bounds_assertion = if vec_ty.scalar == ScalarType::Float {
+        TokenStream::new()
+    } else {
+        let source_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+        let target_scalar = target_ty.scalar.rust(target_ty.scalar_bits);
+        quote! {
+            debug_assert!(
+                a.as_slice().iter().chain(b.as_slice()).all(|&value| {
+                    value >= #target_scalar::MIN as #source_scalar
+                        && value <= #target_scalar::MAX as #source_scalar
+                }),
+                "relaxed_narrow inputs must fit in the destination type",
+            );
+        }
+    };
+
+    quote! {
+        #method_sig {
+            #bounds_assertion
+            self.#implementation(a, b)
+        }
     }
 }
 
@@ -1309,24 +1368,89 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ));
     }
 
-    if matches!(ty.scalar, ScalarType::Unsigned) {
-        if let Some(target_ty) = ty.widened() {
-            ops.push(Op::new(
-                "widen",
-                OpKind::AssociatedOnly,
-                OpSig::WidenNarrow { target_ty },
-                "Zero-extend each element to a wider integer type.\n\nThe number of elements in the result is half that of the input.",
-            ));
-        }
+    let is_f64 = ty.scalar == ScalarType::Float && ty.scalar_bits == 64;
+    if is_f64 {
+        let target_ty = ty.narrowed().expect("f64 vectors support narrowing");
+        ops.push(Op::new(
+            "narrow",
+            OpKind::OwnTrait,
+            OpSig::Narrow {
+                target_ty,
+                mode: NarrowingMode::Wrap,
+            },
+            "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\n\
+            Values are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity.\
+            This is the same as the `as` operator, and follows the IEEE 754 narrowing behavior in round-to-even mode.\n\n\
+            `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+        ));
+        ops.push(Op::new(
+            "saturating_narrow",
+            OpKind::OwnTrait,
+            OpSig::Narrow {
+                target_ty,
+                mode: NarrowingMode::Saturate,
+            },
+            "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\n\
+            For floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n\
+            `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+        ));
+        ops.push(Op::new(
+            "relaxed_narrow",
+            OpKind::OwnTrait,
+            OpSig::Narrow {
+                target_ty,
+                mode: NarrowingMode::Relaxed,
+            },
+            "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\n\
+            For floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n\
+            `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+        ));
+    }
 
-        if let Some(target_ty) = ty.narrowed() {
-            ops.push(Op::new(
+    if let Some(target_ty) = ty.widened() {
+        let doc = if ty.scalar == ScalarType::Float {
+            "Widen every `f32` lane exactly into two same-width `f64` vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."
+        } else {
+            "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."
+        };
+        ops.push(Op::new(
+            "widen",
+            OpKind::OwnTrait,
+            OpSig::Widen { target_ty },
+            doc,
+        ));
+    }
+
+    if !is_f64 && let Some(target_ty) = ty.narrowed() {
+        ops.push(Op::new(
                 "narrow",
-                OpKind::AssociatedOnly,
-                OpSig::WidenNarrow { target_ty },
-                "Truncate each element to a narrower integer type.\n\nThe number of elements in the result is twice that of the input.",
+                OpKind::OwnTrait,
+                OpSig::Narrow {
+                    target_ty,
+                    mode: NarrowingMode::Wrap,
+                },
+                "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
             ));
-        }
+        ops.push(Op::new(
+                "saturating_narrow",
+                OpKind::OwnTrait,
+                OpSig::Narrow {
+                    target_ty,
+                    mode: NarrowingMode::Saturate,
+                },
+                "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+            ));
+        ops.push(Op::new(
+                "relaxed_narrow",
+                OpKind::OwnTrait,
+                OpSig::Narrow {
+                    target_ty,
+                    mode: NarrowingMode::Relaxed,
+                },
+                "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\n\
+                Inputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n\
+                `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+            ));
     }
 
     match (ty.scalar, ty.scalar_bits) {
@@ -1453,13 +1577,6 @@ impl OpSig {
     /// Determine whether a given operation should defer to its generic implementation, for a given vector type and the
     /// maximum native vector width.
     pub(crate) fn should_use_generic_op(&self, vec_ty: &VecType, native_width: usize) -> bool {
-        // For widen/narrow operations, we care about the *target* type's width.
-        if let Self::WidenNarrow { target_ty } = self
-            && target_ty.n_bits() <= native_width
-        {
-            return false;
-        }
-
         if matches!(self, Self::ElementRotate { .. } | Self::ElementShift { .. }) {
             return true;
         }
@@ -1507,7 +1624,7 @@ impl OpSig {
             Self::Unary
             | Self::Split { .. }
             | Self::Cvt { .. }
-            | Self::WidenNarrow { .. }
+            | Self::Widen { .. }
             | Self::MaskReduce { .. }
             | Self::MaskToBitmask => &["a"],
             Self::SwizzleDynWithinBlocks | Self::SwizzleDyn | Self::SwizzleDynPrecise => {
@@ -1521,6 +1638,7 @@ impl OpSig {
             | Self::Interleave
             | Self::Deinterleave
             | Self::Slide { .. } => &["a", "b"],
+            Self::Narrow { .. } => &["a", "b"],
             Self::ElementRotate { .. } => &["a"],
             Self::ElementShift { .. } => &["a", "padding"],
             Self::Ternary | Self::Select => &["a", "b", "c"],
@@ -1537,9 +1655,9 @@ impl OpSig {
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
             | Self::MaskSet => &[],
-            Self::Unary | Self::Cvt { .. } | Self::WidenNarrow { .. } | Self::MaskReduce { .. } => {
-                &["self"]
-            }
+            Self::Unary | Self::Cvt { .. } | Self::MaskReduce { .. } => &["self"],
+            Self::Widen { .. } => &[],
+            Self::Narrow { .. } => &[],
             Self::SwizzleDynWithinBlocks | Self::SwizzleDyn | Self::SwizzleDynPrecise => {
                 &["self", "indices"]
             }
@@ -1593,7 +1711,8 @@ impl OpSig {
             Self::Select
             | Self::Split { .. }
             | Self::Cvt { .. }
-            | Self::WidenNarrow { .. }
+            | Self::Widen { .. }
+            | Self::Narrow { .. }
             | Self::Shift
             | Self::ElementRotate { .. }
             | Self::ElementShift { .. }
