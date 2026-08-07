@@ -138,60 +138,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_f32x4<const SHIFT: usize>(
-        self,
-        a: f32x4<Self>,
-        b: f32x4<Self>,
-    ) -> f32x4<Self> {
-        self.slide_f32x4::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x4<Avx2>, indices: u8x16<Avx2>) -> f32x4<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x4<Avx2>, indices: u8x16<Avx2>) -> f32x4<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x4<Avx2>, indices: u8x16<Avx2>) -> f32x4<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -309,26 +255,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: f32x4<Avx2>, b: f32x4<Avx2>) -> mask32x4<Avx2> {
                 _mm_castps_si128(_mm_cmple_ps(a.into(), b.into())).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x4<Avx2>, b: f32x4<Avx2>) -> mask32x4<Avx2> {
-                _mm_castps_si128(_mm_cmpge_ps(a.into(), b.into())).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x4<Avx2>, b: f32x4<Avx2>) -> mask32x4<Avx2> {
-                _mm_castps_si128(_mm_cmpgt_ps(a.into(), b.into())).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -719,60 +645,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_i8x16<const SHIFT: usize>(
-        self,
-        a: i8x16<Self>,
-        b: i8x16<Self>,
-    ) -> i8x16<Self> {
-        self.slide_i8x16::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x16<Avx2>, indices: u8x16<Avx2>) -> i8x16<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x16<Avx2>, indices: u8x16<Avx2>) -> i8x16<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x16<Avx2>, indices: u8x16<Avx2>) -> i8x16<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -949,26 +821,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: i8x16<Avx2>, b: i8x16<Avx2>) -> mask8x16<Avx2> {
                 _mm_cmpeq_epi8(_mm_min_epi8(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x16<Avx2>, b: i8x16<Avx2>) -> mask8x16<Avx2> {
-                _mm_cmpeq_epi8(_mm_max_epi8(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x16<Avx2>, b: i8x16<Avx2>) -> mask8x16<Avx2> {
-                _mm_cmpgt_epi8(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -1212,14 +1064,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_u8x16<const SHIFT: usize>(
-        self,
-        a: u8x16<Self>,
-        b: u8x16<Self>,
-    ) -> u8x16<Self> {
-        self.slide_u8x16::<SHIFT>(a, b)
-    }
-    #[inline(always)]
     fn swizzle_dyn_within_blocks_u8x16(self, a: u8x16<Self>, indices: u8x16<Self>) -> u8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1442,32 +1286,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u8x16<Avx2>, b: u8x16<Avx2>) -> mask8x16<Avx2> {
                 _mm_cmpeq_epi8(_mm_min_epu8(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u8x16<Avx2>, b: u8x16<Avx2>) -> mask8x16<Avx2> {
-                _mm_cmpeq_epi8(_mm_max_epu8(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u8x16<Avx2>, b: u8x16<Avx2>) -> mask8x16<Avx2> {
-                {
-                    let sign_bit = _mm_set1_epi8(0x80u8.cast_signed());
-                    let lhs_signed = _mm_xor_si128(a.into(), sign_bit);
-                    let rhs_signed = _mm_xor_si128(b.into(), sign_bit);
-                    _mm_cmpgt_epi8(lhs_signed, rhs_signed)
-                }
-                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -1867,60 +1685,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_i16x8<const SHIFT: usize>(
-        self,
-        a: i16x8<Self>,
-        b: i16x8<Self>,
-    ) -> i16x8<Self> {
-        self.slide_i16x8::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x8<Avx2>, indices: u8x16<Avx2>) -> i16x8<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x8<Avx2>, indices: u8x16<Avx2>) -> i16x8<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x8<Avx2>, indices: u8x16<Avx2>) -> i16x8<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2058,26 +1822,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: i16x8<Avx2>, b: i16x8<Avx2>) -> mask16x8<Avx2> {
                 _mm_cmpeq_epi16(_mm_min_epi16(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x8<Avx2>, b: i16x8<Avx2>) -> mask16x8<Avx2> {
-                _mm_cmpeq_epi16(_mm_max_epi16(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x8<Avx2>, b: i16x8<Avx2>) -> mask16x8<Avx2> {
-                _mm_cmpgt_epi16(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -2358,60 +2102,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_u16x8<const SHIFT: usize>(
-        self,
-        a: u16x8<Self>,
-        b: u16x8<Self>,
-    ) -> u16x8<Self> {
-        self.slide_u16x8::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x8<Avx2>, indices: u8x16<Avx2>) -> u16x8<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x8<Avx2>, indices: u8x16<Avx2>) -> u16x8<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x8<Avx2>, indices: u8x16<Avx2>) -> u16x8<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2555,32 +2245,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u16x8<Avx2>, b: u16x8<Avx2>) -> mask16x8<Avx2> {
                 _mm_cmpeq_epi16(_mm_min_epu16(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x8<Avx2>, b: u16x8<Avx2>) -> mask16x8<Avx2> {
-                _mm_cmpeq_epi16(_mm_max_epu16(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x8<Avx2>, b: u16x8<Avx2>) -> mask16x8<Avx2> {
-                {
-                    let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
-                    let lhs_signed = _mm_xor_si128(a.into(), sign_bit);
-                    let rhs_signed = _mm_xor_si128(b.into(), sign_bit);
-                    _mm_cmpgt_epi16(lhs_signed, rhs_signed)
-                }
-                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -3020,60 +2684,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_i32x4<const SHIFT: usize>(
-        self,
-        a: i32x4<Self>,
-        b: i32x4<Self>,
-    ) -> i32x4<Self> {
-        self.slide_i32x4::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x4<Avx2>, indices: u8x16<Avx2>) -> i32x4<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x4<Avx2>, indices: u8x16<Avx2>) -> i32x4<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x4<Avx2>, indices: u8x16<Avx2>) -> i32x4<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3203,26 +2813,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: i32x4<Avx2>, b: i32x4<Avx2>) -> mask32x4<Avx2> {
                 _mm_cmpeq_epi32(_mm_min_epi32(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x4<Avx2>, b: i32x4<Avx2>) -> mask32x4<Avx2> {
-                _mm_cmpeq_epi32(_mm_max_epi32(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x4<Avx2>, b: i32x4<Avx2>) -> mask32x4<Avx2> {
-                _mm_cmpgt_epi32(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -3501,60 +3091,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_u32x4<const SHIFT: usize>(
-        self,
-        a: u32x4<Self>,
-        b: u32x4<Self>,
-    ) -> u32x4<Self> {
-        self.slide_u32x4::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x4<Avx2>, indices: u8x16<Avx2>) -> u32x4<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x4<Avx2>, indices: u8x16<Avx2>) -> u32x4<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x4<Avx2>, indices: u8x16<Avx2>) -> u32x4<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3690,32 +3226,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u32x4<Avx2>, b: u32x4<Avx2>) -> mask32x4<Avx2> {
                 _mm_cmpeq_epi32(_mm_min_epu32(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x4<Avx2>, b: u32x4<Avx2>) -> mask32x4<Avx2> {
-                _mm_cmpeq_epi32(_mm_max_epu32(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x4<Avx2>, b: u32x4<Avx2>) -> mask32x4<Avx2> {
-                {
-                    let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
-                    let lhs_signed = _mm_xor_si128(a.into(), sign_bit);
-                    let rhs_signed = _mm_xor_si128(b.into(), sign_bit);
-                    _mm_cmpgt_epi32(lhs_signed, rhs_signed)
-                }
-                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -4156,60 +3666,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_f64x2<const SHIFT: usize>(
-        self,
-        a: f64x2<Self>,
-        b: f64x2<Self>,
-    ) -> f64x2<Self> {
-        self.slide_f64x2::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x2<Avx2>, indices: u8x16<Avx2>) -> f64x2<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x2<Avx2>, indices: u8x16<Avx2>) -> f64x2<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x2<Avx2>, indices: u8x16<Avx2>) -> f64x2<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4321,26 +3777,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: f64x2<Avx2>, b: f64x2<Avx2>) -> mask64x2<Avx2> {
                 _mm_castpd_si128(_mm_cmple_pd(a.into(), b.into())).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x2<Avx2>, b: f64x2<Avx2>) -> mask64x2<Avx2> {
-                _mm_castpd_si128(_mm_cmpge_pd(a.into(), b.into())).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x2<Avx2>, b: f64x2<Avx2>) -> mask64x2<Avx2> {
-                _mm_castpd_si128(_mm_cmpgt_pd(a.into(), b.into())).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -4642,60 +4078,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_i64x2<const SHIFT: usize>(
-        self,
-        a: i64x2<Self>,
-        b: i64x2<Self>,
-    ) -> i64x2<Self> {
-        self.slide_i64x2::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i64x2<Avx2>, indices: u8x16<Avx2>) -> i64x2<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i64x2<Avx2>, indices: u8x16<Avx2>) -> i64x2<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i64x2<Avx2>, indices: u8x16<Avx2>) -> i64x2<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4823,22 +4205,6 @@ impl Simd for Avx2 {
         [
             -(i64::le(&a[0usize], &b[0usize]) as i64),
             -(i64::le(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_ge_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
-        [
-            -(i64::ge(&a[0usize], &b[0usize]) as i64),
-            -(i64::ge(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
-        [
-            -(i64::gt(&a[0usize], &b[0usize]) as i64),
-            -(i64::gt(&a[1usize], &b[1usize]) as i64),
         ]
         .simd_into(self)
     }
@@ -5082,60 +4448,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_u64x2<const SHIFT: usize>(
-        self,
-        a: u64x2<Self>,
-        b: u64x2<Self>,
-    ) -> u64x2<Self> {
-        self.slide_u64x2::<SHIFT>(a, b)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u64x2<Avx2>, indices: u8x16<Avx2>) -> u64x2<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u64x2<Avx2>, indices: u8x16<Avx2>) -> u64x2<Avx2> {
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u64x2<Avx2>, indices: u8x16<Avx2>) -> u64x2<Avx2> {
-                let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
-                let result_bytes = u8x16 {
-                    val: crate::support::Aligned128(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5260,22 +4572,6 @@ impl Simd for Avx2 {
         [
             -(u64::le(&a[0usize], &b[0usize]) as i64),
             -(u64::le(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_ge_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        [
-            -(u64::ge(&a[0usize], &b[0usize]) as i64),
-            -(u64::ge(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        [
-            -(u64::gt(&a[0usize], &b[0usize]) as i64),
-            -(u64::gt(&a[1usize], &b[1usize]) as i64),
         ]
         .simd_into(self)
     }
@@ -5689,65 +4985,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x8<Avx2>, indices: u8x32<Avx2>) -> f32x8<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x8<Avx2>, indices: u8x32<Avx2>) -> f32x8<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x8<Avx2>, indices: u8x32<Avx2>) -> f32x8<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5868,26 +5105,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: f32x8<Avx2>, b: f32x8<Avx2>) -> mask32x8<Avx2> {
                 _mm256_castps_si256(_mm256_cmp_ps::<18i32>(a.into(), b.into())).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x8<Avx2>, b: f32x8<Avx2>) -> mask32x8<Avx2> {
-                _mm256_castps_si256(_mm256_cmp_ps::<29i32>(a.into(), b.into())).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x8<Avx2>, b: f32x8<Avx2>) -> mask32x8<Avx2> {
-                _mm256_castps_si256(_mm256_cmp_ps::<30i32>(a.into(), b.into())).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -6263,65 +5480,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x32<Avx2>, indices: u8x32<Avx2>) -> i8x32<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x32<Avx2>, indices: u8x32<Avx2>) -> i8x32<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x32<Avx2>, indices: u8x32<Avx2>) -> i8x32<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6532,26 +5690,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: i8x32<Avx2>, b: i8x32<Avx2>) -> mask8x32<Avx2> {
                 _mm256_cmpeq_epi8(_mm256_min_epi8(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x32<Avx2>, b: i8x32<Avx2>) -> mask8x32<Avx2> {
-                _mm256_cmpeq_epi8(_mm256_max_epi8(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x32<Avx2>, b: i8x32<Avx2>) -> mask8x32<Avx2> {
-                _mm256_cmpgt_epi8(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -7070,32 +6208,6 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn simd_ge_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u8x32<Avx2>, b: u8x32<Avx2>) -> mask8x32<Avx2> {
-                _mm256_cmpeq_epi8(_mm256_max_epu8(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u8x32<Avx2>, b: u8x32<Avx2>) -> mask8x32<Avx2> {
-                {
-                    let sign_bit = _mm256_set1_epi8(0x80u8.cast_signed());
-                    let lhs_signed = _mm256_xor_si256(a.into(), sign_bit);
-                    let rhs_signed = _mm256_xor_si256(b.into(), sign_bit);
-                    _mm256_cmpgt_epi8(lhs_signed, rhs_signed)
-                }
-                .simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
     fn zip_low_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -7506,69 +6618,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_i16x16(
-        self,
-        a: i16x16<Self>,
-        indices: u8x32<Self>,
-    ) -> i16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x16<Avx2>, indices: u8x32<Avx2>) -> i16x16<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i16x16(self, a: i16x16<Self>, indices: u8x32<Self>) -> i16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x16<Avx2>, indices: u8x32<Avx2>) -> i16x16<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i16x16(self, a: i16x16<Self>, indices: u8x32<Self>) -> i16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x16<Avx2>, indices: u8x32<Avx2>) -> i16x16<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -7722,26 +6771,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: i16x16<Avx2>, b: i16x16<Avx2>) -> mask16x16<Avx2> {
                 _mm256_cmpeq_epi16(_mm256_min_epi16(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x16<Avx2>, b: i16x16<Avx2>) -> mask16x16<Avx2> {
-                _mm256_cmpeq_epi16(_mm256_max_epi16(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x16<Avx2>, b: i16x16<Avx2>) -> mask16x16<Avx2> {
-                _mm256_cmpgt_epi16(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -8033,69 +7062,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_u16x16(
-        self,
-        a: u16x16<Self>,
-        indices: u8x32<Self>,
-    ) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x16<Avx2>, indices: u8x32<Avx2>) -> u16x16<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u16x16(self, a: u16x16<Self>, indices: u8x32<Self>) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x16<Avx2>, indices: u8x32<Avx2>) -> u16x16<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u16x16(self, a: u16x16<Self>, indices: u8x32<Self>) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x16<Avx2>, indices: u8x32<Avx2>) -> u16x16<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -8255,32 +7221,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u16x16<Avx2>, b: u16x16<Avx2>) -> mask16x16<Avx2> {
                 _mm256_cmpeq_epi16(_mm256_min_epu16(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x16<Avx2>, b: u16x16<Avx2>) -> mask16x16<Avx2> {
-                _mm256_cmpeq_epi16(_mm256_max_epu16(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x16<Avx2>, b: u16x16<Avx2>) -> mask16x16<Avx2> {
-                {
-                    let sign_bit = _mm256_set1_epi16(0x8000u16.cast_signed());
-                    let lhs_signed = _mm256_xor_si256(a.into(), sign_bit);
-                    let rhs_signed = _mm256_xor_si256(b.into(), sign_bit);
-                    _mm256_cmpgt_epi16(lhs_signed, rhs_signed)
-                }
-                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -8747,65 +7687,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x8<Avx2>, indices: u8x32<Avx2>) -> i32x8<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x8<Avx2>, indices: u8x32<Avx2>) -> i32x8<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x8<Avx2>, indices: u8x32<Avx2>) -> i32x8<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -8935,26 +7816,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: i32x8<Avx2>, b: i32x8<Avx2>) -> mask32x8<Avx2> {
                 _mm256_cmpeq_epi32(_mm256_min_epi32(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x8<Avx2>, b: i32x8<Avx2>) -> mask32x8<Avx2> {
-                _mm256_cmpeq_epi32(_mm256_max_epi32(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x8<Avx2>, b: i32x8<Avx2>) -> mask32x8<Avx2> {
-                _mm256_cmpgt_epi32(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -9230,65 +8091,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x8<Avx2>, indices: u8x32<Avx2>) -> u32x8<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x8<Avx2>, indices: u8x32<Avx2>) -> u32x8<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x8<Avx2>, indices: u8x32<Avx2>) -> u32x8<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9424,32 +8226,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u32x8<Avx2>, b: u32x8<Avx2>) -> mask32x8<Avx2> {
                 _mm256_cmpeq_epi32(_mm256_min_epu32(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x8<Avx2>, b: u32x8<Avx2>) -> mask32x8<Avx2> {
-                _mm256_cmpeq_epi32(_mm256_max_epu32(a.into(), b.into()), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x8<Avx2>, b: u32x8<Avx2>) -> mask32x8<Avx2> {
-                {
-                    let sign_bit = _mm256_set1_epi32(0x80000000u32.cast_signed());
-                    let lhs_signed = _mm256_xor_si256(a.into(), sign_bit);
-                    let rhs_signed = _mm256_xor_si256(b.into(), sign_bit);
-                    _mm256_cmpgt_epi32(lhs_signed, rhs_signed)
-                }
-                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -9903,65 +8679,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x4<Avx2>, indices: u8x32<Avx2>) -> f64x4<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x4<Avx2>, indices: u8x32<Avx2>) -> f64x4<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x4<Avx2>, indices: u8x32<Avx2>) -> f64x4<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10076,26 +8793,6 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: f64x4<Avx2>, b: f64x4<Avx2>) -> mask64x4<Avx2> {
                 _mm256_castpd_si256(_mm256_cmp_pd::<18i32>(a.into(), b.into())).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_ge_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x4<Avx2>, b: f64x4<Avx2>) -> mask64x4<Avx2> {
-                _mm256_castpd_si256(_mm256_cmp_pd::<29i32>(a.into(), b.into())).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn simd_gt_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x4<Avx2>, b: f64x4<Avx2>) -> mask64x4<Avx2> {
-                _mm256_castpd_si256(_mm256_cmp_pd::<30i32>(a.into(), b.into())).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -10392,65 +9089,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i64x4<Avx2>, indices: u8x32<Avx2>) -> i64x4<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i64x4<Avx2>, indices: u8x32<Avx2>) -> i64x4<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i64x4<Avx2>, indices: u8x32<Avx2>) -> i64x4<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10587,26 +9225,6 @@ impl Simd for Avx2 {
             -(i64::le(&a[1usize], &b[1usize]) as i64),
             -(i64::le(&a[2usize], &b[2usize]) as i64),
             -(i64::le(&a[3usize], &b[3usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_ge_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
-        [
-            -(i64::ge(&a[0usize], &b[0usize]) as i64),
-            -(i64::ge(&a[1usize], &b[1usize]) as i64),
-            -(i64::ge(&a[2usize], &b[2usize]) as i64),
-            -(i64::ge(&a[3usize], &b[3usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
-        [
-            -(i64::gt(&a[0usize], &b[0usize]) as i64),
-            -(i64::gt(&a[1usize], &b[1usize]) as i64),
-            -(i64::gt(&a[2usize], &b[2usize]) as i64),
-            -(i64::gt(&a[3usize], &b[3usize]) as i64),
         ]
         .simd_into(self)
     }
@@ -10847,65 +9465,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u64x4<Avx2>, indices: u8x32<Avx2>) -> u64x4<Avx2> {
-                let result = _mm256_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u64x4<Avx2>, indices: u8x32<Avx2>) -> u64x4<Avx2> {
-                let bytes = Bytes::to_bytes(a).val.0;
-                let indices = indices.into();
-                let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
-                Bytes::from_bytes(u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                })
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u64x4<Avx2>, indices: u8x32<Avx2>) -> u64x4<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
-                let result_bytes = u8x32 {
-                    val: crate::support::Aligned256(result),
-                    simd: token,
-                };
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
     fn add_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11036,26 +9595,6 @@ impl Simd for Avx2 {
             -(u64::le(&a[1usize], &b[1usize]) as i64),
             -(u64::le(&a[2usize], &b[2usize]) as i64),
             -(u64::le(&a[3usize], &b[3usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_ge_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
-        [
-            -(u64::ge(&a[0usize], &b[0usize]) as i64),
-            -(u64::ge(&a[1usize], &b[1usize]) as i64),
-            -(u64::ge(&a[2usize], &b[2usize]) as i64),
-            -(u64::ge(&a[3usize], &b[3usize]) as i64),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn simd_gt_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
-        [
-            -(u64::gt(&a[0usize], &b[0usize]) as i64),
-            -(u64::gt(&a[1usize], &b[1usize]) as i64),
-            -(u64::gt(&a[2usize], &b[2usize]) as i64),
-            -(u64::gt(&a[3usize], &b[3usize]) as i64),
         ]
         .simd_into(self)
     }
@@ -11411,11 +9950,6 @@ impl Simd for Avx2 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn splat_f32x16(self, val: f32) -> f32x16<Self> {
-        let half = self.splat_f32x8(val);
-        self.combine_f32x8(half, half)
-    }
-    #[inline(always)]
     fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
         if SHIFT >= 16usize {
             return b;
@@ -11432,281 +9966,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_f32x16<const SHIFT: usize>(
-        self,
-        a: f32x16<Self>,
-        b: f32x16<Self>,
-    ) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(
-            self.slide_within_blocks_f32x8::<SHIFT>(a0, b0),
-            self.slide_within_blocks_f32x8::<SHIFT>(a1, b1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_f32x16(
-        self,
-        a: f32x16<Self>,
-        indices: u8x64<Self>,
-    ) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (indices0, indices1) = self.split_u8x64(indices);
-        self.combine_f32x8(
-            self.swizzle_dyn_within_blocks_f32x8(a0, indices0),
-            self.swizzle_dyn_within_blocks_f32x8(a1, indices1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self> {
-        self.swizzle_dyn_precise_f32x16(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x16<Avx2>, indices: u8x64<Avx2>) -> f32x16<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.abs_f32x8(a0), self.abs_f32x8(a1))
-    }
-    #[inline(always)]
-    fn neg_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.neg_f32x8(a0), self.neg_f32x8(a1))
-    }
-    #[inline(always)]
-    fn sqrt_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.sqrt_f32x8(a0), self.sqrt_f32x8(a1))
-    }
-    #[inline(always)]
-    fn approximate_recip_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(
-            self.approximate_recip_f32x8(a0),
-            self.approximate_recip_f32x8(a1),
-        )
-    }
-    #[inline(always)]
-    fn add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.add_f32x8(a0, b0), self.add_f32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn sub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.sub_f32x8(a0, b0), self.sub_f32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn mul_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.mul_f32x8(a0, b0), self.mul_f32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn div_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.div_f32x8(a0, b0), self.div_f32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn copysign_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.copysign_f32x8(a0, b0), self.copysign_f32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_eq_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_mask32x8(self.simd_eq_f32x8(a0, b0), self.simd_eq_f32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_lt_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_mask32x8(self.simd_lt_f32x8(a0, b0), self.simd_lt_f32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_le_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_mask32x8(self.simd_le_f32x8(a0, b0), self.simd_le_f32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_ge_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_mask32x8(self.simd_ge_f32x8(a0, b0), self.simd_ge_f32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_gt_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_mask32x8(self.simd_gt_f32x8(a0, b0), self.simd_gt_f32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn zip_low_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, _) = self.split_f32x16(a);
-        let (b0, _) = self.split_f32x16(b);
-        self.combine_f32x8(self.zip_low_f32x8(a0, b0), self.zip_high_f32x8(a0, b0))
-    }
-    #[inline(always)]
-    fn zip_high_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (_, a1) = self.split_f32x16(a);
-        let (_, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.zip_low_f32x8(a1, b1), self.zip_high_f32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn unzip_low_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.unzip_low_f32x8(a0, a1), self.unzip_low_f32x8(b0, b1))
-    }
-    #[inline(always)]
-    fn unzip_high_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.unzip_high_f32x8(a0, a1), self.unzip_high_f32x8(b0, b1))
-    }
-    #[inline(always)]
-    fn interleave_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> (f32x16<Self>, f32x16<Self>) {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        let lo_lo = self.zip_low_f32x8(a0, b0);
-        let lo_hi = self.zip_high_f32x8(a0, b0);
-        let hi_lo = self.zip_low_f32x8(a1, b1);
-        let hi_hi = self.zip_high_f32x8(a1, b1);
-        (
-            self.combine_f32x8(lo_lo, lo_hi),
-            self.combine_f32x8(hi_lo, hi_hi),
-        )
-    }
-    #[inline(always)]
-    fn deinterleave_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> (f32x16<Self>, f32x16<Self>) {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        let lo_even = self.unzip_low_f32x8(a0, a1);
-        let lo_odd = self.unzip_high_f32x8(a0, a1);
-        let hi_even = self.unzip_low_f32x8(b0, b1);
-        let hi_odd = self.unzip_high_f32x8(b0, b1);
-        (
-            self.combine_f32x8(lo_even, hi_even),
-            self.combine_f32x8(lo_odd, hi_odd),
-        )
-    }
-    #[inline(always)]
-    fn max_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.max_f32x8(a0, b0), self.max_f32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.min_f32x8(a0, b0), self.min_f32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn max_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(
-            self.max_precise_f32x8(a0, b0),
-            self.max_precise_f32x8(a1, b1),
-        )
-    }
-    #[inline(always)]
-    fn min_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(
-            self.min_precise_f32x8(a0, b0),
-            self.min_precise_f32x8(a1, b1),
-        )
-    }
-    #[inline(always)]
-    fn mul_add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        let (c0, c1) = self.split_f32x16(c);
-        self.combine_f32x8(
-            self.mul_add_f32x8(a0, b0, c0),
-            self.mul_add_f32x8(a1, b1, c1),
-        )
-    }
-    #[inline(always)]
-    fn mul_sub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        let (c0, c1) = self.split_f32x16(c);
-        self.combine_f32x8(
-            self.mul_sub_f32x8(a0, b0, c0),
-            self.mul_sub_f32x8(a1, b1, c1),
-        )
-    }
-    #[inline(always)]
-    fn floor_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.floor_f32x8(a0), self.floor_f32x8(a1))
-    }
-    #[inline(always)]
-    fn ceil_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.ceil_f32x8(a0), self.ceil_f32x8(a1))
-    }
-    #[inline(always)]
-    fn round_ties_even_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(
-            self.round_ties_even_f32x8(a0),
-            self.round_ties_even_f32x8(a1),
-        )
-    }
-    #[inline(always)]
-    fn fract_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.fract_f32x8(a0), self.fract_f32x8(a1))
-    }
-    #[inline(always)]
-    fn trunc_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.trunc_f32x8(a0), self.trunc_f32x8(a1))
-    }
-    #[inline(always)]
-    fn select_f32x16(self, a: mask32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        let (c0, c1) = self.split_f32x16(c);
-        self.combine_f32x8(self.select_f32x8(a0, b0, c0), self.select_f32x8(a1, b1, c1))
-    }
-    #[inline(always)]
     fn split_f32x16(self, a: f32x16<Self>) -> (f32x8<Self>, f32x8<Self>) {
         (
             f32x8 {
@@ -11718,44 +9977,6 @@ impl Simd for Avx2 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn widen_f32x16(self, a: f32x16<Self>) -> (f64x8<Self>, f64x8<Self>) {
-        let (a0, a1) = self.split_f32x16(a);
-        let (a00, a01) = self.widen_f32x8(a0);
-        let (a10, a11) = self.widen_f32x8(a1);
-        (self.combine_f64x4(a00, a01), self.combine_f64x4(a10, a11))
-    }
-    #[inline(always)]
-    fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_u32x8(self.cvt_u32_f32x8(a0), self.cvt_u32_f32x8(a1))
-    }
-    #[inline(always)]
-    fn cvt_u32_precise_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_u32x8(
-            self.cvt_u32_precise_f32x8(a0),
-            self.cvt_u32_precise_f32x8(a1),
-        )
-    }
-    #[inline(always)]
-    fn cvt_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_i32x8(self.cvt_i32_f32x8(a0), self.cvt_i32_f32x8(a1))
-    }
-    #[inline(always)]
-    fn cvt_i32_precise_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_i32x8(
-            self.cvt_i32_precise_f32x8(a0),
-            self.cvt_i32_precise_f32x8(a1),
-        )
-    }
-    #[inline(always)]
-    fn splat_i8x64(self, val: i8) -> i8x64<Self> {
-        let half = self.splat_i8x32(val);
-        self.combine_i8x32(half, half)
     }
     #[inline(always)]
     fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -11774,221 +9995,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_i8x64<const SHIFT: usize>(
-        self,
-        a: i8x64<Self>,
-        b: i8x64<Self>,
-    ) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(
-            self.slide_within_blocks_i8x32::<SHIFT>(a0, b0),
-            self.slide_within_blocks_i8x32::<SHIFT>(a1, b1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (indices0, indices1) = self.split_u8x64(indices);
-        self.combine_i8x32(
-            self.swizzle_dyn_within_blocks_i8x32(a0, indices0),
-            self.swizzle_dyn_within_blocks_i8x32(a1, indices1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
-        self.swizzle_dyn_precise_i8x64(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x64<Avx2>, indices: u8x64<Avx2>) -> i8x64<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.add_i8x32(a0, b0), self.add_i8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn sub_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.sub_i8x32(a0, b0), self.sub_i8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn mul_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.mul_i8x32(a0, b0), self.mul_i8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn and_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.and_i8x32(a0, b0), self.and_i8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn or_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.or_i8x32(a0, b0), self.or_i8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn xor_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.xor_i8x32(a0, b0), self.xor_i8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn not_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.not_i8x32(a0), self.not_i8x32(a1))
-    }
-    #[inline(always)]
-    fn shl_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.shl_i8x32(a0, shift), self.shl_i8x32(a1, shift))
-    }
-    #[inline(always)]
-    fn shlv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.shlv_i8x32(a0, b0), self.shlv_i8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn shr_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.shr_i8x32(a0, shift), self.shr_i8x32(a1, shift))
-    }
-    #[inline(always)]
-    fn shrv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.shrv_i8x32(a0, b0), self.shrv_i8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_eq_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_mask8x32(self.simd_eq_i8x32(a0, b0), self.simd_eq_i8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_lt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_mask8x32(self.simd_lt_i8x32(a0, b0), self.simd_lt_i8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_le_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_mask8x32(self.simd_le_i8x32(a0, b0), self.simd_le_i8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_ge_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_mask8x32(self.simd_ge_i8x32(a0, b0), self.simd_ge_i8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_gt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_mask8x32(self.simd_gt_i8x32(a0, b0), self.simd_gt_i8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn zip_low_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, _) = self.split_i8x64(a);
-        let (b0, _) = self.split_i8x64(b);
-        self.combine_i8x32(self.zip_low_i8x32(a0, b0), self.zip_high_i8x32(a0, b0))
-    }
-    #[inline(always)]
-    fn zip_high_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (_, a1) = self.split_i8x64(a);
-        let (_, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.zip_low_i8x32(a1, b1), self.zip_high_i8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn unzip_low_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.unzip_low_i8x32(a0, a1), self.unzip_low_i8x32(b0, b1))
-    }
-    #[inline(always)]
-    fn unzip_high_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.unzip_high_i8x32(a0, a1), self.unzip_high_i8x32(b0, b1))
-    }
-    #[inline(always)]
-    fn interleave_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> (i8x64<Self>, i8x64<Self>) {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        let lo_lo = self.zip_low_i8x32(a0, b0);
-        let lo_hi = self.zip_high_i8x32(a0, b0);
-        let hi_lo = self.zip_low_i8x32(a1, b1);
-        let hi_hi = self.zip_high_i8x32(a1, b1);
-        (
-            self.combine_i8x32(lo_lo, lo_hi),
-            self.combine_i8x32(hi_lo, hi_hi),
-        )
-    }
-    #[inline(always)]
-    fn deinterleave_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> (i8x64<Self>, i8x64<Self>) {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        let lo_even = self.unzip_low_i8x32(a0, a1);
-        let lo_odd = self.unzip_high_i8x32(a0, a1);
-        let hi_even = self.unzip_low_i8x32(b0, b1);
-        let hi_odd = self.unzip_high_i8x32(b0, b1);
-        (
-            self.combine_i8x32(lo_even, hi_even),
-            self.combine_i8x32(lo_odd, hi_odd),
-        )
-    }
-    #[inline(always)]
-    fn select_i8x64(self, a: mask8x64<Self>, b: i8x64<Self>, c: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        let (c0, c1) = self.split_i8x64(c);
-        self.combine_i8x32(self.select_i8x32(a0, b0, c0), self.select_i8x32(a1, b1, c1))
-    }
-    #[inline(always)]
-    fn min_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.min_i8x32(a0, b0), self.min_i8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn max_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.max_i8x32(a0, b0), self.max_i8x32(a1, b1))
-    }
-    #[inline(always)]
     fn split_i8x64(self, a: i8x64<Self>) -> (i8x32<Self>, i8x32<Self>) {
         (
             i8x32 {
@@ -12000,23 +10006,6 @@ impl Simd for Avx2 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn neg_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.neg_i8x32(a0), self.neg_i8x32(a1))
-    }
-    #[inline(always)]
-    fn widen_i8x64(self, a: i8x64<Self>) -> (i16x32<Self>, i16x32<Self>) {
-        let (a0, a1) = self.split_i8x64(a);
-        let (a00, a01) = self.widen_i8x32(a0);
-        let (a10, a11) = self.widen_i8x32(a1);
-        (self.combine_i16x16(a00, a01), self.combine_i16x16(a10, a11))
-    }
-    #[inline(always)]
-    fn splat_u8x64(self, val: u8) -> u8x64<Self> {
-        let half = self.splat_u8x32(val);
-        self.combine_u8x32(half, half)
     }
     #[inline(always)]
     fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
@@ -12033,28 +10022,6 @@ impl Simd for Avx2 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_u8x64<const SHIFT: usize>(
-        self,
-        a: u8x64<Self>,
-        b: u8x64<Self>,
-    ) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(
-            self.slide_within_blocks_u8x32::<SHIFT>(a0, b0),
-            self.slide_within_blocks_u8x32::<SHIFT>(a1, b1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u8x64(self, a: u8x64<Self>, indices: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (indices0, indices1) = self.split_u8x64(indices);
-        self.combine_u8x32(
-            self.swizzle_dyn_within_blocks_u8x32(a0, indices0),
-            self.swizzle_dyn_within_blocks_u8x32(a1, indices1),
-        )
     }
     #[inline(always)]
     fn swizzle_dyn_u8x64(self, a: u8x64<Self>, indices: u8x64<Self>) -> u8x64<Self> {
@@ -12088,168 +10055,6 @@ impl Simd for Avx2 {
         kernel(self, a, indices)
     }
     #[inline(always)]
-    fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.add_u8x32(a0, b0), self.add_u8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn sub_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.sub_u8x32(a0, b0), self.sub_u8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn mul_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.mul_u8x32(a0, b0), self.mul_u8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn and_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.and_u8x32(a0, b0), self.and_u8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn or_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.or_u8x32(a0, b0), self.or_u8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn xor_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.xor_u8x32(a0, b0), self.xor_u8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn not_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u8x32(self.not_u8x32(a0), self.not_u8x32(a1))
-    }
-    #[inline(always)]
-    fn shl_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u8x32(self.shl_u8x32(a0, shift), self.shl_u8x32(a1, shift))
-    }
-    #[inline(always)]
-    fn shlv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.shlv_u8x32(a0, b0), self.shlv_u8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn shr_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u8x32(self.shr_u8x32(a0, shift), self.shr_u8x32(a1, shift))
-    }
-    #[inline(always)]
-    fn shrv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.shrv_u8x32(a0, b0), self.shrv_u8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_eq_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_mask8x32(self.simd_eq_u8x32(a0, b0), self.simd_eq_u8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_lt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_mask8x32(self.simd_lt_u8x32(a0, b0), self.simd_lt_u8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_le_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_mask8x32(self.simd_le_u8x32(a0, b0), self.simd_le_u8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_ge_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_mask8x32(self.simd_ge_u8x32(a0, b0), self.simd_ge_u8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_gt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_mask8x32(self.simd_gt_u8x32(a0, b0), self.simd_gt_u8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn zip_low_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, _) = self.split_u8x64(a);
-        let (b0, _) = self.split_u8x64(b);
-        self.combine_u8x32(self.zip_low_u8x32(a0, b0), self.zip_high_u8x32(a0, b0))
-    }
-    #[inline(always)]
-    fn zip_high_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (_, a1) = self.split_u8x64(a);
-        let (_, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.zip_low_u8x32(a1, b1), self.zip_high_u8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn unzip_low_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.unzip_low_u8x32(a0, a1), self.unzip_low_u8x32(b0, b1))
-    }
-    #[inline(always)]
-    fn unzip_high_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.unzip_high_u8x32(a0, a1), self.unzip_high_u8x32(b0, b1))
-    }
-    #[inline(always)]
-    fn interleave_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> (u8x64<Self>, u8x64<Self>) {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        let lo_lo = self.zip_low_u8x32(a0, b0);
-        let lo_hi = self.zip_high_u8x32(a0, b0);
-        let hi_lo = self.zip_low_u8x32(a1, b1);
-        let hi_hi = self.zip_high_u8x32(a1, b1);
-        (
-            self.combine_u8x32(lo_lo, lo_hi),
-            self.combine_u8x32(hi_lo, hi_hi),
-        )
-    }
-    #[inline(always)]
-    fn deinterleave_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> (u8x64<Self>, u8x64<Self>) {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        let lo_even = self.unzip_low_u8x32(a0, a1);
-        let lo_odd = self.unzip_high_u8x32(a0, a1);
-        let hi_even = self.unzip_low_u8x32(b0, b1);
-        let hi_odd = self.unzip_high_u8x32(b0, b1);
-        (
-            self.combine_u8x32(lo_even, hi_even),
-            self.combine_u8x32(lo_odd, hi_odd),
-        )
-    }
-    #[inline(always)]
-    fn select_u8x64(self, a: mask8x64<Self>, b: u8x64<Self>, c: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        let (c0, c1) = self.split_u8x64(c);
-        self.combine_u8x32(self.select_u8x32(a0, b0, c0), self.select_u8x32(a1, b1, c1))
-    }
-    #[inline(always)]
-    fn min_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.min_u8x32(a0, b0), self.min_u8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn max_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.max_u8x32(a0, b0), self.max_u8x32(a1, b1))
-    }
-    #[inline(always)]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>) {
         (
             u8x32 {
@@ -12261,18 +10066,6 @@ impl Simd for Avx2 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn widen_u8x64(self, a: u8x64<Self>) -> (u16x32<Self>, u16x32<Self>) {
-        let (a0, a1) = self.split_u8x64(a);
-        let (a00, a01) = self.widen_u8x32(a0);
-        let (a10, a11) = self.widen_u8x32(a1);
-        (self.combine_u16x16(a00, a01), self.combine_u16x16(a10, a11))
-    }
-    #[inline(always)]
-    fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
-        let half = self.splat_mask8x32(val);
-        self.combine_mask8x32(half, half)
     }
     #[inline(always)]
     fn from_bitmask_mask8x64(self, bits: u64) -> mask8x64<Self> {
@@ -12316,13 +10109,6 @@ impl Simd for Avx2 {
         kernel(self, bits)
     }
     #[inline(always)]
-    fn to_bitmask_mask8x64(self, a: mask8x64<Self>) -> u64 {
-        let (lo, hi) = self.split_mask8x64(a);
-        let lo = self.to_bitmask_mask8x32(lo);
-        let hi = self.to_bitmask_mask8x32(hi);
-        lo | (hi << 32usize)
-    }
-    #[inline(always)]
     fn set_mask8x64(self, a: &mut mask8x64<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 64usize,
@@ -12332,70 +10118,6 @@ impl Simd for Avx2 {
         let mut lanes: [i8; 64usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(self.and_mask8x32(a0, b0), self.and_mask8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn or_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(self.or_mask8x32(a0, b0), self.or_mask8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn xor_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(self.xor_mask8x32(a0, b0), self.xor_mask8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn not_mask8x64(self, a: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        self.combine_mask8x32(self.not_mask8x32(a0), self.not_mask8x32(a1))
-    }
-    #[inline(always)]
-    fn select_mask8x64(
-        self,
-        a: mask8x64<Self>,
-        b: mask8x64<Self>,
-        c: mask8x64<Self>,
-    ) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        let (c0, c1) = self.split_mask8x64(c);
-        self.combine_mask8x32(
-            self.select_mask8x32(a0, b0, c0),
-            self.select_mask8x32(a1, b1, c1),
-        )
-    }
-    #[inline(always)]
-    fn simd_eq_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(self.simd_eq_mask8x32(a0, b0), self.simd_eq_mask8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn any_true_mask8x64(self, a: mask8x64<Self>) -> bool {
-        let (a0, a1) = self.split_mask8x64(a);
-        self.any_true_mask8x32(a0) || self.any_true_mask8x32(a1)
-    }
-    #[inline(always)]
-    fn all_true_mask8x64(self, a: mask8x64<Self>) -> bool {
-        let (a0, a1) = self.split_mask8x64(a);
-        self.all_true_mask8x32(a0) && self.all_true_mask8x32(a1)
-    }
-    #[inline(always)]
-    fn any_false_mask8x64(self, a: mask8x64<Self>) -> bool {
-        let (a0, a1) = self.split_mask8x64(a);
-        self.any_false_mask8x32(a0) || self.any_false_mask8x32(a1)
-    }
-    #[inline(always)]
-    fn all_false_mask8x64(self, a: mask8x64<Self>) -> bool {
-        let (a0, a1) = self.split_mask8x64(a);
-        self.all_false_mask8x32(a0) && self.all_false_mask8x32(a1)
     }
     #[inline(always)]
     fn split_mask8x64(self, a: mask8x64<Self>) -> (mask8x32<Self>, mask8x32<Self>) {
@@ -12409,11 +10131,6 @@ impl Simd for Avx2 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn splat_i16x32(self, val: i16) -> i16x32<Self> {
-        let half = self.splat_i16x16(val);
-        self.combine_i16x16(half, half)
     }
     #[inline(always)]
     fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -12432,231 +10149,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_i16x32<const SHIFT: usize>(
-        self,
-        a: i16x32<Self>,
-        b: i16x32<Self>,
-    ) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(
-            self.slide_within_blocks_i16x16::<SHIFT>(a0, b0),
-            self.slide_within_blocks_i16x16::<SHIFT>(a1, b1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i16x32(
-        self,
-        a: i16x32<Self>,
-        indices: u8x64<Self>,
-    ) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (indices0, indices1) = self.split_u8x64(indices);
-        self.combine_i16x16(
-            self.swizzle_dyn_within_blocks_i16x16(a0, indices0),
-            self.swizzle_dyn_within_blocks_i16x16(a1, indices1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i16x32(self, a: i16x32<Self>, indices: u8x64<Self>) -> i16x32<Self> {
-        self.swizzle_dyn_precise_i16x32(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i16x32(self, a: i16x32<Self>, indices: u8x64<Self>) -> i16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x32<Avx2>, indices: u8x64<Avx2>) -> i16x32<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.add_i16x16(a0, b0), self.add_i16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn sub_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.sub_i16x16(a0, b0), self.sub_i16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn mul_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.mul_i16x16(a0, b0), self.mul_i16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn and_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.and_i16x16(a0, b0), self.and_i16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn or_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.or_i16x16(a0, b0), self.or_i16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn xor_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.xor_i16x16(a0, b0), self.xor_i16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn not_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.not_i16x16(a0), self.not_i16x16(a1))
-    }
-    #[inline(always)]
-    fn shl_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.shl_i16x16(a0, shift), self.shl_i16x16(a1, shift))
-    }
-    #[inline(always)]
-    fn shlv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.shlv_i16x16(a0, b0), self.shlv_i16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn shr_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.shr_i16x16(a0, shift), self.shr_i16x16(a1, shift))
-    }
-    #[inline(always)]
-    fn shrv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.shrv_i16x16(a0, b0), self.shrv_i16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_eq_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_mask16x16(self.simd_eq_i16x16(a0, b0), self.simd_eq_i16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_lt_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_mask16x16(self.simd_lt_i16x16(a0, b0), self.simd_lt_i16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_le_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_mask16x16(self.simd_le_i16x16(a0, b0), self.simd_le_i16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_ge_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_mask16x16(self.simd_ge_i16x16(a0, b0), self.simd_ge_i16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_gt_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_mask16x16(self.simd_gt_i16x16(a0, b0), self.simd_gt_i16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn zip_low_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, _) = self.split_i16x32(a);
-        let (b0, _) = self.split_i16x32(b);
-        self.combine_i16x16(self.zip_low_i16x16(a0, b0), self.zip_high_i16x16(a0, b0))
-    }
-    #[inline(always)]
-    fn zip_high_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (_, a1) = self.split_i16x32(a);
-        let (_, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.zip_low_i16x16(a1, b1), self.zip_high_i16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn unzip_low_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.unzip_low_i16x16(a0, a1), self.unzip_low_i16x16(b0, b1))
-    }
-    #[inline(always)]
-    fn unzip_high_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(
-            self.unzip_high_i16x16(a0, a1),
-            self.unzip_high_i16x16(b0, b1),
-        )
-    }
-    #[inline(always)]
-    fn interleave_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> (i16x32<Self>, i16x32<Self>) {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        let lo_lo = self.zip_low_i16x16(a0, b0);
-        let lo_hi = self.zip_high_i16x16(a0, b0);
-        let hi_lo = self.zip_low_i16x16(a1, b1);
-        let hi_hi = self.zip_high_i16x16(a1, b1);
-        (
-            self.combine_i16x16(lo_lo, lo_hi),
-            self.combine_i16x16(hi_lo, hi_hi),
-        )
-    }
-    #[inline(always)]
-    fn deinterleave_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> (i16x32<Self>, i16x32<Self>) {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        let lo_even = self.unzip_low_i16x16(a0, a1);
-        let lo_odd = self.unzip_high_i16x16(a0, a1);
-        let hi_even = self.unzip_low_i16x16(b0, b1);
-        let hi_odd = self.unzip_high_i16x16(b0, b1);
-        (
-            self.combine_i16x16(lo_even, hi_even),
-            self.combine_i16x16(lo_odd, hi_odd),
-        )
-    }
-    #[inline(always)]
-    fn select_i16x32(self, a: mask16x32<Self>, b: i16x32<Self>, c: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        let (c0, c1) = self.split_i16x32(c);
-        self.combine_i16x16(
-            self.select_i16x16(a0, b0, c0),
-            self.select_i16x16(a1, b1, c1),
-        )
-    }
-    #[inline(always)]
-    fn min_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.min_i16x16(a0, b0), self.min_i16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn max_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.max_i16x16(a0, b0), self.max_i16x16(a1, b1))
-    }
-    #[inline(always)]
     fn split_i16x32(self, a: i16x32<Self>) -> (i16x16<Self>, i16x16<Self>) {
         (
             i16x16 {
@@ -12668,47 +10160,6 @@ impl Simd for Avx2 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn neg_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.neg_i16x16(a0), self.neg_i16x16(a1))
-    }
-    #[inline(always)]
-    fn widen_i16x32(self, a: i16x32<Self>) -> (i32x16<Self>, i32x16<Self>) {
-        let (a0, a1) = self.split_i16x32(a);
-        let (a00, a01) = self.widen_i16x16(a0);
-        let (a10, a11) = self.widen_i16x16(a1);
-        (self.combine_i32x8(a00, a01), self.combine_i32x8(a10, a11))
-    }
-    #[inline(always)]
-    fn narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i8x32(self.narrow_i16x16(a0, a1), self.narrow_i16x16(b0, b1))
-    }
-    #[inline(always)]
-    fn saturating_narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i8x32(
-            self.saturating_narrow_i16x16(a0, a1),
-            self.saturating_narrow_i16x16(b0, b1),
-        )
-    }
-    #[inline(always)]
-    fn relaxed_narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i8x32(
-            self.relaxed_narrow_i16x16(a0, a1),
-            self.relaxed_narrow_i16x16(b0, b1),
-        )
-    }
-    #[inline(always)]
-    fn splat_u16x32(self, val: u16) -> u16x32<Self> {
-        let half = self.splat_u16x16(val);
-        self.combine_u16x16(half, half)
     }
     #[inline(always)]
     fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -12727,231 +10178,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_u16x32<const SHIFT: usize>(
-        self,
-        a: u16x32<Self>,
-        b: u16x32<Self>,
-    ) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(
-            self.slide_within_blocks_u16x16::<SHIFT>(a0, b0),
-            self.slide_within_blocks_u16x16::<SHIFT>(a1, b1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u16x32(
-        self,
-        a: u16x32<Self>,
-        indices: u8x64<Self>,
-    ) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (indices0, indices1) = self.split_u8x64(indices);
-        self.combine_u16x16(
-            self.swizzle_dyn_within_blocks_u16x16(a0, indices0),
-            self.swizzle_dyn_within_blocks_u16x16(a1, indices1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u16x32(self, a: u16x32<Self>, indices: u8x64<Self>) -> u16x32<Self> {
-        self.swizzle_dyn_precise_u16x32(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u16x32(self, a: u16x32<Self>, indices: u8x64<Self>) -> u16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x32<Avx2>, indices: u8x64<Avx2>) -> u16x32<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.add_u16x16(a0, b0), self.add_u16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn sub_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.sub_u16x16(a0, b0), self.sub_u16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn mul_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.mul_u16x16(a0, b0), self.mul_u16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn and_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.and_u16x16(a0, b0), self.and_u16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn or_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.or_u16x16(a0, b0), self.or_u16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn xor_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.xor_u16x16(a0, b0), self.xor_u16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn not_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u16x16(self.not_u16x16(a0), self.not_u16x16(a1))
-    }
-    #[inline(always)]
-    fn shl_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u16x16(self.shl_u16x16(a0, shift), self.shl_u16x16(a1, shift))
-    }
-    #[inline(always)]
-    fn shlv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.shlv_u16x16(a0, b0), self.shlv_u16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn shr_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u16x16(self.shr_u16x16(a0, shift), self.shr_u16x16(a1, shift))
-    }
-    #[inline(always)]
-    fn shrv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.shrv_u16x16(a0, b0), self.shrv_u16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_eq_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_mask16x16(self.simd_eq_u16x16(a0, b0), self.simd_eq_u16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_lt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_mask16x16(self.simd_lt_u16x16(a0, b0), self.simd_lt_u16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_le_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_mask16x16(self.simd_le_u16x16(a0, b0), self.simd_le_u16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_ge_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_mask16x16(self.simd_ge_u16x16(a0, b0), self.simd_ge_u16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_gt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_mask16x16(self.simd_gt_u16x16(a0, b0), self.simd_gt_u16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn zip_low_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, _) = self.split_u16x32(a);
-        let (b0, _) = self.split_u16x32(b);
-        self.combine_u16x16(self.zip_low_u16x16(a0, b0), self.zip_high_u16x16(a0, b0))
-    }
-    #[inline(always)]
-    fn zip_high_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (_, a1) = self.split_u16x32(a);
-        let (_, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.zip_low_u16x16(a1, b1), self.zip_high_u16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn unzip_low_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.unzip_low_u16x16(a0, a1), self.unzip_low_u16x16(b0, b1))
-    }
-    #[inline(always)]
-    fn unzip_high_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(
-            self.unzip_high_u16x16(a0, a1),
-            self.unzip_high_u16x16(b0, b1),
-        )
-    }
-    #[inline(always)]
-    fn interleave_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> (u16x32<Self>, u16x32<Self>) {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        let lo_lo = self.zip_low_u16x16(a0, b0);
-        let lo_hi = self.zip_high_u16x16(a0, b0);
-        let hi_lo = self.zip_low_u16x16(a1, b1);
-        let hi_hi = self.zip_high_u16x16(a1, b1);
-        (
-            self.combine_u16x16(lo_lo, lo_hi),
-            self.combine_u16x16(hi_lo, hi_hi),
-        )
-    }
-    #[inline(always)]
-    fn deinterleave_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> (u16x32<Self>, u16x32<Self>) {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        let lo_even = self.unzip_low_u16x16(a0, a1);
-        let lo_odd = self.unzip_high_u16x16(a0, a1);
-        let hi_even = self.unzip_low_u16x16(b0, b1);
-        let hi_odd = self.unzip_high_u16x16(b0, b1);
-        (
-            self.combine_u16x16(lo_even, hi_even),
-            self.combine_u16x16(lo_odd, hi_odd),
-        )
-    }
-    #[inline(always)]
-    fn select_u16x32(self, a: mask16x32<Self>, b: u16x32<Self>, c: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        let (c0, c1) = self.split_u16x32(c);
-        self.combine_u16x16(
-            self.select_u16x16(a0, b0, c0),
-            self.select_u16x16(a1, b1, c1),
-        )
-    }
-    #[inline(always)]
-    fn min_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.min_u16x16(a0, b0), self.min_u16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn max_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.max_u16x16(a0, b0), self.max_u16x16(a1, b1))
-    }
-    #[inline(always)]
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>) {
         (
             u16x16 {
@@ -12963,48 +10189,6 @@ impl Simd for Avx2 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn widen_u16x32(self, a: u16x32<Self>) -> (u32x16<Self>, u32x16<Self>) {
-        let (a0, a1) = self.split_u16x32(a);
-        let (a00, a01) = self.widen_u16x16(a0);
-        let (a10, a11) = self.widen_u16x16(a1);
-        (self.combine_u32x8(a00, a01), self.combine_u32x8(a10, a11))
-    }
-    #[inline(always)]
-    fn narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u8x32(self.narrow_u16x16(a0, a1), self.narrow_u16x16(b0, b1))
-    }
-    #[inline(always)]
-    fn saturating_narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u8x32(
-            self.saturating_narrow_u16x16(a0, a1),
-            self.saturating_narrow_u16x16(b0, b1),
-        )
-    }
-    #[inline(always)]
-    fn relaxed_narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u8x32(
-            self.relaxed_narrow_u16x16(a0, a1),
-            self.relaxed_narrow_u16x16(b0, b1),
-        )
-    }
-    #[inline(always)]
-    fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {
-        let half = self.splat_mask16x16(val);
-        self.combine_mask16x16(half, half)
-    }
-    #[inline(always)]
-    fn from_bitmask_mask16x32(self, bits: u64) -> mask16x32<Self> {
-        let lo = self.from_bitmask_mask16x16(bits);
-        let hi = self.from_bitmask_mask16x16(bits >> 16usize);
-        self.combine_mask16x16(lo, hi)
     }
     #[inline(always)]
     fn to_bitmask_mask16x32(self, a: mask16x32<Self>) -> u64 {
@@ -13034,73 +10218,6 @@ impl Simd for Avx2 {
         *a = lanes.simd_into(self);
     }
     #[inline(always)]
-    fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(self.and_mask16x16(a0, b0), self.and_mask16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn or_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(self.or_mask16x16(a0, b0), self.or_mask16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn xor_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(self.xor_mask16x16(a0, b0), self.xor_mask16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn not_mask16x32(self, a: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        self.combine_mask16x16(self.not_mask16x16(a0), self.not_mask16x16(a1))
-    }
-    #[inline(always)]
-    fn select_mask16x32(
-        self,
-        a: mask16x32<Self>,
-        b: mask16x32<Self>,
-        c: mask16x32<Self>,
-    ) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        let (c0, c1) = self.split_mask16x32(c);
-        self.combine_mask16x16(
-            self.select_mask16x16(a0, b0, c0),
-            self.select_mask16x16(a1, b1, c1),
-        )
-    }
-    #[inline(always)]
-    fn simd_eq_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(
-            self.simd_eq_mask16x16(a0, b0),
-            self.simd_eq_mask16x16(a1, b1),
-        )
-    }
-    #[inline(always)]
-    fn any_true_mask16x32(self, a: mask16x32<Self>) -> bool {
-        let (a0, a1) = self.split_mask16x32(a);
-        self.any_true_mask16x16(a0) || self.any_true_mask16x16(a1)
-    }
-    #[inline(always)]
-    fn all_true_mask16x32(self, a: mask16x32<Self>) -> bool {
-        let (a0, a1) = self.split_mask16x32(a);
-        self.all_true_mask16x16(a0) && self.all_true_mask16x16(a1)
-    }
-    #[inline(always)]
-    fn any_false_mask16x32(self, a: mask16x32<Self>) -> bool {
-        let (a0, a1) = self.split_mask16x32(a);
-        self.any_false_mask16x16(a0) || self.any_false_mask16x16(a1)
-    }
-    #[inline(always)]
-    fn all_false_mask16x32(self, a: mask16x32<Self>) -> bool {
-        let (a0, a1) = self.split_mask16x32(a);
-        self.all_false_mask16x16(a0) && self.all_false_mask16x16(a1)
-    }
-    #[inline(always)]
     fn split_mask16x32(self, a: mask16x32<Self>) -> (mask16x16<Self>, mask16x16<Self>) {
         (
             mask16x16 {
@@ -13112,11 +10229,6 @@ impl Simd for Avx2 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn splat_i32x16(self, val: i32) -> i32x16<Self> {
-        let half = self.splat_i32x8(val);
-        self.combine_i32x8(half, half)
     }
     #[inline(always)]
     fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -13135,225 +10247,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_i32x16<const SHIFT: usize>(
-        self,
-        a: i32x16<Self>,
-        b: i32x16<Self>,
-    ) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(
-            self.slide_within_blocks_i32x8::<SHIFT>(a0, b0),
-            self.slide_within_blocks_i32x8::<SHIFT>(a1, b1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i32x16(
-        self,
-        a: i32x16<Self>,
-        indices: u8x64<Self>,
-    ) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (indices0, indices1) = self.split_u8x64(indices);
-        self.combine_i32x8(
-            self.swizzle_dyn_within_blocks_i32x8(a0, indices0),
-            self.swizzle_dyn_within_blocks_i32x8(a1, indices1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i32x16(self, a: i32x16<Self>, indices: u8x64<Self>) -> i32x16<Self> {
-        self.swizzle_dyn_precise_i32x16(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i32x16(self, a: i32x16<Self>, indices: u8x64<Self>) -> i32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x16<Avx2>, indices: u8x64<Avx2>) -> i32x16<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.add_i32x8(a0, b0), self.add_i32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn sub_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.sub_i32x8(a0, b0), self.sub_i32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn mul_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.mul_i32x8(a0, b0), self.mul_i32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn and_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.and_i32x8(a0, b0), self.and_i32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn or_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.or_i32x8(a0, b0), self.or_i32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn xor_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.xor_i32x8(a0, b0), self.xor_i32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn not_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.not_i32x8(a0), self.not_i32x8(a1))
-    }
-    #[inline(always)]
-    fn shl_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.shl_i32x8(a0, shift), self.shl_i32x8(a1, shift))
-    }
-    #[inline(always)]
-    fn shlv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.shlv_i32x8(a0, b0), self.shlv_i32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn shr_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.shr_i32x8(a0, shift), self.shr_i32x8(a1, shift))
-    }
-    #[inline(always)]
-    fn shrv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.shrv_i32x8(a0, b0), self.shrv_i32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_eq_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_mask32x8(self.simd_eq_i32x8(a0, b0), self.simd_eq_i32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_lt_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_mask32x8(self.simd_lt_i32x8(a0, b0), self.simd_lt_i32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_le_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_mask32x8(self.simd_le_i32x8(a0, b0), self.simd_le_i32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_ge_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_mask32x8(self.simd_ge_i32x8(a0, b0), self.simd_ge_i32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_gt_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_mask32x8(self.simd_gt_i32x8(a0, b0), self.simd_gt_i32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn zip_low_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, _) = self.split_i32x16(a);
-        let (b0, _) = self.split_i32x16(b);
-        self.combine_i32x8(self.zip_low_i32x8(a0, b0), self.zip_high_i32x8(a0, b0))
-    }
-    #[inline(always)]
-    fn zip_high_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (_, a1) = self.split_i32x16(a);
-        let (_, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.zip_low_i32x8(a1, b1), self.zip_high_i32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn unzip_low_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.unzip_low_i32x8(a0, a1), self.unzip_low_i32x8(b0, b1))
-    }
-    #[inline(always)]
-    fn unzip_high_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.unzip_high_i32x8(a0, a1), self.unzip_high_i32x8(b0, b1))
-    }
-    #[inline(always)]
-    fn interleave_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> (i32x16<Self>, i32x16<Self>) {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        let lo_lo = self.zip_low_i32x8(a0, b0);
-        let lo_hi = self.zip_high_i32x8(a0, b0);
-        let hi_lo = self.zip_low_i32x8(a1, b1);
-        let hi_hi = self.zip_high_i32x8(a1, b1);
-        (
-            self.combine_i32x8(lo_lo, lo_hi),
-            self.combine_i32x8(hi_lo, hi_hi),
-        )
-    }
-    #[inline(always)]
-    fn deinterleave_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> (i32x16<Self>, i32x16<Self>) {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        let lo_even = self.unzip_low_i32x8(a0, a1);
-        let lo_odd = self.unzip_high_i32x8(a0, a1);
-        let hi_even = self.unzip_low_i32x8(b0, b1);
-        let hi_odd = self.unzip_high_i32x8(b0, b1);
-        (
-            self.combine_i32x8(lo_even, hi_even),
-            self.combine_i32x8(lo_odd, hi_odd),
-        )
-    }
-    #[inline(always)]
-    fn select_i32x16(self, a: mask32x16<Self>, b: i32x16<Self>, c: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        let (c0, c1) = self.split_i32x16(c);
-        self.combine_i32x8(self.select_i32x8(a0, b0, c0), self.select_i32x8(a1, b1, c1))
-    }
-    #[inline(always)]
-    fn min_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.min_i32x8(a0, b0), self.min_i32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn max_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.max_i32x8(a0, b0), self.max_i32x8(a1, b1))
-    }
-    #[inline(always)]
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
         (
             i32x8 {
@@ -13365,52 +10258,6 @@ impl Simd for Avx2 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn neg_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.neg_i32x8(a0), self.neg_i32x8(a1))
-    }
-    #[inline(always)]
-    fn widen_i32x16(self, a: i32x16<Self>) -> (i64x8<Self>, i64x8<Self>) {
-        let (a0, a1) = self.split_i32x16(a);
-        let (a00, a01) = self.widen_i32x8(a0);
-        let (a10, a11) = self.widen_i32x8(a1);
-        (self.combine_i64x4(a00, a01), self.combine_i64x4(a10, a11))
-    }
-    #[inline(always)]
-    fn narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i16x16(self.narrow_i32x8(a0, a1), self.narrow_i32x8(b0, b1))
-    }
-    #[inline(always)]
-    fn saturating_narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i16x16(
-            self.saturating_narrow_i32x8(a0, a1),
-            self.saturating_narrow_i32x8(b0, b1),
-        )
-    }
-    #[inline(always)]
-    fn relaxed_narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i16x16(
-            self.relaxed_narrow_i32x8(a0, a1),
-            self.relaxed_narrow_i32x8(b0, b1),
-        )
-    }
-    #[inline(always)]
-    fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_f32x8(self.cvt_f32_i32x8(a0), self.cvt_f32_i32x8(a1))
-    }
-    #[inline(always)]
-    fn splat_u32x16(self, val: u32) -> u32x16<Self> {
-        let half = self.splat_u32x8(val);
-        self.combine_u32x8(half, half)
     }
     #[inline(always)]
     fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
@@ -13429,225 +10276,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_u32x16<const SHIFT: usize>(
-        self,
-        a: u32x16<Self>,
-        b: u32x16<Self>,
-    ) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(
-            self.slide_within_blocks_u32x8::<SHIFT>(a0, b0),
-            self.slide_within_blocks_u32x8::<SHIFT>(a1, b1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u32x16(
-        self,
-        a: u32x16<Self>,
-        indices: u8x64<Self>,
-    ) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (indices0, indices1) = self.split_u8x64(indices);
-        self.combine_u32x8(
-            self.swizzle_dyn_within_blocks_u32x8(a0, indices0),
-            self.swizzle_dyn_within_blocks_u32x8(a1, indices1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u32x16(self, a: u32x16<Self>, indices: u8x64<Self>) -> u32x16<Self> {
-        self.swizzle_dyn_precise_u32x16(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u32x16(self, a: u32x16<Self>, indices: u8x64<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x16<Avx2>, indices: u8x64<Avx2>) -> u32x16<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.add_u32x8(a0, b0), self.add_u32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn sub_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.sub_u32x8(a0, b0), self.sub_u32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn mul_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.mul_u32x8(a0, b0), self.mul_u32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn and_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.and_u32x8(a0, b0), self.and_u32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn or_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.or_u32x8(a0, b0), self.or_u32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn xor_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.xor_u32x8(a0, b0), self.xor_u32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn not_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u32x8(self.not_u32x8(a0), self.not_u32x8(a1))
-    }
-    #[inline(always)]
-    fn shl_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u32x8(self.shl_u32x8(a0, shift), self.shl_u32x8(a1, shift))
-    }
-    #[inline(always)]
-    fn shlv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.shlv_u32x8(a0, b0), self.shlv_u32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn shr_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u32x8(self.shr_u32x8(a0, shift), self.shr_u32x8(a1, shift))
-    }
-    #[inline(always)]
-    fn shrv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.shrv_u32x8(a0, b0), self.shrv_u32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_eq_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_mask32x8(self.simd_eq_u32x8(a0, b0), self.simd_eq_u32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_lt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_mask32x8(self.simd_lt_u32x8(a0, b0), self.simd_lt_u32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_le_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_mask32x8(self.simd_le_u32x8(a0, b0), self.simd_le_u32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_ge_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_mask32x8(self.simd_ge_u32x8(a0, b0), self.simd_ge_u32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_gt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_mask32x8(self.simd_gt_u32x8(a0, b0), self.simd_gt_u32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn zip_low_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, _) = self.split_u32x16(a);
-        let (b0, _) = self.split_u32x16(b);
-        self.combine_u32x8(self.zip_low_u32x8(a0, b0), self.zip_high_u32x8(a0, b0))
-    }
-    #[inline(always)]
-    fn zip_high_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (_, a1) = self.split_u32x16(a);
-        let (_, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.zip_low_u32x8(a1, b1), self.zip_high_u32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn unzip_low_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.unzip_low_u32x8(a0, a1), self.unzip_low_u32x8(b0, b1))
-    }
-    #[inline(always)]
-    fn unzip_high_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.unzip_high_u32x8(a0, a1), self.unzip_high_u32x8(b0, b1))
-    }
-    #[inline(always)]
-    fn interleave_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> (u32x16<Self>, u32x16<Self>) {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        let lo_lo = self.zip_low_u32x8(a0, b0);
-        let lo_hi = self.zip_high_u32x8(a0, b0);
-        let hi_lo = self.zip_low_u32x8(a1, b1);
-        let hi_hi = self.zip_high_u32x8(a1, b1);
-        (
-            self.combine_u32x8(lo_lo, lo_hi),
-            self.combine_u32x8(hi_lo, hi_hi),
-        )
-    }
-    #[inline(always)]
-    fn deinterleave_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> (u32x16<Self>, u32x16<Self>) {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        let lo_even = self.unzip_low_u32x8(a0, a1);
-        let lo_odd = self.unzip_high_u32x8(a0, a1);
-        let hi_even = self.unzip_low_u32x8(b0, b1);
-        let hi_odd = self.unzip_high_u32x8(b0, b1);
-        (
-            self.combine_u32x8(lo_even, hi_even),
-            self.combine_u32x8(lo_odd, hi_odd),
-        )
-    }
-    #[inline(always)]
-    fn select_u32x16(self, a: mask32x16<Self>, b: u32x16<Self>, c: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        let (c0, c1) = self.split_u32x16(c);
-        self.combine_u32x8(self.select_u32x8(a0, b0, c0), self.select_u32x8(a1, b1, c1))
-    }
-    #[inline(always)]
-    fn min_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.min_u32x8(a0, b0), self.min_u32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn max_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.max_u32x8(a0, b0), self.max_u32x8(a1, b1))
-    }
-    #[inline(always)]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>) {
         (
             u32x8 {
@@ -13659,47 +10287,6 @@ impl Simd for Avx2 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn widen_u32x16(self, a: u32x16<Self>) -> (u64x8<Self>, u64x8<Self>) {
-        let (a0, a1) = self.split_u32x16(a);
-        let (a00, a01) = self.widen_u32x8(a0);
-        let (a10, a11) = self.widen_u32x8(a1);
-        (self.combine_u64x4(a00, a01), self.combine_u64x4(a10, a11))
-    }
-    #[inline(always)]
-    fn narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u16x16(self.narrow_u32x8(a0, a1), self.narrow_u32x8(b0, b1))
-    }
-    #[inline(always)]
-    fn saturating_narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u16x16(
-            self.saturating_narrow_u32x8(a0, a1),
-            self.saturating_narrow_u32x8(b0, b1),
-        )
-    }
-    #[inline(always)]
-    fn relaxed_narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u16x16(
-            self.relaxed_narrow_u32x8(a0, a1),
-            self.relaxed_narrow_u32x8(b0, b1),
-        )
-    }
-    #[inline(always)]
-    fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_f32x8(self.cvt_f32_u32x8(a0), self.cvt_f32_u32x8(a1))
-    }
-    #[inline(always)]
-    fn splat_mask32x16(self, val: bool) -> mask32x16<Self> {
-        let half = self.splat_mask32x8(val);
-        self.combine_mask32x8(half, half)
     }
     #[inline(always)]
     fn from_bitmask_mask32x16(self, bits: u64) -> mask32x16<Self> {
@@ -13729,13 +10316,6 @@ impl Simd for Avx2 {
         kernel(self, bits)
     }
     #[inline(always)]
-    fn to_bitmask_mask32x16(self, a: mask32x16<Self>) -> u64 {
-        let (lo, hi) = self.split_mask32x16(a);
-        let lo = self.to_bitmask_mask32x8(lo);
-        let hi = self.to_bitmask_mask32x8(hi);
-        lo | (hi << 8usize)
-    }
-    #[inline(always)]
     fn set_mask32x16(self, a: &mut mask32x16<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 16usize,
@@ -13745,70 +10325,6 @@ impl Simd for Avx2 {
         let mut lanes: [i32; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(self.and_mask32x8(a0, b0), self.and_mask32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn or_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(self.or_mask32x8(a0, b0), self.or_mask32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn xor_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(self.xor_mask32x8(a0, b0), self.xor_mask32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn not_mask32x16(self, a: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        self.combine_mask32x8(self.not_mask32x8(a0), self.not_mask32x8(a1))
-    }
-    #[inline(always)]
-    fn select_mask32x16(
-        self,
-        a: mask32x16<Self>,
-        b: mask32x16<Self>,
-        c: mask32x16<Self>,
-    ) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        let (c0, c1) = self.split_mask32x16(c);
-        self.combine_mask32x8(
-            self.select_mask32x8(a0, b0, c0),
-            self.select_mask32x8(a1, b1, c1),
-        )
-    }
-    #[inline(always)]
-    fn simd_eq_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(self.simd_eq_mask32x8(a0, b0), self.simd_eq_mask32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn any_true_mask32x16(self, a: mask32x16<Self>) -> bool {
-        let (a0, a1) = self.split_mask32x16(a);
-        self.any_true_mask32x8(a0) || self.any_true_mask32x8(a1)
-    }
-    #[inline(always)]
-    fn all_true_mask32x16(self, a: mask32x16<Self>) -> bool {
-        let (a0, a1) = self.split_mask32x16(a);
-        self.all_true_mask32x8(a0) && self.all_true_mask32x8(a1)
-    }
-    #[inline(always)]
-    fn any_false_mask32x16(self, a: mask32x16<Self>) -> bool {
-        let (a0, a1) = self.split_mask32x16(a);
-        self.any_false_mask32x8(a0) || self.any_false_mask32x8(a1)
-    }
-    #[inline(always)]
-    fn all_false_mask32x16(self, a: mask32x16<Self>) -> bool {
-        let (a0, a1) = self.split_mask32x16(a);
-        self.all_false_mask32x8(a0) && self.all_false_mask32x8(a1)
     }
     #[inline(always)]
     fn split_mask32x16(self, a: mask32x16<Self>) -> (mask32x8<Self>, mask32x8<Self>) {
@@ -13822,11 +10338,6 @@ impl Simd for Avx2 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn splat_f64x8(self, val: f64) -> f64x8<Self> {
-        let half = self.splat_f64x4(val);
-        self.combine_f64x4(half, half)
     }
     #[inline(always)]
     fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
@@ -13845,277 +10356,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_f64x8<const SHIFT: usize>(
-        self,
-        a: f64x8<Self>,
-        b: f64x8<Self>,
-    ) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(
-            self.slide_within_blocks_f64x4::<SHIFT>(a0, b0),
-            self.slide_within_blocks_f64x4::<SHIFT>(a1, b1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (indices0, indices1) = self.split_u8x64(indices);
-        self.combine_f64x4(
-            self.swizzle_dyn_within_blocks_f64x4(a0, indices0),
-            self.swizzle_dyn_within_blocks_f64x4(a1, indices1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
-        self.swizzle_dyn_precise_f64x8(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x8<Avx2>, indices: u8x64<Avx2>) -> f64x8<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.abs_f64x4(a0), self.abs_f64x4(a1))
-    }
-    #[inline(always)]
-    fn neg_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.neg_f64x4(a0), self.neg_f64x4(a1))
-    }
-    #[inline(always)]
-    fn sqrt_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.sqrt_f64x4(a0), self.sqrt_f64x4(a1))
-    }
-    #[inline(always)]
-    fn approximate_recip_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(
-            self.approximate_recip_f64x4(a0),
-            self.approximate_recip_f64x4(a1),
-        )
-    }
-    #[inline(always)]
-    fn add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.add_f64x4(a0, b0), self.add_f64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn sub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.sub_f64x4(a0, b0), self.sub_f64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn mul_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.mul_f64x4(a0, b0), self.mul_f64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn div_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.div_f64x4(a0, b0), self.div_f64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn copysign_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.copysign_f64x4(a0, b0), self.copysign_f64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_eq_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_mask64x4(self.simd_eq_f64x4(a0, b0), self.simd_eq_f64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_lt_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_mask64x4(self.simd_lt_f64x4(a0, b0), self.simd_lt_f64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_le_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_mask64x4(self.simd_le_f64x4(a0, b0), self.simd_le_f64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_ge_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_mask64x4(self.simd_ge_f64x4(a0, b0), self.simd_ge_f64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_gt_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_mask64x4(self.simd_gt_f64x4(a0, b0), self.simd_gt_f64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn zip_low_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, _) = self.split_f64x8(a);
-        let (b0, _) = self.split_f64x8(b);
-        self.combine_f64x4(self.zip_low_f64x4(a0, b0), self.zip_high_f64x4(a0, b0))
-    }
-    #[inline(always)]
-    fn zip_high_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (_, a1) = self.split_f64x8(a);
-        let (_, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.zip_low_f64x4(a1, b1), self.zip_high_f64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn unzip_low_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.unzip_low_f64x4(a0, a1), self.unzip_low_f64x4(b0, b1))
-    }
-    #[inline(always)]
-    fn unzip_high_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.unzip_high_f64x4(a0, a1), self.unzip_high_f64x4(b0, b1))
-    }
-    #[inline(always)]
-    fn interleave_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> (f64x8<Self>, f64x8<Self>) {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        let lo_lo = self.zip_low_f64x4(a0, b0);
-        let lo_hi = self.zip_high_f64x4(a0, b0);
-        let hi_lo = self.zip_low_f64x4(a1, b1);
-        let hi_hi = self.zip_high_f64x4(a1, b1);
-        (
-            self.combine_f64x4(lo_lo, lo_hi),
-            self.combine_f64x4(hi_lo, hi_hi),
-        )
-    }
-    #[inline(always)]
-    fn deinterleave_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> (f64x8<Self>, f64x8<Self>) {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        let lo_even = self.unzip_low_f64x4(a0, a1);
-        let lo_odd = self.unzip_high_f64x4(a0, a1);
-        let hi_even = self.unzip_low_f64x4(b0, b1);
-        let hi_odd = self.unzip_high_f64x4(b0, b1);
-        (
-            self.combine_f64x4(lo_even, hi_even),
-            self.combine_f64x4(lo_odd, hi_odd),
-        )
-    }
-    #[inline(always)]
-    fn max_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.max_f64x4(a0, b0), self.max_f64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.min_f64x4(a0, b0), self.min_f64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn max_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(
-            self.max_precise_f64x4(a0, b0),
-            self.max_precise_f64x4(a1, b1),
-        )
-    }
-    #[inline(always)]
-    fn min_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(
-            self.min_precise_f64x4(a0, b0),
-            self.min_precise_f64x4(a1, b1),
-        )
-    }
-    #[inline(always)]
-    fn mul_add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        let (c0, c1) = self.split_f64x8(c);
-        self.combine_f64x4(
-            self.mul_add_f64x4(a0, b0, c0),
-            self.mul_add_f64x4(a1, b1, c1),
-        )
-    }
-    #[inline(always)]
-    fn mul_sub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        let (c0, c1) = self.split_f64x8(c);
-        self.combine_f64x4(
-            self.mul_sub_f64x4(a0, b0, c0),
-            self.mul_sub_f64x4(a1, b1, c1),
-        )
-    }
-    #[inline(always)]
-    fn floor_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.floor_f64x4(a0), self.floor_f64x4(a1))
-    }
-    #[inline(always)]
-    fn ceil_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.ceil_f64x4(a0), self.ceil_f64x4(a1))
-    }
-    #[inline(always)]
-    fn round_ties_even_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(
-            self.round_ties_even_f64x4(a0),
-            self.round_ties_even_f64x4(a1),
-        )
-    }
-    #[inline(always)]
-    fn fract_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.fract_f64x4(a0), self.fract_f64x4(a1))
-    }
-    #[inline(always)]
-    fn trunc_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.trunc_f64x4(a0), self.trunc_f64x4(a1))
-    }
-    #[inline(always)]
-    fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        let (c0, c1) = self.split_f64x8(c);
-        self.combine_f64x4(self.select_f64x4(a0, b0, c0), self.select_f64x4(a1, b1, c1))
-    }
-    #[inline(always)]
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>) {
         (
             f64x4 {
@@ -14127,35 +10367,6 @@ impl Simd for Avx2 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f32x8(self.narrow_f64x4(a0, a1), self.narrow_f64x4(b0, b1))
-    }
-    #[inline(always)]
-    fn saturating_narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f32x8(
-            self.saturating_narrow_f64x4(a0, a1),
-            self.saturating_narrow_f64x4(b0, b1),
-        )
-    }
-    #[inline(always)]
-    fn relaxed_narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f32x8(
-            self.relaxed_narrow_f64x4(a0, a1),
-            self.relaxed_narrow_f64x4(b0, b1),
-        )
-    }
-    #[inline(always)]
-    fn splat_i64x8(self, val: i64) -> i64x8<Self> {
-        let half = self.splat_i64x4(val);
-        self.combine_i64x4(half, half)
     }
     #[inline(always)]
     fn slide_i64x8<const SHIFT: usize>(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
@@ -14174,221 +10385,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_i64x8<const SHIFT: usize>(
-        self,
-        a: i64x8<Self>,
-        b: i64x8<Self>,
-    ) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(
-            self.slide_within_blocks_i64x4::<SHIFT>(a0, b0),
-            self.slide_within_blocks_i64x4::<SHIFT>(a1, b1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (indices0, indices1) = self.split_u8x64(indices);
-        self.combine_i64x4(
-            self.swizzle_dyn_within_blocks_i64x4(a0, indices0),
-            self.swizzle_dyn_within_blocks_i64x4(a1, indices1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
-        self.swizzle_dyn_precise_i64x8(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i64x8<Avx2>, indices: u8x64<Avx2>) -> i64x8<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn add_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.add_i64x4(a0, b0), self.add_i64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn sub_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.sub_i64x4(a0, b0), self.sub_i64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn mul_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.mul_i64x4(a0, b0), self.mul_i64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn and_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.and_i64x4(a0, b0), self.and_i64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn or_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.or_i64x4(a0, b0), self.or_i64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn xor_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.xor_i64x4(a0, b0), self.xor_i64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn not_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        self.combine_i64x4(self.not_i64x4(a0), self.not_i64x4(a1))
-    }
-    #[inline(always)]
-    fn shl_i64x8(self, a: i64x8<Self>, shift: u32) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        self.combine_i64x4(self.shl_i64x4(a0, shift), self.shl_i64x4(a1, shift))
-    }
-    #[inline(always)]
-    fn shlv_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.shlv_i64x4(a0, b0), self.shlv_i64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn shr_i64x8(self, a: i64x8<Self>, shift: u32) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        self.combine_i64x4(self.shr_i64x4(a0, shift), self.shr_i64x4(a1, shift))
-    }
-    #[inline(always)]
-    fn shrv_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.shrv_i64x4(a0, b0), self.shrv_i64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_eq_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_mask64x4(self.simd_eq_i64x4(a0, b0), self.simd_eq_i64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_lt_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_mask64x4(self.simd_lt_i64x4(a0, b0), self.simd_lt_i64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_le_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_mask64x4(self.simd_le_i64x4(a0, b0), self.simd_le_i64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_ge_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_mask64x4(self.simd_ge_i64x4(a0, b0), self.simd_ge_i64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_gt_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_mask64x4(self.simd_gt_i64x4(a0, b0), self.simd_gt_i64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn zip_low_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, _) = self.split_i64x8(a);
-        let (b0, _) = self.split_i64x8(b);
-        self.combine_i64x4(self.zip_low_i64x4(a0, b0), self.zip_high_i64x4(a0, b0))
-    }
-    #[inline(always)]
-    fn zip_high_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (_, a1) = self.split_i64x8(a);
-        let (_, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.zip_low_i64x4(a1, b1), self.zip_high_i64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn unzip_low_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.unzip_low_i64x4(a0, a1), self.unzip_low_i64x4(b0, b1))
-    }
-    #[inline(always)]
-    fn unzip_high_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.unzip_high_i64x4(a0, a1), self.unzip_high_i64x4(b0, b1))
-    }
-    #[inline(always)]
-    fn interleave_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> (i64x8<Self>, i64x8<Self>) {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        let lo_lo = self.zip_low_i64x4(a0, b0);
-        let lo_hi = self.zip_high_i64x4(a0, b0);
-        let hi_lo = self.zip_low_i64x4(a1, b1);
-        let hi_hi = self.zip_high_i64x4(a1, b1);
-        (
-            self.combine_i64x4(lo_lo, lo_hi),
-            self.combine_i64x4(hi_lo, hi_hi),
-        )
-    }
-    #[inline(always)]
-    fn deinterleave_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> (i64x8<Self>, i64x8<Self>) {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        let lo_even = self.unzip_low_i64x4(a0, a1);
-        let lo_odd = self.unzip_high_i64x4(a0, a1);
-        let hi_even = self.unzip_low_i64x4(b0, b1);
-        let hi_odd = self.unzip_high_i64x4(b0, b1);
-        (
-            self.combine_i64x4(lo_even, hi_even),
-            self.combine_i64x4(lo_odd, hi_odd),
-        )
-    }
-    #[inline(always)]
-    fn select_i64x8(self, a: mask64x8<Self>, b: i64x8<Self>, c: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        let (c0, c1) = self.split_i64x8(c);
-        self.combine_i64x4(self.select_i64x4(a0, b0, c0), self.select_i64x4(a1, b1, c1))
-    }
-    #[inline(always)]
-    fn min_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.min_i64x4(a0, b0), self.min_i64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn max_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.max_i64x4(a0, b0), self.max_i64x4(a1, b1))
-    }
-    #[inline(always)]
     fn split_i64x8(self, a: i64x8<Self>) -> (i64x4<Self>, i64x4<Self>) {
         (
             i64x4 {
@@ -14400,40 +10396,6 @@ impl Simd for Avx2 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn neg_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        self.combine_i64x4(self.neg_i64x4(a0), self.neg_i64x4(a1))
-    }
-    #[inline(always)]
-    fn narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i32x8(self.narrow_i64x4(a0, a1), self.narrow_i64x4(b0, b1))
-    }
-    #[inline(always)]
-    fn saturating_narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i32x8(
-            self.saturating_narrow_i64x4(a0, a1),
-            self.saturating_narrow_i64x4(b0, b1),
-        )
-    }
-    #[inline(always)]
-    fn relaxed_narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i32x8(
-            self.relaxed_narrow_i64x4(a0, a1),
-            self.relaxed_narrow_i64x4(b0, b1),
-        )
-    }
-    #[inline(always)]
-    fn splat_u64x8(self, val: u64) -> u64x8<Self> {
-        let half = self.splat_u64x4(val);
-        self.combine_u64x4(half, half)
     }
     #[inline(always)]
     fn slide_u64x8<const SHIFT: usize>(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
@@ -14452,221 +10414,6 @@ impl Simd for Avx2 {
         })
     }
     #[inline(always)]
-    fn slide_within_blocks_u64x8<const SHIFT: usize>(
-        self,
-        a: u64x8<Self>,
-        b: u64x8<Self>,
-    ) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(
-            self.slide_within_blocks_u64x4::<SHIFT>(a0, b0),
-            self.slide_within_blocks_u64x4::<SHIFT>(a1, b1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_within_blocks_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (indices0, indices1) = self.split_u8x64(indices);
-        self.combine_u64x4(
-            self.swizzle_dyn_within_blocks_u64x4(a0, indices0),
-            self.swizzle_dyn_within_blocks_u64x4(a1, indices1),
-        )
-    }
-    #[inline(always)]
-    fn swizzle_dyn_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
-        self.swizzle_dyn_precise_u64x8(a, indices)
-    }
-    #[inline(always)]
-    fn swizzle_dyn_precise_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u64x8<Avx2>, indices: u8x64<Avx2>) -> u64x8<Avx2> {
-                let bytes = Bytes::to_bytes(a);
-                let (table_low, table_high) = token.split_u8x64(bytes);
-                let (indices_low, indices_high) = token.split_u8x64(indices);
-                let high_table_offset = token.splat_u8x32(32);
-                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
-                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_low, high_table_offset),
-                );
-                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
-                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
-                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
-                    table_high,
-                    token.sub_u8x32(indices_high, high_table_offset),
-                );
-                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
-                let result_bytes = token.combine_u8x32(output_low, output_high);
-                Bytes::from_bytes(result_bytes)
-            }
-        );
-        kernel(self, a, indices)
-    }
-    #[inline(always)]
-    fn add_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.add_u64x4(a0, b0), self.add_u64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn sub_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.sub_u64x4(a0, b0), self.sub_u64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn mul_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.mul_u64x4(a0, b0), self.mul_u64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn and_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.and_u64x4(a0, b0), self.and_u64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn or_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.or_u64x4(a0, b0), self.or_u64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn xor_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.xor_u64x4(a0, b0), self.xor_u64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn not_u64x8(self, a: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        self.combine_u64x4(self.not_u64x4(a0), self.not_u64x4(a1))
-    }
-    #[inline(always)]
-    fn shl_u64x8(self, a: u64x8<Self>, shift: u32) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        self.combine_u64x4(self.shl_u64x4(a0, shift), self.shl_u64x4(a1, shift))
-    }
-    #[inline(always)]
-    fn shlv_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.shlv_u64x4(a0, b0), self.shlv_u64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn shr_u64x8(self, a: u64x8<Self>, shift: u32) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        self.combine_u64x4(self.shr_u64x4(a0, shift), self.shr_u64x4(a1, shift))
-    }
-    #[inline(always)]
-    fn shrv_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.shrv_u64x4(a0, b0), self.shrv_u64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_eq_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_mask64x4(self.simd_eq_u64x4(a0, b0), self.simd_eq_u64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_lt_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_mask64x4(self.simd_lt_u64x4(a0, b0), self.simd_lt_u64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_le_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_mask64x4(self.simd_le_u64x4(a0, b0), self.simd_le_u64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_ge_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_mask64x4(self.simd_ge_u64x4(a0, b0), self.simd_ge_u64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn simd_gt_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_mask64x4(self.simd_gt_u64x4(a0, b0), self.simd_gt_u64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn zip_low_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, _) = self.split_u64x8(a);
-        let (b0, _) = self.split_u64x8(b);
-        self.combine_u64x4(self.zip_low_u64x4(a0, b0), self.zip_high_u64x4(a0, b0))
-    }
-    #[inline(always)]
-    fn zip_high_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (_, a1) = self.split_u64x8(a);
-        let (_, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.zip_low_u64x4(a1, b1), self.zip_high_u64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn unzip_low_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.unzip_low_u64x4(a0, a1), self.unzip_low_u64x4(b0, b1))
-    }
-    #[inline(always)]
-    fn unzip_high_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.unzip_high_u64x4(a0, a1), self.unzip_high_u64x4(b0, b1))
-    }
-    #[inline(always)]
-    fn interleave_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> (u64x8<Self>, u64x8<Self>) {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        let lo_lo = self.zip_low_u64x4(a0, b0);
-        let lo_hi = self.zip_high_u64x4(a0, b0);
-        let hi_lo = self.zip_low_u64x4(a1, b1);
-        let hi_hi = self.zip_high_u64x4(a1, b1);
-        (
-            self.combine_u64x4(lo_lo, lo_hi),
-            self.combine_u64x4(hi_lo, hi_hi),
-        )
-    }
-    #[inline(always)]
-    fn deinterleave_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> (u64x8<Self>, u64x8<Self>) {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        let lo_even = self.unzip_low_u64x4(a0, a1);
-        let lo_odd = self.unzip_high_u64x4(a0, a1);
-        let hi_even = self.unzip_low_u64x4(b0, b1);
-        let hi_odd = self.unzip_high_u64x4(b0, b1);
-        (
-            self.combine_u64x4(lo_even, hi_even),
-            self.combine_u64x4(lo_odd, hi_odd),
-        )
-    }
-    #[inline(always)]
-    fn select_u64x8(self, a: mask64x8<Self>, b: u64x8<Self>, c: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        let (c0, c1) = self.split_u64x8(c);
-        self.combine_u64x4(self.select_u64x4(a0, b0, c0), self.select_u64x4(a1, b1, c1))
-    }
-    #[inline(always)]
-    fn min_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.min_u64x4(a0, b0), self.min_u64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn max_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.max_u64x4(a0, b0), self.max_u64x4(a1, b1))
-    }
-    #[inline(always)]
     fn split_u64x8(self, a: u64x8<Self>) -> (u64x4<Self>, u64x4<Self>) {
         (
             u64x4 {
@@ -14678,35 +10425,6 @@ impl Simd for Avx2 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u32x8(self.narrow_u64x4(a0, a1), self.narrow_u64x4(b0, b1))
-    }
-    #[inline(always)]
-    fn saturating_narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u32x8(
-            self.saturating_narrow_u64x4(a0, a1),
-            self.saturating_narrow_u64x4(b0, b1),
-        )
-    }
-    #[inline(always)]
-    fn relaxed_narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u32x8(
-            self.relaxed_narrow_u64x4(a0, a1),
-            self.relaxed_narrow_u64x4(b0, b1),
-        )
-    }
-    #[inline(always)]
-    fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {
-        let half = self.splat_mask64x4(val);
-        self.combine_mask64x4(half, half)
     }
     #[inline(always)]
     fn from_bitmask_mask64x8(self, bits: u64) -> mask64x8<Self> {
@@ -14734,13 +10452,6 @@ impl Simd for Avx2 {
         kernel(self, bits)
     }
     #[inline(always)]
-    fn to_bitmask_mask64x8(self, a: mask64x8<Self>) -> u64 {
-        let (lo, hi) = self.split_mask64x8(a);
-        let lo = self.to_bitmask_mask64x4(lo);
-        let hi = self.to_bitmask_mask64x4(hi);
-        lo | (hi << 4usize)
-    }
-    #[inline(always)]
     fn set_mask64x8(self, a: &mut mask64x8<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 8usize,
@@ -14750,70 +10461,6 @@ impl Simd for Avx2 {
         let mut lanes: [i64; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(self.and_mask64x4(a0, b0), self.and_mask64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn or_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(self.or_mask64x4(a0, b0), self.or_mask64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn xor_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(self.xor_mask64x4(a0, b0), self.xor_mask64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn not_mask64x8(self, a: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        self.combine_mask64x4(self.not_mask64x4(a0), self.not_mask64x4(a1))
-    }
-    #[inline(always)]
-    fn select_mask64x8(
-        self,
-        a: mask64x8<Self>,
-        b: mask64x8<Self>,
-        c: mask64x8<Self>,
-    ) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        let (c0, c1) = self.split_mask64x8(c);
-        self.combine_mask64x4(
-            self.select_mask64x4(a0, b0, c0),
-            self.select_mask64x4(a1, b1, c1),
-        )
-    }
-    #[inline(always)]
-    fn simd_eq_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(self.simd_eq_mask64x4(a0, b0), self.simd_eq_mask64x4(a1, b1))
-    }
-    #[inline(always)]
-    fn any_true_mask64x8(self, a: mask64x8<Self>) -> bool {
-        let (a0, a1) = self.split_mask64x8(a);
-        self.any_true_mask64x4(a0) || self.any_true_mask64x4(a1)
-    }
-    #[inline(always)]
-    fn all_true_mask64x8(self, a: mask64x8<Self>) -> bool {
-        let (a0, a1) = self.split_mask64x8(a);
-        self.all_true_mask64x4(a0) && self.all_true_mask64x4(a1)
-    }
-    #[inline(always)]
-    fn any_false_mask64x8(self, a: mask64x8<Self>) -> bool {
-        let (a0, a1) = self.split_mask64x8(a);
-        self.any_false_mask64x4(a0) || self.any_false_mask64x4(a1)
-    }
-    #[inline(always)]
-    fn all_false_mask64x8(self, a: mask64x8<Self>) -> bool {
-        let (a0, a1) = self.split_mask64x8(a);
-        self.all_false_mask64x4(a0) && self.all_false_mask64x4(a1)
     }
     #[inline(always)]
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>) {

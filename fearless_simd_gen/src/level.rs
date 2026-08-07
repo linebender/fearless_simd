@@ -5,7 +5,6 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
-    generic::generic_op,
     ops::{Op, ops_for_type},
     types::{SIMD_TYPES, ScalarType, VecType, type_imports},
 };
@@ -138,8 +137,10 @@ pub(crate) trait Level {
         let mut methods = vec![];
         for vec_ty in SIMD_TYPES {
             for op in ops_for_type(vec_ty) {
-                if self.should_use_generic_op(&op, vec_ty) {
-                    methods.push(generic_op(&op, vec_ty));
+                if op.sig.should_route_swizzle_through_bytes(vec_ty)
+                    || op.reversed_compare_method().is_some()
+                    || self.should_use_generic_op(&op, vec_ty)
+                {
                     continue;
                 }
 
