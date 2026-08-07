@@ -269,7 +269,6 @@ pub trait SimdCvtFloat<T: Seal>: Seal {
 ///
 /// If processing in wider vectors is desirable, combine the 128-bit vectors into larger ones
 /// and process them together as a single vector. This avoids issues with register pressure.
-/// ```
 pub trait SimdInterleaved<S: Simd>: SimdBase<S> {
     /// The exact-sized flat scalar array exchanged by four-way interleaved operations.
     ///
