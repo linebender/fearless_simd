@@ -262,21 +262,22 @@ pub(crate) fn mk_simd_types() -> TokenStream {
             let store_four_interleaved = generic_op_name("store_four_interleaved", ty);
             conditional_impls.push(quote! {
                 impl<S: Simd> SimdInterleaved<S> for #name<S> {
-                    type FourInterleavedArray = [#rust_scalar; #four_interleaved_len];
-
                     #[inline(always)]
                     fn load_four_interleaved(
                         simd: S,
-                        src: &Self::FourInterleavedArray,
+                        src: &[Self::Element],
                     ) -> [Self; 4] {
+                        let src: &[#rust_scalar; #four_interleaved_len] = src.try_into().unwrap();
                         simd.#load_four_interleaved(src)
                     }
 
                     #[inline(always)]
                     fn store_four_interleaved(
                         vectors: [Self; 4],
-                        dest: &mut Self::FourInterleavedArray,
+                        dest: &mut [Self::Element],
                     ) {
+                        let dest: &mut [#rust_scalar; #four_interleaved_len] =
+                            dest.try_into().unwrap();
                         vectors[0].simd.#store_four_interleaved(vectors, dest);
                     }
                 }

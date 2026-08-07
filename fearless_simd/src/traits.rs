@@ -269,30 +269,56 @@ pub trait SimdCvtFloat<T: Seal>: Seal {
 ///
 /// If processing in wider vectors is desirable, combine the 128-bit vectors into larger ones
 /// and process them together as a single vector. This avoids issues with register pressure.
+///
+/// # Example
+///
+/// This generic color transform swaps the red and blue channels of RGBA pixels:
+///
+/// ```
+/// use fearless_simd::prelude::*;
+///
+/// fn swap_red_blue<S: Simd, V: SimdInterleaved<S>>(
+///     simd: S,
+///     pixels: &mut [V::Element],
+/// ) {
+///     let mut chunks = pixels.chunks_exact_mut(V::N * 4);
+///     for chunk in &mut chunks {
+///         let [red, green, blue, alpha] = V::load_four_interleaved(simd, chunk);
+///         V::store_four_interleaved([blue, green, red, alpha], chunk);
+///     }
+///
+///     for pixel in chunks.into_remainder().chunks_exact_mut(4) {
+///         pixel.swap(0, 2);
+///     }
+/// }
+/// ```
 pub trait SimdInterleaved<S: Simd>: SimdBase<S> {
-    /// The exact-sized flat scalar array exchanged by four-way interleaved operations.
-    ///
-    /// This contains four times as many elements as one vector.
-    type FourInterleavedArray: Copy + AsRef<[Self::Element]> + AsMut<[Self::Element]>;
-
-    /// Load four 128-bit vectors from an array with 4-way interleaving
+    /// Load four 128-bit vectors from a slice with 4-way interleaving.
     ///
     /// This is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.
     ///
     /// For example, with 32-bit lanes, memory laid out as
     /// `[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as
-    /// `[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."
-    fn load_four_interleaved(simd: S, src: &Self::FourInterleavedArray) -> [Self; 4];
+    /// `[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`.
+    ///
+    /// # Panics
+    ///
+    /// Panics unless `src.len()` is exactly `Self::N * 4`.
+    fn load_four_interleaved(simd: S, src: &[Self::Element]) -> [Self; 4];
 
-    /// Store four vectors into a scalar array with four-way interleaving.
+    /// Store four vectors into a scalar slice with four-way interleaving.
     ///
     /// This is the inverse of [`load_four_interleaved`](Self::load_four_interleaved).
     ///
     /// This is useful e.g. in image processing to turn vectors of each color component into interleaved RGBA pixels.
     /// For example, with 32-bit lanes, vectors containing
     /// `[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]` get stored as
-    /// `[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]`.",
-    fn store_four_interleaved(vectors: [Self; 4], dest: &mut Self::FourInterleavedArray);
+    /// `[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]`.
+    ///
+    /// # Panics
+    ///
+    /// Panics unless `dest.len()` is exactly `Self::N * 4`.
+    fn store_four_interleaved(vectors: [Self; 4], dest: &mut [Self::Element]);
 }
 
 /// Concatenation of two SIMD vectors.

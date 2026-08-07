@@ -309,13 +309,14 @@ impl<S: Simd> crate::SimdCombine<S> for f32x4<S> {
     }
 }
 impl<S: Simd> SimdInterleaved<S> for f32x4<S> {
-    type FourInterleavedArray = [f32; 16];
     #[inline(always)]
-    fn load_four_interleaved(simd: S, src: &Self::FourInterleavedArray) -> [Self; 4] {
+    fn load_four_interleaved(simd: S, src: &[Self::Element]) -> [Self; 4] {
+        let src: &[f32; 16] = src.try_into().unwrap();
         simd.load_four_interleaved_f32x4(src)
     }
     #[inline(always)]
-    fn store_four_interleaved(vectors: [Self; 4], dest: &mut Self::FourInterleavedArray) {
+    fn store_four_interleaved(vectors: [Self; 4], dest: &mut [Self::Element]) {
+        let dest: &mut [f32; 16] = dest.try_into().unwrap();
         vectors[0].simd.store_four_interleaved_f32x4(vectors, dest);
     }
 }
@@ -573,13 +574,14 @@ impl<S: Simd> crate::SimdCombine<S> for i8x16<S> {
     }
 }
 impl<S: Simd> SimdInterleaved<S> for i8x16<S> {
-    type FourInterleavedArray = [i8; 64];
     #[inline(always)]
-    fn load_four_interleaved(simd: S, src: &Self::FourInterleavedArray) -> [Self; 4] {
+    fn load_four_interleaved(simd: S, src: &[Self::Element]) -> [Self; 4] {
+        let src: &[i8; 64] = src.try_into().unwrap();
         simd.load_four_interleaved_i8x16(src)
     }
     #[inline(always)]
-    fn store_four_interleaved(vectors: [Self; 4], dest: &mut Self::FourInterleavedArray) {
+    fn store_four_interleaved(vectors: [Self; 4], dest: &mut [Self::Element]) {
+        let dest: &mut [i8; 64] = dest.try_into().unwrap();
         vectors[0].simd.store_four_interleaved_i8x16(vectors, dest);
     }
 }
@@ -837,13 +839,14 @@ impl<S: Simd> crate::SimdCombine<S> for u8x16<S> {
     }
 }
 impl<S: Simd> SimdInterleaved<S> for u8x16<S> {
-    type FourInterleavedArray = [u8; 64];
     #[inline(always)]
-    fn load_four_interleaved(simd: S, src: &Self::FourInterleavedArray) -> [Self; 4] {
+    fn load_four_interleaved(simd: S, src: &[Self::Element]) -> [Self; 4] {
+        let src: &[u8; 64] = src.try_into().unwrap();
         simd.load_four_interleaved_u8x16(src)
     }
     #[inline(always)]
-    fn store_four_interleaved(vectors: [Self; 4], dest: &mut Self::FourInterleavedArray) {
+    fn store_four_interleaved(vectors: [Self; 4], dest: &mut [Self::Element]) {
+        let dest: &mut [u8; 64] = dest.try_into().unwrap();
         vectors[0].simd.store_four_interleaved_u8x16(vectors, dest);
     }
 }
@@ -1202,13 +1205,14 @@ impl<S: Simd> crate::SimdCombine<S> for i16x8<S> {
     }
 }
 impl<S: Simd> SimdInterleaved<S> for i16x8<S> {
-    type FourInterleavedArray = [i16; 32];
     #[inline(always)]
-    fn load_four_interleaved(simd: S, src: &Self::FourInterleavedArray) -> [Self; 4] {
+    fn load_four_interleaved(simd: S, src: &[Self::Element]) -> [Self; 4] {
+        let src: &[i16; 32] = src.try_into().unwrap();
         simd.load_four_interleaved_i16x8(src)
     }
     #[inline(always)]
-    fn store_four_interleaved(vectors: [Self; 4], dest: &mut Self::FourInterleavedArray) {
+    fn store_four_interleaved(vectors: [Self; 4], dest: &mut [Self::Element]) {
+        let dest: &mut [i16; 32] = dest.try_into().unwrap();
         vectors[0].simd.store_four_interleaved_i16x8(vectors, dest);
     }
 }
@@ -1473,13 +1477,14 @@ impl<S: Simd> crate::SimdCombine<S> for u16x8<S> {
     }
 }
 impl<S: Simd> SimdInterleaved<S> for u16x8<S> {
-    type FourInterleavedArray = [u16; 32];
     #[inline(always)]
-    fn load_four_interleaved(simd: S, src: &Self::FourInterleavedArray) -> [Self; 4] {
+    fn load_four_interleaved(simd: S, src: &[Self::Element]) -> [Self; 4] {
+        let src: &[u16; 32] = src.try_into().unwrap();
         simd.load_four_interleaved_u16x8(src)
     }
     #[inline(always)]
-    fn store_four_interleaved(vectors: [Self; 4], dest: &mut Self::FourInterleavedArray) {
+    fn store_four_interleaved(vectors: [Self; 4], dest: &mut [Self::Element]) {
+        let dest: &mut [u16; 32] = dest.try_into().unwrap();
         vectors[0].simd.store_four_interleaved_u16x8(vectors, dest);
     }
 }
@@ -1838,13 +1843,14 @@ impl<S: Simd> crate::SimdCombine<S> for i32x4<S> {
     }
 }
 impl<S: Simd> SimdInterleaved<S> for i32x4<S> {
-    type FourInterleavedArray = [i32; 16];
     #[inline(always)]
-    fn load_four_interleaved(simd: S, src: &Self::FourInterleavedArray) -> [Self; 4] {
+    fn load_four_interleaved(simd: S, src: &[Self::Element]) -> [Self; 4] {
+        let src: &[i32; 16] = src.try_into().unwrap();
         simd.load_four_interleaved_i32x4(src)
     }
     #[inline(always)]
-    fn store_four_interleaved(vectors: [Self; 4], dest: &mut Self::FourInterleavedArray) {
+    fn store_four_interleaved(vectors: [Self; 4], dest: &mut [Self::Element]) {
+        let dest: &mut [i32; 16] = dest.try_into().unwrap();
         vectors[0].simd.store_four_interleaved_i32x4(vectors, dest);
     }
 }
@@ -2109,13 +2115,14 @@ impl<S: Simd> crate::SimdCombine<S> for u32x4<S> {
     }
 }
 impl<S: Simd> SimdInterleaved<S> for u32x4<S> {
-    type FourInterleavedArray = [u32; 16];
     #[inline(always)]
-    fn load_four_interleaved(simd: S, src: &Self::FourInterleavedArray) -> [Self; 4] {
+    fn load_four_interleaved(simd: S, src: &[Self::Element]) -> [Self; 4] {
+        let src: &[u32; 16] = src.try_into().unwrap();
         simd.load_four_interleaved_u32x4(src)
     }
     #[inline(always)]
-    fn store_four_interleaved(vectors: [Self; 4], dest: &mut Self::FourInterleavedArray) {
+    fn store_four_interleaved(vectors: [Self; 4], dest: &mut [Self::Element]) {
+        let dest: &mut [u32; 16] = dest.try_into().unwrap();
         vectors[0].simd.store_four_interleaved_u32x4(vectors, dest);
     }
 }
@@ -2509,13 +2516,14 @@ impl<S: Simd> crate::SimdCombine<S> for f64x2<S> {
     }
 }
 impl<S: Simd> SimdInterleaved<S> for f64x2<S> {
-    type FourInterleavedArray = [f64; 8];
     #[inline(always)]
-    fn load_four_interleaved(simd: S, src: &Self::FourInterleavedArray) -> [Self; 4] {
+    fn load_four_interleaved(simd: S, src: &[Self::Element]) -> [Self; 4] {
+        let src: &[f64; 8] = src.try_into().unwrap();
         simd.load_four_interleaved_f64x2(src)
     }
     #[inline(always)]
-    fn store_four_interleaved(vectors: [Self; 4], dest: &mut Self::FourInterleavedArray) {
+    fn store_four_interleaved(vectors: [Self; 4], dest: &mut [Self::Element]) {
+        let dest: &mut [f64; 8] = dest.try_into().unwrap();
         vectors[0].simd.store_four_interleaved_f64x2(vectors, dest);
     }
 }
@@ -2761,13 +2769,14 @@ impl<S: Simd> crate::SimdCombine<S> for i64x2<S> {
     }
 }
 impl<S: Simd> SimdInterleaved<S> for i64x2<S> {
-    type FourInterleavedArray = [i64; 8];
     #[inline(always)]
-    fn load_four_interleaved(simd: S, src: &Self::FourInterleavedArray) -> [Self; 4] {
+    fn load_four_interleaved(simd: S, src: &[Self::Element]) -> [Self; 4] {
+        let src: &[i64; 8] = src.try_into().unwrap();
         simd.load_four_interleaved_i64x2(src)
     }
     #[inline(always)]
-    fn store_four_interleaved(vectors: [Self; 4], dest: &mut Self::FourInterleavedArray) {
+    fn store_four_interleaved(vectors: [Self; 4], dest: &mut [Self::Element]) {
+        let dest: &mut [i64; 8] = dest.try_into().unwrap();
         vectors[0].simd.store_four_interleaved_i64x2(vectors, dest);
     }
 }
@@ -3013,13 +3022,14 @@ impl<S: Simd> crate::SimdCombine<S> for u64x2<S> {
     }
 }
 impl<S: Simd> SimdInterleaved<S> for u64x2<S> {
-    type FourInterleavedArray = [u64; 8];
     #[inline(always)]
-    fn load_four_interleaved(simd: S, src: &Self::FourInterleavedArray) -> [Self; 4] {
+    fn load_four_interleaved(simd: S, src: &[Self::Element]) -> [Self; 4] {
+        let src: &[u64; 8] = src.try_into().unwrap();
         simd.load_four_interleaved_u64x2(src)
     }
     #[inline(always)]
-    fn store_four_interleaved(vectors: [Self; 4], dest: &mut Self::FourInterleavedArray) {
+    fn store_four_interleaved(vectors: [Self; 4], dest: &mut [Self::Element]) {
+        let dest: &mut [u64; 8] = dest.try_into().unwrap();
         vectors[0].simd.store_four_interleaved_u64x2(vectors, dest);
     }
 }
