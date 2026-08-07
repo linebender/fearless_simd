@@ -3413,6 +3413,34 @@ impl Simd for Neon {
         self.narrow_f64x2(a, b)
     }
     #[inline(always)]
+    fn cvt_u64_f64x2(self, a: f64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> u64x2<Neon> {
+                vcvtq_u64_f64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn cvt_u64_precise_f64x2(self, a: f64x2<Self>) -> u64x2<Self> {
+        self.cvt_u64_f64x2(a)
+    }
+    #[inline(always)]
+    fn cvt_i64_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> i64x2<Neon> {
+                vcvtq_s64_f64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn cvt_i64_precise_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
+        self.cvt_i64_f64x2(a)
+    }
+    #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3736,6 +3764,16 @@ impl Simd for Neon {
         self.narrow_i64x2(a, b)
     }
     #[inline(always)]
+    fn cvt_f64_i64x2(self, a: i64x2<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i64x2<Neon>) -> f64x2<Neon> {
+                vcvtq_f64_s64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4047,6 +4085,16 @@ impl Simd for Neon {
             "relaxed_narrow inputs must fit in the destination type",
         );
         self.narrow_u64x2(a, b)
+    }
+    #[inline(always)]
+    fn cvt_f64_u64x2(self, a: u64x2<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u64x2<Neon>) -> f64x2<Neon> {
+                vcvtq_f64_u64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {

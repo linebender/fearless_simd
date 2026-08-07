@@ -4056,6 +4056,22 @@ impl Simd for Avx2 {
         self.narrow_f64x2(a, b)
     }
     #[inline(always)]
+    fn cvt_u64_f64x2(self, a: f64x2<Self>) -> u64x2<Self> {
+        [a[0usize] as u64, a[1usize] as u64].simd_into(self)
+    }
+    #[inline(always)]
+    fn cvt_u64_precise_f64x2(self, a: f64x2<Self>) -> u64x2<Self> {
+        [a[0usize] as u64, a[1usize] as u64].simd_into(self)
+    }
+    #[inline(always)]
+    fn cvt_i64_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
+        [a[0usize] as i64, a[1usize] as i64].simd_into(self)
+    }
+    #[inline(always)]
+    fn cvt_i64_precise_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
+        [a[0usize] as i64, a[1usize] as i64].simd_into(self)
+    }
+    #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4426,6 +4442,10 @@ impl Simd for Avx2 {
         self.narrow_i64x2(a, b)
     }
     #[inline(always)]
+    fn cvt_f64_i64x2(self, a: i64x2<Self>) -> f64x2<Self> {
+        [a[0usize] as f64, a[1usize] as f64].simd_into(self)
+    }
+    #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4780,6 +4800,10 @@ impl Simd for Avx2 {
             "relaxed_narrow inputs must fit in the destination type",
         );
         self.narrow_u64x2(a, b)
+    }
+    #[inline(always)]
+    fn cvt_f64_u64x2(self, a: u64x2<Self>) -> f64x2<Self> {
+        [a[0usize] as f64, a[1usize] as f64].simd_into(self)
     }
     #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
@@ -9047,6 +9071,46 @@ impl Simd for Avx2 {
         self.narrow_f64x4(a, b)
     }
     #[inline(always)]
+    fn cvt_u64_f64x4(self, a: f64x4<Self>) -> u64x4<Self> {
+        [
+            a[0usize] as u64,
+            a[1usize] as u64,
+            a[2usize] as u64,
+            a[3usize] as u64,
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn cvt_u64_precise_f64x4(self, a: f64x4<Self>) -> u64x4<Self> {
+        [
+            a[0usize] as u64,
+            a[1usize] as u64,
+            a[2usize] as u64,
+            a[3usize] as u64,
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn cvt_i64_f64x4(self, a: f64x4<Self>) -> i64x4<Self> {
+        [
+            a[0usize] as i64,
+            a[1usize] as i64,
+            a[2usize] as i64,
+            a[3usize] as i64,
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn cvt_i64_precise_f64x4(self, a: f64x4<Self>) -> i64x4<Self> {
+        [
+            a[0usize] as i64,
+            a[1usize] as i64,
+            a[2usize] as i64,
+            a[3usize] as i64,
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn splat_i64x4(self, val: i64) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9423,6 +9487,16 @@ impl Simd for Avx2 {
         self.narrow_i64x4(a, b)
     }
     #[inline(always)]
+    fn cvt_f64_i64x4(self, a: i64x4<Self>) -> f64x4<Self> {
+        [
+            a[0usize] as f64,
+            a[1usize] as f64,
+            a[2usize] as f64,
+            a[3usize] as f64,
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn splat_u64x4(self, val: u64) -> u64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9781,6 +9855,16 @@ impl Simd for Avx2 {
             "relaxed_narrow inputs must fit in the destination type",
         );
         self.narrow_u64x4(a, b)
+    }
+    #[inline(always)]
+    fn cvt_f64_u64x4(self, a: u64x4<Self>) -> f64x4<Self> {
+        [
+            a[0usize] as f64,
+            a[1usize] as f64,
+            a[2usize] as f64,
+            a[3usize] as f64,
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn splat_mask64x4(self, val: bool) -> mask64x4<Self> {

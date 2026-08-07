@@ -1154,6 +1154,72 @@ pub(crate) const I32_TO_F32: Op = Op::new(
     "Convert each signed 32-bit integer element to a floating-point value.\n\n\
     Values that cannot be exactly represented are rounded to the nearest representable value.",
 );
+pub(crate) const F64_TO_U64: Op = Op::new(
+    "cvt_u64",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Unsigned,
+        scalar_bits: 64,
+        precise: false,
+    },
+    "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\n\
+    Out-of-range values or NaN will produce implementation-defined results.",
+);
+pub(crate) const F64_TO_U64_PRECISE: Op = Op::new(
+    "cvt_u64_precise",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Unsigned,
+        scalar_bits: 64,
+        precise: true,
+    },
+    "Convert each floating-point element to an unsigned 64-bit integer, truncating towards zero.\n\n\
+    Out-of-range values are saturated to the closest in-range value. NaN becomes 0.",
+);
+pub(crate) const F64_TO_I64: Op = Op::new(
+    "cvt_i64",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Int,
+        scalar_bits: 64,
+        precise: false,
+    },
+    "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\n\
+    Out-of-range values or NaN will produce implementation-defined results.",
+);
+pub(crate) const F64_TO_I64_PRECISE: Op = Op::new(
+    "cvt_i64_precise",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Int,
+        scalar_bits: 64,
+        precise: true,
+    },
+    "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\n\
+    Out-of-range values are saturated to the closest in-range value. NaN becomes 0.",
+);
+pub(crate) const U64_TO_F64: Op = Op::new(
+    "cvt_f64",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Float,
+        scalar_bits: 64,
+        precise: false,
+    },
+    "Convert each unsigned 64-bit integer element to a floating-point value.\n\n\
+    Values that cannot be exactly represented are rounded to the nearest representable value.",
+);
+pub(crate) const I64_TO_F64: Op = Op::new(
+    "cvt_f64",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Float,
+        scalar_bits: 64,
+        precise: false,
+    },
+    "Convert each signed 64-bit integer element to a floating-point value.\n\n\
+    Values that cannot be exactly represented are rounded to the nearest representable value.",
+);
 
 pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
     let base = match ty.scalar {
@@ -1244,7 +1310,8 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ));
     }
 
-    if ty.scalar == ScalarType::Float && ty.scalar_bits == 64 {
+    let is_f64 = ty.scalar == ScalarType::Float && ty.scalar_bits == 64;
+    if is_f64 {
         let target_ty = ty.narrowed().expect("f64 vectors support narrowing");
         ops.push(Op::new(
             "narrow",
@@ -1280,7 +1347,6 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
             For floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n\
             `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
         ));
-        return ops;
     }
 
     if let Some(target_ty) = ty.widened() {
@@ -1297,7 +1363,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ));
     }
 
-    if let Some(target_ty) = ty.narrowed() {
+    if !is_f64 && let Some(target_ty) = ty.narrowed() {
         ops.push(Op::new(
                 "narrow",
                 OpKind::OwnTrait,
@@ -1338,6 +1404,14 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         }
         (ScalarType::Unsigned, 32) => ops.push(U32_TO_F32),
         (ScalarType::Int, 32) => ops.push(I32_TO_F32),
+        (ScalarType::Float, 64) => {
+            ops.push(F64_TO_U64);
+            ops.push(F64_TO_U64_PRECISE);
+            ops.push(F64_TO_I64);
+            ops.push(F64_TO_I64_PRECISE);
+        }
+        (ScalarType::Unsigned, 64) => ops.push(U64_TO_F64),
+        (ScalarType::Int, 64) => ops.push(I64_TO_F64),
         _ => (),
     }
 
