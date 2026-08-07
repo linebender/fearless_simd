@@ -444,7 +444,18 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
         let Some(call_args) = sig.forwarding_call_args() else {
             continue;
         };
-        let trait_method = generic_op_name(method, ty);
+        // Integer min/max have no precision-related edge cases, so the precise
+        // variants deliberately forward to the regular backend operations.
+        let backend_method = if matches!(ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
+            match method {
+                "min_precise" => "min",
+                "max_precise" => "max",
+                _ => method,
+            }
+        } else {
+            method
+        };
+        let trait_method = generic_op_name(backend_method, ty);
         let method_sig = op
             .vec_trait_method_sig()
             .expect("base trait operation must have a vector method signature");

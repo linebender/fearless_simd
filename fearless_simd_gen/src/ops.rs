@@ -577,6 +577,44 @@ const BASE_OPS: &[Op] = &[
 
 const COMMON_BASE_OPS: &[Op] = &[
     Op::new(
+        "max",
+        OpKind::BaseTraitMethod,
+        OpSig::Binary,
+        "Return the element-wise maximum of two vectors.\n\n\
+        For floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\n\
+        If one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one.",
+    ),
+    Op::new(
+        "min",
+        OpKind::BaseTraitMethod,
+        OpSig::Binary,
+        "Return the element-wise minimum of two vectors.\n\n\
+        For floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\n\
+        If one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one.",
+    ),
+    Op::new(
+        "max_precise",
+        OpKind::BaseTraitMethod,
+        OpSig::Binary,
+        "Return the element-wise maximum of two vectors.\n\n\
+        For integer vectors, this operation is the same as `max`.\n\n\
+        For floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\n\
+        If one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n\
+        If a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\n\
+        Signaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them.",
+    ),
+    Op::new(
+        "min_precise",
+        OpKind::BaseTraitMethod,
+        OpSig::Binary,
+        "Return the element-wise minimum of two vectors.\n\n\
+        For integer vectors, this operation is the same as `min`.\n\n\
+        For floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\n\
+        If one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n\
+        If a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\n\
+        Signaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them.",
+    ),
+    Op::new(
         "simd_eq",
         OpKind::BaseTraitMethod,
         OpSig::Compare,
@@ -762,42 +800,6 @@ const FLOAT_OPS: &[Op] = &[
         This operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit.",
     ),
     Op::new(
-        "max",
-        OpKind::VecTraitMethod,
-        OpSig::Binary,
-        "Return the element-wise maximum of two vectors.\n\n\
-        If either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\n\
-        If one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one.",
-    ),
-    Op::new(
-        "min",
-        OpKind::VecTraitMethod,
-        OpSig::Binary,
-        "Return the element-wise minimum of two vectors.\n\n\
-        If either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\n\
-        If one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one.",
-    ),
-    Op::new(
-        "max_precise",
-        OpKind::VecTraitMethod,
-        OpSig::Binary,
-        "Return the element-wise maximum of two vectors.\n\n\
-        If one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\n\
-        If one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n\
-        If an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\n\
-        Signaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them.",
-    ),
-    Op::new(
-        "min_precise",
-        OpKind::VecTraitMethod,
-        OpSig::Binary,
-        "Return the element-wise minimum of two vectors.\n\n\
-        If one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\n\
-        If one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n\
-        If an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\n\
-        Signaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them.",
-    ),
-    Op::new(
         "mul_add",
         OpKind::VecTraitMethod,
         OpSig::Ternary,
@@ -934,18 +936,6 @@ const INT_OPS: &[Op] = &[
         OpSig::Select,
         "Select elements from {arg1} and {arg2} based on the mask operand {arg0}.\n\n\
     This operation's behavior is unspecified if {arg0} was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information.",
-    ),
-    Op::new(
-        "min",
-        OpKind::VecTraitMethod,
-        OpSig::Binary,
-        "Return the element-wise minimum of two vectors.",
-    ),
-    Op::new(
-        "max",
-        OpKind::VecTraitMethod,
-        OpSig::Binary,
-        "Return the element-wise maximum of two vectors.",
     ),
 ];
 
@@ -1184,7 +1174,12 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
             ScalarType::Mask => false,
         };
         if common_ops_follow {
-            ops.extend_from_slice(COMMON_BASE_OPS);
+            // Integer precise min/max are exposed by `SimdBase`, but forward to
+            // the ordinary integer backend operations in `simd_vec_impl`.
+            ops.extend(COMMON_BASE_OPS.iter().copied().filter(|op| {
+                ty.scalar == ScalarType::Float
+                    || !matches!(op.method, "min_precise" | "max_precise")
+            }));
         }
     }
 

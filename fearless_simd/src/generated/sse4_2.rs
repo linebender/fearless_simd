@@ -228,6 +228,50 @@ impl Simd for Sse4_2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: f32x4<Sse4_2>, b: f32x4<Sse4_2>) -> f32x4<Sse4_2> {
+                _mm_max_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: f32x4<Sse4_2>, b: f32x4<Sse4_2>) -> f32x4<Sse4_2> {
+                _mm_min_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: f32x4<Sse4_2>, b: f32x4<Sse4_2>) -> f32x4<Sse4_2> {
+                let intermediate = _mm_max_ps(a.into(), b.into());
+                let b_is_nan = _mm_cmpunord_ps(b.into(), b.into());
+                _mm_blendv_ps(intermediate, a.into(), b_is_nan).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: f32x4<Sse4_2>, b: f32x4<Sse4_2>) -> f32x4<Sse4_2> {
+                let intermediate = _mm_min_ps(a.into(), b.into());
+                let b_is_nan = _mm_cmpunord_ps(b.into(), b.into());
+                _mm_blendv_ps(intermediate, a.into(), b_is_nan).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -304,50 +348,6 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn deinterleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>) {
         (self.unzip_low_f32x4(a, b), self.unzip_high_f32x4(a, b))
-    }
-    #[inline(always)]
-    fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: f32x4<Sse4_2>, b: f32x4<Sse4_2>) -> f32x4<Sse4_2> {
-                _mm_max_ps(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: f32x4<Sse4_2>, b: f32x4<Sse4_2>) -> f32x4<Sse4_2> {
-                _mm_min_ps(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: f32x4<Sse4_2>, b: f32x4<Sse4_2>) -> f32x4<Sse4_2> {
-                let intermediate = _mm_max_ps(a.into(), b.into());
-                let b_is_nan = _mm_cmpunord_ps(b.into(), b.into());
-                _mm_blendv_ps(intermediate, a.into(), b_is_nan).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn min_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: f32x4<Sse4_2>, b: f32x4<Sse4_2>) -> f32x4<Sse4_2> {
-                let intermediate = _mm_min_ps(a.into(), b.into());
-                let b_is_nan = _mm_cmpunord_ps(b.into(), b.into());
-                _mm_blendv_ps(intermediate, a.into(), b_is_nan).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
@@ -779,6 +779,26 @@ impl Simd for Sse4_2 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i8x16<Sse4_2>, b: i8x16<Sse4_2>) -> i8x16<Sse4_2> {
+                _mm_max_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i8x16<Sse4_2>, b: i8x16<Sse4_2>) -> i8x16<Sse4_2> {
+                _mm_min_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -876,26 +896,6 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: i8x16<Sse4_2>, b: i8x16<Sse4_2>) -> i8x16<Sse4_2> {
-                _mm_min_epi8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: i8x16<Sse4_2>, b: i8x16<Sse4_2>) -> i8x16<Sse4_2> {
-                _mm_max_epi8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x32<Self> {
@@ -1239,6 +1239,26 @@ impl Simd for Sse4_2 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u8x16<Sse4_2>, b: u8x16<Sse4_2>) -> u8x16<Sse4_2> {
+                _mm_max_epu8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u8x16<Sse4_2>, b: u8x16<Sse4_2>) -> u8x16<Sse4_2> {
+                _mm_min_epu8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1342,26 +1362,6 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: u8x16<Sse4_2>, b: u8x16<Sse4_2>) -> u8x16<Sse4_2> {
-                _mm_min_epu8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: u8x16<Sse4_2>, b: u8x16<Sse4_2>) -> u8x16<Sse4_2> {
-                _mm_max_epu8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self> {
@@ -1779,6 +1779,26 @@ impl Simd for Sse4_2 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i16x8<Sse4_2>, b: i16x8<Sse4_2>) -> i16x8<Sse4_2> {
+                _mm_max_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i16x8<Sse4_2>, b: i16x8<Sse4_2>) -> i16x8<Sse4_2> {
+                _mm_min_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1876,26 +1896,6 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: i16x8<Sse4_2>, b: i16x8<Sse4_2>) -> i16x8<Sse4_2> {
-                _mm_min_epi16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: i16x8<Sse4_2>, b: i16x8<Sse4_2>) -> i16x8<Sse4_2> {
-                _mm_max_epi16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x16<Self> {
@@ -2193,6 +2193,26 @@ impl Simd for Sse4_2 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u16x8<Sse4_2>, b: u16x8<Sse4_2>) -> u16x8<Sse4_2> {
+                _mm_max_epu16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u16x8<Sse4_2>, b: u16x8<Sse4_2>) -> u16x8<Sse4_2> {
+                _mm_min_epu16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2296,26 +2316,6 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: u16x8<Sse4_2>, b: u16x8<Sse4_2>) -> u16x8<Sse4_2> {
-                _mm_min_epu16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: u16x8<Sse4_2>, b: u16x8<Sse4_2>) -> u16x8<Sse4_2> {
-                _mm_max_epu16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x16<Self> {
@@ -2761,6 +2761,26 @@ impl Simd for Sse4_2 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i32x4<Sse4_2>, b: i32x4<Sse4_2>) -> i32x4<Sse4_2> {
+                _mm_max_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i32x4<Sse4_2>, b: i32x4<Sse4_2>) -> i32x4<Sse4_2> {
+                _mm_min_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2856,26 +2876,6 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: i32x4<Sse4_2>, b: i32x4<Sse4_2>) -> i32x4<Sse4_2> {
-                _mm_min_epi32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: i32x4<Sse4_2>, b: i32x4<Sse4_2>) -> i32x4<Sse4_2> {
-                _mm_max_epi32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x8<Self> {
@@ -3165,6 +3165,26 @@ impl Simd for Sse4_2 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u32x4<Sse4_2>, b: u32x4<Sse4_2>) -> u32x4<Sse4_2> {
+                _mm_max_epu32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u32x4<Sse4_2>, b: u32x4<Sse4_2>) -> u32x4<Sse4_2> {
+                _mm_min_epu32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3266,26 +3286,6 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: u32x4<Sse4_2>, b: u32x4<Sse4_2>) -> u32x4<Sse4_2> {
-                _mm_min_epu32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: u32x4<Sse4_2>, b: u32x4<Sse4_2>) -> u32x4<Sse4_2> {
-                _mm_max_epu32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x8<Self> {
@@ -3716,6 +3716,50 @@ impl Simd for Sse4_2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: f64x2<Sse4_2>, b: f64x2<Sse4_2>) -> f64x2<Sse4_2> {
+                _mm_max_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: f64x2<Sse4_2>, b: f64x2<Sse4_2>) -> f64x2<Sse4_2> {
+                _mm_min_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: f64x2<Sse4_2>, b: f64x2<Sse4_2>) -> f64x2<Sse4_2> {
+                let intermediate = _mm_max_pd(a.into(), b.into());
+                let b_is_nan = _mm_cmpunord_pd(b.into(), b.into());
+                _mm_blendv_pd(intermediate, a.into(), b_is_nan).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn min_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: f64x2<Sse4_2>, b: f64x2<Sse4_2>) -> f64x2<Sse4_2> {
+                let intermediate = _mm_min_pd(a.into(), b.into());
+                let b_is_nan = _mm_cmpunord_pd(b.into(), b.into());
+                _mm_blendv_pd(intermediate, a.into(), b_is_nan).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_eq_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3792,50 +3836,6 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn deinterleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>) {
         (self.unzip_low_f64x2(a, b), self.unzip_high_f64x2(a, b))
-    }
-    #[inline(always)]
-    fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: f64x2<Sse4_2>, b: f64x2<Sse4_2>) -> f64x2<Sse4_2> {
-                _mm_max_pd(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: f64x2<Sse4_2>, b: f64x2<Sse4_2>) -> f64x2<Sse4_2> {
-                _mm_min_pd(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: f64x2<Sse4_2>, b: f64x2<Sse4_2>) -> f64x2<Sse4_2> {
-                let intermediate = _mm_max_pd(a.into(), b.into());
-                let b_is_nan = _mm_cmpunord_pd(b.into(), b.into());
-                _mm_blendv_pd(intermediate, a.into(), b_is_nan).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn min_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: f64x2<Sse4_2>, b: f64x2<Sse4_2>) -> f64x2<Sse4_2> {
-                let intermediate = _mm_min_pd(a.into(), b.into());
-                let b_is_nan = _mm_cmpunord_pd(b.into(), b.into());
-                _mm_blendv_pd(intermediate, a.into(), b_is_nan).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
@@ -4133,6 +4133,22 @@ impl Simd for Sse4_2 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        [
+            i64::max(a[0usize], b[0usize]),
+            i64::max(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        [
+            i64::min(a[0usize], b[0usize]),
+            i64::min(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4220,22 +4236,6 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        [
-            i64::min(a[0usize], b[0usize]),
-            i64::min(a[1usize], b[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        [
-            i64::max(a[0usize], b[0usize]),
-            i64::max(a[1usize], b[1usize]),
-        ]
-        .simd_into(self)
     }
     #[inline(always)]
     fn combine_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x4<Self> {
@@ -4503,6 +4503,22 @@ impl Simd for Sse4_2 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        [
+            u64::max(a[0usize], b[0usize]),
+            u64::max(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        [
+            u64::min(a[0usize], b[0usize]),
+            u64::min(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn simd_eq_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4590,22 +4606,6 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, a, b, c)
-    }
-    #[inline(always)]
-    fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        [
-            u64::min(a[0usize], b[0usize]),
-            u64::min(a[1usize], b[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        [
-            u64::max(a[0usize], b[0usize]),
-            u64::max(a[1usize], b[1usize]),
-        ]
-        .simd_into(self)
     }
     #[inline(always)]
     fn combine_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x4<Self> {
