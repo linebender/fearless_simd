@@ -30,6 +30,7 @@ You can find its changes [documented below](#060-2026-07-10).
 - Breaking change: Operations shared by integer and floating-point vectors have moved from `SimdInt`/`SimdFloat` to `SimdBase`, so code generic over any non-mask vector can use `Add`, `Sub`, `Mul`, comparisons, zip/unzip, and interleave/deinterleave operations. ([#308][] by [@Shnatsel][])
 - Breaking change: `min`, `max`, `min_precise`, and `max_precise` have moved from `SimdInt`/`SimdFloat` to `SimdBase`, allowing generic code to use them across integer and floating-point vectors. ([#313][] by [@Shnatsel][])
 - On x86_64 targets with static SSE2 support, `Level::baseline()` now returns `Sse2` instead of `Fallback`. ([#270][] by [@Shnatsel][])
+- The scalar `Fallback` backend and `Level::Fallback` variant are no longer compiled when the target has a better ambient SIMD baseline (e.g. SSE2 on x86, NEON on Aarch64). The `force_support_fallback` feature continues to make them available for testing. `disable_dispatch_sse2` no longer disables SSE2 if it is the baseline level. ([#320][] by [@Shnatsel][])
 - Runtime CPU feature detection performed by `Level::new()` is now cached on x86. ([#278][] by [@Shnatsel][])
 - The result of integer shifts by an amount greater than or equal to the element width is now explicitly documented as platform-dependent. Scalar fallback shifts use wrapping shift amounts instead of potentially panicking in debug builds. ([#283][] by [@Shnatsel][])
 - Full-vector 8-bit shifts on x86 have been optimized, including a 2.4x faster left-shift formulation and faster signed and unsigned right shifts. ([#291][] by [@Shnatsel][])
@@ -330,6 +331,7 @@ No changelog was kept for this release.
 [#313]: https://github.com/linebender/fearless_simd/pull/313
 [#317]: https://github.com/linebender/fearless_simd/pull/317
 [#318]: https://github.com/linebender/fearless_simd/pull/318
+[#320]: https://github.com/linebender/fearless_simd/pull/320
 [#321]: https://github.com/linebender/fearless_simd/pull/321
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.6.0...HEAD
