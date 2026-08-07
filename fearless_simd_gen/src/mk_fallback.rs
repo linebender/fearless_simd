@@ -443,9 +443,6 @@ impl Level for Fallback {
                     }
                 }
             }
-            OpSig::ElementRotate { .. } | OpSig::ElementShift { .. } => {
-                unreachable!("element moves use generic lowering")
-            }
             OpSig::SwizzleDynWithinBlocks => {
                 assert_eq!(
                     vec_ty.n_bits(),
