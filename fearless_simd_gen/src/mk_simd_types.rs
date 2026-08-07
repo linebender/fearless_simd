@@ -15,7 +15,7 @@ use crate::{
 
 pub(crate) fn mk_simd_types() -> TokenStream {
     let mut result = quote! {
-        use crate::{Bytes, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdMask, SimdCvtFloat, SimdCvtTruncate, seal::Seal};
+        use crate::{Bytes, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdMask, SimdCvtFloat, SimdCvtTruncate, SimdWiden, SimdNarrow, seal::Seal};
     };
     for ty in SIMD_TYPES {
         let name = ty.rust();
@@ -187,6 +187,46 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 });
             }
             _ => {}
+        }
+        if let Some(widened_ty) = ty.widened() {
+            let widened_ty = widened_ty.rust();
+            let method = generic_op_name("widen", ty);
+            conditional_impls.push(quote! {
+                impl<S: Simd> SimdWiden<S> for #name<S> {
+                    type Widened = #widened_ty<S>;
+
+                    #[inline(always)]
+                    fn widen(self) -> (Self::Widened, Self::Widened) {
+                        self.simd.#method(self)
+                    }
+                }
+            });
+        }
+        if let Some(narrowed_ty) = ty.narrowed() {
+            let narrowed_ty = narrowed_ty.rust();
+            let narrow = generic_op_name("narrow", ty);
+            let saturating_narrow = generic_op_name("saturating_narrow", ty);
+            let relaxed_narrow = generic_op_name("relaxed_narrow", ty);
+            conditional_impls.push(quote! {
+                impl<S: Simd> SimdNarrow<S> for #name<S> {
+                    type Narrowed = #narrowed_ty<S>;
+
+                    #[inline(always)]
+                    fn narrow(self, high: Self) -> Self::Narrowed {
+                        self.simd.#narrow(self, high)
+                    }
+
+                    #[inline(always)]
+                    fn saturating_narrow(self, high: Self) -> Self::Narrowed {
+                        self.simd.#saturating_narrow(self, high)
+                    }
+
+                    #[inline(always)]
+                    fn relaxed_narrow(self, high: Self) -> Self::Narrowed {
+                        self.simd.#relaxed_narrow(self, high)
+                    }
+                }
+            });
         }
         if let Some(half_ty) = ty.split_operand() {
             let half_ty_rust = half_ty.rust();

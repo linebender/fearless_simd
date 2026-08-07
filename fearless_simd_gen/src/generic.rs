@@ -235,13 +235,31 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::WidenNarrow { mut target_ty } => {
-            target_ty.len /= 2;
-            let combine = generic_op_name("combine", &target_ty);
+        OpSig::Widen { target_ty } => {
+            let mut target_half = target_ty;
+            target_half.len /= 2;
+            let combine_target = generic_op_name("combine", &target_half);
             quote! {
                 #method_sig {
                     let (a0, a1) = self.#split(a);
-                    self.#combine(self.#do_half(a0), self.#do_half(a1))
+                    let (a00, a01) = self.#do_half(a0);
+                    let (a10, a11) = self.#do_half(a1);
+                    (
+                        self.#combine_target(a00, a01),
+                        self.#combine_target(a10, a11),
+                    )
+                }
+            }
+        }
+        OpSig::Narrow { target_ty, .. } => {
+            let mut target_half = target_ty;
+            target_half.len /= 2;
+            let combine_target = generic_op_name("combine", &target_half);
+            quote! {
+                #method_sig {
+                    let (a0, a1) = self.#split(a);
+                    let (b0, b1) = self.#split(b);
+                    self.#combine_target(self.#do_half(a0, a1), self.#do_half(b0, b1))
                 }
             }
         }

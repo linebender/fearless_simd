@@ -125,28 +125,30 @@ impl VecType {
         Self::new(dst_scalar, dst_scalar_bits, self.n_bits() / dst_scalar_bits)
     }
 
+    /// Returns the same-width vector produced by widening each lane of this vector.
     pub(crate) fn widened(&self) -> Option<Self> {
-        if matches!(self.scalar, ScalarType::Mask | ScalarType::Float)
-            || self.n_bits() > 256
-            || self.scalar_bits != 8
-        {
+        let can_widen = match self.scalar {
+            ScalarType::Unsigned | ScalarType::Int => self.scalar_bits < 64,
+            ScalarType::Float => self.scalar_bits == 32,
+            ScalarType::Mask => false,
+        };
+        if !can_widen {
             return None;
         }
-
-        let scalar_bits = self.scalar_bits * 2;
-        Some(Self::new(self.scalar, scalar_bits, self.len))
+        Some(self.reinterpret(self.scalar, self.scalar_bits * 2))
     }
 
+    /// Returns the same-width vector produced by narrowing each lane of two vectors of this type.
     pub(crate) fn narrowed(&self) -> Option<Self> {
-        if matches!(self.scalar, ScalarType::Mask | ScalarType::Float)
-            || self.n_bits() < 256
-            || self.scalar_bits != 16
-        {
+        let can_narrow = match self.scalar {
+            ScalarType::Unsigned | ScalarType::Int => self.scalar_bits > 8,
+            ScalarType::Float => self.scalar_bits == 64,
+            ScalarType::Mask => false,
+        };
+        if !can_narrow {
             return None;
         }
-
-        let scalar_bits = self.scalar_bits / 2;
-        Some(Self::new(self.scalar, scalar_bits, self.len))
+        Some(self.reinterpret(self.scalar, self.scalar_bits / 2))
     }
 
     pub(crate) fn mask_ty(&self) -> Self {

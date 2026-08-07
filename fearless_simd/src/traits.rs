@@ -282,3 +282,137 @@ pub trait SimdSplit<S: Simd>: SimdBase<S> + Seal {
     /// Split this vector into left and right halves.
     fn split(self) -> (Self::Split, Self::Split);
 }
+
+/// Widening conversion of a numeric SIMD vector.
+///
+/// Integer lanes are sign-extended or zero-extended according to their type. Finite floating-point
+/// lanes are converted losslessly from `f32` to `f64`; infinities and NaNs remain infinities and
+/// NaNs. The result is returned as two vectors with the same bit width as the input: the first
+/// contains the widened lower lanes and the second contains the widened upper lanes.
+///
+/// ```
+/// use fearless_simd::{f32x4, f64x2, prelude::*, u8x16, u16x8};
+///
+/// fn fixed<S: Simd>(value: u8x16<S>) -> (u16x8<S>, u16x8<S>) {
+///     value.widen()
+/// }
+///
+/// fn native<S: Simd>(value: S::u8s) -> (S::u16s, S::u16s) {
+///     value.widen()
+/// }
+///
+/// fn fixed_float<S: Simd>(value: f32x4<S>) -> (f64x2<S>, f64x2<S>) {
+///     value.widen()
+/// }
+///
+/// fn native_float<S: Simd>(value: S::f32s) -> (S::f64s, S::f64s) {
+///     value.widen()
+/// }
+/// ```
+pub trait SimdWiden<S: Simd>: SimdBase<S> + Seal {
+    /// The same-width vector type with lanes twice as wide.
+    type Widened: SimdNarrow<S, Narrowed = Self>;
+
+    /// Widen every lane, returning the lower and upper halves in that order.
+    fn widen(self) -> (Self::Widened, Self::Widened);
+}
+
+/// Narrowing conversion of two numeric SIMD vectors.
+///
+/// Both inputs have the same bit width as the result. The first input supplies the lower result
+/// lanes and the second input supplies the upper result lanes. Integer narrowing either retains
+/// the low destination-width bits or saturates, depending on the method. Floating-point narrowing
+/// converts `f64` to `f32` using Rust's `as` semantics; for floats,
+/// [`saturating_narrow`](Self::saturating_narrow) and
+/// [`relaxed_narrow`](Self::relaxed_narrow) are identical to [`narrow`](Self::narrow).
+///
+/// ```
+/// use fearless_simd::{f32x4, f64x2, prelude::*, i16x8, i8x16};
+///
+/// fn fixed<S: Simd>(low: i16x8<S>, high: i16x8<S>) -> i8x16<S> {
+///     low.narrow(high)
+/// }
+///
+/// fn native<S: Simd>(low: S::i16s, high: S::i16s) -> S::i8s {
+///     low.saturating_narrow(high)
+/// }
+///
+/// fn fixed_float<S: Simd>(low: f64x2<S>, high: f64x2<S>) -> f32x4<S> {
+///     low.narrow(high)
+/// }
+///
+/// fn native_float<S: Simd>(low: S::f64s, high: S::f64s) -> S::f32s {
+///     low.saturating_narrow(high)
+/// }
+/// ```
+pub trait SimdNarrow<S: Simd>: SimdBase<S> + Seal {
+    /// The same-width vector type with lanes half as wide.
+    type Narrowed: SimdWiden<S, Widened = Self>;
+
+    /// Narrow every lane.
+    ///
+    /// This conversion behaves identically to the `as` operator:
+    ///  - Integers are truncated.
+    ///  - Floating-point values follow IEEE 754 narrowing behavior in round-to-even mode:
+    ///    they are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use fearless_simd::{dispatch, Level, i64x2, i32x4, prelude::*};
+    ///
+    /// let level = Level::new();
+    /// dispatch!(level, simd => {
+    ///     let low = i64x2::simd_from(simd, [1, -1]);
+    ///     let high = i64x2::simd_from(simd, [i64::MAX - 5, i64::MIN + 5]);
+    ///     let narrowed: i32x4<_> = low.narrow(high);
+    ///     assert_eq!(*narrowed, [1, -1, -6, 5]);
+    /// });
+    /// ```
+    fn narrow(self, high: Self) -> Self::Narrowed;
+
+    /// Narrow with saturation for integers. Floats behave identically to [`narrow`](Self::narrow).
+    ///
+    /// Integer values that overflow the narrowed type become the closest representable value for the narrowed type.
+    /// For example, `1234u16` becomes `u8::MAX` after narrowing, and `-1234i16` becomes `i8::MIN`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use fearless_simd::{dispatch, Level, i64x2, i32x4, prelude::*};
+    ///
+    /// let level = Level::new();
+    /// dispatch!(level, simd => {
+    ///     let low = i64x2::simd_from(simd, [1, -1]);
+    ///     let high = i64x2::simd_from(simd, [i64::MAX - 5, i64::MIN + 5]);
+    ///     let narrowed: i32x4<_> = low.saturating_narrow(high);
+    ///     assert_eq!(*narrowed, [1, -1, i32::MAX, i32::MIN]);
+    /// });
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed;
+
+    /// Narrow using the cheapest operation for the active SIMD backend, assuming no overflow.
+    ///
+    /// This is useful when you're sure the result fits into the destination type,
+    /// so the distinction between [`narrow`](Self::narrow) and [`saturating_narrow`](Self::saturating_narrow)
+    /// doesn't matter.
+    ///
+    /// This method will panic in debug mode if any of the inputs do not fit into the narrower type.
+    /// This operation remains memory-safe and never causes undefined behavior,
+    /// but will produce arbitrary values on overflow in release mode.
+    ///
+    /// Floats behave identically to [`narrow`](Self::narrow), with no additional precondition.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use fearless_simd::{dispatch, Level, i64x2, i32x4, prelude::*};
+    ///
+    /// let level = Level::new();
+    /// dispatch!(level, simd => {
+    ///     let low = i64x2::simd_from(simd, [1, -1]);
+    ///     let high = i64x2::simd_from(simd, [5, -5]);
+    ///     let narrowed: i32x4<_> = low.relaxed_narrow(high);
+    ///     assert_eq!(*narrowed, [1, -1, 5, -5]);
+    /// });
+    fn relaxed_narrow(self, high: Self) -> Self::Narrowed;
+}
