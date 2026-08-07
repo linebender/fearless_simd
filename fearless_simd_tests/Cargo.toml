@@ -21,5 +21,8 @@ workspace = true
 
 [dependencies]
 fastrand = "2.5.0"
-fearless_simd = { workspace = true, features = ["std", "force_support_fallback"] }
+fearless_simd = { workspace = true, features = [
+  "std",
+  "force_support_fallback",
+] }
 fearless_simd_dev_macros = { workspace = true }
