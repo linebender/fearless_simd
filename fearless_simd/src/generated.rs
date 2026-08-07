@@ -3,7 +3,6 @@
 
 #![expect(
     missing_docs,
-    clippy::unnecessary_cast,
     clippy::cast_possible_truncation,
     clippy::unseparated_literal_suffix,
     clippy::use_self,
@@ -12,37 +11,9 @@
 )]
 #![allow(
     trivial_numeric_casts,
-    reason = "Not every conditionally compiled backend contains a trivial cast"
-)]
-#![cfg_attr(
-    all(
-        target_arch = "x86_64",
-        any(
-            not(all(target_feature = "sse2", target_feature = "fxsr")),
-            feature = "force_support_fallback"
-        )
-    ),
-    expect(
-        clippy::new_without_default,
-        reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-    )
-)]
-#![cfg_attr(
-    target_arch = "wasm32",
-    expect(
-        clippy::new_without_default,
-        reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-    )
-)]
-#![cfg_attr(
-    all(
-        feature = "std",
-        all(not(target_arch = "x86_64"), not(target_arch = "wasm32"))
-    ),
-    expect(
-        clippy::new_without_default,
-        reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-    )
+    clippy::unnecessary_cast,
+    clippy::new_without_default,
+    reason = "Simplifies the generator and has no effect on the machine code, only tripped by some backends"
 )]
 
 //! A module containing generated files
