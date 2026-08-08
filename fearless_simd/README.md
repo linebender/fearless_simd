@@ -42,7 +42,7 @@ See https://linebender.org/blog/doc-include/ for related discussion. -->
 No matter what level of abstraction you're after, be it autovectorization and multiversioning, or portable SIMD, or safe access to raw
 intrinsics and nothing more, `fearless_simd` has you covered!
 
-Zero dependencies, from-scratch build time under 1 second, safe public APIs, and [very little](https://shnatsel.github.io/safe-simd-in-rust-even-on-the-inside/) `unsafe` under the hood.
+Zero dependencies, safe public APIs, and [very little](https://shnatsel.github.io/safe-simd-in-rust-even-on-the-inside/) `unsafe` under the hood.
 
 ## Automatic vectorization
 
