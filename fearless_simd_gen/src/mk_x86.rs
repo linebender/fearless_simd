@@ -3687,58 +3687,22 @@ impl X86 {
         if *self == Self::Sse2 && matches!(vec_ty.scalar_bits, 8 | 16) {
             return fallback_method(op, vec_ty);
         }
+        // SSE4.2 intrinsics are used on both SSE4.2 and AVX2,
+        // because AVX2 cross-lane shuffles have higher latency than this SSE4.2 formulation,
+        // and for load operations latency matters a lot more than throughput
+        // since data processing cannot start until the data is loaded.
         match vec_ty.scalar_bits {
             64 | 32 | 16 | 8 => {
-                let avx2_64 = *self == Self::Avx2 && vec_ty.scalar_bits == 64;
-                let block_len = if avx2_64 {
-                    4
-                } else {
-                    block_size as usize / vec_ty.scalar_bits
-                };
+                let block_len = block_size as usize / vec_ty.scalar_bits;
                 let block_ty = VecType::new(vec_ty.scalar, vec_ty.scalar_bits, block_len);
                 let scalar_ty = block_ty.scalar.rust(block_ty.scalar_bits);
                 let native_ty = self.arch_ty(&block_ty);
-                let native_block_ty = self.arch_ty(vec_ty);
                 let vec_32 = block_ty.reinterpret(block_ty.scalar, 32);
                 let unpacklo_32 = simple_sign_unaware_intrinsic("unpacklo", &vec_32);
                 let unpackhi_32 = simple_sign_unaware_intrinsic("unpackhi", &vec_32);
                 let vec_64 = block_ty.reinterpret(block_ty.scalar, 64);
                 let unpacklo_64 = simple_sign_unaware_intrinsic("unpacklo", &vec_64);
                 let unpackhi_64 = simple_sign_unaware_intrinsic("unpackhi", &vec_64);
-                let permute_128 = intrinsic_ident(
-                    match vec_ty.scalar {
-                        ScalarType::Float => "permute2f128",
-                        _ => "permute2x128",
-                    },
-                    coarse_type(&block_ty),
-                    256,
-                );
-
-                if avx2_64 {
-                    return self.kernel_method(op, vec_ty, |token| {
-                        quote! {
-                            let (chunks, []) = src.as_chunks::<4>() else {
-                                unreachable!()
-                            };
-                            let v0: #native_ty = crate::transmute::checked_transmute_copy::<[#scalar_ty; 4], #native_ty>(&chunks[0]);
-                            let v1: #native_ty = crate::transmute::checked_transmute_copy::<[#scalar_ty; 4], #native_ty>(&chunks[1]);
-
-                            let lo = #unpacklo_64(v0, v1); // [0,4,2,6]
-                            let hi = #unpackhi_64(v0, v1); // [1,5,3,7]
-                            let out0 = #permute_128::<0x20>(lo, hi); // [0,4,1,5]
-                            let out1 = #permute_128::<0x31>(lo, hi); // [2,6,3,7]
-                            let outputs: [#native_block_ty; 4] =
-                                crate::transmute::checked_transmute_copy(&[out0, out1]);
-
-                            [
-                                outputs[0].simd_into(#token),
-                                outputs[1].simd_into(#token),
-                                outputs[2].simd_into(#token),
-                                outputs[3].simd_into(#token),
-                            ]
-                        }
-                    });
-                }
 
                 let init_shuffle = match vec_ty.scalar_bits {
                     16 => Some(quote! {
