@@ -2348,18 +2348,44 @@ impl X86 {
                     _mm_and_si128(_mm_castpd_si128(sum_high), midpoint_fraction_mask),
                     midpoint_fraction,
                 );
-                let any_midpoint = _mm_or_si128(midpoint_low, midpoint_high);
+                // Subnormal f32 values have fewer than 24 significant bits, so their midpoint
+                // position within the f64 significand varies with the result's exponent. Use a
+                // provisional narrowing to identify every result whose rounding interval touches
+                // the subnormal range, including zero and the smallest normal value. Those rare
+                // lanes take the general round-to-odd path below.
+                let mut low = _mm_cvtpd_ps(sum_low);
+                let mut high = _mm_cvtpd_ps(sum_high);
+                let provisional = _mm_movelh_ps(low, high);
+                let abs_provisional_bits = _mm_and_si128(
+                    _mm_castps_si128(provisional),
+                    _mm_set1_epi32(0x7fff_ffff),
+                );
+                let at_most_min_normal = _mm_cmpgt_epi32(
+                    _mm_set1_epi32(0x0080_0001),
+                    abs_provisional_bits,
+                );
+                let subnormal_low = _mm_unpacklo_epi32(
+                    at_most_min_normal,
+                    at_most_min_normal,
+                );
+                let subnormal_high = _mm_unpackhi_epi32(
+                    at_most_min_normal,
+                    at_most_min_normal,
+                );
+                let round_to_odd_low = _mm_or_si128(midpoint_low, subnormal_low);
+                let round_to_odd_high = _mm_or_si128(midpoint_high, subnormal_high);
+                let any_round_to_odd = _mm_or_si128(round_to_odd_low, round_to_odd_high);
 
                 // Optimization notes:
                 // On uniform numeric values over the entire range, this branch only fires once per 685k calls,
-                // and on uniform nuimber values in [-1, 1) it fires once in 17k calls (empirically).
+                // and on uniform numeric values in [-1, 1) it fires once in 17k calls (empirically).
                 // So it is worth putting under an `if` despite the branch misprediction penalty.
                 // Outlining this into a #[cold] function regresses performance on both fast and slow paths.
                 // TODO: try using std::hint::cold_path() once MSRV is >= 1.95 and see if that does anything
-                if _mm_testz_si128(any_midpoint, any_midpoint) == 0 {
-                    // TwoSum recovers the exact residual of each widened addition. If a midpoint
-                    // addition was inexact, shift the rounded f64 value by one ULP toward the
-                    // residual before narrowing. This is a round-to-odd intermediate result.
+                if _mm_testz_si128(any_round_to_odd, any_round_to_odd) == 0 {
+                    // TwoSum recovers the exact residual of each widened addition. If a candidate
+                    // addition was inexact and its rounded f64 significand is even, shift it by one
+                    // ULP toward the residual. This produces a round-to-odd intermediate result.
                     let virtual_low = _mm_sub_pd(sum_low, product_low);
                     let residual_low = _mm_add_pd(
                         _mm_sub_pd(product_low, _mm_sub_pd(sum_low, virtual_low)),
@@ -2371,24 +2397,24 @@ impl X86 {
                         _mm_sub_pd(c_high, virtual_high),
                     );
 
-                    let zero = _mm_setzero_pd();
-                    let correction_low = _mm_and_si128(
-                        midpoint_low,
-                        _mm_castpd_si128(_mm_cmpneq_pd(residual_low, zero)),
-                    );
-                    let correction_high = _mm_and_si128(
-                        midpoint_high,
-                        _mm_castpd_si128(_mm_cmpneq_pd(residual_high, zero)),
-                    );
-
                     let one = _mm_set1_epi64x(1);
+                    let zero_si128 = _mm_setzero_si128();
+                    let zero = _mm_setzero_pd();
                     let sum_low_bits = _mm_castpd_si128(sum_low);
                     let residual_low_bits = _mm_castpd_si128(residual_low);
+                    let even_low = _mm_cmpeq_epi64(
+                        _mm_and_si128(sum_low_bits, one),
+                        zero_si128,
+                    );
+                    let correction_low = _mm_and_si128(
+                        _mm_and_si128(round_to_odd_low, even_low),
+                        _mm_castpd_si128(_mm_cmpneq_pd(residual_low, zero)),
+                    );
                     // The XOR is negative as a signed qword exactly when the signs differ.
                     // Its zero-greater-than mask is therefore -1 for a downward correction
                     // and zero otherwise; OR with one turns those into the desired -1/+1.
                     let different_sign_low = _mm_cmpgt_epi64(
-                        _mm_setzero_si128(),
+                        zero_si128,
                         _mm_xor_si128(sum_low_bits, residual_low_bits),
                     );
                     let direction_low = _mm_or_si128(different_sign_low, one);
@@ -2399,8 +2425,16 @@ impl X86 {
 
                     let sum_high_bits = _mm_castpd_si128(sum_high);
                     let residual_high_bits = _mm_castpd_si128(residual_high);
+                    let even_high = _mm_cmpeq_epi64(
+                        _mm_and_si128(sum_high_bits, one),
+                        zero_si128,
+                    );
+                    let correction_high = _mm_and_si128(
+                        _mm_and_si128(round_to_odd_high, even_high),
+                        _mm_castpd_si128(_mm_cmpneq_pd(residual_high, zero)),
+                    );
                     let different_sign_high = _mm_cmpgt_epi64(
-                        _mm_setzero_si128(),
+                        zero_si128,
                         _mm_xor_si128(sum_high_bits, residual_high_bits),
                     );
                     let direction_high = _mm_or_si128(different_sign_high, one);
@@ -2408,10 +2442,11 @@ impl X86 {
                         sum_high_bits,
                         _mm_and_si128(direction_high, correction_high),
                     ));
+
+                    low = _mm_cvtpd_ps(sum_low);
+                    high = _mm_cvtpd_ps(sum_high);
                 }
 
-                let low = _mm_cvtpd_ps(sum_low);
-                let high = _mm_cvtpd_ps(sum_high);
                 _mm_movelh_ps(low, high).simd_into(#token)
             }
         })

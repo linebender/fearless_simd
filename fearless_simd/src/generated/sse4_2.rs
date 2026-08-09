@@ -15,6 +15,30 @@ use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
 use core::ops::*;
+#[inline(always)]
+#[allow(
+    dead_code,
+    reason = "Generated backends use different subsets of these helpers"
+)]
+fn scalar_mul_add_precise_f32(a: f32, b: f32, c: f32) -> f32 {
+    let product = (a as f64) * (b as f64);
+    let c = c as f64;
+    let mut sum = product + c;
+    if sum.is_finite() {
+        let virtual_sum = sum - product;
+        let residual = (product - (sum - virtual_sum)) + (c - virtual_sum);
+        let sum_bits = sum.to_bits();
+        if residual != 0.0 && sum_bits & 1 == 0 {
+            let corrected_bits = if sum.is_sign_negative() == residual.is_sign_negative() {
+                sum_bits.wrapping_add(1)
+            } else {
+                sum_bits.wrapping_sub(1)
+            };
+            sum = f64::from_bits(corrected_bits);
+        }
+    }
+    sum as f32
+}
 #[cfg(all(feature = "libm", not(feature = "std")))]
 #[allow(
     dead_code,
@@ -466,8 +490,19 @@ impl Simd for Sse4_2 {
                     _mm_and_si128(_mm_castpd_si128(sum_high), midpoint_fraction_mask),
                     midpoint_fraction,
                 );
-                let any_midpoint = _mm_or_si128(midpoint_low, midpoint_high);
-                if _mm_testz_si128(any_midpoint, any_midpoint) == 0 {
+                let mut low = _mm_cvtpd_ps(sum_low);
+                let mut high = _mm_cvtpd_ps(sum_high);
+                let provisional = _mm_movelh_ps(low, high);
+                let abs_provisional_bits =
+                    _mm_and_si128(_mm_castps_si128(provisional), _mm_set1_epi32(0x7fff_ffff));
+                let at_most_min_normal =
+                    _mm_cmpgt_epi32(_mm_set1_epi32(0x0080_0001), abs_provisional_bits);
+                let subnormal_low = _mm_unpacklo_epi32(at_most_min_normal, at_most_min_normal);
+                let subnormal_high = _mm_unpackhi_epi32(at_most_min_normal, at_most_min_normal);
+                let round_to_odd_low = _mm_or_si128(midpoint_low, subnormal_low);
+                let round_to_odd_high = _mm_or_si128(midpoint_high, subnormal_high);
+                let any_round_to_odd = _mm_or_si128(round_to_odd_low, round_to_odd_high);
+                if _mm_testz_si128(any_round_to_odd, any_round_to_odd) == 0 {
                     let virtual_low = _mm_sub_pd(sum_low, product_low);
                     let residual_low = _mm_add_pd(
                         _mm_sub_pd(product_low, _mm_sub_pd(sum_low, virtual_low)),
@@ -478,22 +513,18 @@ impl Simd for Sse4_2 {
                         _mm_sub_pd(product_high, _mm_sub_pd(sum_high, virtual_high)),
                         _mm_sub_pd(c_high, virtual_high),
                     );
-                    let zero = _mm_setzero_pd();
-                    let correction_low = _mm_and_si128(
-                        midpoint_low,
-                        _mm_castpd_si128(_mm_cmpneq_pd(residual_low, zero)),
-                    );
-                    let correction_high = _mm_and_si128(
-                        midpoint_high,
-                        _mm_castpd_si128(_mm_cmpneq_pd(residual_high, zero)),
-                    );
                     let one = _mm_set1_epi64x(1);
+                    let zero_si128 = _mm_setzero_si128();
+                    let zero = _mm_setzero_pd();
                     let sum_low_bits = _mm_castpd_si128(sum_low);
                     let residual_low_bits = _mm_castpd_si128(residual_low);
-                    let different_sign_low = _mm_cmpgt_epi64(
-                        _mm_setzero_si128(),
-                        _mm_xor_si128(sum_low_bits, residual_low_bits),
+                    let even_low = _mm_cmpeq_epi64(_mm_and_si128(sum_low_bits, one), zero_si128);
+                    let correction_low = _mm_and_si128(
+                        _mm_and_si128(round_to_odd_low, even_low),
+                        _mm_castpd_si128(_mm_cmpneq_pd(residual_low, zero)),
                     );
+                    let different_sign_low =
+                        _mm_cmpgt_epi64(zero_si128, _mm_xor_si128(sum_low_bits, residual_low_bits));
                     let direction_low = _mm_or_si128(different_sign_low, one);
                     sum_low = _mm_castsi128_pd(_mm_add_epi64(
                         sum_low_bits,
@@ -501,8 +532,13 @@ impl Simd for Sse4_2 {
                     ));
                     let sum_high_bits = _mm_castpd_si128(sum_high);
                     let residual_high_bits = _mm_castpd_si128(residual_high);
+                    let even_high = _mm_cmpeq_epi64(_mm_and_si128(sum_high_bits, one), zero_si128);
+                    let correction_high = _mm_and_si128(
+                        _mm_and_si128(round_to_odd_high, even_high),
+                        _mm_castpd_si128(_mm_cmpneq_pd(residual_high, zero)),
+                    );
                     let different_sign_high = _mm_cmpgt_epi64(
-                        _mm_setzero_si128(),
+                        zero_si128,
                         _mm_xor_si128(sum_high_bits, residual_high_bits),
                     );
                     let direction_high = _mm_or_si128(different_sign_high, one);
@@ -510,9 +546,9 @@ impl Simd for Sse4_2 {
                         sum_high_bits,
                         _mm_and_si128(direction_high, correction_high),
                     ));
+                    low = _mm_cvtpd_ps(sum_low);
+                    high = _mm_cvtpd_ps(sum_high);
                 }
-                let low = _mm_cvtpd_ps(sum_low);
-                let high = _mm_cvtpd_ps(sum_high);
                 _mm_movelh_ps(low, high).simd_into(token)
             }
         );
