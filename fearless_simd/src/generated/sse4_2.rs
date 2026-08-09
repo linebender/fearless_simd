@@ -4062,14 +4062,17 @@ impl Simd for Sse4_2 {
                     ]
                     .simd_into(token);
                 }
-                let splitter = _mm_set1_pd(134_217_729.0);
-                let a_gamma = _mm_mul_pd(splitter, a_raw);
-                let a_delta = _mm_sub_pd(a_raw, a_gamma);
-                let a_high = _mm_add_pd(a_gamma, a_delta);
+                let split_rounding_bit = _mm_set1_epi64x(1_i64 << 26);
+                let split_high_mask = _mm_set1_epi64x(!((1_i64 << 27) - 1));
+                let a_high = _mm_castsi128_pd(_mm_and_si128(
+                    _mm_add_epi64(_mm_castpd_si128(a_raw), split_rounding_bit),
+                    split_high_mask,
+                ));
                 let a_low = _mm_sub_pd(a_raw, a_high);
-                let b_gamma = _mm_mul_pd(splitter, b_raw);
-                let b_delta = _mm_sub_pd(b_raw, b_gamma);
-                let b_high = _mm_add_pd(b_gamma, b_delta);
+                let b_high = _mm_castsi128_pd(_mm_and_si128(
+                    _mm_add_epi64(_mm_castpd_si128(b_raw), split_rounding_bit),
+                    split_high_mask,
+                ));
                 let b_low = _mm_sub_pd(b_raw, b_high);
                 let product_high = _mm_mul_pd(a_raw, b_raw);
                 let product_error_1 = _mm_sub_pd(_mm_mul_pd(a_high, b_high), product_high);
@@ -4085,23 +4088,23 @@ impl Simd for Sse4_2 {
                 let sum_small = _mm_blendv_pd(product_high, c_raw, product_high_larger);
                 let sum_low = _mm_sub_pd(sum_small, _mm_sub_pd(sum_high, sum_large));
                 let v_high = _mm_add_pd(product_low, sum_low);
-                let product_low_abs =
-                    _mm_and_si128(_mm_castpd_si128(product_low), absolute_value_mask);
-                let sum_low_abs = _mm_and_si128(_mm_castpd_si128(sum_low), absolute_value_mask);
-                let product_low_larger = _mm_cmpgt_pd(
-                    _mm_castsi128_pd(product_low_abs),
-                    _mm_castsi128_pd(sum_low_abs),
-                );
-                let v_large = _mm_blendv_pd(sum_low, product_low, product_low_larger);
-                let v_small = _mm_blendv_pd(product_low, sum_low, product_low_larger);
-                let v_low = _mm_sub_pd(v_small, _mm_sub_pd(v_high, v_large));
                 let v_high_bits = _mm_castpd_si128(v_high);
                 let lower_fraction_mask = _mm_set1_epi64x(0x0007_ffff_ffff_ffff);
                 let special_fraction =
                     _mm_cmpeq_epi64(_mm_and_si128(v_high_bits, lower_fraction_mask), zero_bits);
-                let v_low_nonzero = _mm_castpd_si128(_mm_cmpneq_pd(v_low, _mm_setzero_pd()));
-                let special = _mm_and_si128(v_low_nonzero, special_fraction);
-                if _mm_testz_si128(special, special) == 0 {
+                if _mm_testz_si128(special_fraction, v_high_bits) == 0 {
+                    let product_low_abs =
+                        _mm_and_si128(_mm_castpd_si128(product_low), absolute_value_mask);
+                    let sum_low_abs = _mm_and_si128(_mm_castpd_si128(sum_low), absolute_value_mask);
+                    let product_low_larger = _mm_cmpgt_pd(
+                        _mm_castsi128_pd(product_low_abs),
+                        _mm_castsi128_pd(sum_low_abs),
+                    );
+                    let v_large = _mm_blendv_pd(sum_low, product_low, product_low_larger);
+                    let v_small = _mm_blendv_pd(product_low, sum_low, product_low_larger);
+                    let v_low = _mm_sub_pd(v_small, _mm_sub_pd(v_high, v_large));
+                    let v_low_nonzero = _mm_castpd_si128(_mm_cmpneq_pd(v_low, _mm_setzero_pd()));
+                    let special = _mm_and_si128(v_low_nonzero, special_fraction);
                     let different_sign_bits = _mm_slli_epi64::<63>(_mm_srli_epi64::<63>(
                         _mm_xor_si128(v_high_bits, _mm_castpd_si128(v_low)),
                     ));

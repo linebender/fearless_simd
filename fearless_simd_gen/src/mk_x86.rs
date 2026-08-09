@@ -2551,15 +2551,23 @@ impl X86 {
                     .simd_into(#token);
                 }
 
-                // Veltkamp splitting for binary64, using K = 2^27 + 1.
-                let splitter = _mm_set1_pd(134_217_729.0);
-                let a_gamma = _mm_mul_pd(splitter, a_raw);
-                let a_delta = _mm_sub_pd(a_raw, a_gamma);
-                let a_high = _mm_add_pd(a_gamma, a_delta);
+                // Split each normal multiplicand into nonoverlapping high and low parts.
+                // Adding half of the discarded range before clearing 27 significand bits
+                // gives the high part at most 26 significant bits and leaves the low part
+                // at most 27. The addition operates on sign-magnitude binary64 encodings,
+                // so it rounds the magnitude in the same direction for either sign. The
+                // exponent guard above prevents the integer addition from wrapping.
+                let split_rounding_bit = _mm_set1_epi64x(1_i64 << 26);
+                let split_high_mask = _mm_set1_epi64x(!((1_i64 << 27) - 1));
+                let a_high = _mm_castsi128_pd(_mm_and_si128(
+                    _mm_add_epi64(_mm_castpd_si128(a_raw), split_rounding_bit),
+                    split_high_mask,
+                ));
                 let a_low = _mm_sub_pd(a_raw, a_high);
-                let b_gamma = _mm_mul_pd(splitter, b_raw);
-                let b_delta = _mm_sub_pd(b_raw, b_gamma);
-                let b_high = _mm_add_pd(b_gamma, b_delta);
+                let b_high = _mm_castsi128_pd(_mm_and_si128(
+                    _mm_add_epi64(_mm_castpd_si128(b_raw), split_rounding_bit),
+                    split_high_mask,
+                ));
                 let b_low = _mm_sub_pd(b_raw, b_high);
 
                 // Dekker product: product_high + product_low is exactly a * b.
@@ -2589,39 +2597,47 @@ impl X86 {
                 let sum_small = _mm_blendv_pd(product_high, c_raw, product_high_larger);
                 let sum_low = _mm_sub_pd(sum_small, _mm_sub_pd(sum_high, sum_large));
 
-                // Fast2Sum(product_low, sum_low), after the same magnitude sort.
+                // Only the rounded sum of product_low and sum_low is needed on the
+                // overwhelmingly common path. Its exact residual matters only when
+                // v_high has one of the two significand shapes that can require the
+                // Graillat-Muller correction, so defer that second Fast2Sum until then.
                 let v_high = _mm_add_pd(product_low, sum_low);
-                let product_low_abs = _mm_and_si128(
-                    _mm_castpd_si128(product_low),
-                    absolute_value_mask,
-                );
-                let sum_low_abs = _mm_and_si128(
-                    _mm_castpd_si128(sum_low),
-                    absolute_value_mask,
-                );
-                let product_low_larger = _mm_cmpgt_pd(
-                    _mm_castsi128_pd(product_low_abs),
-                    _mm_castsi128_pd(sum_low_abs),
-                );
-                let v_large = _mm_blendv_pd(sum_low, product_low, product_low_larger);
-                let v_small = _mm_blendv_pd(product_low, sum_low, product_low_larger);
-                let v_low = _mm_sub_pd(v_small, _mm_sub_pd(v_high, v_large));
-
-                // The default sum is correctly rounded except when v_low is nonzero and
-                // |v_high| is 2^k or 3 * 2^k. Under the exponent guard, every nonzero
-                // product or residual is a multiple of at least 2^-904, so v_low != 0
-                // implies that v_high is finite, normal, and nonzero. The two relevant
-                // significand shapes therefore differ only in their top fraction bit.
                 let v_high_bits = _mm_castpd_si128(v_high);
                 let lower_fraction_mask = _mm_set1_epi64x(0x0007_ffff_ffff_ffff);
                 let special_fraction = _mm_cmpeq_epi64(
                     _mm_and_si128(v_high_bits, lower_fraction_mask),
                     zero_bits,
                 );
-                let v_low_nonzero = _mm_castpd_si128(_mm_cmpneq_pd(v_low, _mm_setzero_pd()));
-                let special = _mm_and_si128(v_low_nonzero, special_fraction);
 
-                if _mm_testz_si128(special, special) == 0 {
+                // A positive zero has the same fraction shape, but cannot need correction.
+                // Testing the shape mask against v_high itself excludes it without forming
+                // another packed mask. A negative zero may enter the rare path harmlessly.
+                if _mm_testz_si128(special_fraction, v_high_bits) == 0 {
+                    // Fast2Sum(product_low, sum_low), after the same magnitude sort.
+                    let product_low_abs = _mm_and_si128(
+                        _mm_castpd_si128(product_low),
+                        absolute_value_mask,
+                    );
+                    let sum_low_abs = _mm_and_si128(
+                        _mm_castpd_si128(sum_low),
+                        absolute_value_mask,
+                    );
+                    let product_low_larger = _mm_cmpgt_pd(
+                        _mm_castsi128_pd(product_low_abs),
+                        _mm_castsi128_pd(sum_low_abs),
+                    );
+                    let v_large = _mm_blendv_pd(sum_low, product_low, product_low_larger);
+                    let v_small = _mm_blendv_pd(product_low, sum_low, product_low_larger);
+                    let v_low = _mm_sub_pd(v_small, _mm_sub_pd(v_high, v_large));
+
+                    // The default sum is correctly rounded except when v_low is nonzero and
+                    // |v_high| is 2^k or 3 * 2^k. Under the exponent guard, every nonzero
+                    // product or residual is a multiple of at least 2^-904, so v_low != 0
+                    // implies that v_high is finite, normal, and nonzero. The two relevant
+                    // significand shapes therefore differ only in their top fraction bit.
+                    let v_low_nonzero =
+                        _mm_castpd_si128(_mm_cmpneq_pd(v_low, _mm_setzero_pd()));
+                    let special = _mm_and_si128(v_low_nonzero, special_fraction);
                     let different_sign_bits = _mm_slli_epi64::<63>(_mm_srli_epi64::<63>(
                         _mm_xor_si128(v_high_bits, _mm_castpd_si128(v_low)),
                     ));
