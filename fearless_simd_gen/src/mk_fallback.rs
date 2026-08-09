@@ -17,6 +17,39 @@ pub(crate) struct Fallback;
 
 pub(crate) fn float_ext_prelude() -> TokenStream {
     quote! {
+        #[inline(always)]
+        #[allow(dead_code, reason = "Generated backends use different subsets of these helpers")]
+        fn scalar_mul_add_precise_f32(a: f32, b: f32, c: f32) -> f32 {
+            // Every finite f32 product is exactly representable as f64. Recover the exact error
+            // of the widened addition with TwoSum, then turn the rounded f64 sum into a
+            // round-to-odd value before narrowing. Boldo and Melquiond prove that this final
+            // narrowing is equivalent to rounding the exact product-plus-add once to f32:
+            // https://guillaume.melquiond.fr/doc/08-tc.pdf
+            let product = (a as f64) * (b as f64);
+            let c = c as f64;
+            let mut sum = product + c;
+
+            if sum.is_finite() {
+                let virtual_sum = sum - product;
+                let residual =
+                    (product - (sum - virtual_sum)) + (c - virtual_sum);
+                let sum_bits = sum.to_bits();
+
+                if residual != 0.0 && sum_bits & 1 == 0 {
+                    let corrected_bits = if sum.is_sign_negative()
+                        == residual.is_sign_negative()
+                    {
+                        sum_bits.wrapping_add(1)
+                    } else {
+                        sum_bits.wrapping_sub(1)
+                    };
+                    sum = f64::from_bits(corrected_bits);
+                }
+            }
+
+            sum as f32
+        }
+
         #[cfg(all(feature = "libm", not(feature = "std")))]
         #[allow(dead_code, reason = "Generated backends use different subsets of these helpers")]
         trait FloatExt {
@@ -314,6 +347,25 @@ impl Level for Fallback {
                     quote! {
                         #method_sig {
                             self.#mul_add_precise(a, b, -c)
+                        }
+                    }
+                } else if method == "mul_add_precise"
+                    && vec_ty.scalar == ScalarType::Float
+                    && vec_ty.scalar_bits == 32
+                {
+                    let items = make_list(
+                        (0..vec_ty.len)
+                            .map(|idx| {
+                                let a = lane(quote! { a }, vec_ty, idx);
+                                let b = lane(quote! { b }, vec_ty, idx);
+                                let c = lane(quote! { c }, vec_ty, idx);
+                                quote! { scalar_mul_add_precise_f32(#a, #b, #c) }
+                            })
+                            .collect::<Vec<_>>(),
+                    );
+                    quote! {
+                        #method_sig {
+                            #items.simd_into(self)
                         }
                     }
                 } else {
