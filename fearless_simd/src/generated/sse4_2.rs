@@ -490,19 +490,22 @@ impl Simd for Sse4_2 {
                     let one = _mm_set1_epi64x(1);
                     let sum_low_bits = _mm_castpd_si128(sum_low);
                     let residual_low_bits = _mm_castpd_si128(residual_low);
-                    let different_sign_low =
-                        _mm_srli_epi64::<63>(_mm_xor_si128(sum_low_bits, residual_low_bits));
-                    let direction_low = _mm_sub_epi64(one, _mm_slli_epi64::<1>(different_sign_low));
+                    let different_sign_low = _mm_cmpgt_epi64(
+                        _mm_setzero_si128(),
+                        _mm_xor_si128(sum_low_bits, residual_low_bits),
+                    );
+                    let direction_low = _mm_or_si128(different_sign_low, one);
                     sum_low = _mm_castsi128_pd(_mm_add_epi64(
                         sum_low_bits,
                         _mm_and_si128(direction_low, correction_low),
                     ));
                     let sum_high_bits = _mm_castpd_si128(sum_high);
                     let residual_high_bits = _mm_castpd_si128(residual_high);
-                    let different_sign_high =
-                        _mm_srli_epi64::<63>(_mm_xor_si128(sum_high_bits, residual_high_bits));
-                    let direction_high =
-                        _mm_sub_epi64(one, _mm_slli_epi64::<1>(different_sign_high));
+                    let different_sign_high = _mm_cmpgt_epi64(
+                        _mm_setzero_si128(),
+                        _mm_xor_si128(sum_high_bits, residual_high_bits),
+                    );
+                    let direction_high = _mm_or_si128(different_sign_high, one);
                     sum_high = _mm_castsi128_pd(_mm_add_epi64(
                         sum_high_bits,
                         _mm_and_si128(direction_high, correction_high),
