@@ -309,6 +309,13 @@ impl Level for Fallback {
                             a.mul(b).sub(c)
                         }
                     }
+                } else if method == "mul_sub_precise" {
+                    let mul_add_precise = generic_op_name("mul_add_precise", vec_ty);
+                    quote! {
+                        #method_sig {
+                            self.#mul_add_precise(a, b, -c)
+                        }
+                    }
                 } else {
                     let items = make_list(
                         (0..vec_ty.len)

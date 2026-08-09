@@ -822,6 +822,14 @@ const FLOAT_OPS: &[Op] = &[
         Depending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors.",
     ),
     Op::new(
+        "mul_sub_precise",
+        OpKind::VecTraitMethod,
+        OpSig::Ternary,
+        "Compute `({arg0} * {arg1}) - {arg2}` for each element, with a single rounding at the end.\n\n\
+        The result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on hardware without fused multiply-add instructions.\n\n\
+        Floating-point exception flags and NaN payload selection are not guaranteed.",
+    ),
+    Op::new(
         "floor",
         OpKind::VecTraitMethod,
         OpSig::Unary,

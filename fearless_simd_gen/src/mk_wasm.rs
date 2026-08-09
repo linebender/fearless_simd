@@ -421,6 +421,13 @@ impl Level for WasmSimd128 {
             OpSig::Ternary => {
                 if method == "mul_add_precise" {
                     fallback_method(op, vec_ty)
+                } else if method == "mul_sub_precise" {
+                    let mul_add_precise = generic_op_name("mul_add_precise", vec_ty);
+                    quote! {
+                        #method_sig {
+                            self.#mul_add_precise(a, b, -c)
+                        }
+                    }
                 } else if matches!(method, "mul_add" | "mul_sub") {
                     let add_sub =
                         generic_op_name(if method == "mul_add" { "add" } else { "sub" }, vec_ty);

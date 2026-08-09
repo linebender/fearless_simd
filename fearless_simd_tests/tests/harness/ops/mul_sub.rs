@@ -23,6 +23,42 @@ fn mul_sub_f64x2<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn mul_sub_f32x4_signed_zero<S: Simd>(simd: S) {
+    let a_values = [1.0_f32, -1.0, 0.0, -0.0];
+    let b_values = [1.0_f32, -1.0, 1.0, 1.0];
+    let c_values = [1.0_f32, 1.0, 0.0, 0.0];
+    let a = f32x4::from_slice(simd, &a_values);
+    let b = f32x4::from_slice(simd, &b_values);
+    let c = f32x4::from_slice(simd, &c_values);
+    let result = a.mul_sub(b, c);
+
+    for lane in 0..4 {
+        assert_eq!(
+            result[lane].to_bits(),
+            (a_values[lane] * b_values[lane] - c_values[lane]).to_bits()
+        );
+    }
+}
+
+#[simd_test]
+fn mul_sub_f64x2_signed_zero<S: Simd>(simd: S) {
+    let a_values = [1.0_f64, -0.0];
+    let b_values = [1.0_f64, 1.0];
+    let c_values = [1.0_f64, 0.0];
+    let a = f64x2::from_slice(simd, &a_values);
+    let b = f64x2::from_slice(simd, &b_values);
+    let c = f64x2::from_slice(simd, &c_values);
+    let result = a.mul_sub(b, c);
+
+    for lane in 0..2 {
+        assert_eq!(
+            result[lane].to_bits(),
+            (a_values[lane] * b_values[lane] - c_values[lane]).to_bits()
+        );
+    }
+}
+
+#[simd_test]
 fn mul_sub_f32x8<S: Simd>(simd: S) {
     let a = f32x8::from_slice(simd, &[2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
     let b = f32x8::from_slice(simd, &[10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]);

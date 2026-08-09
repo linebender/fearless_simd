@@ -2440,6 +2440,22 @@ impl X86 {
                 }
             }
             "mul_add_precise" => fallback_method(op, vec_ty),
+            "mul_sub_precise" if matches!(self, Self::Avx2 | Self::Avx512) => {
+                let mul_sub = generic_op_name("mul_sub", vec_ty);
+                quote! {
+                    #method_sig {
+                        self.#mul_sub(a, b, c)
+                    }
+                }
+            }
+            "mul_sub_precise" => {
+                let mul_add_precise = generic_op_name("mul_add_precise", vec_ty);
+                quote! {
+                    #method_sig {
+                        self.#mul_add_precise(a, b, -c)
+                    }
+                }
+            }
             "mul_add" if matches!(self, Self::Avx2 | Self::Avx512) => {
                 let intrinsic = simple_intrinsic("fmadd", vec_ty);
                 self.kernel_method(

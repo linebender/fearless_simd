@@ -460,6 +460,10 @@ impl Simd for Sse2 {
         a * b - c
     }
     #[inline(always)]
+    fn mul_sub_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
+        self.mul_add_precise_f32x4(a, b, -c)
+    }
+    #[inline(always)]
     fn floor_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
         [
             f32::floor(a[0usize]),
@@ -4211,6 +4215,10 @@ impl Simd for Sse2 {
     #[inline(always)]
     fn mul_sub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
         a * b - c
+    }
+    #[inline(always)]
+    fn mul_sub_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
+        self.mul_add_precise_f64x2(a, b, -c)
     }
     #[inline(always)]
     fn floor_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
