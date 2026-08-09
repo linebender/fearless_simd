@@ -643,9 +643,37 @@ impl Level for WasmSimd128 {
             }
             OpSig::SwizzleDyn => {
                 let precise = generic_op_name("swizzle_dyn_precise", vec_ty);
-                quote! {
-                    #method_sig {
-                        self.#precise(a, indices)
+
+                // Relaxed SIMD's relaxed_swizzle is only used for 128-bit vectors
+                // because the double-width swizzle path needs out-of-bounds indices
+                // to be zeroed to work efficiently
+                if vec_ty.n_bits() == 128 {
+                    let bytes_ty = vec_ty.bytes_ty();
+                    let bytes = bytes_ty.rust();
+                    let wrapper = bytes_ty.aligned_wrapper();
+
+                    quote! {
+                        #method_sig {
+                            #[cfg(target_feature = "relaxed-simd")]
+                            {
+                                let result = u8x16_relaxed_swizzle(
+                                    Bytes::to_bytes(a).val.0,
+                                    indices.into(),
+                                );
+                                Bytes::from_bytes(#bytes { val: #wrapper(result), simd: self })
+                            }
+
+                            #[cfg(not(target_feature = "relaxed-simd"))]
+                            {
+                                self.#precise(a, indices)
+                            }
+                        }
+                    }
+                } else {
+                    quote! {
+                        #method_sig {
+                            self.#precise(a, indices)
+                        }
                     }
                 }
             }
