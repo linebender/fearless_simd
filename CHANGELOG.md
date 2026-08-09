@@ -13,7 +13,7 @@ You can find its changes [documented below](#070-2026-08-11).
 
 ### Added
 
- - - Added `mul_add_precise` and `mul_sub_precise` for floating-point vectors. They guarantee the infinite-precision product-plus-add rounded once, including on SIMD levels without hardware fused multiply-add instructions. They are not susceptible to the [bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library, `std::simd` and musl libc that causes incorrect rounding for subnormal results.
+ - - Added `mul_add_precise` and `mul_sub_precise` for floating-point vectors. They guarantee the infinite-precision product-plus-add rounded once, including on SIMD levels without hardware fused multiply-add instructions. They are not susceptible to the [bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library, `std::simd` and musl libc that causes incorrect rounding for subnormal results. SSE4.2 gets SIMD emulation of these operations for better performance. ([#323][], [#324][] by [@Shnatsel][])
 
 ## [0.7.0][] (2026-08-11)
 
@@ -341,6 +341,8 @@ No changelog was kept for this release.
 [#318]: https://github.com/linebender/fearless_simd/pull/318
 [#320]: https://github.com/linebender/fearless_simd/pull/320
 [#321]: https://github.com/linebender/fearless_simd/pull/321
+[#323]: https://github.com/linebender/fearless_simd/pull/323
+[#324]: https://github.com/linebender/fearless_simd/pull/324
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.7.0...HEAD
 [0.7.0]: https://github.com/linebender/fearless_simd/compare/v0.6.0...v0.7.0

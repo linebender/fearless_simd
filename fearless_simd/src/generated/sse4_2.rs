@@ -4022,11 +4022,111 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn mul_add_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        [
-            f64::mul_add(a[0usize], b[0usize], c[0usize]),
-            f64::mul_add(a[1usize], b[1usize], c[1usize]),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                a: f64x2<Sse4_2>,
+                b: f64x2<Sse4_2>,
+                c: f64x2<Sse4_2>,
+            ) -> f64x2<Sse4_2> {
+                let a_raw: __m128d = a.into();
+                let b_raw: __m128d = b.into();
+                let c_raw: __m128d = c.into();
+                let absolute_value_mask = _mm_set1_epi64x(i64::MAX);
+                let a_bits = _mm_and_si128(_mm_castpd_si128(a_raw), absolute_value_mask);
+                let b_bits = _mm_and_si128(_mm_castpd_si128(b_raw), absolute_value_mask);
+                let c_bits = _mm_and_si128(_mm_castpd_si128(c_raw), absolute_value_mask);
+                let lower_bound_minus_one = _mm_set1_epi64x((623_i64 << 52) - 1);
+                let upper_bound_plus_one = _mm_set1_epi64x((1423_i64 << 52) + 1);
+                let zero_bits = _mm_setzero_si128();
+                let all_ones = _mm_set1_epi64x(-1);
+                let a_safe = _mm_and_si128(
+                    _mm_cmpgt_epi64(a_bits, lower_bound_minus_one),
+                    _mm_cmpgt_epi64(upper_bound_plus_one, a_bits),
+                );
+                let b_safe = _mm_and_si128(
+                    _mm_cmpgt_epi64(b_bits, lower_bound_minus_one),
+                    _mm_cmpgt_epi64(upper_bound_plus_one, b_bits),
+                );
+                let c_in_range = _mm_and_si128(
+                    _mm_cmpgt_epi64(c_bits, lower_bound_minus_one),
+                    _mm_cmpgt_epi64(upper_bound_plus_one, c_bits),
+                );
+                let c_safe = _mm_or_si128(c_in_range, _mm_cmpeq_epi64(c_bits, zero_bits));
+                let all_safe = _mm_and_si128(_mm_and_si128(a_safe, b_safe), c_safe);
+                if _mm_testc_si128(all_safe, all_ones) == 0 {
+                    return [
+                        f64::mul_add(a[0], b[0], c[0]),
+                        f64::mul_add(a[1], b[1], c[1]),
+                    ]
+                    .simd_into(token);
+                }
+                let splitter = _mm_set1_pd(134_217_729.0);
+                let a_gamma = _mm_mul_pd(splitter, a_raw);
+                let a_delta = _mm_sub_pd(a_raw, a_gamma);
+                let a_high = _mm_add_pd(a_gamma, a_delta);
+                let a_low = _mm_sub_pd(a_raw, a_high);
+                let b_gamma = _mm_mul_pd(splitter, b_raw);
+                let b_delta = _mm_sub_pd(b_raw, b_gamma);
+                let b_high = _mm_add_pd(b_gamma, b_delta);
+                let b_low = _mm_sub_pd(b_raw, b_high);
+                let product_high = _mm_mul_pd(a_raw, b_raw);
+                let product_error_1 = _mm_sub_pd(_mm_mul_pd(a_high, b_high), product_high);
+                let product_error_2 = _mm_add_pd(product_error_1, _mm_mul_pd(a_high, b_low));
+                let product_error_3 = _mm_add_pd(product_error_2, _mm_mul_pd(a_low, b_high));
+                let product_low = _mm_add_pd(product_error_3, _mm_mul_pd(a_low, b_low));
+                let sum_high = _mm_add_pd(product_high, c_raw);
+                let sum_product_part = _mm_sub_pd(sum_high, c_raw);
+                let sum_low = _mm_add_pd(
+                    _mm_sub_pd(product_high, sum_product_part),
+                    _mm_sub_pd(c_raw, _mm_sub_pd(sum_high, sum_product_part)),
+                );
+                let v_high = _mm_add_pd(product_low, sum_low);
+                let v_product_part = _mm_sub_pd(v_high, sum_low);
+                let v_low = _mm_add_pd(
+                    _mm_sub_pd(product_low, v_product_part),
+                    _mm_sub_pd(sum_low, _mm_sub_pd(v_high, v_product_part)),
+                );
+                let v_high_bits = _mm_castpd_si128(v_high);
+                let v_high_abs = _mm_and_si128(v_high_bits, absolute_value_mask);
+                let fraction_mask = _mm_set1_epi64x(0x000f_ffff_ffff_ffff);
+                let top_fraction_bit = _mm_set1_epi64x(0x0008_0000_0000_0000);
+                let exponent_mask = _mm_set1_epi64x(0x7ff0_0000_0000_0000);
+                let fraction = _mm_and_si128(v_high_abs, fraction_mask);
+                let exponent = _mm_and_si128(v_high_abs, exponent_mask);
+                let special_fraction = _mm_or_si128(
+                    _mm_cmpeq_epi64(fraction, zero_bits),
+                    _mm_cmpeq_epi64(fraction, top_fraction_bit),
+                );
+                let normal_exponent = _mm_andnot_si128(
+                    _mm_cmpeq_epi64(exponent, exponent_mask),
+                    _mm_cmpgt_epi64(exponent, zero_bits),
+                );
+                let v_low_nonzero = _mm_castpd_si128(_mm_cmpneq_pd(v_low, _mm_setzero_pd()));
+                let special = _mm_and_si128(
+                    v_low_nonzero,
+                    _mm_and_si128(special_fraction, normal_exponent),
+                );
+                if _mm_testz_si128(special, special) == 0 {
+                    let different_sign_bits = _mm_slli_epi64::<63>(_mm_srli_epi64::<63>(
+                        _mm_xor_si128(v_high_bits, _mm_castpd_si128(v_low)),
+                    ));
+                    let factor = _mm_blendv_pd(
+                        _mm_set1_pd(9.0 / 8.0),
+                        _mm_set1_pd(7.0 / 8.0),
+                        _mm_castsi128_pd(different_sign_bits),
+                    );
+                    let adjusted_v_high = _mm_mul_pd(factor, v_high);
+                    let correction =
+                        _mm_blendv_pd(v_high, adjusted_v_high, _mm_castsi128_pd(special));
+                    _mm_add_pd(sum_high, correction).simd_into(token)
+                } else {
+                    _mm_add_pd(sum_high, v_high).simd_into(token)
+                }
+            }
+        );
+        kernel(self, a, b, c)
     }
     #[inline(always)]
     fn mul_sub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {

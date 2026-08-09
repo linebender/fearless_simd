@@ -111,6 +111,31 @@ fn mul_sub_precise_f64x2<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn mul_sub_precise_f64x2_midpoint<S: Simd>(simd: S) {
+    let midpoint_a = 1.0 + 2.0_f64.powi(-27);
+    let midpoint_b = 1.0 - 2.0_f64.powi(-27);
+    let tiny = 2.0_f64.powi(-150);
+    let a_values = [midpoint_a, midpoint_a];
+    let b_values = [midpoint_b, midpoint_b];
+    let c_values = [-tiny, tiny];
+    let expected = [
+        a_values[0].mul_add(b_values[0], -c_values[0]),
+        a_values[1].mul_add(b_values[1], -c_values[1]),
+    ];
+
+    let a = f64x2::from_slice(simd, &a_values);
+    let b = f64x2::from_slice(simd, &b_values);
+    let c = f64x2::from_slice(simd, &c_values);
+    assert_eq!(*a.mul_sub_precise(b, c), expected);
+
+    assert_ne!(
+        expected[1],
+        midpoint_a * midpoint_b - tiny,
+        "the positive subtrahend must differ from a naive multiply-subtract",
+    );
+}
+
+#[simd_test]
 fn mul_sub_precise_f64x2_special_values<S: Simd>(simd: S) {
     let a_values = [-0.0_f64, f64::INFINITY];
     let b_values = [2.0_f64, 2.0];

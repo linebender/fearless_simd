@@ -9,6 +9,89 @@ use fearless_simd_dev_macros::simd_test;
 // on SSE4.2 and need to test it in great depth.
 
 #[simd_test]
+#[ignore = "stress-tests randomized safe-range and full-range f64 inputs"]
+fn mul_add_precise_f64x2_random<S: Simd>(simd: S) {
+    simd.vectorize(
+        #[inline(always)]
+        || {
+            let mut rng = fastrand::Rng::with_seed(0x3c6e_f372_fe94_f82b);
+            let fraction_mask = (1_u64 << 52) - 1;
+
+            for iteration in 0..100_000 {
+                let safe_a: [f64; 2] = core::array::from_fn(|_| {
+                    let exponent = rng.i32(-400..400);
+                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
+                    let bits =
+                        sign | (((exponent + 1023) as u64) << 52) | (rng.u64(..) & fraction_mask);
+                    f64::from_bits(bits)
+                });
+                let safe_b: [f64; 2] = core::array::from_fn(|_| {
+                    let exponent = rng.i32(-400..400);
+                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
+                    let bits =
+                        sign | (((exponent + 1023) as u64) << 52) | (rng.u64(..) & fraction_mask);
+                    f64::from_bits(bits)
+                });
+                let safe_c: [f64; 2] = core::array::from_fn(|lane| {
+                    if iteration % 32 == 0 && lane == 0 {
+                        return if rng.bool() { 0.0 } else { -0.0 };
+                    }
+                    let exponent = rng.i32(-400..400);
+                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
+                    let bits =
+                        sign | (((exponent + 1023) as u64) << 52) | (rng.u64(..) & fraction_mask);
+                    f64::from_bits(bits)
+                });
+                let safe_result = f64x2::from_slice(simd, &safe_a).mul_add_precise(
+                    f64x2::from_slice(simd, &safe_b),
+                    f64x2::from_slice(simd, &safe_c),
+                );
+                for lane in 0..2 {
+                    let expected = safe_a[lane].mul_add(safe_b[lane], safe_c[lane]);
+                    if expected.is_nan() {
+                        assert!(
+                            safe_result[lane].is_nan(),
+                            "safe-range iteration {iteration}, lane {lane}: expected NaN, got {:?}",
+                            safe_result[lane],
+                        );
+                    } else {
+                        assert_eq!(
+                            safe_result[lane].to_bits(),
+                            expected.to_bits(),
+                            "safe-range iteration {iteration}, lane {lane}",
+                        );
+                    }
+                }
+
+                let arbitrary_a = [f64::from_bits(rng.u64(..)), f64::from_bits(rng.u64(..))];
+                let arbitrary_b = [f64::from_bits(rng.u64(..)), f64::from_bits(rng.u64(..))];
+                let arbitrary_c = [f64::from_bits(rng.u64(..)), f64::from_bits(rng.u64(..))];
+                let arbitrary_result = f64x2::from_slice(simd, &arbitrary_a).mul_add_precise(
+                    f64x2::from_slice(simd, &arbitrary_b),
+                    f64x2::from_slice(simd, &arbitrary_c),
+                );
+                for lane in 0..2 {
+                    let expected = arbitrary_a[lane].mul_add(arbitrary_b[lane], arbitrary_c[lane]);
+                    if expected.is_nan() {
+                        assert!(
+                            arbitrary_result[lane].is_nan(),
+                            "full-range iteration {iteration}, lane {lane}: expected NaN, got {:?}",
+                            arbitrary_result[lane],
+                        );
+                    } else {
+                        assert_eq!(
+                            arbitrary_result[lane].to_bits(),
+                            expected.to_bits(),
+                            "full-range iteration {iteration}, lane {lane}",
+                        );
+                    }
+                }
+            }
+        },
+    );
+}
+
+#[simd_test]
 fn mul_add_precise_f32x4<S: Simd>(simd: S) {
     let midpoint_a = f32::from_bits(0x3f80_1000); // 1 + 2^-11
     let midpoint_b = f32::from_bits(0x3f7f_f800); // 1 - 2^-13
@@ -104,6 +187,31 @@ fn mul_add_precise_f64x2<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn mul_add_precise_f64x2_midpoint<S: Simd>(simd: S) {
+    let midpoint_a = 1.0 + 2.0_f64.powi(-27);
+    let midpoint_b = 1.0 - 2.0_f64.powi(-27);
+    let tiny = 2.0_f64.powi(-150);
+    let a_values = [midpoint_a, midpoint_a];
+    let b_values = [midpoint_b, midpoint_b];
+    let c_values = [tiny, -tiny];
+    let expected = [
+        a_values[0].mul_add(b_values[0], c_values[0]),
+        a_values[1].mul_add(b_values[1], c_values[1]),
+    ];
+
+    let a = f64x2::from_slice(simd, &a_values);
+    let b = f64x2::from_slice(simd, &b_values);
+    let c = f64x2::from_slice(simd, &c_values);
+    assert_eq!(*a.mul_add_precise(b, c), expected);
+
+    assert_ne!(
+        expected[1],
+        midpoint_a * midpoint_b - tiny,
+        "the negative perturbation must differ from a naive multiply-add",
+    );
+}
+
+#[simd_test]
 fn mul_add_precise_f64x2_special_values<S: Simd>(simd: S) {
     let a_values = [-0.0, f64::INFINITY];
     let b_values = [2.0, 2.0];
@@ -118,6 +226,96 @@ fn mul_add_precise_f64x2_special_values<S: Simd>(simd: S) {
         a_values[0].mul_add(b_values[0], c_values[0]).to_bits()
     );
     assert!(result[1].is_nan());
+}
+
+#[simd_test]
+fn mul_add_precise_f64x2_safe_range_boundaries<S: Simd>(simd: S) {
+    let safe_minimum = f64::from_bits(623_u64 << 52);
+    let below_safe_minimum = f64::from_bits((623_u64 << 52) - 1);
+    let safe_maximum = f64::from_bits(1423_u64 << 52);
+    let above_safe_maximum = f64::from_bits((1423_u64 << 52) + 1);
+
+    let a_values = [safe_minimum, safe_maximum];
+    let b_values = [safe_maximum, safe_minimum];
+    let c_values = [-0.0, safe_minimum];
+    let expected = [
+        a_values[0].mul_add(b_values[0], c_values[0]),
+        a_values[1].mul_add(b_values[1], c_values[1]),
+    ];
+    let result = f64x2::from_slice(simd, &a_values).mul_add_precise(
+        f64x2::from_slice(simd, &b_values),
+        f64x2::from_slice(simd, &c_values),
+    );
+    assert_eq!(result[0].to_bits(), expected[0].to_bits());
+    assert_eq!(result[1].to_bits(), expected[1].to_bits());
+
+    let a_values = [below_safe_minimum, above_safe_maximum];
+    let b_values = [1.0, 1.0];
+    let c_values = [safe_minimum, -safe_maximum];
+    let expected = [
+        a_values[0].mul_add(b_values[0], c_values[0]),
+        a_values[1].mul_add(b_values[1], c_values[1]),
+    ];
+    let result = f64x2::from_slice(simd, &a_values).mul_add_precise(
+        f64x2::from_slice(simd, &b_values),
+        f64x2::from_slice(simd, &c_values),
+    );
+    assert_eq!(result[0].to_bits(), expected[0].to_bits());
+    assert_eq!(result[1].to_bits(), expected[1].to_bits());
+}
+
+#[simd_test]
+fn mul_add_precise_f64x2_mixed_safe_and_unsafe<S: Simd>(simd: S) {
+    let midpoint_a = 1.0 + 2.0_f64.powi(-27);
+    let midpoint_b = 1.0 - 2.0_f64.powi(-27);
+    let tiny = 2.0_f64.powi(-150);
+    let a_values = [midpoint_a, f64::from_bits(1)];
+    let b_values = [midpoint_b, f64::MAX];
+    let c_values = [-tiny, -f64::MAX];
+    let expected = [
+        a_values[0].mul_add(b_values[0], c_values[0]),
+        a_values[1].mul_add(b_values[1], c_values[1]),
+    ];
+
+    let result = f64x2::from_slice(simd, &a_values).mul_add_precise(
+        f64x2::from_slice(simd, &b_values),
+        f64x2::from_slice(simd, &c_values),
+    );
+    assert_eq!(result[0].to_bits(), expected[0].to_bits());
+    assert_eq!(result[1].to_bits(), expected[1].to_bits());
+}
+
+#[simd_test]
+fn mul_add_precise_f64x2_full_range_fallback<S: Simd>(simd: S) {
+    let cases = [
+        ([0.0, -0.0], [-2.0, 2.0], [-0.0, 0.0]),
+        (
+            [f64::from_bits(1), f64::MIN_POSITIVE],
+            [0.5, 0.5],
+            [f64::from_bits(1), -f64::from_bits(1)],
+        ),
+        (
+            [f64::MAX, f64::INFINITY],
+            [2.0, 2.0],
+            [-f64::MAX, f64::NEG_INFINITY],
+        ),
+        ([f64::NAN, 1.0], [1.0, f64::NAN], [2.0, 3.0]),
+    ];
+
+    for (a_values, b_values, c_values) in cases {
+        let result = f64x2::from_slice(simd, &a_values).mul_add_precise(
+            f64x2::from_slice(simd, &b_values),
+            f64x2::from_slice(simd, &c_values),
+        );
+        for lane in 0..2 {
+            let expected = a_values[lane].mul_add(b_values[lane], c_values[lane]);
+            if expected.is_nan() {
+                assert!(result[lane].is_nan());
+            } else {
+                assert_eq!(result[lane].to_bits(), expected.to_bits());
+            }
+        }
+    }
 }
 
 #[simd_test]
