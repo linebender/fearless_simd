@@ -811,8 +811,7 @@ const FLOAT_OPS: &[Op] = &[
         OpKind::VecTraitMethod,
         OpSig::Ternary,
         "Compute `({arg0} * {arg1}) + {arg2}` for each element, with a single rounding at the end.\n\n\
-        The result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on hardware without fused multiply-add instructions.\n\n\
-        Floating-point exception flags and NaN payload selection are not guaranteed.",
+        The result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on hardware without fused multiply-add instructions.",
     ),
     Op::new(
         "mul_sub",
@@ -826,8 +825,7 @@ const FLOAT_OPS: &[Op] = &[
         OpKind::VecTraitMethod,
         OpSig::Ternary,
         "Compute `({arg0} * {arg1}) - {arg2}` for each element, with a single rounding at the end.\n\n\
-        The result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on hardware without fused multiply-add instructions.\n\n\
-        Floating-point exception flags and NaN payload selection are not guaranteed.",
+        The result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on hardware without fused multiply-add instructions.",
     ),
     Op::new(
         "floor",
