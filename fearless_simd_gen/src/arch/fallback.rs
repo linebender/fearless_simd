@@ -59,6 +59,7 @@ pub(crate) fn translate_op(op: &str, is_float: bool) -> Option<&'static str> {
         "min" => "min",
         "max_precise" => "max",
         "min_precise" => "min",
+        "mul_add_precise" => "mul_add",
         _ => return None,
     })
 }

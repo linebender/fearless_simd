@@ -121,7 +121,7 @@ impl Level for X86 {
     }
 
     fn make_module_prelude(&self) -> TokenStream {
-        let float_ext = if *self == Self::Sse2 {
+        let float_ext = if matches!(self, Self::Sse2 | Self::Sse4_2) {
             crate::mk_fallback::float_ext_prelude()
         } else {
             TokenStream::new()
@@ -2292,6 +2292,134 @@ impl X86 {
         }
     }
 
+    fn precise_mul_add_f32x4(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        assert!(
+            *self == Self::Sse4_2,
+            "precise f32 multiply-add emulation is specific to SSE4.2"
+        );
+        assert_eq!(
+            vec_ty.scalar,
+            ScalarType::Float,
+            "precise f32 multiply-add requires a floating-point vector"
+        );
+        assert_eq!(
+            vec_ty.scalar_bits, 32,
+            "precise f32 multiply-add requires 32-bit lanes"
+        );
+        assert_eq!(
+            vec_ty.n_bits(),
+            128,
+            "SSE4.2 precise f32 multiply-add requires one native vector"
+        );
+
+        // The basic idea behind the algorithm: turn f32x4 into two f64x2 vectors,
+        // compute `a * b + c`` there, then round back into f32.
+        // We need round-to-odd to correctly round to f32 in this case.
+        // Paper for the algorithm, with a formal proof in Coq:
+        // https://guillaume.melquiond.fr/doc/08-tc.pdf
+        self.kernel_method(op, vec_ty, |token| {
+            quote! {
+                let a: __m128 = a.into();
+                let b: __m128 = b.into();
+                let c: __m128 = c.into();
+
+                let a_low = _mm_cvtps_pd(a);
+                let a_high = _mm_cvtps_pd(_mm_movehl_ps(a, a));
+                let b_low = _mm_cvtps_pd(b);
+                let b_high = _mm_cvtps_pd(_mm_movehl_ps(b, b));
+                let c_low = _mm_cvtps_pd(c);
+                let c_high = _mm_cvtps_pd(_mm_movehl_ps(c, c));
+
+                // Every finite f32 product is exactly representable as f64. Usually the f64 sum
+                // can therefore be narrowed directly. The only possible double-rounding error is
+                // when that sum is exactly halfway between two adjacent f32 values.
+                let product_low = _mm_mul_pd(a_low, b_low);
+                let product_high = _mm_mul_pd(a_high, b_high);
+                let mut sum_low = _mm_add_pd(product_low, c_low);
+                let mut sum_high = _mm_add_pd(product_high, c_high);
+
+                let midpoint_fraction_mask = _mm_set1_epi64x(0x1fff_ffff);
+                let midpoint_fraction = _mm_set1_epi64x(0x1000_0000);
+                let midpoint_low = _mm_cmpeq_epi64(
+                    _mm_and_si128(_mm_castpd_si128(sum_low), midpoint_fraction_mask),
+                    midpoint_fraction,
+                );
+                let midpoint_high = _mm_cmpeq_epi64(
+                    _mm_and_si128(_mm_castpd_si128(sum_high), midpoint_fraction_mask),
+                    midpoint_fraction,
+                );
+                let any_midpoint = _mm_or_si128(midpoint_low, midpoint_high);
+
+                // Optimization notes:
+                // On uniform numeric values over the entire range, this branch only fires once per 685k calls,
+                // and on uniform nuimber values in [-1, 1) it fires once in 17k calls (empirically).
+                // So it is worth putting under an `if` despite the branch misprediction penalty.
+                // Outlining this into a #[cold] function regresses performance on both fast and slow paths.
+                // TODO: try using std::hint::cold_path() once MSRV is >= 1.95 and see if that does anything
+                if _mm_testz_si128(any_midpoint, any_midpoint) == 0 {
+                    // TwoSum recovers the exact residual of each widened addition. If a midpoint
+                    // addition was inexact, shift the rounded f64 value by one ULP toward the
+                    // residual before narrowing. This is a round-to-odd intermediate result.
+                    let virtual_low = _mm_sub_pd(sum_low, product_low);
+                    let residual_low = _mm_add_pd(
+                        _mm_sub_pd(product_low, _mm_sub_pd(sum_low, virtual_low)),
+                        _mm_sub_pd(c_low, virtual_low),
+                    );
+                    let virtual_high = _mm_sub_pd(sum_high, product_high);
+                    let residual_high = _mm_add_pd(
+                        _mm_sub_pd(product_high, _mm_sub_pd(sum_high, virtual_high)),
+                        _mm_sub_pd(c_high, virtual_high),
+                    );
+
+                    let zero = _mm_setzero_pd();
+                    let correction_low = _mm_and_si128(
+                        midpoint_low,
+                        _mm_castpd_si128(_mm_cmpneq_pd(residual_low, zero)),
+                    );
+                    let correction_high = _mm_and_si128(
+                        midpoint_high,
+                        _mm_castpd_si128(_mm_cmpneq_pd(residual_high, zero)),
+                    );
+
+                    let one = _mm_set1_epi64x(1);
+                    let sum_low_bits = _mm_castpd_si128(sum_low);
+                    let residual_low_bits = _mm_castpd_si128(residual_low);
+                    let different_sign_low = _mm_srli_epi64::<63>(_mm_xor_si128(
+                        sum_low_bits,
+                        residual_low_bits,
+                    ));
+                    let direction_low = _mm_sub_epi64(
+                        one,
+                        _mm_slli_epi64::<1>(different_sign_low),
+                    );
+                    sum_low = _mm_castsi128_pd(_mm_add_epi64(
+                        sum_low_bits,
+                        _mm_and_si128(direction_low, correction_low),
+                    ));
+
+                    let sum_high_bits = _mm_castpd_si128(sum_high);
+                    let residual_high_bits = _mm_castpd_si128(residual_high);
+                    let different_sign_high = _mm_srli_epi64::<63>(_mm_xor_si128(
+                        sum_high_bits,
+                        residual_high_bits,
+                    ));
+                    let direction_high = _mm_sub_epi64(
+                        one,
+                        _mm_slli_epi64::<1>(different_sign_high),
+                    );
+                    sum_high = _mm_castsi128_pd(_mm_add_epi64(
+                        sum_high_bits,
+                        _mm_and_si128(direction_high, correction_high),
+                    ));
+                }
+
+                let low = _mm_cvtpd_ps(sum_low);
+                let high = _mm_cvtpd_ps(sum_high);
+                _mm_movelh_ps(low, high).simd_into(#token)
+            }
+        })
+    }
+
     pub(crate) fn handle_ternary(
         &self,
         op: Op,
@@ -2300,6 +2428,18 @@ impl X86 {
         vec_ty: &VecType,
     ) -> TokenStream {
         match method {
+            "mul_add_precise" if *self == Self::Sse4_2 && vec_ty.scalar_bits == 32 => {
+                self.precise_mul_add_f32x4(op, vec_ty)
+            }
+            "mul_add_precise" if matches!(self, Self::Avx2 | Self::Avx512) => {
+                let mul_add = generic_op_name("mul_add", vec_ty);
+                quote! {
+                    #method_sig {
+                        self.#mul_add(a, b, c)
+                    }
+                }
+            }
+            "mul_add_precise" => fallback_method(op, vec_ty),
             "mul_add" if matches!(self, Self::Avx2 | Self::Avx512) => {
                 let intrinsic = simple_intrinsic("fmadd", vec_ty);
                 self.kernel_method(

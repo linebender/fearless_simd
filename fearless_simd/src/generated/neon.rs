@@ -362,6 +362,10 @@ impl Simd for Neon {
         kernel(self, a, b, c)
     }
     #[inline(always)]
+    fn mul_add_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
+        self.mul_add_f32x4(a, b, c)
+    }
+    #[inline(always)]
     fn mul_sub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3285,6 +3289,10 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b, c)
+    }
+    #[inline(always)]
+    fn mul_add_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
+        self.mul_add_f64x2(a, b, c)
     }
     #[inline(always)]
     fn mul_sub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {

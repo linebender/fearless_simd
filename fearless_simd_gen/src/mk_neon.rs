@@ -318,6 +318,15 @@ impl Level for Neon {
                 })
             }
             OpSig::Ternary => {
+                if method == "mul_add_precise" {
+                    let mul_add = generic_op_name("mul_add", vec_ty);
+                    return quote! {
+                        #method_sig {
+                            self.#mul_add(a, b, c)
+                        }
+                    };
+                }
+
                 let args = match method {
                     "mul_add" | "mul_sub" => [
                         quote! { c.into() },

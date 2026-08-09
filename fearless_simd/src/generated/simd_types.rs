@@ -238,6 +238,11 @@ impl<S: Simd> crate::SimdFloat<S> for f32x4<S> {
             .mul_add_f32x4(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
+    fn mul_add_precise(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .mul_add_precise_f32x4(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn mul_sub(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
         self.simd
             .mul_sub_f32x4(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
@@ -2374,6 +2379,11 @@ impl<S: Simd> crate::SimdFloat<S> for f64x2<S> {
             .mul_add_f64x2(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
+    fn mul_add_precise(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .mul_add_precise_f64x2(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn mul_sub(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
         self.simd
             .mul_sub_f64x2(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
@@ -3292,6 +3302,11 @@ impl<S: Simd> crate::SimdFloat<S> for f32x8<S> {
     fn mul_add(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
         self.simd
             .mul_add_f32x8(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn mul_add_precise(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .mul_add_precise_f32x8(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
     fn mul_sub(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
@@ -5469,6 +5484,11 @@ impl<S: Simd> crate::SimdFloat<S> for f64x4<S> {
             .mul_add_f64x4(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
+    fn mul_add_precise(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .mul_add_precise_f64x4(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn mul_sub(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
         self.simd
             .mul_sub_f64x4(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
@@ -6382,6 +6402,11 @@ impl<S: Simd> crate::SimdFloat<S> for f32x16<S> {
     fn mul_add(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
         self.simd
             .mul_add_f32x16(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn mul_add_precise(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .mul_add_precise_f32x16(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
     fn mul_sub(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
@@ -8641,6 +8666,11 @@ impl<S: Simd> crate::SimdFloat<S> for f64x8<S> {
     fn mul_add(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
         self.simd
             .mul_add_f64x8(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn mul_add_precise(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .mul_add_precise_f64x8(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
     fn mul_sub(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {

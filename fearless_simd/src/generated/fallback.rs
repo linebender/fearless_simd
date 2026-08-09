@@ -23,6 +23,7 @@ trait FloatExt {
     fn fract(self) -> Self;
     fn sqrt(self) -> Self;
     fn trunc(self) -> Self;
+    fn mul_add(self, a: Self, b: Self) -> Self;
 }
 #[cfg(all(feature = "libm", not(feature = "std")))]
 impl FloatExt for f32 {
@@ -50,6 +51,10 @@ impl FloatExt for f32 {
     fn trunc(self) -> f32 {
         libm::truncf(self)
     }
+    #[inline(always)]
+    fn mul_add(self, a: f32, b: f32) -> f32 {
+        libm::fmaf(self, a, b)
+    }
 }
 #[cfg(all(feature = "libm", not(feature = "std")))]
 impl FloatExt for f64 {
@@ -76,6 +81,10 @@ impl FloatExt for f64 {
     #[inline(always)]
     fn trunc(self) -> f64 {
         libm::trunc(self)
+    }
+    #[inline(always)]
+    fn mul_add(self, a: f64, b: f64) -> f64 {
+        libm::fma(self, a, b)
     }
 }
 #[doc = "A token for scalar fallback SIMD, representing the \"fallback\" level."]
@@ -360,6 +369,16 @@ impl Simd for Fallback {
     #[inline(always)]
     fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
         a.mul(b).add(c)
+    }
+    #[inline(always)]
+    fn mul_add_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
+        [
+            f32::mul_add(a[0usize], b[0usize], c[0usize]),
+            f32::mul_add(a[1usize], b[1usize], c[1usize]),
+            f32::mul_add(a[2usize], b[2usize], c[2usize]),
+            f32::mul_add(a[3usize], b[3usize], c[3usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn mul_sub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
@@ -4485,6 +4504,14 @@ impl Simd for Fallback {
     #[inline(always)]
     fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
         a.mul(b).add(c)
+    }
+    #[inline(always)]
+    fn mul_add_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
+        [
+            f64::mul_add(a[0usize], b[0usize], c[0usize]),
+            f64::mul_add(a[1usize], b[1usize], c[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn mul_sub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {

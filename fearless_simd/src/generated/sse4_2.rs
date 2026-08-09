@@ -15,6 +15,82 @@ use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
 use core::ops::*;
+#[cfg(all(feature = "libm", not(feature = "std")))]
+#[allow(
+    dead_code,
+    reason = "Generated backends use different subsets of these helpers"
+)]
+trait FloatExt {
+    fn floor(self) -> Self;
+    fn ceil(self) -> Self;
+    fn round_ties_even(self) -> Self;
+    fn fract(self) -> Self;
+    fn sqrt(self) -> Self;
+    fn trunc(self) -> Self;
+    fn mul_add(self, a: Self, b: Self) -> Self;
+}
+#[cfg(all(feature = "libm", not(feature = "std")))]
+impl FloatExt for f32 {
+    #[inline(always)]
+    fn floor(self) -> f32 {
+        libm::floorf(self)
+    }
+    #[inline(always)]
+    fn ceil(self) -> f32 {
+        libm::ceilf(self)
+    }
+    #[inline(always)]
+    fn round_ties_even(self) -> f32 {
+        libm::rintf(self)
+    }
+    #[inline(always)]
+    fn sqrt(self) -> f32 {
+        libm::sqrtf(self)
+    }
+    #[inline(always)]
+    fn fract(self) -> f32 {
+        self - self.trunc()
+    }
+    #[inline(always)]
+    fn trunc(self) -> f32 {
+        libm::truncf(self)
+    }
+    #[inline(always)]
+    fn mul_add(self, a: f32, b: f32) -> f32 {
+        libm::fmaf(self, a, b)
+    }
+}
+#[cfg(all(feature = "libm", not(feature = "std")))]
+impl FloatExt for f64 {
+    #[inline(always)]
+    fn floor(self) -> f64 {
+        libm::floor(self)
+    }
+    #[inline(always)]
+    fn ceil(self) -> f64 {
+        libm::ceil(self)
+    }
+    #[inline(always)]
+    fn round_ties_even(self) -> f64 {
+        libm::rint(self)
+    }
+    #[inline(always)]
+    fn sqrt(self) -> f64 {
+        libm::sqrt(self)
+    }
+    #[inline(always)]
+    fn fract(self) -> f64 {
+        self - self.trunc()
+    }
+    #[inline(always)]
+    fn trunc(self) -> f64 {
+        libm::trunc(self)
+    }
+    #[inline(always)]
+    fn mul_add(self, a: f64, b: f64) -> f64 {
+        libm::fma(self, a, b)
+    }
+}
 #[doc = "A token for SSE4.2 intrinsics on `x86` and `x86_64`, representing the x86-64-v2 level."]
 #[doc = "# Browsing the documentation"]
 #[doc = "The method list on this struct is very verbose."]
@@ -356,6 +432,88 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
         a * b + c
+    }
+    #[inline(always)]
+    fn mul_add_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                a: f32x4<Sse4_2>,
+                b: f32x4<Sse4_2>,
+                c: f32x4<Sse4_2>,
+            ) -> f32x4<Sse4_2> {
+                let a: __m128 = a.into();
+                let b: __m128 = b.into();
+                let c: __m128 = c.into();
+                let a_low = _mm_cvtps_pd(a);
+                let a_high = _mm_cvtps_pd(_mm_movehl_ps(a, a));
+                let b_low = _mm_cvtps_pd(b);
+                let b_high = _mm_cvtps_pd(_mm_movehl_ps(b, b));
+                let c_low = _mm_cvtps_pd(c);
+                let c_high = _mm_cvtps_pd(_mm_movehl_ps(c, c));
+                let product_low = _mm_mul_pd(a_low, b_low);
+                let product_high = _mm_mul_pd(a_high, b_high);
+                let mut sum_low = _mm_add_pd(product_low, c_low);
+                let mut sum_high = _mm_add_pd(product_high, c_high);
+                let midpoint_fraction_mask = _mm_set1_epi64x(0x1fff_ffff);
+                let midpoint_fraction = _mm_set1_epi64x(0x1000_0000);
+                let midpoint_low = _mm_cmpeq_epi64(
+                    _mm_and_si128(_mm_castpd_si128(sum_low), midpoint_fraction_mask),
+                    midpoint_fraction,
+                );
+                let midpoint_high = _mm_cmpeq_epi64(
+                    _mm_and_si128(_mm_castpd_si128(sum_high), midpoint_fraction_mask),
+                    midpoint_fraction,
+                );
+                let any_midpoint = _mm_or_si128(midpoint_low, midpoint_high);
+                if _mm_testz_si128(any_midpoint, any_midpoint) == 0 {
+                    let virtual_low = _mm_sub_pd(sum_low, product_low);
+                    let residual_low = _mm_add_pd(
+                        _mm_sub_pd(product_low, _mm_sub_pd(sum_low, virtual_low)),
+                        _mm_sub_pd(c_low, virtual_low),
+                    );
+                    let virtual_high = _mm_sub_pd(sum_high, product_high);
+                    let residual_high = _mm_add_pd(
+                        _mm_sub_pd(product_high, _mm_sub_pd(sum_high, virtual_high)),
+                        _mm_sub_pd(c_high, virtual_high),
+                    );
+                    let zero = _mm_setzero_pd();
+                    let correction_low = _mm_and_si128(
+                        midpoint_low,
+                        _mm_castpd_si128(_mm_cmpneq_pd(residual_low, zero)),
+                    );
+                    let correction_high = _mm_and_si128(
+                        midpoint_high,
+                        _mm_castpd_si128(_mm_cmpneq_pd(residual_high, zero)),
+                    );
+                    let one = _mm_set1_epi64x(1);
+                    let sum_low_bits = _mm_castpd_si128(sum_low);
+                    let residual_low_bits = _mm_castpd_si128(residual_low);
+                    let different_sign_low =
+                        _mm_srli_epi64::<63>(_mm_xor_si128(sum_low_bits, residual_low_bits));
+                    let direction_low = _mm_sub_epi64(one, _mm_slli_epi64::<1>(different_sign_low));
+                    sum_low = _mm_castsi128_pd(_mm_add_epi64(
+                        sum_low_bits,
+                        _mm_and_si128(direction_low, correction_low),
+                    ));
+                    let sum_high_bits = _mm_castpd_si128(sum_high);
+                    let residual_high_bits = _mm_castpd_si128(residual_high);
+                    let different_sign_high =
+                        _mm_srli_epi64::<63>(_mm_xor_si128(sum_high_bits, residual_high_bits));
+                    let direction_high =
+                        _mm_sub_epi64(one, _mm_slli_epi64::<1>(different_sign_high));
+                    sum_high = _mm_castsi128_pd(_mm_add_epi64(
+                        sum_high_bits,
+                        _mm_and_si128(direction_high, correction_high),
+                    ));
+                }
+                let low = _mm_cvtpd_ps(sum_low);
+                let high = _mm_cvtpd_ps(sum_high);
+                _mm_movelh_ps(low, high).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
     }
     #[inline(always)]
     fn mul_sub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
@@ -3844,6 +4002,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
         a * b + c
+    }
+    #[inline(always)]
+    fn mul_add_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
+        [
+            f64::mul_add(a[0usize], b[0usize], c[0usize]),
+            f64::mul_add(a[1usize], b[1usize], c[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn mul_sub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {

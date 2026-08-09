@@ -117,9 +117,11 @@ impl Level for WasmSimd128 {
     }
 
     fn make_module_prelude(&self) -> TokenStream {
+        let float_ext = crate::mk_fallback::float_ext_prelude();
         quote! {
             use core::arch::wasm32::*;
             use core::ops::*;
+            #float_ext
         }
     }
 
@@ -417,7 +419,9 @@ impl Level for WasmSimd128 {
                 }
             }
             OpSig::Ternary => {
-                if matches!(method, "mul_add" | "mul_sub") {
+                if method == "mul_add_precise" {
+                    fallback_method(op, vec_ty)
+                } else if matches!(method, "mul_add" | "mul_sub") {
                     let add_sub =
                         generic_op_name(if method == "mul_add" { "add" } else { "sub" }, vec_ty);
                     let mul = generic_op_name("mul", vec_ty);

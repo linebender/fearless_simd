@@ -26,6 +26,7 @@ pub(crate) fn float_ext_prelude() -> TokenStream {
             fn fract(self) -> Self;
             fn sqrt(self) -> Self;
             fn trunc(self) -> Self;
+            fn mul_add(self, a: Self, b: Self) -> Self;
         }
         #[cfg(all(feature = "libm", not(feature = "std")))]
         impl FloatExt for f32 {
@@ -52,6 +53,10 @@ pub(crate) fn float_ext_prelude() -> TokenStream {
             #[inline(always)]
             fn trunc(self) -> f32 {
                 libm::truncf(self)
+            }
+            #[inline(always)]
+            fn mul_add(self, a: f32, b: f32) -> f32 {
+                libm::fmaf(self, a, b)
             }
         }
 
@@ -80,6 +85,10 @@ pub(crate) fn float_ext_prelude() -> TokenStream {
             #[inline(always)]
             fn trunc(self) -> f64 {
                 libm::trunc(self)
+            }
+            #[inline(always)]
+            fn mul_add(self, a: f64, b: f64) -> f64 {
+                libm::fma(self, a, b)
             }
         }
     }
@@ -301,16 +310,21 @@ impl Level for Fallback {
                         }
                     }
                 } else {
-                    let args = [
-                        quote! { a.into() },
-                        quote! { b.into() },
-                        quote! { c.into() },
-                    ];
-
-                    let expr = fallback::expr(method, vec_ty, &args);
+                    let items = make_list(
+                        (0..vec_ty.len)
+                            .map(|idx| {
+                                let args = [
+                                    lane(quote! { a }, vec_ty, idx),
+                                    lane(quote! { b }, vec_ty, idx),
+                                    lane(quote! { c }, vec_ty, idx),
+                                ];
+                                fallback::expr(method, vec_ty, &args)
+                            })
+                            .collect::<Vec<_>>(),
+                    );
                     quote! {
                         #method_sig {
-                            #expr.simd_into(self)
+                            #items.simd_into(self)
                         }
                     }
                 }

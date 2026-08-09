@@ -48,6 +48,7 @@ mod min;
 mod min_precise;
 mod mul;
 mod mul_add;
+mod mul_add_precise;
 mod mul_sub;
 mod narrow;
 mod native_width;
