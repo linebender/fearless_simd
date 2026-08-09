@@ -9,7 +9,7 @@ use fearless_simd_dev_macros::simd_test;
 // on SSE4.2 and need to test it in great depth.
 
 #[simd_test]
-#[ignore = "stress-tests randomized safe-range and full-range f64 inputs"]
+#[ignore = "stress-tests 10 million randomized safe-range and full-range f64 inputs"]
 fn mul_add_precise_f64x2_random<S: Simd>(simd: S) {
     simd.vectorize(
         #[inline(always)]
@@ -17,7 +17,7 @@ fn mul_add_precise_f64x2_random<S: Simd>(simd: S) {
             let mut rng = fastrand::Rng::with_seed(0x3c6e_f372_fe94_f82b);
             let fraction_mask = (1_u64 << 52) - 1;
 
-            for iteration in 0..100_000 {
+            for iteration in 0..10_000_000 {
                 let safe_a: [f64; 2] = core::array::from_fn(|_| {
                     let exponent = rng.i32(-400..400);
                     let sign = if rng.bool() { 1_u64 << 63 } else { 0 };

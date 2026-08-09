@@ -4077,37 +4077,30 @@ impl Simd for Sse4_2 {
                 let product_error_3 = _mm_add_pd(product_error_2, _mm_mul_pd(a_low, b_high));
                 let product_low = _mm_add_pd(product_error_3, _mm_mul_pd(a_low, b_low));
                 let sum_high = _mm_add_pd(product_high, c_raw);
-                let sum_product_part = _mm_sub_pd(sum_high, c_raw);
-                let sum_low = _mm_add_pd(
-                    _mm_sub_pd(product_high, sum_product_part),
-                    _mm_sub_pd(c_raw, _mm_sub_pd(sum_high, sum_product_part)),
-                );
+                let product_high_abs =
+                    _mm_and_si128(_mm_castpd_si128(product_high), absolute_value_mask);
+                let product_high_larger =
+                    _mm_cmpgt_pd(_mm_castsi128_pd(product_high_abs), _mm_castsi128_pd(c_bits));
+                let sum_large = _mm_blendv_pd(c_raw, product_high, product_high_larger);
+                let sum_small = _mm_blendv_pd(product_high, c_raw, product_high_larger);
+                let sum_low = _mm_sub_pd(sum_small, _mm_sub_pd(sum_high, sum_large));
                 let v_high = _mm_add_pd(product_low, sum_low);
-                let v_product_part = _mm_sub_pd(v_high, sum_low);
-                let v_low = _mm_add_pd(
-                    _mm_sub_pd(product_low, v_product_part),
-                    _mm_sub_pd(sum_low, _mm_sub_pd(v_high, v_product_part)),
+                let product_low_abs =
+                    _mm_and_si128(_mm_castpd_si128(product_low), absolute_value_mask);
+                let sum_low_abs = _mm_and_si128(_mm_castpd_si128(sum_low), absolute_value_mask);
+                let product_low_larger = _mm_cmpgt_pd(
+                    _mm_castsi128_pd(product_low_abs),
+                    _mm_castsi128_pd(sum_low_abs),
                 );
+                let v_large = _mm_blendv_pd(sum_low, product_low, product_low_larger);
+                let v_small = _mm_blendv_pd(product_low, sum_low, product_low_larger);
+                let v_low = _mm_sub_pd(v_small, _mm_sub_pd(v_high, v_large));
                 let v_high_bits = _mm_castpd_si128(v_high);
-                let v_high_abs = _mm_and_si128(v_high_bits, absolute_value_mask);
-                let fraction_mask = _mm_set1_epi64x(0x000f_ffff_ffff_ffff);
-                let top_fraction_bit = _mm_set1_epi64x(0x0008_0000_0000_0000);
-                let exponent_mask = _mm_set1_epi64x(0x7ff0_0000_0000_0000);
-                let fraction = _mm_and_si128(v_high_abs, fraction_mask);
-                let exponent = _mm_and_si128(v_high_abs, exponent_mask);
-                let special_fraction = _mm_or_si128(
-                    _mm_cmpeq_epi64(fraction, zero_bits),
-                    _mm_cmpeq_epi64(fraction, top_fraction_bit),
-                );
-                let normal_exponent = _mm_andnot_si128(
-                    _mm_cmpeq_epi64(exponent, exponent_mask),
-                    _mm_cmpgt_epi64(exponent, zero_bits),
-                );
+                let lower_fraction_mask = _mm_set1_epi64x(0x0007_ffff_ffff_ffff);
+                let special_fraction =
+                    _mm_cmpeq_epi64(_mm_and_si128(v_high_bits, lower_fraction_mask), zero_bits);
                 let v_low_nonzero = _mm_castpd_si128(_mm_cmpneq_pd(v_low, _mm_setzero_pd()));
-                let special = _mm_and_si128(
-                    v_low_nonzero,
-                    _mm_and_si128(special_fraction, normal_exponent),
-                );
+                let special = _mm_and_si128(v_low_nonzero, special_fraction);
                 if _mm_testz_si128(special, special) == 0 {
                     let different_sign_bits = _mm_slli_epi64::<63>(_mm_srli_epi64::<63>(
                         _mm_xor_si128(v_high_bits, _mm_castpd_si128(v_low)),
