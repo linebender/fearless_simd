@@ -42,8 +42,3 @@ workspace = true
 
 [dependencies]
 libm = { version = "0.2.15", optional = true }
-
-[dev-dependencies]
-# Keep precise-FMA benchmarks on libm's generic software implementation even on
-# x86 hosts where libm would otherwise select hardware FMA at runtime.
-libm = { version = "0.2.15", features = ["force-soft-floats"] }
