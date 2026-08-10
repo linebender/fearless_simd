@@ -1,7 +1,6 @@
 // Copyright 2026 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use core::any::TypeId;
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
@@ -10,18 +9,16 @@ use fearless_simd_dev_macros::simd_test;
 // on SSE4.2 and need to test it in great depth.
 
 #[inline(always)]
-fn reference_fma_f32<S: Simd>(_: S, x: f32, y: f32, z: f32) -> f32 {
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    if TypeId::of::<S>() == TypeId::of::<Avx2>() || TypeId::of::<S>() == TypeId::of::<Avx512>() {
-        return x.mul_add(y, z);
+fn reference_fma_f32<S: Simd>(simd: S, x: f32, y: f32, z: f32) -> f32 {
+    // Targets with hardware FMA use it; other use our own software emulation
+    use Level::*;
+    match simd.level() {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        Avx2(_) | Avx512(_) => x.mul_add(y, z),
+        #[cfg(target_arch = "aarch64")]
+        Neon(_) => x.mul_add(y, z),
+        _ => soft_fma(x, y, z),
     }
-
-    #[cfg(target_arch = "aarch64")]
-    if TypeId::of::<S>() == TypeId::of::<Neon>() {
-        return x.mul_add(y, z);
-    }
-
-    soft_fma(x, y, z)
 }
 
 // Rust std and even musl libc have buggy software FMA:
