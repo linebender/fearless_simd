@@ -11,12 +11,11 @@ use fearless_simd_dev_macros::simd_test;
 #[inline(always)]
 fn reference_fma_f32<S: Simd>(simd: S, x: f32, y: f32, z: f32) -> f32 {
     // Targets with hardware FMA use it; other use our own software emulation
-    use Level::*;
     match simd.level() {
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-        Avx2(_) | Avx512(_) => x.mul_add(y, z),
+        Level::Avx2(_) | Level::Avx512(_) => x.mul_add(y, z),
         #[cfg(target_arch = "aarch64")]
-        Neon(_) => x.mul_add(y, z),
+        Level::Neon(_) => x.mul_add(y, z),
         _ => soft_fma(x, y, z),
     }
 }
