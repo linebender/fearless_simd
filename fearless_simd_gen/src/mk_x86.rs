@@ -126,6 +126,11 @@ impl Level for X86 {
         } else {
             TokenStream::new()
         };
+        let scalar_mul_add_precise_f32 = if *self == Self::Sse2 {
+            crate::mk_fallback::sse2_scalar_mul_add_precise_f32_helper()
+        } else {
+            TokenStream::new()
+        };
 
         quote! {
             #[cfg(target_arch = "x86")]
@@ -133,6 +138,7 @@ impl Level for X86 {
             #[cfg(target_arch = "x86_64")]
             use core::arch::x86_64::*;
             use core::ops::*;
+            #scalar_mul_add_precise_f32
             #float_ext
         }
     }
@@ -2460,6 +2466,22 @@ impl X86 {
         vec_ty: &VecType,
     ) -> TokenStream {
         match method {
+            "mul_add_precise"
+                if *self == Self::Sse2
+                    && vec_ty.scalar == ScalarType::Float
+                    && vec_ty.scalar_bits == 32 =>
+            {
+                let calls = (0..vec_ty.len).map(|idx| {
+                    quote! {
+                        scalar_mul_add_precise_f32(self, a[#idx], b[#idx], c[#idx])
+                    }
+                });
+                quote! {
+                    #method_sig {
+                        [#(#calls),*].simd_into(self)
+                    }
+                }
+            }
             "mul_add_precise" if *self == Self::Sse4_2 && vec_ty.scalar_bits == 32 => {
                 self.precise_mul_add_f32x4(op, vec_ty)
             }

@@ -15,41 +15,65 @@ use quote::quote;
 #[derive(Clone, Copy)]
 pub(crate) struct Fallback;
 
-pub(crate) fn float_ext_prelude() -> TokenStream {
+fn scalar_mul_add_precise_f32_body() -> TokenStream {
+    quote! {
+        // Every finite f32 product is exactly representable as f64. Recover the exact error
+        // of the widened addition with TwoSum, then turn the rounded f64 sum into a
+        // round-to-odd value before narrowing. Boldo and Melquiond prove that this final
+        // narrowing is equivalent to rounding the exact product-plus-add once to f32:
+        // https://guillaume.melquiond.fr/doc/08-tc.pdf
+        let product = (a as f64) * (b as f64);
+        let c = c as f64;
+        let mut sum = product + c;
+
+        if sum.is_finite() {
+            let virtual_sum = sum - product;
+            let residual =
+                (product - (sum - virtual_sum)) + (c - virtual_sum);
+            let sum_bits = sum.to_bits();
+
+            if residual != 0.0 && sum_bits & 1 == 0 {
+                let corrected_bits = if sum.is_sign_negative()
+                    == residual.is_sign_negative()
+                {
+                    sum_bits.wrapping_add(1)
+                } else {
+                    sum_bits.wrapping_sub(1)
+                };
+                sum = f64::from_bits(corrected_bits);
+            }
+        }
+
+        sum as f32
+    }
+}
+
+pub(crate) fn scalar_mul_add_precise_f32_helper() -> TokenStream {
+    let body = scalar_mul_add_precise_f32_body();
     quote! {
         #[inline(always)]
         #[allow(dead_code, reason = "Generated backends use different subsets of these helpers")]
         fn scalar_mul_add_precise_f32(a: f32, b: f32, c: f32) -> f32 {
-            // Every finite f32 product is exactly representable as f64. Recover the exact error
-            // of the widened addition with TwoSum, then turn the rounded f64 sum into a
-            // round-to-odd value before narrowing. Boldo and Melquiond prove that this final
-            // narrowing is equivalent to rounding the exact product-plus-add once to f32:
-            // https://guillaume.melquiond.fr/doc/08-tc.pdf
-            let product = (a as f64) * (b as f64);
-            let c = c as f64;
-            let mut sum = product + c;
-
-            if sum.is_finite() {
-                let virtual_sum = sum - product;
-                let residual =
-                    (product - (sum - virtual_sum)) + (c - virtual_sum);
-                let sum_bits = sum.to_bits();
-
-                if residual != 0.0 && sum_bits & 1 == 0 {
-                    let corrected_bits = if sum.is_sign_negative()
-                        == residual.is_sign_negative()
-                    {
-                        sum_bits.wrapping_add(1)
-                    } else {
-                        sum_bits.wrapping_sub(1)
-                    };
-                    sum = f64::from_bits(corrected_bits);
-                }
-            }
-
-            sum as f32
+            #body
         }
+    }
+}
 
+pub(crate) fn sse2_scalar_mul_add_precise_f32_helper() -> TokenStream {
+    let body = scalar_mul_add_precise_f32_body();
+    quote! {
+        crate::kernel!(
+            #[inline(always)]
+            #[allow(dead_code, reason = "Generated backends use different subsets of these helpers")]
+            fn scalar_mul_add_precise_f32(_token: Sse2, a: f32, b: f32, c: f32) -> f32 {
+                #body
+            }
+        );
+    }
+}
+
+pub(crate) fn float_ext_prelude() -> TokenStream {
+    quote! {
         #[cfg(all(feature = "libm", not(feature = "std")))]
         #[allow(dead_code, reason = "Generated backends use different subsets of these helpers")]
         trait FloatExt {
@@ -156,10 +180,12 @@ impl Level for Fallback {
 
     fn make_module_prelude(&self) -> TokenStream {
         let float_ext = float_ext_prelude();
+        let scalar_mul_add_precise_f32 = scalar_mul_add_precise_f32_helper();
 
         quote! {
             use core::ops::*;
 
+            #scalar_mul_add_precise_f32
             #float_ext
         }
     }

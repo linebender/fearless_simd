@@ -118,9 +118,11 @@ impl Level for WasmSimd128 {
 
     fn make_module_prelude(&self) -> TokenStream {
         let float_ext = crate::mk_fallback::float_ext_prelude();
+        let scalar_mul_add_precise_f32 = crate::mk_fallback::scalar_mul_add_precise_f32_helper();
         quote! {
             use core::arch::wasm32::*;
             use core::ops::*;
+            #scalar_mul_add_precise_f32
             #float_ext
         }
     }
