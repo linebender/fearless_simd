@@ -1,12 +1,67 @@
 // Copyright 2026 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+use core::any::TypeId;
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
 // This file has a lot of coverage for 128-bit vectors specifically.
 // That's because we have complex, error-prone emulation of precise FMA
 // on SSE4.2 and need to test it in great depth.
+
+#[inline(always)]
+fn reference_fma_f32<S: Simd>(_: S, x: f32, y: f32, z: f32) -> f32 {
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    if TypeId::of::<S>() == TypeId::of::<Avx2>() || TypeId::of::<S>() == TypeId::of::<Avx512>() {
+        return x.mul_add(y, z);
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    if TypeId::of::<S>() == TypeId::of::<Neon>() {
+        return x.mul_add(y, z);
+    }
+
+    soft_fma(x, y, z)
+}
+
+// Rust std and even musl libc have buggy software FMA:
+// https://github.com/rust-lang/compiler-builtins/issues/1262
+// We're using a formally verified algorithm in prod,
+// but comparing an algorithm against itself is silly,
+// so we need something else for verification, and this is the
+// "something else", sourced from
+// https://github.com/linebender/fearless_simd/pull/323#issuecomment-5234072329
+#[inline]
+fn soft_fma(x: f32, y: f32, z: f32) -> f32 {
+    let xy = f64::from(x) * f64::from(y);
+    let z = f64::from(z);
+    let result = xy + z;
+    let mut u = result.to_bits();
+    if u & 0x0fff_ffff != 0 {
+        return result as f32;
+    }
+
+    if u & 0x1000_0000 == 0 && (u >> 52) & 0x7ff > 1023 - 126 {
+        return result as f32;
+    }
+
+    if result - xy == z && result - z == xy {
+        return result as f32;
+    }
+
+    let neg = u >> 63 != 0;
+    let err = if neg == (z > xy) {
+        xy - result + z
+    } else {
+        z - result + xy
+    };
+    if neg == (err < 0.0) {
+        u += 1;
+    } else {
+        u -= 1;
+    }
+    f64::from_bits(u) as f32
+}
 
 #[simd_test]
 #[ignore = "exhaustively checks all non-NaN f32 bit patterns"]
@@ -67,7 +122,7 @@ fn mul_add_precise_f32x4_random_independent_bit_patterns<S: Simd>(simd: S) {
         );
 
         for lane in 0..4 {
-            let expected = a_values[lane].mul_add(b_values[lane], c_values[lane]);
+            let expected = reference_fma_f32(simd, a_values[lane], b_values[lane], c_values[lane]);
             if expected.is_nan() {
                 assert!(
                     actual[lane].is_nan(),
@@ -227,9 +282,7 @@ fn mul_add_precise_f32x4_random_reported_product_patterns<S: Simd>(simd: S) {
         let b_values = b_bits.map(f32::from_bits);
         let c_values = c_bits.map(f32::from_bits);
         let expected_bits: [u32; 4] = core::array::from_fn(|lane| {
-            a_values[lane]
-                .mul_add(b_values[lane], c_values[lane])
-                .to_bits()
+            reference_fma_f32(simd, a_values[lane], b_values[lane], c_values[lane]).to_bits()
         });
         let actual = f32x4::from_slice(simd, &a_values).mul_add_precise(
             f32x4::from_slice(simd, &b_values),
@@ -306,9 +359,7 @@ fn mul_add_precise_f32x4_random_half_subnormal_products<S: Simd>(simd: S) {
         let b_values = b_bits.map(f32::from_bits);
         let c_values = c_bits.map(f32::from_bits);
         let expected_bits: [u32; 4] = core::array::from_fn(|lane| {
-            a_values[lane]
-                .mul_add(b_values[lane], c_values[lane])
-                .to_bits()
+            reference_fma_f32(simd, a_values[lane], b_values[lane], c_values[lane]).to_bits()
         });
         let actual = f32x4::from_slice(simd, &a_values).mul_add_precise(
             f32x4::from_slice(simd, &b_values),
