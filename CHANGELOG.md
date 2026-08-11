@@ -6,10 +6,14 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 -->
 
-The latest published Fearless SIMD release is [0.6.0](#060-2026-07-10) which was released on 2026-07-10.
-You can find its changes [documented below](#060-2026-07-10).
+The latest published Fearless SIMD release is [0.7.0](#070-2026-08-11) which was released on 2026-08-11.
+You can find its changes [documented below](#070-2026-08-11).
 
-## [0.7.0][] (TODO)
+## [Unreleased]
+
+## [0.7.0][] (2026-08-11)
+
+This release has an [MSRV][] of 1.89.
 
 ### Added
 
