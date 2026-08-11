@@ -64,7 +64,6 @@ pub(crate) fn sse2_scalar_mul_add_precise_f32_helper() -> TokenStream {
     quote! {
         crate::kernel!(
             #[inline(always)]
-            #[allow(dead_code, reason = "Generated backends use different subsets of these helpers")]
             fn scalar_mul_add_precise_f32(_token: Sse2, a: f32, b: f32, c: f32) -> f32 {
                 #body
             }
