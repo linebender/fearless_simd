@@ -37,6 +37,35 @@ fn mul_add_precise_f32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn mul_add_precise_f32x4_overflow_rounding<S: Simd>(simd: S) {
+    // a*b is exactly the overflow midpoint 2^128 - 2^103. The much smaller addend is
+    // lost by the rounded f64 addition, but decides whether the exact FMA is finite.
+    let a_value = f32::from_bits(0x5ff8_0000);
+    let b_value = f32::from_bits(0x5f04_2108);
+    let delta = f32::from_bits(0x6280_0000); // 2^70
+    let a = f32x4::from_slice(simd, &[a_value, a_value, -a_value, -a_value]);
+    let b = f32x4::splat(simd, b_value);
+    let c = f32x4::from_slice(simd, &[delta, -delta, -delta, delta]);
+    let actual = a.mul_add_precise(b, c);
+    let actual_bits = [
+        actual[0].to_bits(),
+        actual[1].to_bits(),
+        actual[2].to_bits(),
+        actual[3].to_bits(),
+    ];
+
+    assert_eq!(
+        actual_bits,
+        [
+            f32::INFINITY.to_bits(),
+            f32::MAX.to_bits(),
+            f32::NEG_INFINITY.to_bits(),
+            (-f32::MAX).to_bits(),
+        ]
+    );
+}
+
+#[simd_test]
 fn mul_add_precise_f32x4_special_values<S: Simd>(simd: S) {
     let a_values = [-0.0, f32::MIN_POSITIVE, f32::INFINITY, f32::NAN];
     let b_values = [2.0, 0.5, 2.0, 1.0];
