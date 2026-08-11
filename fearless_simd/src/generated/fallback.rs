@@ -12,10 +12,6 @@ use crate::{
 };
 use core::ops::*;
 #[inline(always)]
-#[allow(
-    dead_code,
-    reason = "Generated backends use different subsets of these helpers"
-)]
 fn scalar_mul_add_precise_f32(a: f32, b: f32, c: f32) -> f32 {
     let product = (a as f64) * (b as f64);
     let c = c as f64;

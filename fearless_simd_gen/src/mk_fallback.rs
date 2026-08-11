@@ -15,7 +15,7 @@ use quote::quote;
 #[derive(Clone, Copy)]
 pub(crate) struct Fallback;
 
-fn scalar_mul_add_precise_f32_body() -> TokenStream {
+pub(crate) fn scalar_mul_add_precise_f32_body() -> TokenStream {
     quote! {
         // Every finite f32 product is exactly representable as f64. Recover the exact error
         // of the widened addition with TwoSum, then turn the rounded f64 sum into a
@@ -52,22 +52,9 @@ pub(crate) fn scalar_mul_add_precise_f32_helper() -> TokenStream {
     let body = scalar_mul_add_precise_f32_body();
     quote! {
         #[inline(always)]
-        #[allow(dead_code, reason = "Generated backends use different subsets of these helpers")]
         fn scalar_mul_add_precise_f32(a: f32, b: f32, c: f32) -> f32 {
             #body
         }
-    }
-}
-
-pub(crate) fn sse2_scalar_mul_add_precise_f32_helper() -> TokenStream {
-    let body = scalar_mul_add_precise_f32_body();
-    quote! {
-        crate::kernel!(
-            #[inline(always)]
-            fn scalar_mul_add_precise_f32(_token: Sse2, a: f32, b: f32, c: f32) -> f32 {
-                #body
-            }
-        );
     }
 }
 

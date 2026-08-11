@@ -37,6 +37,18 @@ pub(crate) const AVX2_FEATURES: &str =
     "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,fxsr,lzcnt,movbe,popcnt,xsave";
 pub(crate) const AVX512_FEATURES: &str = "adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,fxsr,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves";
 
+fn sse2_scalar_mul_add_precise_f32_helper() -> TokenStream {
+    let body = crate::mk_fallback::scalar_mul_add_precise_f32_body();
+    quote! {
+        crate::kernel!(
+            #[inline(always)]
+            fn scalar_mul_add_precise_f32(_token: Sse2, a: f32, b: f32, c: f32) -> f32 {
+                #body
+            }
+        );
+    }
+}
+
 impl Level for X86 {
     fn name(&self) -> &'static str {
         match self {
@@ -127,7 +139,7 @@ impl Level for X86 {
             TokenStream::new()
         };
         let scalar_mul_add_precise_f32 = if *self == Self::Sse2 {
-            crate::mk_fallback::sse2_scalar_mul_add_precise_f32_helper()
+            sse2_scalar_mul_add_precise_f32_helper()
         } else {
             TokenStream::new()
         };
