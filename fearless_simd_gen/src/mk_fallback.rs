@@ -19,14 +19,18 @@ pub(crate) fn scalar_mul_add_precise_f32_body() -> TokenStream {
     quote! {
         // Every finite f32 product is exactly representable as f64. Recover the exact error
         // of the widened addition with TwoSum, then turn the rounded f64 sum into a
-        // round-to-odd value before narrowing. Boldo and Melquiond prove that this final
-        // narrowing is equivalent to rounding the exact product-plus-add once to f32:
+        // round-to-odd value before narrowing. This is the p=24, k=29 specialization of
+        // Boldo and Melquiond's Theorem 3, which proves that this final narrowing is
+        // equivalent to rounding the exact product-plus-add once to f32:
         // https://guillaume.melquiond.fr/doc/08-tc.pdf
+        // The theorem's exponent-range condition also holds: every finite exact result is
+        // a multiple of 2^-298 with magnitude below 2^256, well inside binary64's normal range.
         let product = (a as f64) * (b as f64);
         let c = c as f64;
         let mut sum = product + c;
 
         if sum.is_finite() {
+            // Knuth's unconditional TwoSum; each arithmetic operation must round to binary64.
             let virtual_sum = sum - product;
             let residual =
                 (product - (sum - virtual_sum)) + (c - virtual_sum);

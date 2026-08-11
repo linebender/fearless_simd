@@ -2330,10 +2330,12 @@ impl X86 {
             "SSE4.2 precise f32 multiply-add requires one native vector"
         );
 
-        // The basic idea behind the algorithm: turn f32x4 into two f64x2 vectors,
-        // compute `a * b + c`` there, then round back into f32.
-        // We need round-to-odd to correctly round to f32 in this case.
-        // Paper for the algorithm, with a formal proof in Coq:
+        // Apply Boldo and Melquiond's Theorem 3: turn f32x4 into two f64x2 vectors,
+        // conceptually compute a binary64 round-to-odd value of `a * b + c`, then round it
+        // to f32. The fast path below skips the round-to-odd correction only where narrowing
+        // the binary64 sum cannot suffer a double-rounding error.
+        // Its parameters are p=24, k=29, Ew=149, and Ee=1074, satisfying k >= 2 and
+        // Ee >= Ew + 2. The theorem, including gradual-underflow cases, is proved in Coq:
         // https://guillaume.melquiond.fr/doc/08-tc.pdf
         self.kernel_method(op, vec_ty, |token| {
             quote! {
@@ -2348,9 +2350,12 @@ impl X86 {
                 let c_low = _mm_cvtps_pd(c);
                 let c_high = _mm_cvtps_pd(_mm_movehl_ps(c, c));
 
-                // Every finite f32 product is exactly representable as f64. Usually the f64 sum
-                // can therefore be narrowed directly. The only possible double-rounding error is
-                // when that sum is exactly halfway between two adjacent f32 values.
+                // Every finite f32 product is exactly representable as f64. Every exact finite
+                // product-plus-add is a multiple of 2^-298 with magnitude below 2^256, so none of
+                // these operations underflow or overflow in f64. Usually the f64 sum can be
+                // narrowed directly. For a normal f32 result, the only possible double-rounding
+                // error is when that sum is exactly halfway between two adjacent f32 values. This
+                // also recognizes the f32 finite/infinity overflow threshold.
                 let product_low = _mm_mul_pd(a_low, b_low);
                 let product_high = _mm_mul_pd(a_high, b_high);
                 let mut sum_low = _mm_add_pd(product_low, c_low);
@@ -2401,9 +2406,10 @@ impl X86 {
                 // Outlining this into a #[cold] function regresses performance on both fast and slow paths.
                 // TODO: try using std::hint::cold_path() once MSRV is >= 1.95 and see if that does anything
                 if _mm_testz_si128(any_round_to_odd, any_round_to_odd) == 0 {
-                    // TwoSum recovers the exact residual of each widened addition. If a candidate
-                    // addition was inexact and its rounded f64 significand is even, shift it by one
-                    // ULP toward the residual. This produces a round-to-odd intermediate result.
+                    // Knuth's unconditional TwoSum establishes
+                    // `sum + residual == product + c` exactly. If a candidate addition was
+                    // inexact and its rounded f64 significand is even, shift it by one ULP toward
+                    // the residual. This produces the round-to-odd intermediate from Theorem 3.
                     let virtual_low = _mm_sub_pd(sum_low, product_low);
                     let residual_low = _mm_add_pd(
                         _mm_sub_pd(product_low, _mm_sub_pd(sum_low, virtual_low)),
