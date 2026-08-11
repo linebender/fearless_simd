@@ -27,6 +27,7 @@
 /// use std::arch::x86_64::{__m256i, _mm256_add_epi32};
 ///
 /// fearless_simd::kernel!(
+///     #[inline]
 ///     fn add_i32x8(avx2: Avx2, a: __m256i, b: __m256i) -> __m256i {
 ///         _mm256_add_epi32(a, b)
 ///     }
