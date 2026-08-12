@@ -811,7 +811,13 @@ const FLOAT_OPS: &[Op] = &[
         OpKind::VecTraitMethod,
         OpSig::Ternary,
         "Compute `({arg0} * {arg1}) + {arg2}` for each element, with a single rounding at the end.\n\n\
-        The result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on hardware without fused multiply-add instructions.",
+        The result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on hardware without fused multiply-add instructions.\n\n\
+        # Precision guarantees\n\n\
+        This function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library \
+        and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\n\
+        On the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\n\
+        On WebAssembly this uses the host implementation of precise multiply-add via the `madd` intrinsic.\n\n\
+        The exact `NaN` payloads as well as signaling `NaN`s are not preserved.",
     ),
     Op::new(
         "mul_sub",
@@ -825,7 +831,13 @@ const FLOAT_OPS: &[Op] = &[
         OpKind::VecTraitMethod,
         OpSig::Ternary,
         "Compute `({arg0} * {arg1}) - {arg2}` for each element, with a single rounding at the end.\n\n\
-        The result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on hardware without fused multiply-add instructions.",
+        The result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on hardware without fused multiply-add instructions.
+        # Precision guarantees\n\n\
+        This function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library \
+        and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\n\
+        On the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\n\
+        On WebAssembly this uses the host implementation of precise multiply-add via the `madd` intrinsic.\n\n\
+        The exact `NaN` payloads as well as signaling `NaN`s are not preserved.",
     ),
     Op::new(
         "floor",
