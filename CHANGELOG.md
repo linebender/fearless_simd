@@ -6,39 +6,58 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 -->
 
-The latest published Fearless SIMD release is [0.6.0](#060-2026-07-10) which was released on 2026-07-10.
-You can find its changes [documented below](#060-2026-07-10).
+The latest published Fearless SIMD release is [0.7.0](#070-2026-08-11) which was released on 2026-08-11.
+You can find its changes [documented below](#070-2026-08-11).
 
 ## [Unreleased]
 
 ### Added
 
-- Added `mul_add_precise` for floating-point vectors. It guarantees the infinite-precision product-plus-add rounded once, including on SIMD levels without hardware fused multiply-add instructions.
-- Added `mul_sub_precise` for floating-point vectors. It guarantees the infinite-precision product-minus-subtrahend rounded once.
-- Added an `Sse2` level. This is the new baseline for i686-* and x86_64-* targets, replacing `Fallback`. ([#270][] by [@Shnatsel][])
-- Added full-vector `swizzle_dyn` and `swizzle_dyn_precise` byte swizzles. `swizzle_dyn` permits implementation-defined results for out-of-range indices, while `swizzle_dyn_precise` always returns zero for them.
+ - - Added `mul_add_precise` and `mul_sub_precise` for floating-point vectors. They guarantee the infinite-precision product-plus-add rounded once, including on SIMD levels without hardware fused multiply-add instructions. They are not susceptible to the [bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library, `std::simd` and musl libc that causes incorrect rounding for subnormal results.
+
+## [0.7.0][] (2026-08-11)
+
+This release has an [MSRV][] of 1.89.
+
+### Added
+
+- Added `i64x2`, `i64x4`, `i64x8`, `u64x2`, `u64x4`, and `u64x8` vector types, the native-width `i64s` and `u64s` associated types, and 64-bit integer operations across all backends. ([#253][], [#310][] by [@Shnatsel][])
+- Added an `Sse2` level. This is the new baseline for i686-* and x86_64-* targets, replacing `Fallback`. It is detected at runtime on Tier-2 i586-* targets. ([#270][] by [@Shnatsel][])
+- Added `shift_elements_left`, `shift_elements_right`, `rotate_elements_left`, and `rotate_elements_right` to non-mask vectors. Shifts accept a padding element and fill the entire vector when the offset is at least its lane count; rotations wrap the offset. ([#274][] by [@Shnatsel][])
+- Added full-vector `swizzle_dyn` and `swizzle_dyn_precise` byte swizzles. `swizzle_dyn` permits implementation-defined results for out-of-range indices, while `swizzle_dyn_precise` always returns zero for them. ([#276][], [#304][] by [@Shnatsel][])
+- Added the `SimdElement::BITS` constant, exposing the bit width of a vector's lane type to generic code. ([#296][] by [@danderson][])
 - Added trait bounds on `SimdElement`, and introduced the `SimdIntElement` and `SimdFloatElement` subtraits. These allow generic code to access many math and utility operations on the elements of SIMD vector types. ([#302][] by [@danderson][])
+- Added the `SimdWiden` and `SimdNarrow` traits, providing widening, narrowing, and saturating narrowing operations for all integer and floating-point vector types. ([#300][] by [@Shnatsel][])
+- The four-way interleaved load and store operations are now exposed on the vector types they operate on and are available to generic code through `SimdInterleaved`. ([#321][] by [@Shnatsel][])
 
 ### Changed
 
-- Breaking change: the `load_interleaved_128_*` and `store_interleaved_128_*` methods, which exchanged one 512-bit vector, have been replaced by `load_four_interleaved_*` and `store_four_interleaved_*`. The new methods exchange an array of four 128-bit vectors directly and are available for all non-mask scalar types.
-
-- The `new_unchecked()` function on SIMD level tokens such as `Avx2` has been renamed to `assume_supported()` and is now safe to call from contexts that already contain the appropriate `#[target_feature]` annotations. Functions without such annotations can still call `assume_supported()` with an `unsafe` block. ([#293][] by [@Shnatsel][])
+- Breaking change: the `load_interleaved_128_*` and `store_interleaved_128_*` methods, which exchanged one 512-bit vector, have been replaced by `load_four_interleaved_*` and `store_four_interleaved_*`. The new methods exchange an array of four 128-bit vectors directly and are available for all non-mask scalar types. ([#298][] by [@Shnatsel][])
+- Breaking change: the `new_unchecked()` function on SIMD level tokens such as `Avx2` has been renamed to `assume_supported()` and is now safe to call from contexts that already contain the appropriate `#[target_feature]` annotations. Functions without such annotations can still call `assume_supported()` with an `unsafe` block. ([#293][] by [@Shnatsel][])
+- Breaking change: The `fxsr` CPU feature is now required for all x86 SIMD levels. It is present in hardware on all SIMD-capable CPUs, but it is possible to disable it in some emulators combined with a custom Rust target specification. ([#270][] by [@Shnatsel][])
+- Breaking change: Operations shared by integer and floating-point vectors have moved from `SimdInt`/`SimdFloat` to `SimdBase`, so code generic over any non-mask vector can use `Add`, `Sub`, `Mul`, comparisons, zip/unzip, and interleave/deinterleave operations. ([#308][] by [@Shnatsel][])
+- Breaking change: `min`, `max`, `min_precise`, and `max_precise` have moved from `SimdInt`/`SimdFloat` to `SimdBase`, allowing generic code to use them across integer and floating-point vectors. ([#313][] by [@Shnatsel][])
 - On x86_64 targets with static SSE2 support, `Level::baseline()` now returns `Sse2` instead of `Fallback`. ([#270][] by [@Shnatsel][])
-- The scalar `Fallback` backend and `Level::Fallback` variant are no longer compiled when the target has a better ambient SIMD baseline (e.g. SSE2 on x86, NEON on Aarch64). The `force_support_fallback` feature continues to make them available for testing. `disable_dispatch_sse2` no longer disables SSE2 if it is the baseline level.
-- The `fxsr` CPU feature is now required for all x86 SIMD levels. It is present in hardware on all SIMD-capable CPUs, but it is possible to disable it in some emulators combined with a custom Rust target specification. ([#270][] by [@Shnatsel][])
-- All native-width non-mask vector types now share `u8s` as their byte representation, enabling `Bytes::bitcast` between arbitrary lane types in code generic over `Simd`. The byte representation of any `SimdBase` type is now also guaranteed to be an idempotent, same-token `u8` SIMD vector, so it can be manipulated directly in generic code.
-- `SimdBase::Mask` now guarantees support for selecting vectors of its associated `SimdBase` type, enabling mask selection in generic code without additional bounds.
-- `SimdElement` now requires `Copy`, enabling elements to be read by value from vectors in generic code without additional bounds.
-- `SimdBase::Block` now declares that a 128-bit block is its own block, enabling recursive use in generic code without additional equality bounds.
-- `SimdElement::Mask` now declares that a mask lane type is its own mask lane type, exposing this invariant to generic code.
-- `SimdCombine` and `SimdSplit` now declare their associated vector types as inverse operations, enabling generic code to recover the original vector type without additional equality bounds.
-- `SimdBase::Array` now guarantees `Copy` (and therefore `Clone`), `Debug`, by-value `IntoIterator`, `AsRef`, `AsMut`, and conversion from its vector type, while `SimdBase` guarantees construction from its associated array through `SimdFrom`.
-- Breaking change: the 204 vector-specific `Simd` array conversion methods have been replaced by the `SimdBase::load_array`, `load_array_ref`, `as_array`, `as_array_ref`, `as_array_mut`, and `store_array` methods. Masks continue to use `SimdMask::from_slice` and `store_slice`.
+- The scalar `Fallback` backend and `Level::Fallback` variant are no longer compiled when the target has a better ambient SIMD baseline (e.g. SSE2 on x86, NEON on Aarch64). The `force_support_fallback` feature continues to make them available for testing. `disable_dispatch_sse2` no longer disables SSE2 if it is the baseline level. ([#320][] by [@Shnatsel][])
+- Runtime CPU feature detection performed by `Level::new()` is now cached on x86. ([#278][] by [@Shnatsel][])
+- The result of integer shifts by an amount greater than or equal to the element width is now explicitly documented as platform-dependent. Scalar fallback shifts use wrapping shift amounts instead of potentially panicking in debug builds. ([#283][] by [@Shnatsel][])
+- Full-vector 8-bit shifts on x86 have been optimized, including a 2.4x faster left-shift formulation and faster signed and unsigned right shifts. ([#291][] by [@Shnatsel][])
+- All native-width non-mask vector types now share `u8s` as their byte representation, enabling `Bytes::bitcast` between arbitrary lane types in code generic over `Simd`. The byte representation of any `SimdBase` type is now also guaranteed to be an idempotent, same-token `u8` SIMD vector, so it can be manipulated directly in generic code. ([#284][] by [@Shnatsel][])
+- Generic bounds now encode existing relationships between masks, vectors, blocks, elements, and split/combined vector types. This enables mask selection, by-value element access, recursive block use, and reversible split/combine operations without additional bounds. ([#285][] by [@Shnatsel][])
+- `SimdBase::Array` now guarantees `Copy` (and therefore `Clone`), `Debug`, by-value `IntoIterator`, `AsRef`, `AsMut`, and conversion from its vector type, while `SimdBase` guarantees construction from its associated array through `SimdFrom`. ([#285][] by [@Shnatsel][])
+- `Simd` and `SimdBase` now require `Debug`, exposing implementations already provided by all tokens and vector types to generic code. ([#309][] by [@Shnatsel][])
+- The `Simd::vectorize` documentation now explains when to use it and includes an end-to-end example. ([#312][] by [@Shnatsel][])
+- Generated code and metadata have been substantially reduced, cutting x86 build time by roughly one third. ([#292][], [#317][], [#318][] by [@Shnatsel][])
 
 ### Removed
 
-- Breaking change: removed the low-level `reinterpret_f32_*`, `reinterpret_f64_*`, `reinterpret_i32_*`, `reinterpret_u32_*`, `reinterpret_u8_*`, `cvt_to_bytes_*`, and `cvt_from_bytes_*` methods. Use `Bytes::bitcast` for arbitrary same-width bit reinterpretation, or `Bytes::to_bytes` and `Bytes::from_bytes` for direct byte-vector conversions.
+- Breaking change: removed the low-level `reinterpret_f32_*`, `reinterpret_f64_*`, `reinterpret_i32_*`, `reinterpret_u32_*`, `reinterpret_u8_*`, `cvt_to_bytes_*`, and `cvt_from_bytes_*` methods. Use `Bytes::bitcast` for arbitrary same-width bit reinterpretation, or `Bytes::to_bytes` and `Bytes::from_bytes` for direct byte-vector conversions. ([#284][] by [@Shnatsel][])
+- Breaking change: removed the `WithSimd` trait, which only delegated to the `dispatch!` macro. Use `dispatch!` directly instead. ([#306][] by [@Shnatsel][])
+
+### Fixed
+
+- Integer negation in the scalar fallback now wraps for the minimum signed value, matching the SIMD backends instead of potentially panicking in debug builds. ([#253][] by [@Shnatsel][])
+- Fixed x86 8-bit left shifts: overflowing `u8` lanes now wrap instead of saturating, and `i8` lanes now match Rust's signed shift semantics. ([#288][], [#290][] by [@danderson][])
 
 ## [0.6.0][] (2026-07-10)
 
@@ -294,11 +313,37 @@ No changelog was kept for this release.
 [#263]: https://github.com/linebender/fearless_simd/pull/263
 [#264]: https://github.com/linebender/fearless_simd/pull/264
 [#266]: https://github.com/linebender/fearless_simd/pull/266
+[#253]: https://github.com/linebender/fearless_simd/pull/253
 [#270]: https://github.com/linebender/fearless_simd/pull/270
+[#274]: https://github.com/linebender/fearless_simd/pull/274
+[#276]: https://github.com/linebender/fearless_simd/pull/276
+[#278]: https://github.com/linebender/fearless_simd/pull/278
+[#283]: https://github.com/linebender/fearless_simd/pull/283
+[#284]: https://github.com/linebender/fearless_simd/pull/284
+[#285]: https://github.com/linebender/fearless_simd/pull/285
+[#288]: https://github.com/linebender/fearless_simd/pull/288
+[#290]: https://github.com/linebender/fearless_simd/pull/290
+[#291]: https://github.com/linebender/fearless_simd/pull/291
+[#292]: https://github.com/linebender/fearless_simd/pull/292
 [#293]: https://github.com/linebender/fearless_simd/pull/293
+[#296]: https://github.com/linebender/fearless_simd/pull/296
+[#298]: https://github.com/linebender/fearless_simd/pull/298
+[#300]: https://github.com/linebender/fearless_simd/pull/300
 [#302]: https://github.com/linebender/fearless_simd/pull/302
+[#304]: https://github.com/linebender/fearless_simd/pull/304
+[#306]: https://github.com/linebender/fearless_simd/pull/306
+[#308]: https://github.com/linebender/fearless_simd/pull/308
+[#309]: https://github.com/linebender/fearless_simd/pull/309
+[#310]: https://github.com/linebender/fearless_simd/pull/310
+[#312]: https://github.com/linebender/fearless_simd/pull/312
+[#313]: https://github.com/linebender/fearless_simd/pull/313
+[#317]: https://github.com/linebender/fearless_simd/pull/317
+[#318]: https://github.com/linebender/fearless_simd/pull/318
+[#320]: https://github.com/linebender/fearless_simd/pull/320
+[#321]: https://github.com/linebender/fearless_simd/pull/321
 
-[Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/linebender/fearless_simd/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/linebender/fearless_simd/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/linebender/fearless_simd/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/linebender/fearless_simd/compare/v0.4.0...v0.4.1

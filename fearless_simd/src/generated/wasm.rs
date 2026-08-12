@@ -772,7 +772,18 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn swizzle_dyn_u8x16(self, a: u8x16<Self>, indices: u8x16<Self>) -> u8x16<Self> {
-        self.swizzle_dyn_precise_u8x16(a, indices)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            let result = u8x16_relaxed_swizzle(Bytes::to_bytes(a).val.0, indices.into());
+            Bytes::from_bytes(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            self.swizzle_dyn_precise_u8x16(a, indices)
+        }
     }
     #[inline(always)]
     fn swizzle_dyn_precise_u8x16(self, a: u8x16<Self>, indices: u8x16<Self>) -> u8x16<Self> {
