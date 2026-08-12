@@ -11,6 +11,26 @@ use crate::{
     u16x8, u16x16, u16x32, u32x4, u32x8, u32x16, u64x2, u64x4, u64x8,
 };
 use core::ops::*;
+#[inline(always)]
+fn scalar_mul_add_precise_f32(a: f32, b: f32, c: f32) -> f32 {
+    let product = (a as f64) * (b as f64);
+    let c = c as f64;
+    let mut sum = product + c;
+    if sum.is_finite() {
+        let virtual_sum = sum - product;
+        let residual = (product - (sum - virtual_sum)) + (c - virtual_sum);
+        let sum_bits = sum.to_bits();
+        if residual != 0.0 && sum_bits & 1 == 0 {
+            let corrected_bits = if sum.is_sign_negative() == residual.is_sign_negative() {
+                sum_bits.wrapping_add(1)
+            } else {
+                sum_bits.wrapping_sub(1)
+            };
+            sum = f64::from_bits(corrected_bits);
+        }
+    }
+    sum as f32
+}
 #[cfg(all(feature = "libm", not(feature = "std")))]
 #[allow(
     dead_code,
@@ -23,6 +43,7 @@ trait FloatExt {
     fn fract(self) -> Self;
     fn sqrt(self) -> Self;
     fn trunc(self) -> Self;
+    fn mul_add(self, a: Self, b: Self) -> Self;
 }
 #[cfg(all(feature = "libm", not(feature = "std")))]
 impl FloatExt for f32 {
@@ -50,6 +71,10 @@ impl FloatExt for f32 {
     fn trunc(self) -> f32 {
         libm::truncf(self)
     }
+    #[inline(always)]
+    fn mul_add(self, a: f32, b: f32) -> f32 {
+        libm::fmaf(self, a, b)
+    }
 }
 #[cfg(all(feature = "libm", not(feature = "std")))]
 impl FloatExt for f64 {
@@ -76,6 +101,10 @@ impl FloatExt for f64 {
     #[inline(always)]
     fn trunc(self) -> f64 {
         libm::trunc(self)
+    }
+    #[inline(always)]
+    fn mul_add(self, a: f64, b: f64) -> f64 {
+        libm::fma(self, a, b)
     }
 }
 #[doc = "A token for scalar fallback SIMD, representing the \"fallback\" level."]
@@ -362,8 +391,22 @@ impl Simd for Fallback {
         a.mul(b).add(c)
     }
     #[inline(always)]
+    fn mul_add_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
+        [
+            scalar_mul_add_precise_f32(a[0usize], b[0usize], c[0usize]),
+            scalar_mul_add_precise_f32(a[1usize], b[1usize], c[1usize]),
+            scalar_mul_add_precise_f32(a[2usize], b[2usize], c[2usize]),
+            scalar_mul_add_precise_f32(a[3usize], b[3usize], c[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn mul_sub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
         a.mul(b).sub(c)
+    }
+    #[inline(always)]
+    fn mul_sub_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
+        self.mul_add_precise_f32x4(a, b, -c)
     }
     #[inline(always)]
     fn floor_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -4487,8 +4530,20 @@ impl Simd for Fallback {
         a.mul(b).add(c)
     }
     #[inline(always)]
+    fn mul_add_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
+        [
+            f64::mul_add(a[0usize], b[0usize], c[0usize]),
+            f64::mul_add(a[1usize], b[1usize], c[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn mul_sub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
         a.mul(b).sub(c)
+    }
+    #[inline(always)]
+    fn mul_sub_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
+        self.mul_add_precise_f64x2(a, b, -c)
     }
     #[inline(always)]
     fn floor_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {

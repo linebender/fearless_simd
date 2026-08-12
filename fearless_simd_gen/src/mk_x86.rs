@@ -37,6 +37,18 @@ pub(crate) const AVX2_FEATURES: &str =
     "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,fxsr,lzcnt,movbe,popcnt,xsave";
 pub(crate) const AVX512_FEATURES: &str = "adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,fxsr,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves";
 
+fn sse2_scalar_mul_add_precise_f32_helper() -> TokenStream {
+    let body = crate::mk_fallback::scalar_mul_add_precise_f32_body();
+    quote! {
+        crate::kernel!(
+            #[inline(always)]
+            fn scalar_mul_add_precise_f32(_token: Sse2, a: f32, b: f32, c: f32) -> f32 {
+                #body
+            }
+        );
+    }
+}
+
 impl Level for X86 {
     fn name(&self) -> &'static str {
         match self {
@@ -121,8 +133,13 @@ impl Level for X86 {
     }
 
     fn make_module_prelude(&self) -> TokenStream {
-        let float_ext = if *self == Self::Sse2 {
+        let float_ext = if matches!(self, Self::Sse2 | Self::Sse4_2) {
             crate::mk_fallback::float_ext_prelude()
+        } else {
+            TokenStream::new()
+        };
+        let scalar_mul_add_precise_f32 = if *self == Self::Sse2 {
+            sse2_scalar_mul_add_precise_f32_helper()
         } else {
             TokenStream::new()
         };
@@ -133,6 +150,7 @@ impl Level for X86 {
             #[cfg(target_arch = "x86_64")]
             use core::arch::x86_64::*;
             use core::ops::*;
+            #scalar_mul_add_precise_f32
             #float_ext
         }
     }
@@ -2292,6 +2310,172 @@ impl X86 {
         }
     }
 
+    fn precise_mul_add_f32x4(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        assert!(
+            *self == Self::Sse4_2,
+            "precise f32 multiply-add emulation is specific to SSE4.2"
+        );
+        assert_eq!(
+            vec_ty.scalar,
+            ScalarType::Float,
+            "precise f32 multiply-add requires a floating-point vector"
+        );
+        assert_eq!(
+            vec_ty.scalar_bits, 32,
+            "precise f32 multiply-add requires 32-bit lanes"
+        );
+        assert_eq!(
+            vec_ty.n_bits(),
+            128,
+            "SSE4.2 precise f32 multiply-add requires one native vector"
+        );
+
+        // Apply Boldo and Melquiond's Theorem 3: turn f32x4 into two f64x2 vectors,
+        // conceptually compute a binary64 round-to-odd value of `a * b + c`, then round it
+        // to f32. The fast path below skips the round-to-odd correction only where narrowing
+        // the binary64 sum cannot suffer a double-rounding error.
+        // Its parameters are p=24, k=29, Ew=149, and Ee=1074, satisfying k >= 2 and
+        // Ee >= Ew + 2. The theorem, including gradual-underflow cases, is proved in Coq:
+        // https://guillaume.melquiond.fr/doc/08-tc.pdf
+        self.kernel_method(op, vec_ty, |token| {
+            quote! {
+                let a: __m128 = a.into();
+                let b: __m128 = b.into();
+                let c: __m128 = c.into();
+
+                let a_low = _mm_cvtps_pd(a);
+                let a_high = _mm_cvtps_pd(_mm_movehl_ps(a, a));
+                let b_low = _mm_cvtps_pd(b);
+                let b_high = _mm_cvtps_pd(_mm_movehl_ps(b, b));
+                let c_low = _mm_cvtps_pd(c);
+                let c_high = _mm_cvtps_pd(_mm_movehl_ps(c, c));
+
+                // Every finite f32 product is exactly representable as f64. Every exact finite
+                // product-plus-add is a multiple of 2^-298 with magnitude below 2^256, so none of
+                // these operations underflow or overflow in f64. Usually the f64 sum can be
+                // narrowed directly. For a normal f32 result, the only possible double-rounding
+                // error is when that sum is exactly halfway between two adjacent f32 values. This
+                // also recognizes the f32 finite/infinity overflow threshold.
+                let product_low = _mm_mul_pd(a_low, b_low);
+                let product_high = _mm_mul_pd(a_high, b_high);
+                let mut sum_low = _mm_add_pd(product_low, c_low);
+                let mut sum_high = _mm_add_pd(product_high, c_high);
+
+                let midpoint_fraction_mask = _mm_set1_epi64x(0x1fff_ffff);
+                let midpoint_fraction = _mm_set1_epi64x(0x1000_0000);
+                let midpoint_low = _mm_cmpeq_epi64(
+                    _mm_and_si128(_mm_castpd_si128(sum_low), midpoint_fraction_mask),
+                    midpoint_fraction,
+                );
+                let midpoint_high = _mm_cmpeq_epi64(
+                    _mm_and_si128(_mm_castpd_si128(sum_high), midpoint_fraction_mask),
+                    midpoint_fraction,
+                );
+                // Subnormal f32 values have fewer than 24 significant bits, so their midpoint
+                // position within the f64 significand varies with the result's exponent. Use a
+                // provisional narrowing to identify every result whose rounding interval touches
+                // the subnormal range, including zero and the smallest normal value. Those rare
+                // lanes take the general round-to-odd path below.
+                let mut low = _mm_cvtpd_ps(sum_low);
+                let mut high = _mm_cvtpd_ps(sum_high);
+                let provisional = _mm_movelh_ps(low, high);
+                let abs_provisional_bits = _mm_and_si128(
+                    _mm_castps_si128(provisional),
+                    _mm_set1_epi32(0x7fff_ffff),
+                );
+                let at_most_min_normal = _mm_cmpgt_epi32(
+                    _mm_set1_epi32(0x0080_0001),
+                    abs_provisional_bits,
+                );
+                let subnormal_low = _mm_unpacklo_epi32(
+                    at_most_min_normal,
+                    at_most_min_normal,
+                );
+                let subnormal_high = _mm_unpackhi_epi32(
+                    at_most_min_normal,
+                    at_most_min_normal,
+                );
+                let round_to_odd_low = _mm_or_si128(midpoint_low, subnormal_low);
+                let round_to_odd_high = _mm_or_si128(midpoint_high, subnormal_high);
+                let any_round_to_odd = _mm_or_si128(round_to_odd_low, round_to_odd_high);
+
+                // Optimization notes:
+                // On uniform numeric values over the entire range, this branch only fires once per 685k calls,
+                // and on uniform numeric values in [-1, 1) it fires once in 17k calls (empirically).
+                // So it is worth putting under an `if` despite the branch misprediction penalty.
+                // Outlining this into a #[cold] function regresses performance on both fast and slow paths.
+                // TODO: try using std::hint::cold_path() once MSRV is >= 1.95 and see if that does anything
+                if _mm_testz_si128(any_round_to_odd, any_round_to_odd) == 0 {
+                    // Knuth's unconditional TwoSum establishes
+                    // `sum + error == product + c` exactly. If a candidate addition was
+                    // inexact and its rounded f64 significand is even, shift it by one ULP toward
+                    // the error. This produces the round-to-odd intermediate from Theorem 3.
+                    let virtual_low = _mm_sub_pd(sum_low, product_low);
+                    let error_low = _mm_add_pd(
+                        _mm_sub_pd(product_low, _mm_sub_pd(sum_low, virtual_low)),
+                        _mm_sub_pd(c_low, virtual_low),
+                    );
+                    let virtual_high = _mm_sub_pd(sum_high, product_high);
+                    let error_high = _mm_add_pd(
+                        _mm_sub_pd(product_high, _mm_sub_pd(sum_high, virtual_high)),
+                        _mm_sub_pd(c_high, virtual_high),
+                    );
+
+                    let one = _mm_set1_epi64x(1);
+                    let zero_si128 = _mm_setzero_si128();
+                    let zero = _mm_setzero_pd();
+                    let sum_low_bits = _mm_castpd_si128(sum_low);
+                    let error_low_bits = _mm_castpd_si128(error_low);
+                    let even_low = _mm_cmpeq_epi64(
+                        _mm_and_si128(sum_low_bits, one),
+                        zero_si128,
+                    );
+                    let correction_low = _mm_and_si128(
+                        _mm_and_si128(round_to_odd_low, even_low),
+                        _mm_castpd_si128(_mm_cmpneq_pd(error_low, zero)),
+                    );
+                    // The XOR is negative as a signed qword exactly when the signs differ.
+                    // Its zero-greater-than mask is therefore -1 for a downward correction
+                    // and zero otherwise; OR with one turns those into the desired -1/+1.
+                    let different_sign_low = _mm_cmpgt_epi64(
+                        zero_si128,
+                        _mm_xor_si128(sum_low_bits, error_low_bits),
+                    );
+                    let direction_low = _mm_or_si128(different_sign_low, one);
+                    sum_low = _mm_castsi128_pd(_mm_add_epi64(
+                        sum_low_bits,
+                        _mm_and_si128(direction_low, correction_low),
+                    ));
+
+                    let sum_high_bits = _mm_castpd_si128(sum_high);
+                    let error_high_bits = _mm_castpd_si128(error_high);
+                    let even_high = _mm_cmpeq_epi64(
+                        _mm_and_si128(sum_high_bits, one),
+                        zero_si128,
+                    );
+                    let correction_high = _mm_and_si128(
+                        _mm_and_si128(round_to_odd_high, even_high),
+                        _mm_castpd_si128(_mm_cmpneq_pd(error_high, zero)),
+                    );
+                    let different_sign_high = _mm_cmpgt_epi64(
+                        zero_si128,
+                        _mm_xor_si128(sum_high_bits, error_high_bits),
+                    );
+                    let direction_high = _mm_or_si128(different_sign_high, one);
+                    sum_high = _mm_castsi128_pd(_mm_add_epi64(
+                        sum_high_bits,
+                        _mm_and_si128(direction_high, correction_high),
+                    ));
+
+                    low = _mm_cvtpd_ps(sum_low);
+                    high = _mm_cvtpd_ps(sum_high);
+                }
+
+                _mm_movelh_ps(low, high).simd_into(#token)
+            }
+        })
+    }
+
     pub(crate) fn handle_ternary(
         &self,
         op: Op,
@@ -2300,6 +2484,50 @@ impl X86 {
         vec_ty: &VecType,
     ) -> TokenStream {
         match method {
+            "mul_add_precise"
+                if *self == Self::Sse2
+                    && vec_ty.scalar == ScalarType::Float
+                    && vec_ty.scalar_bits == 32 =>
+            {
+                let calls = (0..vec_ty.len).map(|idx| {
+                    quote! {
+                        scalar_mul_add_precise_f32(self, a[#idx], b[#idx], c[#idx])
+                    }
+                });
+                quote! {
+                    #method_sig {
+                        [#(#calls),*].simd_into(self)
+                    }
+                }
+            }
+            "mul_add_precise" if *self == Self::Sse4_2 && vec_ty.scalar_bits == 32 => {
+                self.precise_mul_add_f32x4(op, vec_ty)
+            }
+            "mul_add_precise" if matches!(self, Self::Avx2 | Self::Avx512) => {
+                let mul_add = generic_op_name("mul_add", vec_ty);
+                quote! {
+                    #method_sig {
+                        self.#mul_add(a, b, c)
+                    }
+                }
+            }
+            "mul_add_precise" => fallback_method(op, vec_ty),
+            "mul_sub_precise" if matches!(self, Self::Avx2 | Self::Avx512) => {
+                let mul_sub = generic_op_name("mul_sub", vec_ty);
+                quote! {
+                    #method_sig {
+                        self.#mul_sub(a, b, c)
+                    }
+                }
+            }
+            "mul_sub_precise" => {
+                let mul_add_precise = generic_op_name("mul_add_precise", vec_ty);
+                quote! {
+                    #method_sig {
+                        self.#mul_add_precise(a, b, -c)
+                    }
+                }
+            }
             "mul_add" if matches!(self, Self::Avx2 | Self::Avx512) => {
                 let intrinsic = simple_intrinsic("fmadd", vec_ty);
                 self.kernel_method(

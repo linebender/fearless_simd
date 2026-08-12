@@ -318,25 +318,37 @@ impl Level for Neon {
                 })
             }
             OpSig::Ternary => {
-                let args = match method {
-                    "mul_add" | "mul_sub" => [
-                        quote! { c.into() },
-                        quote! { b.into() },
-                        quote! { a.into() },
-                    ],
-                    _ => [
-                        quote! { a.into() },
-                        quote! { b.into() },
-                        quote! { c.into() },
-                    ],
-                };
-
-                let mut expr = neon::expr(method, vec_ty, &args);
-                if method == "mul_sub" {
-                    // -(c - a * b) = (a * b - c)
-                    let neg = simple_intrinsic("vneg", vec_ty);
-                    expr = quote! { #neg(#expr) };
+                if method == "mul_add_precise" {
+                    let mul_add = generic_op_name("mul_add", vec_ty);
+                    return quote! {
+                        #method_sig {
+                            self.#mul_add(a, b, c)
+                        }
+                    };
                 }
+                if method == "mul_sub" {
+                    let mul_add = generic_op_name("mul_add", vec_ty);
+                    return quote! {
+                        #method_sig {
+                            self.#mul_add(a, b, -c)
+                        }
+                    };
+                }
+                if method == "mul_sub_precise" {
+                    let mul_sub = generic_op_name("mul_sub", vec_ty);
+                    return quote! {
+                        #method_sig {
+                            self.#mul_sub(a, b, c)
+                        }
+                    };
+                }
+
+                let args = [
+                    quote! { c.into() },
+                    quote! { b.into() },
+                    quote! { a.into() },
+                ];
+                let expr = neon::expr(method, vec_ty, &args);
                 self.kernel_method(op, vec_ty, |token| {
                     quote! { #expr.simd_into(#token) }
                 })
