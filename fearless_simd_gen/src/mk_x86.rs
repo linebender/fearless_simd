@@ -2407,16 +2407,16 @@ impl X86 {
                 // TODO: try using std::hint::cold_path() once MSRV is >= 1.95 and see if that does anything
                 if _mm_testz_si128(any_round_to_odd, any_round_to_odd) == 0 {
                     // Knuth's unconditional TwoSum establishes
-                    // `sum + residual == product + c` exactly. If a candidate addition was
+                    // `sum + error == product + c` exactly. If a candidate addition was
                     // inexact and its rounded f64 significand is even, shift it by one ULP toward
-                    // the residual. This produces the round-to-odd intermediate from Theorem 3.
+                    // the error. This produces the round-to-odd intermediate from Theorem 3.
                     let virtual_low = _mm_sub_pd(sum_low, product_low);
-                    let residual_low = _mm_add_pd(
+                    let error_low = _mm_add_pd(
                         _mm_sub_pd(product_low, _mm_sub_pd(sum_low, virtual_low)),
                         _mm_sub_pd(c_low, virtual_low),
                     );
                     let virtual_high = _mm_sub_pd(sum_high, product_high);
-                    let residual_high = _mm_add_pd(
+                    let error_high = _mm_add_pd(
                         _mm_sub_pd(product_high, _mm_sub_pd(sum_high, virtual_high)),
                         _mm_sub_pd(c_high, virtual_high),
                     );
@@ -2425,21 +2425,21 @@ impl X86 {
                     let zero_si128 = _mm_setzero_si128();
                     let zero = _mm_setzero_pd();
                     let sum_low_bits = _mm_castpd_si128(sum_low);
-                    let residual_low_bits = _mm_castpd_si128(residual_low);
+                    let error_low_bits = _mm_castpd_si128(error_low);
                     let even_low = _mm_cmpeq_epi64(
                         _mm_and_si128(sum_low_bits, one),
                         zero_si128,
                     );
                     let correction_low = _mm_and_si128(
                         _mm_and_si128(round_to_odd_low, even_low),
-                        _mm_castpd_si128(_mm_cmpneq_pd(residual_low, zero)),
+                        _mm_castpd_si128(_mm_cmpneq_pd(error_low, zero)),
                     );
                     // The XOR is negative as a signed qword exactly when the signs differ.
                     // Its zero-greater-than mask is therefore -1 for a downward correction
                     // and zero otherwise; OR with one turns those into the desired -1/+1.
                     let different_sign_low = _mm_cmpgt_epi64(
                         zero_si128,
-                        _mm_xor_si128(sum_low_bits, residual_low_bits),
+                        _mm_xor_si128(sum_low_bits, error_low_bits),
                     );
                     let direction_low = _mm_or_si128(different_sign_low, one);
                     sum_low = _mm_castsi128_pd(_mm_add_epi64(
@@ -2448,18 +2448,18 @@ impl X86 {
                     ));
 
                     let sum_high_bits = _mm_castpd_si128(sum_high);
-                    let residual_high_bits = _mm_castpd_si128(residual_high);
+                    let error_high_bits = _mm_castpd_si128(error_high);
                     let even_high = _mm_cmpeq_epi64(
                         _mm_and_si128(sum_high_bits, one),
                         zero_si128,
                     );
                     let correction_high = _mm_and_si128(
                         _mm_and_si128(round_to_odd_high, even_high),
-                        _mm_castpd_si128(_mm_cmpneq_pd(residual_high, zero)),
+                        _mm_castpd_si128(_mm_cmpneq_pd(error_high, zero)),
                     );
                     let different_sign_high = _mm_cmpgt_epi64(
                         zero_si128,
-                        _mm_xor_si128(sum_high_bits, residual_high_bits),
+                        _mm_xor_si128(sum_high_bits, error_high_bits),
                     );
                     let direction_high = _mm_or_si128(different_sign_high, one);
                     sum_high = _mm_castsi128_pd(_mm_add_epi64(
