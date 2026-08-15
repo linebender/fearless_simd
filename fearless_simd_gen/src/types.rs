@@ -61,6 +61,10 @@ impl VecType {
         self.scalar_bits * self.len
     }
 
+    pub(crate) fn align(&self) -> usize {
+        self.n_bits() / 8
+    }
+
     /// Name of the type, as in `f32x4`
     pub(crate) fn rust_name(&self) -> String {
         let scalar = match self.scalar {
@@ -76,6 +80,10 @@ impl VecType {
     pub(crate) fn rust(&self) -> TokenStream {
         let ident = Ident::new(&self.rust_name(), Span::call_site());
         quote! { #ident }
+    }
+
+    pub(crate) fn array_name(&self) -> String {
+        format!("[{}; {}]", self.scalar.rust(self.scalar_bits), self.len)
     }
 
     /// Returns the name of the `Aligned{128/256/512}` wrapper for this vector type, used to wrap native vector types or
@@ -216,6 +224,8 @@ fn construct_mask<S: Simd>(simd: S) {{
             let scalar_name = self.scalar.rust_name(self.scalar_bits);
             let block_ty = self.block_ty();
             let rust_name = self.rust_name();
+            let array_name = self.array_name();
+            let align = self.align();
 
             let (splat_example, many_example_literals): (String, Vec<String>) = match self.scalar {
                 ScalarType::Float => {
@@ -251,6 +261,7 @@ fn construct_mask<S: Simd>(simd: S) {{
 
             format!(
                 "A SIMD vector of {len} [`{scalar_name}`] elements.\n\n\
+                This type's memory layout is identical to that of [`{array_name}`](prim@array), except that it is aligned to {align} bytes.\n\n\
                 You may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n\
                 ```rust\n\
 # use fearless_simd::{{prelude::*, {rust_name}}};

@@ -18,6 +18,7 @@ mod harness;
 #[cfg(not(miri))] // too slow
 mod soundness;
 mod token_soundness;
+mod type_layout;
 
 #[test]
 fn dispatches_forced_fallback_across_crates() {
