@@ -9,237 +9,6 @@ use fearless_simd_dev_macros::simd_test;
 // on SSE4.2 and need to test it in great depth.
 
 #[simd_test]
-#[ignore = "stress-tests 1 billion randomized safe-range and full-range f64 inputs"]
-fn mul_add_precise_f64x2_random<S: Simd>(simd: S) {
-    simd.vectorize(
-        #[inline(always)]
-        || {
-            let mut rng = fastrand::Rng::with_seed(0x3c6e_f372_fe94_f82b);
-            let fraction_mask = (1_u64 << 52) - 1;
-
-            for iteration in 0..1_000_000_000 {
-                let safe_a: [f64; 2] = core::array::from_fn(|_| {
-                    let exponent = rng.i32(-400..400);
-                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
-                    let bits =
-                        sign | (((exponent + 1023) as u64) << 52) | (rng.u64(..) & fraction_mask);
-                    f64::from_bits(bits)
-                });
-                let safe_b: [f64; 2] = core::array::from_fn(|_| {
-                    let exponent = rng.i32(-400..400);
-                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
-                    let bits =
-                        sign | (((exponent + 1023) as u64) << 52) | (rng.u64(..) & fraction_mask);
-                    f64::from_bits(bits)
-                });
-                let safe_c: [f64; 2] = core::array::from_fn(|lane| {
-                    if iteration % 32 == 0 && lane == 0 {
-                        return if rng.bool() { 0.0 } else { -0.0 };
-                    }
-                    let exponent = rng.i32(-400..400);
-                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
-                    let bits =
-                        sign | (((exponent + 1023) as u64) << 52) | (rng.u64(..) & fraction_mask);
-                    f64::from_bits(bits)
-                });
-                let safe_result = f64x2::from_slice(simd, &safe_a).mul_add_precise(
-                    f64x2::from_slice(simd, &safe_b),
-                    f64x2::from_slice(simd, &safe_c),
-                );
-                for lane in 0..2 {
-                    let expected = safe_a[lane].mul_add(safe_b[lane], safe_c[lane]);
-                    if expected.is_nan() {
-                        assert!(
-                            safe_result[lane].is_nan(),
-                            "safe-range iteration {iteration}, lane {lane}: expected NaN, got {:?}",
-                            safe_result[lane],
-                        );
-                    } else {
-                        assert_eq!(
-                            safe_result[lane].to_bits(),
-                            expected.to_bits(),
-                            "safe-range iteration {iteration}, lane {lane}",
-                        );
-                    }
-                }
-
-                let arbitrary_a = [f64::from_bits(rng.u64(..)), f64::from_bits(rng.u64(..))];
-                let arbitrary_b = [f64::from_bits(rng.u64(..)), f64::from_bits(rng.u64(..))];
-                let arbitrary_c = [f64::from_bits(rng.u64(..)), f64::from_bits(rng.u64(..))];
-                let arbitrary_result = f64x2::from_slice(simd, &arbitrary_a).mul_add_precise(
-                    f64x2::from_slice(simd, &arbitrary_b),
-                    f64x2::from_slice(simd, &arbitrary_c),
-                );
-                for lane in 0..2 {
-                    let expected = arbitrary_a[lane].mul_add(arbitrary_b[lane], arbitrary_c[lane]);
-                    if expected.is_nan() {
-                        assert!(
-                            arbitrary_result[lane].is_nan(),
-                            "full-range iteration {iteration}, lane {lane}: expected NaN, got {:?}",
-                            arbitrary_result[lane],
-                        );
-                    } else {
-                        assert_eq!(
-                            arbitrary_result[lane].to_bits(),
-                            expected.to_bits(),
-                            "full-range iteration {iteration}, lane {lane}",
-                        );
-                    }
-                }
-            }
-        },
-    );
-}
-
-#[simd_test]
-#[ignore = "stress-tests 1 billion safe-range, split-tie, and cancellation f64 inputs each"]
-fn mul_add_precise_f64x2_adversarial_random<S: Simd>(simd: S) {
-    simd.vectorize(
-        #[inline(always)]
-        || {
-            const CASES_PER_DISTRIBUTION: usize = 1_000_000_000;
-            let fraction_mask = (1_u64 << 52) - 1;
-            let mut rng = fastrand::Rng::with_seed(0x4d59_5df4_d0f3_3173);
-
-            // Uniformly sample the exponent-safe packed path. Each vector supplies two cases.
-            for vector_index in 0..CASES_PER_DISTRIBUTION / 2 {
-                let a_values: [f64; 2] = core::array::from_fn(|_| {
-                    let exponent = rng.i32(-400..400);
-                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
-                    let bits =
-                        sign | (((exponent + 1023) as u64) << 52) | (rng.u64(..) & fraction_mask);
-                    f64::from_bits(bits)
-                });
-                let b_values: [f64; 2] = core::array::from_fn(|_| {
-                    let exponent = rng.i32(-400..400);
-                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
-                    let bits =
-                        sign | (((exponent + 1023) as u64) << 52) | (rng.u64(..) & fraction_mask);
-                    f64::from_bits(bits)
-                });
-                let c_values: [f64; 2] = core::array::from_fn(|_| {
-                    let exponent = rng.i32(-400..400);
-                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
-                    let bits =
-                        sign | (((exponent + 1023) as u64) << 52) | (rng.u64(..) & fraction_mask);
-                    f64::from_bits(bits)
-                });
-                let result = f64x2::from_slice(simd, &a_values).mul_add_precise(
-                    f64x2::from_slice(simd, &b_values),
-                    f64x2::from_slice(simd, &c_values),
-                );
-
-                for lane in 0..2 {
-                    let expected = a_values[lane].mul_add(b_values[lane], c_values[lane]);
-                    assert_eq!(
-                        result[lane].to_bits(),
-                        expected.to_bits(),
-                        "safe-range case {}: a={:#018x}, b={:#018x}, c={:#018x}",
-                        vector_index * 2 + lane,
-                        a_values[lane].to_bits(),
-                        b_values[lane].to_bits(),
-                        c_values[lane].to_bits(),
-                    );
-                }
-            }
-
-            // Put both multiplicands exactly halfway across the integer-mask split boundary.
-            // Random binary64 bit patterns almost never exercise this rounding case.
-            let fraction_above_split_mask = 0x000f_ffff_f800_0000_u64;
-            let split_rounding_bit = 1_u64 << 26;
-            for vector_index in 0..CASES_PER_DISTRIBUTION / 2 {
-                let a_values: [f64; 2] = core::array::from_fn(|_| {
-                    let exponent = rng.i32(-400..400);
-                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
-                    let fraction = (rng.u64(..) & fraction_above_split_mask) | split_rounding_bit;
-                    f64::from_bits(sign | (((exponent + 1023) as u64) << 52) | fraction)
-                });
-                let b_values: [f64; 2] = core::array::from_fn(|_| {
-                    let exponent = rng.i32(-400..400);
-                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
-                    let fraction = (rng.u64(..) & fraction_above_split_mask) | split_rounding_bit;
-                    f64::from_bits(sign | (((exponent + 1023) as u64) << 52) | fraction)
-                });
-                let c_values: [f64; 2] = core::array::from_fn(|_| {
-                    let exponent = rng.i32(-400..400);
-                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
-                    let bits =
-                        sign | (((exponent + 1023) as u64) << 52) | (rng.u64(..) & fraction_mask);
-                    f64::from_bits(bits)
-                });
-                let result = f64x2::from_slice(simd, &a_values).mul_add_precise(
-                    f64x2::from_slice(simd, &b_values),
-                    f64x2::from_slice(simd, &c_values),
-                );
-
-                for lane in 0..2 {
-                    let expected = a_values[lane].mul_add(b_values[lane], c_values[lane]);
-                    assert_eq!(
-                        result[lane].to_bits(),
-                        expected.to_bits(),
-                        "split-tie case {}: a={:#018x}, b={:#018x}, c={:#018x}",
-                        vector_index * 2 + lane,
-                        a_values[lane].to_bits(),
-                        b_values[lane].to_bits(),
-                        c_values[lane].to_bits(),
-                    );
-                }
-            }
-
-            // Cancelling the rounded product exposes any error in the reconstructed exact tail.
-            let safe_minimum_bits = 623_u64 << 52;
-            let safe_maximum_bits = 1423_u64 << 52;
-            for vector_index in 0..CASES_PER_DISTRIBUTION / 2 {
-                let mut a_values = [0.0; 2];
-                let mut b_values = [0.0; 2];
-                let mut c_values = [0.0; 2];
-                for lane in 0..2 {
-                    loop {
-                        let a_exponent = rng.i32(-400..400);
-                        let a_sign = if rng.bool() { 1_u64 << 63 } else { 0 };
-                        let a_bits = a_sign
-                            | (((a_exponent + 1023) as u64) << 52)
-                            | (rng.u64(..) & fraction_mask);
-                        let b_exponent = rng.i32(-400..400);
-                        let b_sign = if rng.bool() { 1_u64 << 63 } else { 0 };
-                        let b_bits = b_sign
-                            | (((b_exponent + 1023) as u64) << 52)
-                            | (rng.u64(..) & fraction_mask);
-                        let a = f64::from_bits(a_bits);
-                        let b = f64::from_bits(b_bits);
-                        let rounded_product = a * b;
-                        let product_bits = rounded_product.to_bits() & i64::MAX as u64;
-                        if product_bits >= safe_minimum_bits && product_bits <= safe_maximum_bits {
-                            a_values[lane] = a;
-                            b_values[lane] = b;
-                            c_values[lane] = -rounded_product;
-                            break;
-                        }
-                    }
-                }
-                let result = f64x2::from_slice(simd, &a_values).mul_add_precise(
-                    f64x2::from_slice(simd, &b_values),
-                    f64x2::from_slice(simd, &c_values),
-                );
-
-                for lane in 0..2 {
-                    let expected = a_values[lane].mul_add(b_values[lane], c_values[lane]);
-                    assert_eq!(
-                        result[lane].to_bits(),
-                        expected.to_bits(),
-                        "cancellation case {}: a={:#018x}, b={:#018x}, c={:#018x}",
-                        vector_index * 2 + lane,
-                        a_values[lane].to_bits(),
-                        b_values[lane].to_bits(),
-                        c_values[lane].to_bits(),
-                    );
-                }
-            }
-        },
-    );
-}
-
-#[simd_test]
 fn mul_add_precise_f64x2_edge_patterns<S: Simd>(simd: S) {
     let edge_bits = [
         0x0000_0000_0000_0000,
@@ -1544,4 +1313,235 @@ fn mul_add_precise_f32x4_random_half_subnormal_products<S: Simd>(simd: S) {
             "iteration {iteration}: a={a_bits:x?}, b={b_bits:x?}, c={c_bits:x?}",
         );
     }
+}
+
+#[simd_test]
+#[ignore = "stress-tests 1 billion randomized safe-range and full-range f64 inputs"]
+fn mul_add_precise_f64x2_random<S: Simd>(simd: S) {
+    simd.vectorize(
+        #[inline(always)]
+        || {
+            let mut rng = fastrand::Rng::with_seed(0x3c6e_f372_fe94_f82b);
+            let fraction_mask = (1_u64 << 52) - 1;
+
+            for iteration in 0..1_000_000_000 {
+                let safe_a: [f64; 2] = core::array::from_fn(|_| {
+                    let exponent = rng.i32(-400..400);
+                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
+                    let bits =
+                        sign | (((exponent + 1023) as u64) << 52) | (rng.u64(..) & fraction_mask);
+                    f64::from_bits(bits)
+                });
+                let safe_b: [f64; 2] = core::array::from_fn(|_| {
+                    let exponent = rng.i32(-400..400);
+                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
+                    let bits =
+                        sign | (((exponent + 1023) as u64) << 52) | (rng.u64(..) & fraction_mask);
+                    f64::from_bits(bits)
+                });
+                let safe_c: [f64; 2] = core::array::from_fn(|lane| {
+                    if iteration % 32 == 0 && lane == 0 {
+                        return if rng.bool() { 0.0 } else { -0.0 };
+                    }
+                    let exponent = rng.i32(-400..400);
+                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
+                    let bits =
+                        sign | (((exponent + 1023) as u64) << 52) | (rng.u64(..) & fraction_mask);
+                    f64::from_bits(bits)
+                });
+                let safe_result = f64x2::from_slice(simd, &safe_a).mul_add_precise(
+                    f64x2::from_slice(simd, &safe_b),
+                    f64x2::from_slice(simd, &safe_c),
+                );
+                for lane in 0..2 {
+                    let expected = safe_a[lane].mul_add(safe_b[lane], safe_c[lane]);
+                    if expected.is_nan() {
+                        assert!(
+                            safe_result[lane].is_nan(),
+                            "safe-range iteration {iteration}, lane {lane}: expected NaN, got {:?}",
+                            safe_result[lane],
+                        );
+                    } else {
+                        assert_eq!(
+                            safe_result[lane].to_bits(),
+                            expected.to_bits(),
+                            "safe-range iteration {iteration}, lane {lane}",
+                        );
+                    }
+                }
+
+                let arbitrary_a = [f64::from_bits(rng.u64(..)), f64::from_bits(rng.u64(..))];
+                let arbitrary_b = [f64::from_bits(rng.u64(..)), f64::from_bits(rng.u64(..))];
+                let arbitrary_c = [f64::from_bits(rng.u64(..)), f64::from_bits(rng.u64(..))];
+                let arbitrary_result = f64x2::from_slice(simd, &arbitrary_a).mul_add_precise(
+                    f64x2::from_slice(simd, &arbitrary_b),
+                    f64x2::from_slice(simd, &arbitrary_c),
+                );
+                for lane in 0..2 {
+                    let expected = arbitrary_a[lane].mul_add(arbitrary_b[lane], arbitrary_c[lane]);
+                    if expected.is_nan() {
+                        assert!(
+                            arbitrary_result[lane].is_nan(),
+                            "full-range iteration {iteration}, lane {lane}: expected NaN, got {:?}",
+                            arbitrary_result[lane],
+                        );
+                    } else {
+                        assert_eq!(
+                            arbitrary_result[lane].to_bits(),
+                            expected.to_bits(),
+                            "full-range iteration {iteration}, lane {lane}",
+                        );
+                    }
+                }
+            }
+        },
+    );
+}
+
+#[simd_test]
+#[ignore = "stress-tests 1 billion safe-range, split-tie, and cancellation f64 inputs each"]
+fn mul_add_precise_f64x2_adversarial_random<S: Simd>(simd: S) {
+    simd.vectorize(
+        #[inline(always)]
+        || {
+            const CASES_PER_DISTRIBUTION: usize = 1_000_000_000;
+            let fraction_mask = (1_u64 << 52) - 1;
+            let mut rng = fastrand::Rng::with_seed(0x4d59_5df4_d0f3_3173);
+
+            // Uniformly sample the exponent-safe packed path. Each vector supplies two cases.
+            for vector_index in 0..CASES_PER_DISTRIBUTION / 2 {
+                let a_values: [f64; 2] = core::array::from_fn(|_| {
+                    let exponent = rng.i32(-400..400);
+                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
+                    let bits =
+                        sign | (((exponent + 1023) as u64) << 52) | (rng.u64(..) & fraction_mask);
+                    f64::from_bits(bits)
+                });
+                let b_values: [f64; 2] = core::array::from_fn(|_| {
+                    let exponent = rng.i32(-400..400);
+                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
+                    let bits =
+                        sign | (((exponent + 1023) as u64) << 52) | (rng.u64(..) & fraction_mask);
+                    f64::from_bits(bits)
+                });
+                let c_values: [f64; 2] = core::array::from_fn(|_| {
+                    let exponent = rng.i32(-400..400);
+                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
+                    let bits =
+                        sign | (((exponent + 1023) as u64) << 52) | (rng.u64(..) & fraction_mask);
+                    f64::from_bits(bits)
+                });
+                let result = f64x2::from_slice(simd, &a_values).mul_add_precise(
+                    f64x2::from_slice(simd, &b_values),
+                    f64x2::from_slice(simd, &c_values),
+                );
+
+                for lane in 0..2 {
+                    let expected = a_values[lane].mul_add(b_values[lane], c_values[lane]);
+                    assert_eq!(
+                        result[lane].to_bits(),
+                        expected.to_bits(),
+                        "safe-range case {}: a={:#018x}, b={:#018x}, c={:#018x}",
+                        vector_index * 2 + lane,
+                        a_values[lane].to_bits(),
+                        b_values[lane].to_bits(),
+                        c_values[lane].to_bits(),
+                    );
+                }
+            }
+
+            // Put both multiplicands exactly halfway across the integer-mask split boundary.
+            // Random binary64 bit patterns almost never exercise this rounding case.
+            let fraction_above_split_mask = 0x000f_ffff_f800_0000_u64;
+            let split_rounding_bit = 1_u64 << 26;
+            for vector_index in 0..CASES_PER_DISTRIBUTION / 2 {
+                let a_values: [f64; 2] = core::array::from_fn(|_| {
+                    let exponent = rng.i32(-400..400);
+                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
+                    let fraction = (rng.u64(..) & fraction_above_split_mask) | split_rounding_bit;
+                    f64::from_bits(sign | (((exponent + 1023) as u64) << 52) | fraction)
+                });
+                let b_values: [f64; 2] = core::array::from_fn(|_| {
+                    let exponent = rng.i32(-400..400);
+                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
+                    let fraction = (rng.u64(..) & fraction_above_split_mask) | split_rounding_bit;
+                    f64::from_bits(sign | (((exponent + 1023) as u64) << 52) | fraction)
+                });
+                let c_values: [f64; 2] = core::array::from_fn(|_| {
+                    let exponent = rng.i32(-400..400);
+                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
+                    let bits =
+                        sign | (((exponent + 1023) as u64) << 52) | (rng.u64(..) & fraction_mask);
+                    f64::from_bits(bits)
+                });
+                let result = f64x2::from_slice(simd, &a_values).mul_add_precise(
+                    f64x2::from_slice(simd, &b_values),
+                    f64x2::from_slice(simd, &c_values),
+                );
+
+                for lane in 0..2 {
+                    let expected = a_values[lane].mul_add(b_values[lane], c_values[lane]);
+                    assert_eq!(
+                        result[lane].to_bits(),
+                        expected.to_bits(),
+                        "split-tie case {}: a={:#018x}, b={:#018x}, c={:#018x}",
+                        vector_index * 2 + lane,
+                        a_values[lane].to_bits(),
+                        b_values[lane].to_bits(),
+                        c_values[lane].to_bits(),
+                    );
+                }
+            }
+
+            // Cancelling the rounded product exposes any error in the reconstructed exact tail.
+            let safe_minimum_bits = 623_u64 << 52;
+            let safe_maximum_bits = 1423_u64 << 52;
+            for vector_index in 0..CASES_PER_DISTRIBUTION / 2 {
+                let mut a_values = [0.0; 2];
+                let mut b_values = [0.0; 2];
+                let mut c_values = [0.0; 2];
+                for lane in 0..2 {
+                    loop {
+                        let a_exponent = rng.i32(-400..400);
+                        let a_sign = if rng.bool() { 1_u64 << 63 } else { 0 };
+                        let a_bits = a_sign
+                            | (((a_exponent + 1023) as u64) << 52)
+                            | (rng.u64(..) & fraction_mask);
+                        let b_exponent = rng.i32(-400..400);
+                        let b_sign = if rng.bool() { 1_u64 << 63 } else { 0 };
+                        let b_bits = b_sign
+                            | (((b_exponent + 1023) as u64) << 52)
+                            | (rng.u64(..) & fraction_mask);
+                        let a = f64::from_bits(a_bits);
+                        let b = f64::from_bits(b_bits);
+                        let rounded_product = a * b;
+                        let product_bits = rounded_product.to_bits() & i64::MAX as u64;
+                        if product_bits >= safe_minimum_bits && product_bits <= safe_maximum_bits {
+                            a_values[lane] = a;
+                            b_values[lane] = b;
+                            c_values[lane] = -rounded_product;
+                            break;
+                        }
+                    }
+                }
+                let result = f64x2::from_slice(simd, &a_values).mul_add_precise(
+                    f64x2::from_slice(simd, &b_values),
+                    f64x2::from_slice(simd, &c_values),
+                );
+
+                for lane in 0..2 {
+                    let expected = a_values[lane].mul_add(b_values[lane], c_values[lane]);
+                    assert_eq!(
+                        result[lane].to_bits(),
+                        expected.to_bits(),
+                        "cancellation case {}: a={:#018x}, b={:#018x}, c={:#018x}",
+                        vector_index * 2 + lane,
+                        a_values[lane].to_bits(),
+                        b_values[lane].to_bits(),
+                        c_values[lane].to_bits(),
+                    );
+                }
+            }
+        },
+    );
 }
