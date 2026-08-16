@@ -193,6 +193,8 @@
 //! It benefited from conversations with Luca Versari, though he is not responsible for any of the mistakes or bad decisions.
 //!
 //! [`pulp`]: https://crates.io/crates/pulp
+#![cfg_attr(feature = "libm", doc = "[libm]: libm")]
+#![cfg_attr(not(feature = "libm"), doc = "[libm]: https://crates.io/crates/libm")]
 // LINEBENDER LINT SET - lib.rs - v3
 // See https://linebender.org/wiki/canonical-lints/
 // These lints shouldn't apply to examples or tests.
