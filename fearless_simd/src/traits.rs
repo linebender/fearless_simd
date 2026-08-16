@@ -6,6 +6,7 @@
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 use crate::{Simd, SimdBase, seal::Seal};
+use core::error::Error;
 use core::fmt::{Binary, Debug, Display, LowerExp, UpperExp};
 use core::iter::{Product, Sum};
 use core::ops::{
@@ -219,6 +220,18 @@ pub trait SimdIntElement:
     + BitOrAssign<Self>
     + BitXor<Self, Output = Self>
     + BitXorAssign<Self>
+    + TryFrom<u8, Error: Copy + Clone + Error + Eq + PartialEq>
+    + TryFrom<u16, Error: Copy + Clone + Error + Eq + PartialEq>
+    + TryFrom<u32, Error: Copy + Clone + Error + Eq + PartialEq>
+    + TryFrom<u64, Error: Copy + Clone + Error + Eq + PartialEq>
+    + TryFrom<u128, Error: Copy + Clone + Error + Eq + PartialEq>
+    + TryFrom<usize, Error: Copy + Clone + Error + Eq + PartialEq>
+    + TryFrom<i8, Error: Copy + Clone + Error + Eq + PartialEq>
+    + TryFrom<i16, Error: Copy + Clone + Error + Eq + PartialEq>
+    + TryFrom<i32, Error: Copy + Clone + Error + Eq + PartialEq>
+    + TryFrom<i64, Error: Copy + Clone + Error + Eq + PartialEq>
+    + TryFrom<i128, Error: Copy + Clone + Error + Eq + PartialEq>
+    + TryFrom<isize, Error: Copy + Clone + Error + Eq + PartialEq>
     + for<'a> Shl<&'a usize, Output = Self>
     + for<'a> ShlAssign<&'a usize>
     + for<'a> Shr<&'a usize, Output = Self>
