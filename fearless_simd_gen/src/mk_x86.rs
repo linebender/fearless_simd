@@ -2476,6 +2476,190 @@ impl X86 {
         })
     }
 
+    fn precise_mul_add_f64x2(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        assert!(
+            *self == Self::Sse4_2,
+            "precise f64 multiply-add emulation is specific to SSE4.2"
+        );
+        assert_eq!(
+            vec_ty.scalar,
+            ScalarType::Float,
+            "precise f64 multiply-add requires a floating-point vector"
+        );
+        assert_eq!(
+            vec_ty.scalar_bits, 64,
+            "precise f64 multiply-add requires 64-bit lanes"
+        );
+        assert_eq!(
+            vec_ty.n_bits(),
+            128,
+            "SSE4.2 precise f64 multiply-add requires one native vector"
+        );
+
+        // Graillat and Muller's Algorithm 9 computes an FMA from a Dekker product
+        // and their correctly rounded addition of a double-word and an FP number:
+        // https://perso.lip6.fr/Stef.Graillat/papers/NM-2025.pdf
+        // https://doi.org/10.1007/s00211-025-01487-2
+        //
+        // Their proof assumes an unbounded exponent range. Restrict the packed path
+        // to a conservative range where no nonzero intermediate can underflow or
+        // overflow, and use scalar FMA for complete IEEE binary64 range coverage.
+        //
+        // The vectorized path is taken for values between 2^-400 and 2^400,
+        // values outside that range are routed to the scalar fallback.
+        self.kernel_method(op, vec_ty, |token| {
+            quote! {
+                let a_raw: __m128d = a.into();
+                let b_raw: __m128d = b.into();
+                let c_raw: __m128d = c.into();
+
+                let absolute_value_mask = _mm_set1_epi64x(i64::MAX);
+                let a_bits = _mm_and_si128(_mm_castpd_si128(a_raw), absolute_value_mask);
+                let b_bits = _mm_and_si128(_mm_castpd_si128(b_raw), absolute_value_mask);
+                let c_bits = _mm_and_si128(_mm_castpd_si128(c_raw), absolute_value_mask);
+
+                // 2^-400 and 2^400 have biased exponents 623 and 1423. Inclusive
+                // comparisons are expressed using strict signed qword comparisons;
+                // absolute-value binary64 bits are always nonnegative as i64 values.
+                let lower_bound_minus_one = _mm_set1_epi64x((623_i64 << 52) - 1);
+                let upper_bound_plus_one = _mm_set1_epi64x((1423_i64 << 52) + 1);
+                let zero_bits = _mm_setzero_si128();
+                let all_ones = _mm_set1_epi64x(-1);
+                let a_safe = _mm_and_si128(
+                    _mm_cmpgt_epi64(a_bits, lower_bound_minus_one),
+                    _mm_cmpgt_epi64(upper_bound_plus_one, a_bits),
+                );
+                let b_safe = _mm_and_si128(
+                    _mm_cmpgt_epi64(b_bits, lower_bound_minus_one),
+                    _mm_cmpgt_epi64(upper_bound_plus_one, b_bits),
+                );
+                let c_in_range = _mm_and_si128(
+                    _mm_cmpgt_epi64(c_bits, lower_bound_minus_one),
+                    _mm_cmpgt_epi64(upper_bound_plus_one, c_bits),
+                );
+                let c_safe = _mm_or_si128(c_in_range, _mm_cmpeq_epi64(c_bits, zero_bits));
+                let all_safe = _mm_and_si128(_mm_and_si128(a_safe, b_safe), c_safe);
+
+                // Scalarize both lanes if either one is outside the proven exponent-safe range.
+                // This branch must precede the packed arithmetic so unsafe inactive lanes cannot
+                // overflow or underflow inside the error-free transforms.
+                if _mm_testc_si128(all_safe, all_ones) == 0 {
+                    return [
+                        f64::mul_add(a[0], b[0], c[0]),
+                        f64::mul_add(a[1], b[1], c[1]),
+                    ]
+                    .simd_into(#token);
+                }
+
+                // Split each normal multiplicand into nonoverlapping high and low parts.
+                // Adding half of the discarded range before clearing 27 significand bits
+                // gives the high part at most 26 significant bits and leaves the low part
+                // at most 27. The addition operates on sign-magnitude binary64 encodings,
+                // so it rounds the magnitude in the same direction for either sign. The
+                // exponent guard above prevents the integer addition from wrapping.
+                let split_rounding_bit = _mm_set1_epi64x(1_i64 << 26);
+                let split_high_mask = _mm_set1_epi64x(!((1_i64 << 27) - 1));
+                let a_high = _mm_castsi128_pd(_mm_and_si128(
+                    _mm_add_epi64(_mm_castpd_si128(a_raw), split_rounding_bit),
+                    split_high_mask,
+                ));
+                let a_low = _mm_sub_pd(a_raw, a_high);
+                let b_high = _mm_castsi128_pd(_mm_and_si128(
+                    _mm_add_epi64(_mm_castpd_si128(b_raw), split_rounding_bit),
+                    split_high_mask,
+                ));
+                let b_low = _mm_sub_pd(b_raw, b_high);
+
+                // Dekker product: product_high + product_low is exactly a * b.
+                let product_high = _mm_mul_pd(a_raw, b_raw);
+                let product_error_1 =
+                    _mm_sub_pd(_mm_mul_pd(a_high, b_high), product_high);
+                let product_error_2 =
+                    _mm_add_pd(product_error_1, _mm_mul_pd(a_high, b_low));
+                let product_error_3 =
+                    _mm_add_pd(product_error_2, _mm_mul_pd(a_low, b_high));
+                let product_low =
+                    _mm_add_pd(product_error_3, _mm_mul_pd(a_low, b_low));
+
+                // Magnitude-sort each addition so Fast2Sum can replace TwoSum.
+                // This trades packed compares and blends for a shorter floating-point
+                // dependency chain, as suggested by Graillat and Muller.
+                let sum_high = _mm_add_pd(product_high, c_raw);
+                let product_high_abs = _mm_and_si128(
+                    _mm_castpd_si128(product_high),
+                    absolute_value_mask,
+                );
+                let product_high_larger = _mm_cmpgt_pd(
+                    _mm_castsi128_pd(product_high_abs),
+                    _mm_castsi128_pd(c_bits),
+                );
+                let sum_large = _mm_blendv_pd(c_raw, product_high, product_high_larger);
+                let sum_small = _mm_blendv_pd(product_high, c_raw, product_high_larger);
+                let sum_low = _mm_sub_pd(sum_small, _mm_sub_pd(sum_high, sum_large));
+
+                // Only the rounded sum of product_low and sum_low is needed on the
+                // overwhelmingly common path. Its exact residual matters only when
+                // v_high has one of the two significand shapes that can require the
+                // Graillat-Muller correction, so defer that second Fast2Sum until then.
+                let v_high = _mm_add_pd(product_low, sum_low);
+                let v_high_bits = _mm_castpd_si128(v_high);
+                let lower_fraction_mask = _mm_set1_epi64x(0x0007_ffff_ffff_ffff);
+                let special_fraction = _mm_cmpeq_epi64(
+                    _mm_and_si128(v_high_bits, lower_fraction_mask),
+                    zero_bits,
+                );
+
+                // A positive zero has the same fraction shape, but cannot need correction.
+                // Testing the shape mask against v_high itself excludes it without forming
+                // another packed mask. A negative zero may enter the rare path harmlessly.
+                if _mm_testz_si128(special_fraction, v_high_bits) == 0 {
+                    // Fast2Sum(product_low, sum_low), after the same magnitude sort.
+                    let product_low_abs = _mm_and_si128(
+                        _mm_castpd_si128(product_low),
+                        absolute_value_mask,
+                    );
+                    let sum_low_abs = _mm_and_si128(
+                        _mm_castpd_si128(sum_low),
+                        absolute_value_mask,
+                    );
+                    let product_low_larger = _mm_cmpgt_pd(
+                        _mm_castsi128_pd(product_low_abs),
+                        _mm_castsi128_pd(sum_low_abs),
+                    );
+                    let v_large = _mm_blendv_pd(sum_low, product_low, product_low_larger);
+                    let v_small = _mm_blendv_pd(product_low, sum_low, product_low_larger);
+                    let v_low = _mm_sub_pd(v_small, _mm_sub_pd(v_high, v_large));
+
+                    // The default sum is correctly rounded except when v_low is nonzero and
+                    // |v_high| is 2^k or 3 * 2^k. Under the exponent guard, every nonzero
+                    // product or residual is a multiple of at least 2^-904, so v_low != 0
+                    // implies that v_high is finite, normal, and nonzero. The two relevant
+                    // significand shapes therefore differ only in their top fraction bit.
+                    let v_low_nonzero =
+                        _mm_castpd_si128(_mm_cmpneq_pd(v_low, _mm_setzero_pd()));
+                    let special = _mm_and_si128(v_low_nonzero, special_fraction);
+                    let different_sign_bits = _mm_slli_epi64::<63>(_mm_srli_epi64::<63>(
+                        _mm_xor_si128(v_high_bits, _mm_castpd_si128(v_low)),
+                    ));
+                    let factor = _mm_blendv_pd(
+                        _mm_set1_pd(9.0 / 8.0),
+                        _mm_set1_pd(7.0 / 8.0),
+                        _mm_castsi128_pd(different_sign_bits),
+                    );
+                    let adjusted_v_high = _mm_mul_pd(factor, v_high);
+                    let correction = _mm_blendv_pd(
+                        v_high,
+                        adjusted_v_high,
+                        _mm_castsi128_pd(special),
+                    );
+                    _mm_add_pd(sum_high, correction).simd_into(#token)
+                } else {
+                    _mm_add_pd(sum_high, v_high).simd_into(#token)
+                }
+            }
+        })
+    }
+
     pub(crate) fn handle_ternary(
         &self,
         op: Op,
@@ -2502,6 +2686,9 @@ impl X86 {
             }
             "mul_add_precise" if *self == Self::Sse4_2 && vec_ty.scalar_bits == 32 => {
                 self.precise_mul_add_f32x4(op, vec_ty)
+            }
+            "mul_add_precise" if *self == Self::Sse4_2 && vec_ty.scalar_bits == 64 => {
+                self.precise_mul_add_f64x2(op, vec_ty)
             }
             "mul_add_precise" if matches!(self, Self::Avx2 | Self::Avx512) => {
                 let mul_add = generic_op_name("mul_add", vec_ty);
