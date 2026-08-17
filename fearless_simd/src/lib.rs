@@ -475,6 +475,7 @@ impl Level {
     ///
     /// This method is always available, even when the fallback backend is not compiled. In that
     /// case, it always returns `false`.
+    #[inline]
     pub fn is_fallback(self) -> bool {
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         return self.as_sse2().is_none();
