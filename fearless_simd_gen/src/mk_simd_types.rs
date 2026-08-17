@@ -22,7 +22,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
         let name = ty.rust();
         let name_str = ty.rust_name();
         let doc = ty.docstring();
-        let align = ty.n_bits() / 8;
+        let align = ty.align();
         let align_lit = Literal::usize_unsuffixed(align);
         let len = Literal::usize_unsuffixed(ty.len);
         let rust_scalar = ty.scalar.rust(ty.scalar_bits);
