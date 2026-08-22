@@ -18,10 +18,13 @@ pub(crate) enum Quantifier {
 }
 
 impl Quantifier {
-    pub(crate) fn bool_op(&self) -> TokenStream {
-        match self {
-            Self::Any => quote! { || },
-            Self::All => quote! { && },
+    /// The element-wise op that combines two mask halves such that reducing the result is
+    /// equivalent to reducing each half and combining the booleans.
+    pub(crate) fn mask_combine_op(&self, condition: bool) -> &'static str {
+        if (*self == Self::Any) == condition {
+            "or"
+        } else {
+            "and"
         }
     }
 }
