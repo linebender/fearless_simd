@@ -2321,25 +2321,25 @@ pub trait Simd:
     #[inline(always)]
     fn any_true_mask8x32(self, a: mask8x32<Self>) -> bool {
         let (a0, a1) = self.split_mask8x32(a);
-        self.any_true_mask8x16(a0) || self.any_true_mask8x16(a1)
+        self.any_true_mask8x16(self.or_mask8x16(a0, a1))
     }
     #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn all_true_mask8x32(self, a: mask8x32<Self>) -> bool {
         let (a0, a1) = self.split_mask8x32(a);
-        self.all_true_mask8x16(a0) && self.all_true_mask8x16(a1)
+        self.all_true_mask8x16(self.and_mask8x16(a0, a1))
     }
     #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn any_false_mask8x32(self, a: mask8x32<Self>) -> bool {
         let (a0, a1) = self.split_mask8x32(a);
-        self.any_false_mask8x16(a0) || self.any_false_mask8x16(a1)
+        self.any_false_mask8x16(self.and_mask8x16(a0, a1))
     }
     #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn all_false_mask8x32(self, a: mask8x32<Self>) -> bool {
         let (a0, a1) = self.split_mask8x32(a);
-        self.all_false_mask8x16(a0) && self.all_false_mask8x16(a1)
+        self.all_false_mask8x16(self.or_mask8x16(a0, a1))
     }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x64<Self>;
@@ -2954,25 +2954,25 @@ pub trait Simd:
     #[inline(always)]
     fn any_true_mask16x16(self, a: mask16x16<Self>) -> bool {
         let (a0, a1) = self.split_mask16x16(a);
-        self.any_true_mask16x8(a0) || self.any_true_mask16x8(a1)
+        self.any_true_mask16x8(self.or_mask16x8(a0, a1))
     }
     #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn all_true_mask16x16(self, a: mask16x16<Self>) -> bool {
         let (a0, a1) = self.split_mask16x16(a);
-        self.all_true_mask16x8(a0) && self.all_true_mask16x8(a1)
+        self.all_true_mask16x8(self.and_mask16x8(a0, a1))
     }
     #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn any_false_mask16x16(self, a: mask16x16<Self>) -> bool {
         let (a0, a1) = self.split_mask16x16(a);
-        self.any_false_mask16x8(a0) || self.any_false_mask16x8(a1)
+        self.any_false_mask16x8(self.and_mask16x8(a0, a1))
     }
     #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn all_false_mask16x16(self, a: mask16x16<Self>) -> bool {
         let (a0, a1) = self.split_mask16x16(a);
-        self.all_false_mask16x8(a0) && self.all_false_mask16x8(a1)
+        self.all_false_mask16x8(self.or_mask16x8(a0, a1))
     }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x32<Self>;
@@ -3591,25 +3591,25 @@ pub trait Simd:
     #[inline(always)]
     fn any_true_mask32x8(self, a: mask32x8<Self>) -> bool {
         let (a0, a1) = self.split_mask32x8(a);
-        self.any_true_mask32x4(a0) || self.any_true_mask32x4(a1)
+        self.any_true_mask32x4(self.or_mask32x4(a0, a1))
     }
     #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn all_true_mask32x8(self, a: mask32x8<Self>) -> bool {
         let (a0, a1) = self.split_mask32x8(a);
-        self.all_true_mask32x4(a0) && self.all_true_mask32x4(a1)
+        self.all_true_mask32x4(self.and_mask32x4(a0, a1))
     }
     #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn any_false_mask32x8(self, a: mask32x8<Self>) -> bool {
         let (a0, a1) = self.split_mask32x8(a);
-        self.any_false_mask32x4(a0) || self.any_false_mask32x4(a1)
+        self.any_false_mask32x4(self.and_mask32x4(a0, a1))
     }
     #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn all_false_mask32x8(self, a: mask32x8<Self>) -> bool {
         let (a0, a1) = self.split_mask32x8(a);
-        self.all_false_mask32x4(a0) && self.all_false_mask32x4(a1)
+        self.all_false_mask32x4(self.or_mask32x4(a0, a1))
     }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x16<Self>;
@@ -4578,25 +4578,25 @@ pub trait Simd:
     #[inline(always)]
     fn any_true_mask64x4(self, a: mask64x4<Self>) -> bool {
         let (a0, a1) = self.split_mask64x4(a);
-        self.any_true_mask64x2(a0) || self.any_true_mask64x2(a1)
+        self.any_true_mask64x2(self.or_mask64x2(a0, a1))
     }
     #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn all_true_mask64x4(self, a: mask64x4<Self>) -> bool {
         let (a0, a1) = self.split_mask64x4(a);
-        self.all_true_mask64x2(a0) && self.all_true_mask64x2(a1)
+        self.all_true_mask64x2(self.and_mask64x2(a0, a1))
     }
     #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn any_false_mask64x4(self, a: mask64x4<Self>) -> bool {
         let (a0, a1) = self.split_mask64x4(a);
-        self.any_false_mask64x2(a0) || self.any_false_mask64x2(a1)
+        self.any_false_mask64x2(self.and_mask64x2(a0, a1))
     }
     #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn all_false_mask64x4(self, a: mask64x4<Self>) -> bool {
         let (a0, a1) = self.split_mask64x4(a);
-        self.all_false_mask64x2(a0) && self.all_false_mask64x2(a1)
+        self.all_false_mask64x2(self.or_mask64x2(a0, a1))
     }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x8<Self>;
@@ -5503,25 +5503,25 @@ pub trait Simd:
     #[inline(always)]
     fn any_true_mask8x64(self, a: mask8x64<Self>) -> bool {
         let (a0, a1) = self.split_mask8x64(a);
-        self.any_true_mask8x32(a0) || self.any_true_mask8x32(a1)
+        self.any_true_mask8x32(self.or_mask8x32(a0, a1))
     }
     #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn all_true_mask8x64(self, a: mask8x64<Self>) -> bool {
         let (a0, a1) = self.split_mask8x64(a);
-        self.all_true_mask8x32(a0) && self.all_true_mask8x32(a1)
+        self.all_true_mask8x32(self.and_mask8x32(a0, a1))
     }
     #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn any_false_mask8x64(self, a: mask8x64<Self>) -> bool {
         let (a0, a1) = self.split_mask8x64(a);
-        self.any_false_mask8x32(a0) || self.any_false_mask8x32(a1)
+        self.any_false_mask8x32(self.and_mask8x32(a0, a1))
     }
     #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn all_false_mask8x64(self, a: mask8x64<Self>) -> bool {
         let (a0, a1) = self.split_mask8x64(a);
-        self.all_false_mask8x32(a0) && self.all_false_mask8x32(a1)
+        self.all_false_mask8x32(self.or_mask8x32(a0, a1))
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask8x64(self, a: mask8x64<Self>) -> (mask8x32<Self>, mask8x32<Self>);
@@ -6145,25 +6145,25 @@ pub trait Simd:
     #[inline(always)]
     fn any_true_mask16x32(self, a: mask16x32<Self>) -> bool {
         let (a0, a1) = self.split_mask16x32(a);
-        self.any_true_mask16x16(a0) || self.any_true_mask16x16(a1)
+        self.any_true_mask16x16(self.or_mask16x16(a0, a1))
     }
     #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn all_true_mask16x32(self, a: mask16x32<Self>) -> bool {
         let (a0, a1) = self.split_mask16x32(a);
-        self.all_true_mask16x16(a0) && self.all_true_mask16x16(a1)
+        self.all_true_mask16x16(self.and_mask16x16(a0, a1))
     }
     #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn any_false_mask16x32(self, a: mask16x32<Self>) -> bool {
         let (a0, a1) = self.split_mask16x32(a);
-        self.any_false_mask16x16(a0) || self.any_false_mask16x16(a1)
+        self.any_false_mask16x16(self.and_mask16x16(a0, a1))
     }
     #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn all_false_mask16x32(self, a: mask16x32<Self>) -> bool {
         let (a0, a1) = self.split_mask16x32(a);
-        self.all_false_mask16x16(a0) && self.all_false_mask16x16(a1)
+        self.all_false_mask16x16(self.or_mask16x16(a0, a1))
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask16x32(self, a: mask16x32<Self>) -> (mask16x16<Self>, mask16x16<Self>);
@@ -6784,25 +6784,25 @@ pub trait Simd:
     #[inline(always)]
     fn any_true_mask32x16(self, a: mask32x16<Self>) -> bool {
         let (a0, a1) = self.split_mask32x16(a);
-        self.any_true_mask32x8(a0) || self.any_true_mask32x8(a1)
+        self.any_true_mask32x8(self.or_mask32x8(a0, a1))
     }
     #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn all_true_mask32x16(self, a: mask32x16<Self>) -> bool {
         let (a0, a1) = self.split_mask32x16(a);
-        self.all_true_mask32x8(a0) && self.all_true_mask32x8(a1)
+        self.all_true_mask32x8(self.and_mask32x8(a0, a1))
     }
     #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn any_false_mask32x16(self, a: mask32x16<Self>) -> bool {
         let (a0, a1) = self.split_mask32x16(a);
-        self.any_false_mask32x8(a0) || self.any_false_mask32x8(a1)
+        self.any_false_mask32x8(self.and_mask32x8(a0, a1))
     }
     #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn all_false_mask32x16(self, a: mask32x16<Self>) -> bool {
         let (a0, a1) = self.split_mask32x16(a);
-        self.all_false_mask32x8(a0) && self.all_false_mask32x8(a1)
+        self.all_false_mask32x8(self.or_mask32x8(a0, a1))
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask32x16(self, a: mask32x16<Self>) -> (mask32x8<Self>, mask32x8<Self>);
@@ -7763,25 +7763,25 @@ pub trait Simd:
     #[inline(always)]
     fn any_true_mask64x8(self, a: mask64x8<Self>) -> bool {
         let (a0, a1) = self.split_mask64x8(a);
-        self.any_true_mask64x4(a0) || self.any_true_mask64x4(a1)
+        self.any_true_mask64x4(self.or_mask64x4(a0, a1))
     }
     #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn all_true_mask64x8(self, a: mask64x8<Self>) -> bool {
         let (a0, a1) = self.split_mask64x8(a);
-        self.all_true_mask64x4(a0) && self.all_true_mask64x4(a1)
+        self.all_true_mask64x4(self.and_mask64x4(a0, a1))
     }
     #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn any_false_mask64x8(self, a: mask64x8<Self>) -> bool {
         let (a0, a1) = self.split_mask64x8(a);
-        self.any_false_mask64x4(a0) || self.any_false_mask64x4(a1)
+        self.any_false_mask64x4(self.and_mask64x4(a0, a1))
     }
     #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     #[inline(always)]
     fn all_false_mask64x8(self, a: mask64x8<Self>) -> bool {
         let (a0, a1) = self.split_mask64x8(a);
-        self.all_false_mask64x4(a0) && self.all_false_mask64x4(a1)
+        self.all_false_mask64x4(self.or_mask64x4(a0, a1))
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>);
