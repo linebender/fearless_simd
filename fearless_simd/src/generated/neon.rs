@@ -1197,9 +1197,9 @@ impl Simd for Neon {
                     1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128,
                 ]);
                 let bits = vandq_u8(vreinterpretq_u8_s8(a.into()), weights);
-                let lo = vaddv_u8(vget_low_u8(bits)) as u64;
-                let hi = vaddv_u8(vget_high_u8(bits)) as u64;
-                lo | (hi << 8)
+                let rotated = vextq_u8::<8>(bits, bits);
+                let paired = vzip1q_u8(bits, rotated);
+                vaddvq_u16(vreinterpretq_u16_u8(paired)) as u64
             }
         );
         kernel(self, a)
@@ -4465,6 +4465,28 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
+    fn to_bitmask_mask8x32(self, a: mask8x32<Self>) -> u64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask8x32<Neon>) -> u64 {
+                let a: int8x16x2_t = a.into();
+                let lo = vreinterpretq_u16_u8(vreinterpretq_u8_s8(a.0));
+                let hi = vreinterpretq_u16_u8(vreinterpretq_u8_s8(a.1));
+                let pairs_lo = vshrn_n_u16::<7>(lo);
+                let pairs_hi = vshrn_n_u16::<7>(hi);
+                let pairs = vcombine_u8(pairs_lo, pairs_hi);
+                let pairs = vsliq_n_u8::<6>(pairs, pairs);
+                let nibbles = vshrn_n_u16::<6>(vreinterpretq_u16_u8(pairs));
+                let mut bits = vget_lane_u64::<0>(vreinterpret_u64_u8(nibbles));
+                bits &= 0x0f0f_0f0f_0f0f_0f0f;
+                bits = (bits | (bits >> 4)) & 0x00ff_00ff_00ff_00ff;
+                bits = (bits | (bits >> 8)) & 0x0000_ffff_0000_ffff;
+                (bits | (bits >> 16)) & 0xffff_ffff
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn set_mask8x32(self, a: &mut mask8x32<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 32usize,
@@ -4616,6 +4638,21 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
+    fn to_bitmask_mask16x16(self, a: mask16x16<Self>) -> u64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask16x16<Neon>) -> u64 {
+                let a: int16x8x2_t = a.into();
+                let reduced = vreinterpretq_s8_u8(vuzp1q_u8(
+                    vreinterpretq_u8_s16(a.0),
+                    vreinterpretq_u8_s16(a.1),
+                ));
+                token.to_bitmask_mask8x16(reduced.simd_into(token))
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn set_mask16x16(self, a: &mut mask16x16<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 16usize,
@@ -4765,6 +4802,21 @@ impl Simd for Neon {
                 simd: self,
             },
         )
+    }
+    #[inline(always)]
+    fn to_bitmask_mask32x8(self, a: mask32x8<Self>) -> u64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask32x8<Neon>) -> u64 {
+                let a: int32x4x2_t = a.into();
+                let reduced = vreinterpretq_s16_u16(vuzp1q_u16(
+                    vreinterpretq_u16_s32(a.0),
+                    vreinterpretq_u16_s32(a.1),
+                ));
+                token.to_bitmask_mask16x8(reduced.simd_into(token))
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn set_mask32x8(self, a: &mut mask32x8<Self>, index: usize, value: bool) -> () {
@@ -4975,6 +5027,21 @@ impl Simd for Neon {
                 simd: self,
             },
         )
+    }
+    #[inline(always)]
+    fn to_bitmask_mask64x4(self, a: mask64x4<Self>) -> u64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask64x4<Neon>) -> u64 {
+                let a: int64x2x2_t = a.into();
+                let reduced = vreinterpretq_s32_u32(vuzp1q_u32(
+                    vreinterpretq_u32_s64(a.0),
+                    vreinterpretq_u32_s64(a.1),
+                ));
+                token.to_bitmask_mask32x4(reduced.simd_into(token))
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn set_mask64x4(self, a: &mut mask64x4<Self>, index: usize, value: bool) -> () {
@@ -5239,6 +5306,27 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
+    fn to_bitmask_mask8x64(self, a: mask8x64<Self>) -> u64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask8x64<Neon>) -> u64 {
+                let a: int8x16x4_t = a.into();
+                let a0 = vreinterpretq_u8_s8(a.0);
+                let a1 = vreinterpretq_u8_s8(a.1);
+                let a2 = vreinterpretq_u8_s8(a.2);
+                let a3 = vreinterpretq_u8_s8(a.3);
+                let lo = vsriq_n_u8::<1>(vuzp2q_u8(a0, a1), vuzp1q_u8(a0, a1));
+                let hi = vsriq_n_u8::<1>(vuzp2q_u8(a2, a3), vuzp1q_u8(a2, a3));
+                let packed = vsriq_n_u8::<2>(vuzp2q_u8(lo, hi), vuzp1q_u8(lo, hi));
+                let lo = vget_low_u8(packed);
+                let hi = vget_high_u8(packed);
+                let packed = vsri_n_u8::<4>(vuzp2_u8(lo, hi), vuzp1_u8(lo, hi));
+                vget_lane_u64::<0>(vreinterpret_u64_u8(packed))
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn set_mask8x64(self, a: &mut mask8x64<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 64usize,
@@ -5399,6 +5487,26 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
+    fn to_bitmask_mask16x32(self, a: mask16x32<Self>) -> u64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask16x32<Neon>) -> u64 {
+                let a: int16x8x4_t = a.into();
+                let lo = vreinterpretq_s8_u8(vuzp1q_u8(
+                    vreinterpretq_u8_s16(a.0),
+                    vreinterpretq_u8_s16(a.1),
+                ));
+                let hi = vreinterpretq_s8_u8(vuzp1q_u8(
+                    vreinterpretq_u8_s16(a.2),
+                    vreinterpretq_u8_s16(a.3),
+                ));
+                let reduced = int8x16x2_t(lo, hi);
+                token.to_bitmask_mask8x32(reduced.simd_into(token))
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn set_mask16x32(self, a: &mut mask16x32<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 32usize,
@@ -5557,6 +5665,26 @@ impl Simd for Neon {
                 simd: self,
             },
         )
+    }
+    #[inline(always)]
+    fn to_bitmask_mask32x16(self, a: mask32x16<Self>) -> u64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask32x16<Neon>) -> u64 {
+                let a: int32x4x4_t = a.into();
+                let lo = vreinterpretq_s16_u16(vuzp1q_u16(
+                    vreinterpretq_u16_s32(a.0),
+                    vreinterpretq_u16_s32(a.1),
+                ));
+                let hi = vreinterpretq_s16_u16(vuzp1q_u16(
+                    vreinterpretq_u16_s32(a.2),
+                    vreinterpretq_u16_s32(a.3),
+                ));
+                let reduced = int16x8x2_t(lo, hi);
+                token.to_bitmask_mask16x16(reduced.simd_into(token))
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn set_mask32x16(self, a: &mut mask32x16<Self>, index: usize, value: bool) -> () {
@@ -5785,6 +5913,26 @@ impl Simd for Neon {
                 simd: self,
             },
         )
+    }
+    #[inline(always)]
+    fn to_bitmask_mask64x8(self, a: mask64x8<Self>) -> u64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask64x8<Neon>) -> u64 {
+                let a: int64x2x4_t = a.into();
+                let lo = vreinterpretq_s32_u32(vuzp1q_u32(
+                    vreinterpretq_u32_s64(a.0),
+                    vreinterpretq_u32_s64(a.1),
+                ));
+                let hi = vreinterpretq_s32_u32(vuzp1q_u32(
+                    vreinterpretq_u32_s64(a.2),
+                    vreinterpretq_u32_s64(a.3),
+                ));
+                let reduced = int32x4x2_t(lo, hi);
+                token.to_bitmask_mask32x8(reduced.simd_into(token))
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn set_mask64x8(self, a: &mut mask64x8<Self>, index: usize, value: bool) -> () {

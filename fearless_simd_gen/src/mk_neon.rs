@@ -645,6 +645,14 @@ impl Level for Neon {
             }
         }
     }
+
+    fn should_use_generic_op(&self, op: &Op, vec_ty: &VecType) -> bool {
+        if matches!(op.sig, OpSig::MaskToBitmask) {
+            false
+        } else {
+            op.sig.should_use_generic_op(vec_ty, self.native_width())
+        }
+    }
 }
 
 impl Neon {
@@ -712,14 +720,9 @@ impl Neon {
             ScalarType::Mask,
             "mask bitmask conversion only operates on masks"
         );
-        assert_eq!(
-            vec_ty.n_bits(),
-            self.native_width(),
-            "wide masks should use the generic split implementation"
-        );
 
-        self.kernel_method(op, vec_ty, |_| match vec_ty.scalar_bits {
-            8 => quote! {
+        let body = match (vec_ty.n_bits(), vec_ty.scalar_bits) {
+            (128, 8) => quote! {
                 let weights =
                     crate::transmute::checked_transmute_copy::<[u8; 16], uint8x16_t>(
                         &[
@@ -728,11 +731,11 @@ impl Neon {
                         ],
                     );
                 let bits = vandq_u8(vreinterpretq_u8_s8(a.into()), weights);
-                let lo = vaddv_u8(vget_low_u8(bits)) as u64;
-                let hi = vaddv_u8(vget_high_u8(bits)) as u64;
-                lo | (hi << 8)
+                let rotated = vextq_u8::<8>(bits, bits);
+                let paired = vzip1q_u8(bits, rotated);
+                vaddvq_u16(vreinterpretq_u16_u8(paired)) as u64
             },
-            16 => quote! {
+            (128, 16) => quote! {
                 let weights =
                     crate::transmute::checked_transmute_copy::<[u16; 8], uint16x8_t>(
                         &[1, 2, 4, 8, 16, 32, 64, 128],
@@ -740,7 +743,7 @@ impl Neon {
                 let bits = vandq_u16(vreinterpretq_u16_s16(a.into()), weights);
                 vaddvq_u16(bits) as u64
             },
-            32 => quote! {
+            (128, 32) => quote! {
                 let weights =
                     crate::transmute::checked_transmute_copy::<[u32; 4], uint32x4_t>(
                         &[1, 2, 4, 8],
@@ -748,7 +751,7 @@ impl Neon {
                 let bits = vandq_u32(vreinterpretq_u32_s32(a.into()), weights);
                 vaddvq_u32(bits) as u64
             },
-            64 => quote! {
+            (128, 64) => quote! {
                 let weights =
                     crate::transmute::checked_transmute_copy::<[u64; 2], uint64x2_t>(
                         &[1, 2],
@@ -756,7 +759,103 @@ impl Neon {
                 let bits = vandq_u64(vreinterpretq_u64_s64(a.into()), weights);
                 vaddvq_u64(bits)
             },
+            // Pack 32 canonical mask bytes in two vector narrowing stages. The first SHRN reduces
+            // each adjacent byte pair to one byte; SLI arranges the retained bits so that the
+            // second SHRN reduces each group of four lanes to the low nibble of one byte. Moving
+            // those eight nibbles to a scalar register and merging them with a SWAR tree produces
+            // the final 32-bit mask. Keeping the final stages scalar avoids a serial vector
+            // reduction while preserving good throughput across both in-order and OoO cores.
+            (256, 8) => quote! {
+                let a: int8x16x2_t = a.into();
+                let lo = vreinterpretq_u16_u8(vreinterpretq_u8_s8(a.0));
+                let hi = vreinterpretq_u16_u8(vreinterpretq_u8_s8(a.1));
+
+                let pairs_lo = vshrn_n_u16::<7>(lo);
+                let pairs_hi = vshrn_n_u16::<7>(hi);
+                let pairs = vcombine_u8(pairs_lo, pairs_hi);
+                let pairs = vsliq_n_u8::<6>(pairs, pairs);
+                let nibbles = vshrn_n_u16::<6>(vreinterpretq_u16_u8(pairs));
+
+                let mut bits = vget_lane_u64::<0>(vreinterpret_u64_u8(nibbles));
+                bits &= 0x0f0f_0f0f_0f0f_0f0f;
+                bits = (bits | (bits >> 4)) & 0x00ff_00ff_00ff_00ff;
+                bits = (bits | (bits >> 8)) & 0x0000_ffff_0000_ffff;
+                (bits | (bits >> 16)) & 0xffff_ffff
+            },
+            // Pack 64 canonical mask bytes with a constant-free butterfly. Each UZP1/UZP2 pair
+            // separates alternating lane groups, and SRI inserts their high mask bits into the
+            // same byte: the three levels therefore pack groups of 2, then 4, then 8 lanes. The
+            // final level deliberately operates on the distinct low and high D halves. Writing it
+            // as UZP(x, x) makes LLVM expand the intended three-instruction stage into seven.
+            (512, 8) => quote! {
+                let a: int8x16x4_t = a.into();
+                let a0 = vreinterpretq_u8_s8(a.0);
+                let a1 = vreinterpretq_u8_s8(a.1);
+                let a2 = vreinterpretq_u8_s8(a.2);
+                let a3 = vreinterpretq_u8_s8(a.3);
+
+                let lo = vsriq_n_u8::<1>(vuzp2q_u8(a0, a1), vuzp1q_u8(a0, a1));
+                let hi = vsriq_n_u8::<1>(vuzp2q_u8(a2, a3), vuzp1q_u8(a2, a3));
+                let packed = vsriq_n_u8::<2>(vuzp2q_u8(lo, hi), vuzp1q_u8(lo, hi));
+                let lo = vget_low_u8(packed);
+                let hi = vget_high_u8(packed);
+                let packed = vsri_n_u8::<4>(vuzp2_u8(lo, hi), vuzp1_u8(lo, hi));
+                vget_lane_u64::<0>(vreinterpret_u64_u8(packed))
+            },
+            (256 | 512, 16 | 32 | 64) => {
+                return self.handle_wide_mask_to_bitmask(op, vec_ty);
+            }
             _ => unimplemented!(),
+        };
+
+        self.kernel_method(op, vec_ty, |_| body)
+    }
+
+    fn handle_wide_mask_to_bitmask(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        // Canonical mask lanes contain either all zeroes or all ones, so retaining either half of
+        // every lane preserves its value. Pairing adjacent Q registers with UZP1 therefore maps
+        // (total width, element width) to (width / 2, element width / 2) without changing the
+        // logical lane count or order. Recurse diagonally until reaching a native-width reduction
+        // or one of the byte-mask packers above.
+        //
+        // Keep this expressed as UZP1 rather than XTN plus `vcombine`. Although the operations are
+        // equivalent for canonical masks, LLVM 22.1.6 misses useful folds for the latter form.
+        let reduced_ty = VecType::new(ScalarType::Mask, vec_ty.scalar_bits / 2, vec_ty.len);
+        let reduced_method = generic_op_name("to_bitmask", &reduced_ty);
+        let native_ty = self.arch_ty(vec_ty);
+        let reduced_native_ty = self.arch_ty(&reduced_ty);
+        let half_bits = vec_ty.scalar_bits / 2;
+        let reinterpret = format_ident!("vreinterpretq_u{half_bits}_s{}", vec_ty.scalar_bits);
+        let reinterpret_signed = format_ident!("vreinterpretq_s{half_bits}_u{half_bits}");
+        let unzip_low = format_ident!("vuzp1q_u{half_bits}");
+
+        self.kernel_method(op, vec_ty, |token| {
+            let reduced = match vec_ty.n_bits() {
+                256 => quote! {
+                    let reduced = #reinterpret_signed(#unzip_low(
+                        #reinterpret(a.0),
+                        #reinterpret(a.1),
+                    ));
+                },
+                512 => quote! {
+                    let lo = #reinterpret_signed(#unzip_low(
+                        #reinterpret(a.0),
+                        #reinterpret(a.1),
+                    ));
+                    let hi = #reinterpret_signed(#unzip_low(
+                        #reinterpret(a.2),
+                        #reinterpret(a.3),
+                    ));
+                    let reduced = #reduced_native_ty(lo, hi);
+                },
+                _ => unreachable!(),
+            };
+
+            quote! {
+                let a: #native_ty = a.into();
+                #reduced
+                #token.#reduced_method(reduced.simd_into(#token))
+            }
         })
     }
 }
