@@ -290,12 +290,18 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::MaskReduce { quantifier, .. } => {
-            let combine_op = quantifier.bool_op();
+        OpSig::MaskReduce {
+            quantifier,
+            condition,
+        } => {
+            // Combining the halves element-wise first means only one horizontal reduction
+            // (the expensive part) is needed, and avoids the branch a short-circuiting
+            // `||`/`&&` would allow.
+            let combine_halves = generic_op_name(quantifier.mask_combine_op(condition), &half);
             quote! {
                 #method_sig {
                     let (a0, a1) = self.#split(a);
-                    self.#do_half(a0) #combine_op self.#do_half(a1)
+                    self.#do_half(self.#combine_halves(a0, a1))
                 }
             }
         }
