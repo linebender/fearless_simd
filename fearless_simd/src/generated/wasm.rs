@@ -200,14 +200,6 @@ impl Simd for WasmSimd128 {
         vectorize_inner(f)
     }
     #[inline(always)]
-    fn vectorize_inline<F: FnOnce() -> R, R>(self, f: F) -> R {
-        #[inline]
-        fn vectorize_inline_inner<F: FnOnce() -> R, R>(f: F) -> R {
-            f()
-        }
-        vectorize_inline_inner(f)
-    }
-    #[inline(always)]
     fn splat_f32x4(self, val: f32) -> f32x4<Self> {
         f32x4_splat(val).simd_into(self)
     }

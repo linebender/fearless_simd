@@ -175,27 +175,6 @@ pub(crate) trait Level {
             }
         };
 
-        let vectorize_inline_body = if let Some(target_features) = self.enabled_target_features() {
-            let vectorize_inline =
-                format_ident!("vectorize_inline_{}", self.name().to_ascii_lowercase());
-            quote! {
-                #[inline]
-                #[target_feature(enable = #target_features)]
-                fn #vectorize_inline<F: FnOnce() -> R, R>(f: F) -> R {
-                    f()
-                }
-                unsafe { #vectorize_inline(f) }
-            }
-        } else {
-            quote! {
-                #[inline]
-                fn vectorize_inline_inner<F: FnOnce() -> R, R>(f: F) -> R {
-                    f()
-                }
-                vectorize_inline_inner(f)
-            }
-        };
-
         let level_body = self.make_level_body();
 
         let mut assoc_types = vec![];
@@ -235,11 +214,6 @@ pub(crate) trait Level {
                 #[inline(always)]
                 fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
                     #vectorize_body
-                }
-
-                #[inline(always)]
-                fn vectorize_inline<F: FnOnce() -> R, R>(self, f: F) -> R {
-                    #vectorize_inline_body
                 }
 
                 #(

@@ -116,17 +116,6 @@ impl Simd for Avx2 {
         unsafe { vectorize_avx2(f) }
     }
     #[inline(always)]
-    fn vectorize_inline<F: FnOnce() -> R, R>(self, f: F) -> R {
-        #[inline]
-        #[target_feature(
-            enable = "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,fxsr,lzcnt,movbe,popcnt,xsave"
-        )]
-        fn vectorize_inline_avx2<F: FnOnce() -> R, R>(f: F) -> R {
-            f()
-        }
-        unsafe { vectorize_inline_avx2(f) }
-    }
-    #[inline(always)]
     fn splat_f32x4(self, val: f32) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
