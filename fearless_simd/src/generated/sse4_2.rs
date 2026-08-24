@@ -4299,6 +4299,20 @@ impl Simd for Sse4_2 {
         [a[0usize] as u64, a[1usize] as u64].simd_into(self)
     }
     #[inline(always)]
+    #[cfg(target_arch = "x86_64")]
+    fn cvt_i64_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: f64x2<Sse4_2>) -> i64x2<Sse4_2> {
+                let a = a.into();
+                let low = _mm_cvttsd_si64(a);
+                let high = _mm_cvttsd_si64(_mm_unpackhi_pd(a, a));
+                _mm_set_epi64x(high, low).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[cfg(target_arch = "x86")]
     fn cvt_i64_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
         [a[0usize] as i64, a[1usize] as i64].simd_into(self)
     }
@@ -4676,7 +4690,21 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn cvt_f64_i64x2(self, a: i64x2<Self>) -> f64x2<Self> {
-        [a[0usize] as f64, a[1usize] as f64].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i64x2<Sse4_2>) -> f64x2<Sse4_2> {
+                let a = a.into();
+                let low = _mm_blend_epi16::<0xcc>(a, _mm_set1_epi64x(0x4330_0000_0000_0000));
+                let high = _mm_srli_epi64::<32>(a);
+                let high = _mm_xor_si128(high, _mm_set1_epi64x(4985484789646622720i64));
+                let high = _mm_sub_pd(
+                    _mm_castsi128_pd(high),
+                    _mm_set1_pd(f64::from_bits(4985484789647671296u64)),
+                );
+                _mm_add_pd(_mm_castsi128_pd(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
@@ -5039,7 +5067,21 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn cvt_f64_u64x2(self, a: u64x2<Self>) -> f64x2<Self> {
-        [a[0usize] as f64, a[1usize] as f64].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u64x2<Sse4_2>) -> f64x2<Sse4_2> {
+                let a = a.into();
+                let low = _mm_blend_epi16::<0xcc>(a, _mm_set1_epi64x(0x4330_0000_0000_0000));
+                let high = _mm_srli_epi64::<32>(a);
+                let high = _mm_xor_si128(high, _mm_set1_epi64x(4985484787499139072i64));
+                let high = _mm_sub_pd(
+                    _mm_castsi128_pd(high),
+                    _mm_set1_pd(f64::from_bits(4985484787500187648u64)),
+                );
+                _mm_add_pd(_mm_castsi128_pd(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {

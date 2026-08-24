@@ -4392,6 +4392,20 @@ impl Simd for Sse2 {
         [a[0usize] as u64, a[1usize] as u64].simd_into(self)
     }
     #[inline(always)]
+    #[cfg(target_arch = "x86_64")]
+    fn cvt_i64_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f64x2<Sse2>) -> i64x2<Sse2> {
+                let a = a.into();
+                let low = _mm_cvttsd_si64(a);
+                let high = _mm_cvttsd_si64(_mm_unpackhi_pd(a, a));
+                _mm_set_epi64x(high, low).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[cfg(target_arch = "x86")]
     fn cvt_i64_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
         [a[0usize] as i64, a[1usize] as i64].simd_into(self)
     }

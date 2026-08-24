@@ -84,3 +84,39 @@ fn cvt_i64_f64x8<S: Simd>(simd: S) {
     let result = i64x8::truncate_from(a);
     assert_eq!(*result, values.map(|x| x as i64));
 }
+
+#[simd_test]
+#[ignore = "randomly checks 10 million in-range f64 bit patterns"]
+// Run with: cargo test --release cvt_i64_f64_random -- --ignored
+fn cvt_i64_f64_random<S: Simd>(simd: S) {
+    simd.vectorize(
+        #[inline(always)]
+        || {
+            let mut rng = fastrand::Rng::with_seed(0x1319_8a2e_0370_7344);
+
+            for iteration in 0..2_500_000 {
+                let values: [f64; 4] = core::array::from_fn(|_| {
+                    loop {
+                        let value = f64::from_bits(rng.u64(..));
+                        if (-9_223_372_036_854_775_808.0..9_223_372_036_854_775_808.0)
+                            .contains(&value)
+                        {
+                            break value;
+                        }
+                    }
+                });
+                let expected = values.map(|value| value as i64);
+
+                let result_x4 = f64x4::from_slice(simd, &values).to_int::<i64x4<_>>();
+                assert_eq!(*result_x4, expected, "x4 iteration {iteration}");
+
+                let result_x2 = f64x2::from_slice(simd, &values[..2]).to_int::<i64x2<_>>();
+                assert_eq!(
+                    *result_x2,
+                    [expected[0], expected[1]],
+                    "x2 iteration {iteration}",
+                );
+            }
+        },
+    );
+}

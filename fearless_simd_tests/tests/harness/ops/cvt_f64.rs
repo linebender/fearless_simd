@@ -72,3 +72,47 @@ fn cvt_f64_u64x8<S: Simd>(simd: S) {
     let result = f64x8::float_from(a);
     assert_eq!(*result, values.map(|x| x as f64));
 }
+
+#[simd_test]
+#[ignore = "randomly checks 10 million signed and unsigned 64-bit integers"]
+// Run with: cargo test --release cvt_f64_i64_u64_random -- --ignored
+fn cvt_f64_i64_u64_random<S: Simd>(simd: S) {
+    simd.vectorize(
+        #[inline(always)]
+        || {
+            let mut rng = fastrand::Rng::with_seed(0x243f_6a88_85a3_08d3);
+
+            for iteration in 0..2_500_000 {
+                let signed = [rng.i64(..), rng.i64(..), rng.i64(..), rng.i64(..)];
+                let expected_signed = signed.map(|value| (value as f64).to_bits());
+                let signed_x4 = i64x4::from_slice(simd, &signed).to_float::<f64x4<_>>();
+                assert_eq!(
+                    (*signed_x4).map(f64::to_bits),
+                    expected_signed,
+                    "signed x4 iteration {iteration}",
+                );
+                let signed_x2 = i64x2::from_slice(simd, &signed[..2]).to_float::<f64x2<_>>();
+                assert_eq!(
+                    (*signed_x2).map(f64::to_bits),
+                    [expected_signed[0], expected_signed[1]],
+                    "signed x2 iteration {iteration}",
+                );
+
+                let unsigned = [rng.u64(..), rng.u64(..), rng.u64(..), rng.u64(..)];
+                let expected_unsigned = unsigned.map(|value| (value as f64).to_bits());
+                let unsigned_x4 = u64x4::from_slice(simd, &unsigned).to_float::<f64x4<_>>();
+                assert_eq!(
+                    (*unsigned_x4).map(f64::to_bits),
+                    expected_unsigned,
+                    "unsigned x4 iteration {iteration}",
+                );
+                let unsigned_x2 = u64x2::from_slice(simd, &unsigned[..2]).to_float::<f64x2<_>>();
+                assert_eq!(
+                    (*unsigned_x2).map(f64::to_bits),
+                    [expected_unsigned[0], expected_unsigned[1]],
+                    "unsigned x2 iteration {iteration}",
+                );
+            }
+        },
+    );
+}
