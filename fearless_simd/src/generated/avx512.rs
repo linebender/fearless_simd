@@ -885,6 +885,20 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
+    fn count_ones_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>) -> i8x16<Avx512> {
+                _mm_popcnt_epi8(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        self.count_ones_i8x16(self.not_i8x16(a))
+    }
+    #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1355,6 +1369,20 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn count_ones_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>) -> u8x16<Avx512> {
+                _mm_popcnt_epi8(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        self.count_ones_u8x16(self.not_u8x16(a))
     }
     #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -1879,6 +1907,20 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
+    fn count_ones_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>) -> i16x8<Avx512> {
+                _mm_popcnt_epi16(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        self.count_ones_i16x8(self.not_i16x8(a))
+    }
+    #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2283,6 +2325,20 @@ impl Simd for Avx512 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>) -> u16x8<Avx512> {
+                _mm_popcnt_epi16(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        self.count_ones_u16x8(self.not_u16x8(a))
     }
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -2791,6 +2847,20 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
+    fn count_ones_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_popcnt_epi32(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        self.count_ones_i32x4(self.not_i32x4(a))
+    }
+    #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3189,6 +3259,20 @@ impl Simd for Avx512 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>) -> u32x4<Avx512> {
+                _mm_popcnt_epi32(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        self.count_ones_u32x4(self.not_u32x4(a))
     }
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -4161,6 +4245,20 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
+    fn count_ones_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x2<Avx512>) -> i64x2<Avx512> {
+                _mm_popcnt_epi64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        self.count_ones_i64x2(self.not_i64x2(a))
+    }
+    #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4539,6 +4637,20 @@ impl Simd for Avx512 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x2<Avx512>) -> u64x2<Avx512> {
+                _mm_popcnt_epi64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        self.count_ones_u64x2(self.not_u64x2(a))
     }
     #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -5583,6 +5695,20 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
+    fn count_ones_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>) -> i8x32<Avx512> {
+                _mm256_popcnt_epi8(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
+        self.count_ones_i8x32(self.not_i8x32(a))
+    }
+    #[inline(always)]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6106,6 +6232,20 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn count_ones_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>) -> u8x32<Avx512> {
+                _mm256_popcnt_epi8(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
+        self.count_ones_u8x32(self.not_u8x32(a))
     }
     #[inline(always)]
     fn add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
@@ -6697,6 +6837,20 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
+    fn count_ones_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>) -> i16x16<Avx512> {
+                _mm256_popcnt_epi16(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
+        self.count_ones_i16x16(self.not_i16x16(a))
+    }
+    #[inline(always)]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -7142,6 +7296,20 @@ impl Simd for Avx512 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>) -> u16x16<Avx512> {
+                _mm256_popcnt_epi16(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
+        self.count_ones_u16x16(self.not_u16x16(a))
     }
     #[inline(always)]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
@@ -7705,6 +7873,20 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
+    fn count_ones_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>) -> i32x8<Avx512> {
+                _mm256_popcnt_epi32(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
+        self.count_ones_i32x8(self.not_i32x8(a))
+    }
+    #[inline(always)]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -8138,6 +8320,20 @@ impl Simd for Avx512 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>) -> u32x8<Avx512> {
+                _mm256_popcnt_epi32(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
+        self.count_ones_u32x8(self.not_u32x8(a))
     }
     #[inline(always)]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
@@ -9202,6 +9398,20 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
+    fn count_ones_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x4<Avx512>) -> i64x4<Avx512> {
+                _mm256_popcnt_epi64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
+        self.count_ones_i64x4(self.not_i64x4(a))
+    }
+    #[inline(always)]
     fn add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9605,6 +9815,20 @@ impl Simd for Avx512 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u64x4(self, a: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x4<Avx512>) -> u64x4<Avx512> {
+                _mm256_popcnt_epi64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u64x4(self, a: u64x4<Self>) -> u64x4<Self> {
+        self.count_ones_u64x4(self.not_u64x4(a))
     }
     #[inline(always)]
     fn add_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
@@ -10677,6 +10901,20 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
+    fn count_ones_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>) -> i8x64<Avx512> {
+                _mm512_popcnt_epi8(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
+        self.count_ones_i8x64(self.not_i8x64(a))
+    }
+    #[inline(always)]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11208,6 +11446,20 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn count_ones_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>) -> u8x64<Avx512> {
+                _mm512_popcnt_epi8(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
+        self.count_ones_u8x64(self.not_u8x64(a))
     }
     #[inline(always)]
     fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
@@ -11799,6 +12051,20 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
+    fn count_ones_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>) -> i16x32<Avx512> {
+                _mm512_popcnt_epi16(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
+        self.count_ones_i16x32(self.not_i16x32(a))
+    }
+    #[inline(always)]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12254,6 +12520,20 @@ impl Simd for Avx512 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>) -> u16x32<Avx512> {
+                _mm512_popcnt_epi16(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
+        self.count_ones_u16x32(self.not_u16x32(a))
     }
     #[inline(always)]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -12819,6 +13099,20 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
+    fn count_ones_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>) -> i32x16<Avx512> {
+                _mm512_popcnt_epi32(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
+        self.count_ones_i32x16(self.not_i32x16(a))
+    }
+    #[inline(always)]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -13266,6 +13560,20 @@ impl Simd for Avx512 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>) -> u32x16<Avx512> {
+                _mm512_popcnt_epi32(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
+        self.count_ones_u32x16(self.not_u32x16(a))
     }
     #[inline(always)]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
@@ -14347,6 +14655,20 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
+    fn count_ones_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x8<Avx512>) -> i64x8<Avx512> {
+                _mm512_popcnt_epi64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
+        self.count_ones_i64x8(self.not_i64x8(a))
+    }
+    #[inline(always)]
     fn add_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -14758,6 +15080,20 @@ impl Simd for Avx512 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u64x8(self, a: u64x8<Self>) -> u64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x8<Avx512>) -> u64x8<Avx512> {
+                _mm512_popcnt_epi64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u64x8(self, a: u64x8<Self>) -> u64x8<Self> {
+        self.count_ones_u64x8(self.not_u64x8(a))
     }
     #[inline(always)]
     fn add_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {

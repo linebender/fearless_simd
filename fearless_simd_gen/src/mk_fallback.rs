@@ -3,8 +3,8 @@
 
 use crate::arch::fallback;
 use crate::generic::{
-    generic_mask_from_bitmask, generic_mask_set, generic_mask_to_bitmask, generic_op_name,
-    integer_lane_mask_splat_arg,
+    count_zeros_method, generic_mask_from_bitmask, generic_mask_set, generic_mask_to_bitmask,
+    generic_op_name, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{NarrowingMode, Op, OpSig, relaxed_narrow_method};
@@ -141,6 +141,33 @@ pub(crate) fn float_ext_prelude() -> TokenStream {
     }
 }
 
+fn count_ones_method(op: Op, vec_ty: &VecType) -> TokenStream {
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+    let items = make_list(
+        (0..vec_ty.len)
+            .map(|idx| {
+                let value = lane(quote! { a }, vec_ty, idx);
+                match (vec_ty.scalar, vec_ty.scalar_bits) {
+                    (ScalarType::Unsigned, 32) => quote! { #value.count_ones() },
+                    (ScalarType::Int, 32) => quote! { #value.count_ones().cast_signed() },
+                    (_, 64) => quote! { #scalar::from(#value.count_ones()) },
+                    (_, 8 | 16) => {
+                        quote! { #scalar::try_from(#value.count_ones()).unwrap() }
+                    }
+                    _ => unreachable!(),
+                }
+            })
+            .collect::<Vec<_>>(),
+    );
+
+    quote! {
+        #method_sig {
+            #items.simd_into(self)
+        }
+    }
+}
+
 impl Level for Fallback {
     fn name(&self) -> &'static str {
         "Fallback"
@@ -216,6 +243,14 @@ impl Level for Fallback {
                 }
             }
             OpSig::Unary => {
+                if method == "count_zeros" {
+                    return count_zeros_method(op, vec_ty);
+                }
+
+                if method == "count_ones" {
+                    return count_ones_method(op, vec_ty);
+                }
+
                 if method == "approximate_recip" {
                     return quote! {
                         #method_sig {

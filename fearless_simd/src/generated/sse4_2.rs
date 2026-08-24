@@ -807,6 +807,29 @@ impl Simd for Sse4_2 {
         })
     }
     #[inline(always)]
+    fn count_ones_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i8x16<Sse4_2>) -> i8x16<Sse4_2> {
+                let value = a.into();
+                let nibble_mask = _mm_set1_epi8(0x0f);
+                let lookup = _mm_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
+                let low = _mm_and_si128(value, nibble_mask);
+                let high = _mm_and_si128(_mm_srli_epi16::<4>(value), nibble_mask);
+                let byte_counts = _mm_add_epi8(
+                    _mm_shuffle_epi8(lookup, low),
+                    _mm_shuffle_epi8(lookup, high),
+                );
+                byte_counts.simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        self.count_ones_i8x16(self.not_i8x16(a))
+    }
+    #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1271,6 +1294,29 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn count_ones_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u8x16<Sse4_2>) -> u8x16<Sse4_2> {
+                let value = a.into();
+                let nibble_mask = _mm_set1_epi8(0x0f);
+                let lookup = _mm_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
+                let low = _mm_and_si128(value, nibble_mask);
+                let high = _mm_and_si128(_mm_srli_epi16::<4>(value), nibble_mask);
+                let byte_counts = _mm_add_epi8(
+                    _mm_shuffle_epi8(lookup, low),
+                    _mm_shuffle_epi8(lookup, high),
+                );
+                byte_counts.simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        self.count_ones_u8x16(self.not_u8x16(a))
     }
     #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -1846,6 +1892,29 @@ impl Simd for Sse4_2 {
         })
     }
     #[inline(always)]
+    fn count_ones_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i16x8<Sse4_2>) -> i16x8<Sse4_2> {
+                let value = a.into();
+                let nibble_mask = _mm_set1_epi8(0x0f);
+                let lookup = _mm_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
+                let low = _mm_and_si128(value, nibble_mask);
+                let high = _mm_and_si128(_mm_srli_epi16::<4>(value), nibble_mask);
+                let byte_counts = _mm_add_epi8(
+                    _mm_shuffle_epi8(lookup, low),
+                    _mm_shuffle_epi8(lookup, high),
+                );
+                _mm_maddubs_epi16(byte_counts, _mm_set1_epi8(1)).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        self.count_ones_i16x8(self.not_i16x8(a))
+    }
+    #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2258,6 +2327,29 @@ impl Simd for Sse4_2 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u16x8<Sse4_2>) -> u16x8<Sse4_2> {
+                let value = a.into();
+                let nibble_mask = _mm_set1_epi8(0x0f);
+                let lookup = _mm_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
+                let low = _mm_and_si128(value, nibble_mask);
+                let high = _mm_and_si128(_mm_srli_epi16::<4>(value), nibble_mask);
+                let byte_counts = _mm_add_epi8(
+                    _mm_shuffle_epi8(lookup, low),
+                    _mm_shuffle_epi8(lookup, high),
+                );
+                _mm_maddubs_epi16(byte_counts, _mm_set1_epi8(1)).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        self.count_ones_u16x8(self.not_u16x8(a))
     }
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -2836,6 +2928,33 @@ impl Simd for Sse4_2 {
         })
     }
     #[inline(always)]
+    fn count_ones_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i32x4<Sse4_2>) -> i32x4<Sse4_2> {
+                let value = a.into();
+                let nibble_mask = _mm_set1_epi8(0x0f);
+                let lookup = _mm_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
+                let low = _mm_and_si128(value, nibble_mask);
+                let high = _mm_and_si128(_mm_srli_epi16::<4>(value), nibble_mask);
+                let byte_counts = _mm_add_epi8(
+                    _mm_shuffle_epi8(lookup, low),
+                    _mm_shuffle_epi8(lookup, high),
+                );
+                _mm_madd_epi16(
+                    _mm_maddubs_epi16(byte_counts, _mm_set1_epi8(1)),
+                    _mm_set1_epi16(1),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        self.count_ones_i32x4(self.not_i32x4(a))
+    }
+    #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3238,6 +3357,33 @@ impl Simd for Sse4_2 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u32x4<Sse4_2>) -> u32x4<Sse4_2> {
+                let value = a.into();
+                let nibble_mask = _mm_set1_epi8(0x0f);
+                let lookup = _mm_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
+                let low = _mm_and_si128(value, nibble_mask);
+                let high = _mm_and_si128(_mm_srli_epi16::<4>(value), nibble_mask);
+                let byte_counts = _mm_add_epi8(
+                    _mm_shuffle_epi8(lookup, low),
+                    _mm_shuffle_epi8(lookup, high),
+                );
+                _mm_madd_epi16(
+                    _mm_maddubs_epi16(byte_counts, _mm_set1_epi8(1)),
+                    _mm_set1_epi16(1),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        self.count_ones_u32x4(self.not_u32x4(a))
     }
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -4340,6 +4486,29 @@ impl Simd for Sse4_2 {
         })
     }
     #[inline(always)]
+    fn count_ones_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i64x2<Sse4_2>) -> i64x2<Sse4_2> {
+                let value = a.into();
+                let nibble_mask = _mm_set1_epi8(0x0f);
+                let lookup = _mm_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
+                let low = _mm_and_si128(value, nibble_mask);
+                let high = _mm_and_si128(_mm_srli_epi16::<4>(value), nibble_mask);
+                let byte_counts = _mm_add_epi8(
+                    _mm_shuffle_epi8(lookup, low),
+                    _mm_shuffle_epi8(lookup, high),
+                );
+                _mm_sad_epu8(byte_counts, _mm_setzero_si128()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        self.count_ones_i64x2(self.not_i64x2(a))
+    }
+    #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4710,6 +4879,29 @@ impl Simd for Sse4_2 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u64x2<Sse4_2>) -> u64x2<Sse4_2> {
+                let value = a.into();
+                let nibble_mask = _mm_set1_epi8(0x0f);
+                let lookup = _mm_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
+                let low = _mm_and_si128(value, nibble_mask);
+                let high = _mm_and_si128(_mm_srli_epi16::<4>(value), nibble_mask);
+                let byte_counts = _mm_add_epi8(
+                    _mm_shuffle_epi8(lookup, low),
+                    _mm_shuffle_epi8(lookup, high),
+                );
+                _mm_sad_epu8(byte_counts, _mm_setzero_si128()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        self.count_ones_u64x2(self.not_u64x2(a))
     }
     #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {

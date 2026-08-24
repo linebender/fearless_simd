@@ -539,6 +539,20 @@ impl Simd for Neon {
         })
     }
     #[inline(always)]
+    fn count_ones_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>) -> i8x16<Neon> {
+                vreinterpretq_s8_u8(vcntq_u8(vreinterpretq_u8_s8(a.into()))).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        self.count_ones_i8x16(self.not_i8x16(a))
+    }
+    #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -880,6 +894,20 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn count_ones_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>) -> u8x16<Neon> {
+                vcntq_u8(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        self.count_ones_u8x16(self.not_u8x16(a))
     }
     #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -1359,6 +1387,21 @@ impl Simd for Neon {
         })
     }
     #[inline(always)]
+    fn count_ones_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>) -> i16x8<Neon> {
+                vreinterpretq_s16_u16(vpaddlq_u8(vcntq_u8(vreinterpretq_u8_s16(a.into()))))
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        self.count_ones_i16x8(self.not_i16x8(a))
+    }
+    #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1699,6 +1742,20 @@ impl Simd for Neon {
             val: crate::support::Aligned128(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>) -> u16x8<Neon> {
+                vpaddlq_u8(vcntq_u8(vreinterpretq_u8_u16(a.into()))).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        self.count_ones_u16x8(self.not_u16x8(a))
     }
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -2201,6 +2258,23 @@ impl Simd for Neon {
         })
     }
     #[inline(always)]
+    fn count_ones_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>) -> i32x4<Neon> {
+                vreinterpretq_s32_u32(vpaddlq_u16(vpaddlq_u8(vcntq_u8(vreinterpretq_u8_s32(
+                    a.into(),
+                )))))
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        self.count_ones_i32x4(self.not_i32x4(a))
+    }
+    #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2551,6 +2625,20 @@ impl Simd for Neon {
             val: crate::support::Aligned128(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>) -> u32x4<Neon> {
+                vpaddlq_u16(vpaddlq_u8(vcntq_u8(vreinterpretq_u8_u32(a.into())))).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        self.count_ones_u32x4(self.not_u32x4(a))
     }
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -3471,6 +3559,23 @@ impl Simd for Neon {
         })
     }
     #[inline(always)]
+    fn count_ones_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i64x2<Neon>) -> i64x2<Neon> {
+                vreinterpretq_s64_u64(vpaddlq_u32(vpaddlq_u16(vpaddlq_u8(vcntq_u8(
+                    vreinterpretq_u8_s64(a.into()),
+                )))))
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        self.count_ones_i64x2(self.not_i64x2(a))
+    }
+    #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3802,6 +3907,23 @@ impl Simd for Neon {
             val: crate::support::Aligned128(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u64x2<Neon>) -> u64x2<Neon> {
+                vpaddlq_u32(vpaddlq_u16(vpaddlq_u8(vcntq_u8(vreinterpretq_u8_u64(
+                    a.into(),
+                )))))
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn count_zeros_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        self.count_ones_u64x2(self.not_u64x2(a))
     }
     #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {

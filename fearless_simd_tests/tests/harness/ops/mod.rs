@@ -19,6 +19,8 @@ mod block_splat;
 mod ceil;
 mod combine;
 mod copysign;
+mod count_ones;
+mod count_zeros;
 mod cvt_f32;
 mod cvt_f64;
 mod cvt_i32;
