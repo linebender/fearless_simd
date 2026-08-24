@@ -85,80 +85,98 @@ fn mask64x8_set_roundtrip<S: Simd>(simd: S) {
 }
 
 #[simd_test]
-fn mask8x16_bitmask_roundtrip<S: Simd>(simd: S) {
+fn mask8x16_to_bitmask_exhaustive<S: Simd>(simd: S) {
     for bits in 0..=0xffff_u64 {
-        let mask = mask8x16::from_bitmask(simd, bits);
+        let values: [i8; 16] =
+            core::array::from_fn(|i| if bits & (1_u64 << i) == 0 { 0 } else { -1 });
+        let mask = mask8x16::from_slice(simd, &values);
         assert_eq!(mask.to_bitmask(), bits);
     }
 }
 
 #[simd_test]
-fn mask16x8_bitmask_roundtrip<S: Simd>(simd: S) {
-    for bits in 0..=0xffff_u64 {
-        let mask = mask16x8::from_bitmask(simd, bits);
-        assert_eq!(mask.to_bitmask(), bits & 0xff);
-    }
-}
-
-#[simd_test]
-fn mask32x4_bitmask_roundtrip<S: Simd>(simd: S) {
-    for bits in 0..=0xffff_u64 {
-        let mask = mask32x4::from_bitmask(simd, bits);
-        assert_eq!(mask.to_bitmask(), bits & 0xf);
-    }
-}
-
-#[simd_test]
-fn mask64x2_bitmask_roundtrip<S: Simd>(simd: S) {
-    for bits in 0..=0xffff_u64 {
-        let mask = mask64x2::from_bitmask(simd, bits);
-        assert_eq!(mask.to_bitmask(), bits & 0x3);
-    }
-}
-
-#[simd_test]
-fn mask16x16_bitmask_roundtrip<S: Simd>(simd: S) {
-    for bits in 0..=0xffff_u64 {
-        let mask = mask16x16::from_bitmask(simd, bits);
+fn mask16x8_to_bitmask_exhaustive<S: Simd>(simd: S) {
+    for bits in 0..=0xff_u64 {
+        let values: [i16; 8] =
+            core::array::from_fn(|i| if bits & (1_u64 << i) == 0 { 0 } else { -1 });
+        let mask = mask16x8::from_slice(simd, &values);
         assert_eq!(mask.to_bitmask(), bits);
     }
 }
 
 #[simd_test]
-fn mask32x8_bitmask_roundtrip<S: Simd>(simd: S) {
-    for bits in 0..=0xffff_u64 {
-        let mask = mask32x8::from_bitmask(simd, bits);
-        assert_eq!(mask.to_bitmask(), bits & 0xff);
-    }
-}
-
-#[simd_test]
-fn mask64x4_bitmask_roundtrip<S: Simd>(simd: S) {
-    for bits in 0..=0xffff_u64 {
-        let mask = mask64x4::from_bitmask(simd, bits);
-        assert_eq!(mask.to_bitmask(), bits & 0xf);
-    }
-}
-
-#[simd_test]
-fn mask32x16_bitmask_roundtrip<S: Simd>(simd: S) {
-    for bits in 0..=0xffff_u64 {
-        let mask = mask32x16::from_bitmask(simd, bits);
+fn mask32x4_to_bitmask_exhaustive<S: Simd>(simd: S) {
+    for bits in 0..=0xf_u64 {
+        let values: [i32; 4] =
+            core::array::from_fn(|i| if bits & (1_u64 << i) == 0 { 0 } else { -1 });
+        let mask = mask32x4::from_slice(simd, &values);
         assert_eq!(mask.to_bitmask(), bits);
     }
 }
 
 #[simd_test]
-fn mask64x8_bitmask_roundtrip<S: Simd>(simd: S) {
-    for bits in 0..=0xffff_u64 {
-        let mask = mask64x8::from_bitmask(simd, bits);
-        assert_eq!(mask.to_bitmask(), bits & 0xff);
+fn mask64x2_to_bitmask_exhaustive<S: Simd>(simd: S) {
+    for bits in 0..=0x3_u64 {
+        let values: [i64; 2] =
+            core::array::from_fn(|i| if bits & (1_u64 << i) == 0 { 0 } else { -1 });
+        let mask = mask64x2::from_slice(simd, &values);
+        assert_eq!(mask.to_bitmask(), bits);
     }
 }
 
 #[simd_test]
-#[ignore] // takes too long to run on CI
-fn mask8x32_bitmask_roundtrip_exhaustive<S: Simd>(simd: S) {
+fn mask16x16_to_bitmask_exhaustive<S: Simd>(simd: S) {
+    for bits in 0..=0xffff_u64 {
+        let values: [i16; 16] =
+            core::array::from_fn(|i| if bits & (1_u64 << i) == 0 { 0 } else { -1 });
+        let mask = mask16x16::from_slice(simd, &values);
+        assert_eq!(mask.to_bitmask(), bits);
+    }
+}
+
+#[simd_test]
+fn mask32x8_to_bitmask_exhaustive<S: Simd>(simd: S) {
+    for bits in 0..=0xff_u64 {
+        let values: [i32; 8] =
+            core::array::from_fn(|i| if bits & (1_u64 << i) == 0 { 0 } else { -1 });
+        let mask = mask32x8::from_slice(simd, &values);
+        assert_eq!(mask.to_bitmask(), bits);
+    }
+}
+
+#[simd_test]
+fn mask64x4_to_bitmask_exhaustive<S: Simd>(simd: S) {
+    for bits in 0..=0xf_u64 {
+        let values: [i64; 4] =
+            core::array::from_fn(|i| if bits & (1_u64 << i) == 0 { 0 } else { -1 });
+        let mask = mask64x4::from_slice(simd, &values);
+        assert_eq!(mask.to_bitmask(), bits);
+    }
+}
+
+#[simd_test]
+fn mask32x16_to_bitmask_exhaustive<S: Simd>(simd: S) {
+    for bits in 0..=0xffff_u64 {
+        let values: [i32; 16] =
+            core::array::from_fn(|i| if bits & (1_u64 << i) == 0 { 0 } else { -1 });
+        let mask = mask32x16::from_slice(simd, &values);
+        assert_eq!(mask.to_bitmask(), bits);
+    }
+}
+
+#[simd_test]
+fn mask64x8_to_bitmask_exhaustive<S: Simd>(simd: S) {
+    for bits in 0..=0xff_u64 {
+        let values: [i64; 8] =
+            core::array::from_fn(|i| if bits & (1_u64 << i) == 0 { 0 } else { -1 });
+        let mask = mask64x8::from_slice(simd, &values);
+        assert_eq!(mask.to_bitmask(), bits);
+    }
+}
+
+#[simd_test]
+#[ignore = "exhaustive test; run in release mode"]
+fn mask8x32_to_bitmask_exhaustive<S: Simd>(simd: S) {
     for bits in 0..=0xffff_ffff_u64 {
         let mask = mask8x32::from_bitmask(simd, bits);
         assert_eq!(mask.to_bitmask(), bits);
@@ -166,11 +184,25 @@ fn mask8x32_bitmask_roundtrip_exhaustive<S: Simd>(simd: S) {
 }
 
 #[simd_test]
-#[ignore] // takes too long to run on CI
-fn mask16x32_bitmask_roundtrip_exhaustive<S: Simd>(simd: S) {
+#[ignore = "exhaustive test; run in release mode"]
+fn mask16x32_to_bitmask_exhaustive<S: Simd>(simd: S) {
     for bits in 0..=0xffff_ffff_u64 {
         let mask = mask16x32::from_bitmask(simd, bits);
         assert_eq!(mask.to_bitmask(), bits);
+    }
+}
+
+#[simd_test]
+#[ignore = "random stress test; run in release mode"]
+fn mask8x64_to_bitmask_random<S: Simd>(simd: S) {
+    let mut rng = fastrand::Rng::with_seed(0x243f_6a88_85a3_08d3);
+
+    for iteration in 0..100_000_000 {
+        let bits = rng.u64(..);
+        let values: [i8; 64] =
+            core::array::from_fn(|i| if bits & (1_u64 << i) == 0 { 0 } else { -1 });
+        let mask = mask8x64::from_slice(simd, &values);
+        assert_eq!(mask.to_bitmask(), bits, "iteration {iteration}");
     }
 }
 
