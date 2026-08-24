@@ -468,14 +468,6 @@ fn mk_simd_int() -> TokenStream {
         })
         .filter(|core_op| !is_base_arithmetic(core_op))
         .flat_map(|core_op| core_op.trait_bounds());
-    let max_lanes = SIMD_TYPES.iter().map(|ty| ty.len).max().unwrap();
-    let reduction_shifts = (0..max_lanes.ilog2())
-        .rev()
-        .map(|power| Literal::usize_unsuffixed(1 << power))
-        .collect::<Vec<_>>();
-    let reduce_and_shifts = reduction_shifts.clone();
-    let reduce_or_shifts = reduction_shifts.clone();
-    let reduce_xor_shifts = reduction_shifts;
     quote! {
         /// Functionality implemented by (signed and unsigned) integer SIMD vectors.
         pub trait SimdInt<S: Simd>: SimdBase<S, Element: SimdIntElement> + Seal
@@ -486,45 +478,6 @@ fn mk_simd_int() -> TokenStream {
             /// actually exists a target type of the same bit width (`f32` or `f64`).
             #[inline(always)]
             fn to_float<T: SimdCvtFloat<Self>>(self) -> T { T::float_from(self) }
-
-            /// Returns the cumulative bitwise AND across the elements of this vector.
-            #[inline(always)]
-            fn reduce_and(self) -> Self::Element {
-                let padding = Self::splat(self.witness(), !Self::Element::default());
-                let mut reduced = self;
-                #(
-                    if Self::N > #reduce_and_shifts {
-                        reduced &= reduced.slide::<#reduce_and_shifts>(padding);
-                    }
-                )*
-                reduced[0]
-            }
-
-            /// Returns the cumulative bitwise OR across the elements of this vector.
-            #[inline(always)]
-            fn reduce_or(self) -> Self::Element {
-                let padding = Self::splat(self.witness(), Self::Element::default());
-                let mut reduced = self;
-                #(
-                    if Self::N > #reduce_or_shifts {
-                        reduced |= reduced.slide::<#reduce_or_shifts>(padding);
-                    }
-                )*
-                reduced[0]
-            }
-
-            /// Returns the cumulative bitwise XOR across the elements of this vector.
-            #[inline(always)]
-            fn reduce_xor(self) -> Self::Element {
-                let padding = Self::splat(self.witness(), Self::Element::default());
-                let mut reduced = self;
-                #(
-                    if Self::N > #reduce_xor_shifts {
-                        reduced ^= reduced.slide::<#reduce_xor_shifts>(padding);
-                    }
-                )*
-                reduced[0]
-            }
 
             #( #methods )*
         }
