@@ -3883,7 +3883,7 @@ impl X86 {
             }
             (Self::Sse4_2, source @ (Int | Unsigned), Float, 64, 128, _)
             | (Self::Avx2, source @ (Int | Unsigned), Float, 64, 128 | 256, _) => {
-                // Befire AVX-512 there's no packed 64-bit integer -> f64 instruction.
+                // Before AVX-512 there's no packed 64-bit integer -> f64 instruction.
                 // Split each integer into 32-bit halves, embed those halves in the fraction fields
                 // of exact powers of two, then remove the biases. This is LLVM's u64 expansion,
                 // extended to signed values by biasing the high half around i32::MIN.
