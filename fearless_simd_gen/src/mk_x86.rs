@@ -3866,6 +3866,7 @@ impl X86 {
                 let max = simple_intrinsic("max", vec_ty);
                 let set0 = intrinsic_ident("setzero", coarse_type(vec_ty), vec_ty.n_bits());
                 let cmplt = float_compare_method("simd_lt", vec_ty);
+                let cmple = float_compare_method("simd_le", vec_ty);
                 let cmpord = float_compare_method("ord", vec_ty);
                 let set1_float = set1_intrinsic(vec_ty);
                 let set1_int = set1_intrinsic(&target_ty);
@@ -3885,6 +3886,7 @@ impl X86 {
                 );
                 let blend = intrinsic_ident("blendv", "epi8", vec_ty.n_bits());
                 let and = intrinsic_ident("and", coarse_type(&target_ty), vec_ty.n_bits());
+                let xor = intrinsic_ident("xor", coarse_type(&target_ty), vec_ty.n_bits());
                 let andnot = simple_intrinsic("andnot", vec_ty);
                 let add_int = simple_sign_unaware_intrinsic("add", &target_ty);
                 let sub_float = simple_intrinsic("sub", vec_ty);
@@ -3916,24 +3918,18 @@ impl X86 {
                     (Int, Precise) => {
                         quote! {
                             let a = a.into();
-
-                            let mut converted = #convert(a);
-
-                            // In the common case where everything is in range, we don't need to do anything else.
-                            let in_range = #cmplt(a, #set1_float(2147483648.0));
-                            let all_in_range = #movemask(in_range) == #all_ones;
-
-                            if !all_in_range {
-                                // If we are above i32::MAX (2147483647), clamp to it.
-                                converted = #blend(#set1_int(i32::MAX), converted, #cast_to_int(in_range));
-                                // Set NaN to 0. Using `and` seems slightly faster than `blend`.
-                                let is_not_nan = #cast_to_int(#cmpord(a, a));
-                                converted = #and(converted, is_not_nan);
-                                // We don't need to handle negative overflow because Intel's "invalid result" sentinel
-                                // value is -2147483648, which is what we want anyway.
-                            }
-
-                            converted.simd_into(#token)
+                            let converted = #convert(a);
+                            // The truncating instruction returns i32::MIN for every invalid lane.
+                            // Flipping its bits for positive overflow turns that sentinel into
+                            // i32::MAX. Negative overflow already has the desired value.
+                            let positive_overflow = #cast_to_int(#cmple(
+                                #set1_float(2147483648.0),
+                                a,
+                            ));
+                            let converted = #xor(converted, positive_overflow);
+                            // The ordered mask is false only for NaN, which Rust converts to zero.
+                            let is_not_nan = #cast_to_int(#cmpord(a, a));
+                            #and(converted, is_not_nan).simd_into(#token)
                         }
                     }
                     (Unsigned, Precise) => {

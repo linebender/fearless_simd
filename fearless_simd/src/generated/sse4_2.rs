@@ -763,19 +763,12 @@ impl Simd for Sse4_2 {
             #[inline(always)]
             fn kernel(token: Sse4_2, a: f32x4<Sse4_2>) -> i32x4<Sse4_2> {
                 let a = a.into();
-                let mut converted = _mm_cvttps_epi32(a);
-                let in_range = _mm_cmplt_ps(a, _mm_set1_ps(2147483648.0));
-                let all_in_range = _mm_movemask_ps(in_range) == 0b1111;
-                if !all_in_range {
-                    converted = _mm_blendv_epi8(
-                        _mm_set1_epi32(i32::MAX),
-                        converted,
-                        _mm_castps_si128(in_range),
-                    );
-                    let is_not_nan = _mm_castps_si128(_mm_cmpord_ps(a, a));
-                    converted = _mm_and_si128(converted, is_not_nan);
-                }
-                converted.simd_into(token)
+                let converted = _mm_cvttps_epi32(a);
+                let positive_overflow =
+                    _mm_castps_si128(_mm_cmple_ps(_mm_set1_ps(2147483648.0), a));
+                let converted = _mm_xor_si128(converted, positive_overflow);
+                let is_not_nan = _mm_castps_si128(_mm_cmpord_ps(a, a));
+                _mm_and_si128(converted, is_not_nan).simd_into(token)
             }
         );
         kernel(self, a)
