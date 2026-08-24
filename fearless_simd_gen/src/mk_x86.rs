@@ -1105,6 +1105,13 @@ impl X86 {
         }
     }
 
+    fn handle_count_zeros(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        match *self {
+            Self::Sse2 => fallback_method(op, vec_ty), // slightly faster than going through the generic code
+            Self::Sse4_2 | Self::Avx2 | Self::Avx512 => count_zeros_method(op, vec_ty),
+        }
+    }
+
     pub(crate) fn handle_splat(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask {
             let lane_mask = avx512_mask_lane_bits(vec_ty);
@@ -1455,7 +1462,7 @@ impl X86 {
         vec_ty: &VecType,
     ) -> TokenStream {
         if method == "count_zeros" {
-            return count_zeros_method(op, vec_ty);
+            return self.handle_count_zeros(op, vec_ty);
         }
 
         if method == "count_ones" {
