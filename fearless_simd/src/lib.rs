@@ -252,8 +252,9 @@ extern crate std;
 #[cfg(all(not(feature = "libm"), not(feature = "std")))]
 compile_error!("fearless_simd requires either the `std` or `libm` feature");
 
-// Suppress the unused_crate_dependencies lint when both std and libm are specified.
-#[cfg(all(feature = "std", feature = "libm"))]
+// Some native SIMD backends do not need libm unless fallback support is also enabled.
+// Keep the optional dependency marked as used for every supported target configuration.
+#[cfg(feature = "libm")]
 use libm as _;
 
 mod generated;
