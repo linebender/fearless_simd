@@ -1048,61 +1048,61 @@ fn interleaved_store_indices(len: usize, block_count: usize) -> Vec<usize> {
 
 impl X86 {
     fn handle_count_ones(&self, op: Op, vec_ty: &VecType) -> TokenStream {
-        if *self == Self::Sse2 {
-            return fallback_method(op, vec_ty);
-        }
-
-        if *self == Self::Avx512 {
-            let suffix = format!("epi{}", vec_ty.scalar_bits);
-            let popcnt = intrinsic_ident("popcnt", &suffix, vec_ty.n_bits());
-            return self.kernel_method(op, vec_ty, |token| {
-                quote! { #popcnt(a.into()).simd_into(#token) }
-            });
-        }
-
-        let bits = vec_ty.n_bits();
-        let set1_epi8 = intrinsic_ident("set1", "epi8", bits);
-        let set1_epi16 = intrinsic_ident("set1", "epi16", bits);
-        let setzero = intrinsic_ident("setzero", coarse_type(vec_ty), bits);
-        let and = intrinsic_ident("and", coarse_type(vec_ty), bits);
-        let shift = intrinsic_ident("srli", "epi16", bits);
-        let shuffle = intrinsic_ident("shuffle", "epi8", bits);
-        let add = intrinsic_ident("add", "epi8", bits);
-        let maddubs = intrinsic_ident("maddubs", "epi16", bits);
-        let madd = intrinsic_ident("madd", "epi16", bits);
-        let sad = intrinsic_ident("sad", "epu8", bits);
-        let lookup = match bits {
-            128 => quote! {
-                _mm_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4)
-            },
-            256 => quote! {
-                _mm256_setr_epi8(
-                    0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
-                    0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
-                )
-            },
-            _ => unreachable!(),
-        };
-        self.kernel_method(op, vec_ty, |token| {
-            let combine = match vec_ty.scalar_bits {
-                8 => quote! { byte_counts },
-                16 => quote! { #maddubs(byte_counts, #set1_epi8(1)) },
-                32 => quote! {
-                    #madd(#maddubs(byte_counts, #set1_epi8(1)), #set1_epi16(1))
-                },
-                64 => quote! { #sad(byte_counts, #setzero()) },
-                _ => unreachable!(),
-            };
-            quote! {
-                let value = a.into();
-                let nibble_mask = #set1_epi8(0x0f);
-                let lookup = #lookup;
-                let low = #and(value, nibble_mask);
-                let high = #and(#shift::<4>(value), nibble_mask);
-                let byte_counts = #add(#shuffle(lookup, low), #shuffle(lookup, high));
-                #combine.simd_into(#token)
+        match *self {
+            Self::Avx512 => {
+                let suffix = format!("epi{}", vec_ty.scalar_bits);
+                let popcnt = intrinsic_ident("popcnt", &suffix, vec_ty.n_bits());
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! { #popcnt(a.into()).simd_into(#token) }
+                })
             }
-        })
+            Self::Sse4_2 | Self::Avx2 => {
+                let bits = vec_ty.n_bits();
+                let set1_epi8 = intrinsic_ident("set1", "epi8", bits);
+                let set1_epi16 = intrinsic_ident("set1", "epi16", bits);
+                let setzero = intrinsic_ident("setzero", coarse_type(vec_ty), bits);
+                let and = intrinsic_ident("and", coarse_type(vec_ty), bits);
+                let shift = intrinsic_ident("srli", "epi16", bits);
+                let shuffle = intrinsic_ident("shuffle", "epi8", bits);
+                let add = intrinsic_ident("add", "epi8", bits);
+                let maddubs = intrinsic_ident("maddubs", "epi16", bits);
+                let madd = intrinsic_ident("madd", "epi16", bits);
+                let sad = intrinsic_ident("sad", "epu8", bits);
+                let lookup = match bits {
+                    128 => quote! {
+                        _mm_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4)
+                    },
+                    256 => quote! {
+                        _mm256_setr_epi8(
+                            0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
+                            0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
+                        )
+                    },
+                    _ => unreachable!(),
+                };
+                self.kernel_method(op, vec_ty, |token| {
+                    let combine = match vec_ty.scalar_bits {
+                        8 => quote! { byte_counts },
+                        16 => quote! { #maddubs(byte_counts, #set1_epi8(1)) },
+                        32 => quote! {
+                            #madd(#maddubs(byte_counts, #set1_epi8(1)), #set1_epi16(1))
+                        },
+                        64 => quote! { #sad(byte_counts, #setzero()) },
+                        _ => unreachable!(),
+                    };
+                    quote! {
+                        let value = a.into();
+                        let nibble_mask = #set1_epi8(0x0f);
+                        let lookup = #lookup;
+                        let low = #and(value, nibble_mask);
+                        let high = #and(#shift::<4>(value), nibble_mask);
+                        let byte_counts = #add(#shuffle(lookup, low), #shuffle(lookup, high));
+                        #combine.simd_into(#token)
+                    }
+                })
+            }
+            Self::Sse2 => fallback_method(op, vec_ty),
+        }
     }
 
     pub(crate) fn handle_splat(&self, op: Op, vec_ty: &VecType) -> TokenStream {
