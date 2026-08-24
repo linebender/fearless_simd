@@ -716,6 +716,63 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reduce_and_i8x16(self, a: i8x16<Self>) -> i8 {
+        a[0usize]
+            & a[1usize]
+            & a[2usize]
+            & a[3usize]
+            & a[4usize]
+            & a[5usize]
+            & a[6usize]
+            & a[7usize]
+            & a[8usize]
+            & a[9usize]
+            & a[10usize]
+            & a[11usize]
+            & a[12usize]
+            & a[13usize]
+            & a[14usize]
+            & a[15usize]
+    }
+    #[inline(always)]
+    fn reduce_or_i8x16(self, a: i8x16<Self>) -> i8 {
+        a[0usize]
+            | a[1usize]
+            | a[2usize]
+            | a[3usize]
+            | a[4usize]
+            | a[5usize]
+            | a[6usize]
+            | a[7usize]
+            | a[8usize]
+            | a[9usize]
+            | a[10usize]
+            | a[11usize]
+            | a[12usize]
+            | a[13usize]
+            | a[14usize]
+            | a[15usize]
+    }
+    #[inline(always)]
+    fn reduce_xor_i8x16(self, a: i8x16<Self>) -> i8 {
+        a[0usize]
+            ^ a[1usize]
+            ^ a[2usize]
+            ^ a[3usize]
+            ^ a[4usize]
+            ^ a[5usize]
+            ^ a[6usize]
+            ^ a[7usize]
+            ^ a[8usize]
+            ^ a[9usize]
+            ^ a[10usize]
+            ^ a[11usize]
+            ^ a[12usize]
+            ^ a[13usize]
+            ^ a[14usize]
+            ^ a[15usize]
+    }
+    #[inline(always)]
     fn not_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
         [
             i8::not(a[0usize]),
@@ -1511,6 +1568,63 @@ impl Simd for Fallback {
             u8::bitxor(a[15usize], &b[15usize]),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_and_u8x16(self, a: u8x16<Self>) -> u8 {
+        a[0usize]
+            & a[1usize]
+            & a[2usize]
+            & a[3usize]
+            & a[4usize]
+            & a[5usize]
+            & a[6usize]
+            & a[7usize]
+            & a[8usize]
+            & a[9usize]
+            & a[10usize]
+            & a[11usize]
+            & a[12usize]
+            & a[13usize]
+            & a[14usize]
+            & a[15usize]
+    }
+    #[inline(always)]
+    fn reduce_or_u8x16(self, a: u8x16<Self>) -> u8 {
+        a[0usize]
+            | a[1usize]
+            | a[2usize]
+            | a[3usize]
+            | a[4usize]
+            | a[5usize]
+            | a[6usize]
+            | a[7usize]
+            | a[8usize]
+            | a[9usize]
+            | a[10usize]
+            | a[11usize]
+            | a[12usize]
+            | a[13usize]
+            | a[14usize]
+            | a[15usize]
+    }
+    #[inline(always)]
+    fn reduce_xor_u8x16(self, a: u8x16<Self>) -> u8 {
+        a[0usize]
+            ^ a[1usize]
+            ^ a[2usize]
+            ^ a[3usize]
+            ^ a[4usize]
+            ^ a[5usize]
+            ^ a[6usize]
+            ^ a[7usize]
+            ^ a[8usize]
+            ^ a[9usize]
+            ^ a[10usize]
+            ^ a[11usize]
+            ^ a[12usize]
+            ^ a[13usize]
+            ^ a[14usize]
+            ^ a[15usize]
     }
     #[inline(always)]
     fn not_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
@@ -2480,6 +2594,39 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reduce_and_i16x8(self, a: i16x8<Self>) -> i16 {
+        a[0usize]
+            & a[1usize]
+            & a[2usize]
+            & a[3usize]
+            & a[4usize]
+            & a[5usize]
+            & a[6usize]
+            & a[7usize]
+    }
+    #[inline(always)]
+    fn reduce_or_i16x8(self, a: i16x8<Self>) -> i16 {
+        a[0usize]
+            | a[1usize]
+            | a[2usize]
+            | a[3usize]
+            | a[4usize]
+            | a[5usize]
+            | a[6usize]
+            | a[7usize]
+    }
+    #[inline(always)]
+    fn reduce_xor_i16x8(self, a: i16x8<Self>) -> i16 {
+        a[0usize]
+            ^ a[1usize]
+            ^ a[2usize]
+            ^ a[3usize]
+            ^ a[4usize]
+            ^ a[5usize]
+            ^ a[6usize]
+            ^ a[7usize]
+    }
+    #[inline(always)]
     fn not_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
         [
             i16::not(a[0usize]),
@@ -2980,6 +3127,39 @@ impl Simd for Fallback {
             u16::bitxor(a[7usize], &b[7usize]),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_and_u16x8(self, a: u16x8<Self>) -> u16 {
+        a[0usize]
+            & a[1usize]
+            & a[2usize]
+            & a[3usize]
+            & a[4usize]
+            & a[5usize]
+            & a[6usize]
+            & a[7usize]
+    }
+    #[inline(always)]
+    fn reduce_or_u16x8(self, a: u16x8<Self>) -> u16 {
+        a[0usize]
+            | a[1usize]
+            | a[2usize]
+            | a[3usize]
+            | a[4usize]
+            | a[5usize]
+            | a[6usize]
+            | a[7usize]
+    }
+    #[inline(always)]
+    fn reduce_xor_u16x8(self, a: u16x8<Self>) -> u16 {
+        a[0usize]
+            ^ a[1usize]
+            ^ a[2usize]
+            ^ a[3usize]
+            ^ a[4usize]
+            ^ a[5usize]
+            ^ a[6usize]
+            ^ a[7usize]
     }
     #[inline(always)]
     fn not_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
@@ -3661,6 +3841,18 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reduce_and_i32x4(self, a: i32x4<Self>) -> i32 {
+        a[0usize] & a[1usize] & a[2usize] & a[3usize]
+    }
+    #[inline(always)]
+    fn reduce_or_i32x4(self, a: i32x4<Self>) -> i32 {
+        a[0usize] | a[1usize] | a[2usize] | a[3usize]
+    }
+    #[inline(always)]
+    fn reduce_xor_i32x4(self, a: i32x4<Self>) -> i32 {
+        a[0usize] ^ a[1usize] ^ a[2usize] ^ a[3usize]
+    }
+    #[inline(always)]
     fn not_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
         [
             i32::not(a[0usize]),
@@ -3987,6 +4179,18 @@ impl Simd for Fallback {
             u32::bitxor(a[3usize], &b[3usize]),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_and_u32x4(self, a: u32x4<Self>) -> u32 {
+        a[0usize] & a[1usize] & a[2usize] & a[3usize]
+    }
+    #[inline(always)]
+    fn reduce_or_u32x4(self, a: u32x4<Self>) -> u32 {
+        a[0usize] | a[1usize] | a[2usize] | a[3usize]
+    }
+    #[inline(always)]
+    fn reduce_xor_u32x4(self, a: u32x4<Self>) -> u32 {
+        a[0usize] ^ a[1usize] ^ a[2usize] ^ a[3usize]
     }
     #[inline(always)]
     fn not_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
@@ -4718,6 +4922,18 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reduce_and_i64x2(self, a: i64x2<Self>) -> i64 {
+        a[0usize] & a[1usize]
+    }
+    #[inline(always)]
+    fn reduce_or_i64x2(self, a: i64x2<Self>) -> i64 {
+        a[0usize] | a[1usize]
+    }
+    #[inline(always)]
+    fn reduce_xor_i64x2(self, a: i64x2<Self>) -> i64 {
+        a[0usize] ^ a[1usize]
+    }
+    #[inline(always)]
     fn not_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
         [i64::not(a[0usize]), i64::not(a[1usize])].simd_into(self)
     }
@@ -4963,6 +5179,18 @@ impl Simd for Fallback {
             u64::bitxor(a[1usize], &b[1usize]),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_and_u64x2(self, a: u64x2<Self>) -> u64 {
+        a[0usize] & a[1usize]
+    }
+    #[inline(always)]
+    fn reduce_or_u64x2(self, a: u64x2<Self>) -> u64 {
+        a[0usize] | a[1usize]
+    }
+    #[inline(always)]
+    fn reduce_xor_u64x2(self, a: u64x2<Self>) -> u64 {
+        a[0usize] ^ a[1usize]
     }
     #[inline(always)]
     fn not_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {

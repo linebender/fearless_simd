@@ -6,7 +6,7 @@ use quote::{ToTokens, quote};
 
 use crate::{
     level::Level,
-    ops::{Op, OpSig, SlideGranularity},
+    ops::{CoreOpTrait, Op, OpSig, SlideGranularity},
     types::{ScalarType, VecType},
 };
 
@@ -16,6 +16,49 @@ pub(crate) fn generic_op_name(op: &str, ty: &VecType) -> Ident {
 
 pub(crate) fn fallback_method(op: Op, vec_ty: &VecType) -> TokenStream {
     crate::mk_fallback::Fallback.make_method(op, vec_ty)
+}
+
+/// Implement a 128-bit integer reduction in a concrete backend using that
+/// backend's bitwise and slide operations.
+pub(crate) fn bitwise_reduction_method(
+    op: Op,
+    vec_ty: &VecType,
+    combine_op: CoreOpTrait,
+) -> TokenStream {
+    assert_eq!(vec_ty.n_bits(), 128);
+    assert!(matches!(
+        combine_op,
+        CoreOpTrait::BitAnd | CoreOpTrait::BitOr | CoreOpTrait::BitXor
+    ));
+
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let combine = generic_op_name(combine_op.simd_name(), vec_ty);
+    let slide = generic_op_name("slide", vec_ty);
+    let shifts = (1..vec_ty.len.ilog2())
+        .rev()
+        .map(|power| Literal::usize_unsuffixed(1 << power))
+        .collect::<Vec<_>>();
+    let scalar_combine = match combine_op {
+        CoreOpTrait::BitAnd => quote! { reduced[0] & reduced[1] },
+        CoreOpTrait::BitOr => quote! { reduced[0] | reduced[1] },
+        CoreOpTrait::BitXor => quote! { reduced[0] ^ reduced[1] },
+        _ => unreachable!(),
+    };
+    let reduced_init = if shifts.is_empty() {
+        quote! { let reduced = a; }
+    } else {
+        quote! { let mut reduced = a; }
+    };
+
+    quote! {
+        #method_sig {
+            #reduced_init
+            #(
+                reduced = self.#combine(reduced, self.#slide::<#shifts>(reduced, reduced));
+            )*
+            #scalar_combine
+        }
+    }
 }
 
 /// Implement a typed byte swizzle by forwarding to the corresponding byte-vector operation.
@@ -298,6 +341,15 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
             // (the expensive part) is needed, and avoids the branch a short-circuiting
             // `||`/`&&` would allow.
             let combine_halves = generic_op_name(quantifier.mask_combine_op(condition), &half);
+            quote! {
+                #method_sig {
+                    let (a0, a1) = self.#split(a);
+                    self.#do_half(self.#combine_halves(a0, a1))
+                }
+            }
+        }
+        OpSig::BitwiseReduction { op: combine_op } => {
+            let combine_halves = generic_op_name(combine_op.simd_name(), &half);
             quote! {
                 #method_sig {
                     let (a0, a1) = self.#split(a);
