@@ -8,7 +8,7 @@ use crate::generic::{
     fallback_method, generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
-use crate::ops::{NarrowingMode, Op, SlideGranularity, relaxed_narrow_method};
+use crate::ops::{CoreOpTrait, NarrowingMode, Op, SlideGranularity, relaxed_narrow_method};
 use crate::{
     arch::neon::{self, cvt_intrinsic, simple_intrinsic, split_intrinsic},
     ops::OpSig,
@@ -622,6 +622,9 @@ impl Level for Neon {
                     |_| quote! { #min_max(#reinterpret(a.into())) #target },
                 )
             }
+            OpSig::BitwiseReduction { op: combine_op } => {
+                self.handle_bitwise_reduction(op, vec_ty, combine_op)
+            }
             OpSig::MaskFromBitmask => self.handle_mask_from_bitmask(op, vec_ty),
             OpSig::MaskToBitmask => self.handle_mask_to_bitmask(op, vec_ty),
             OpSig::MaskSet => generic_mask_set(method_sig, vec_ty),
@@ -656,6 +659,64 @@ impl Level for Neon {
 }
 
 impl Neon {
+    fn handle_bitwise_reduction(
+        &self,
+        op: Op,
+        vec_ty: &VecType,
+        combine_op: CoreOpTrait,
+    ) -> TokenStream {
+        assert_eq!(vec_ty.n_bits(), 128);
+        assert!(matches!(
+            combine_op,
+            CoreOpTrait::BitAnd | CoreOpTrait::BitOr | CoreOpTrait::BitXor
+        ));
+
+        let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+        let scalar_prefix = match vec_ty.scalar {
+            ScalarType::Int => "s",
+            ScalarType::Unsigned => "u",
+            _ => unreachable!("bitwise reductions only operate on integers"),
+        };
+        let bits = if vec_ty.scalar == ScalarType::Unsigned && vec_ty.scalar_bits == 64 {
+            quote! { a.into() }
+        } else {
+            let reinterpret =
+                format_ident!("vreinterpretq_u64_{}{}", scalar_prefix, vec_ty.scalar_bits);
+            quote! { #reinterpret(a.into()) }
+        };
+        let vector_combine = match combine_op {
+            CoreOpTrait::BitAnd => quote! { vand_u64 },
+            CoreOpTrait::BitOr => quote! { vorr_u64 },
+            CoreOpTrait::BitXor => quote! { veor_u64 },
+            _ => unreachable!(),
+        };
+        let shifts = (vec_ty.scalar_bits.ilog2()..6)
+            .rev()
+            .map(|power| Literal::usize_unsuffixed(1 << power))
+            .collect::<Vec<_>>();
+        let reduced_init = if shifts.is_empty() {
+            quote! { let reduced = vget_lane_u64::<0>(halves); }
+        } else {
+            quote! { let mut reduced = vget_lane_u64::<0>(halves); }
+        };
+        let scalar_steps = match combine_op {
+            CoreOpTrait::BitAnd => quote! { #(reduced &= reduced >> #shifts;)* },
+            CoreOpTrait::BitOr => quote! { #(reduced |= reduced >> #shifts;)* },
+            CoreOpTrait::BitXor => quote! { #(reduced ^= reduced >> #shifts;)* },
+            _ => unreachable!(),
+        };
+
+        self.kernel_method(op, vec_ty, |_| {
+            quote! {
+                let bits = #bits;
+                let halves = #vector_combine(vget_low_u64(bits), vget_high_u64(bits));
+                #reduced_init
+                #scalar_steps
+                reduced as #scalar
+            }
+        })
+    }
+
     fn handle_mask_from_bitmask(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         assert_eq!(
             vec_ty.scalar,

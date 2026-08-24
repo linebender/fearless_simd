@@ -377,6 +377,12 @@ pub trait Simd:
     fn or_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    fn reduce_and_i8x16(self, a: i8x16<Self>) -> i8;
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    fn reduce_or_i8x16(self, a: i8x16<Self>) -> i8;
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    fn reduce_xor_i8x16(self, a: i8x16<Self>) -> i8;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
@@ -468,6 +474,12 @@ pub trait Simd:
     fn or_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    fn reduce_and_u8x16(self, a: u8x16<Self>) -> u8;
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    fn reduce_or_u8x16(self, a: u8x16<Self>) -> u8;
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    fn reduce_xor_u8x16(self, a: u8x16<Self>) -> u8;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
@@ -601,6 +613,12 @@ pub trait Simd:
     fn or_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    fn reduce_and_i16x8(self, a: i16x8<Self>) -> i16;
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    fn reduce_or_i16x8(self, a: i16x8<Self>) -> i16;
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    fn reduce_xor_i16x8(self, a: i16x8<Self>) -> i16;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
@@ -707,6 +725,12 @@ pub trait Simd:
     fn or_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    fn reduce_and_u16x8(self, a: u16x8<Self>) -> u16;
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    fn reduce_or_u16x8(self, a: u16x8<Self>) -> u16;
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    fn reduce_xor_u16x8(self, a: u16x8<Self>) -> u16;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u16x8(self, a: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
@@ -846,6 +870,12 @@ pub trait Simd:
     fn or_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    fn reduce_and_i32x4(self, a: i32x4<Self>) -> i32;
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    fn reduce_or_i32x4(self, a: i32x4<Self>) -> i32;
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    fn reduce_xor_i32x4(self, a: i32x4<Self>) -> i32;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
@@ -954,6 +984,12 @@ pub trait Simd:
     fn or_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    fn reduce_and_u32x4(self, a: u32x4<Self>) -> u32;
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    fn reduce_or_u32x4(self, a: u32x4<Self>) -> u32;
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    fn reduce_xor_u32x4(self, a: u32x4<Self>) -> u32;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u32x4(self, a: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
@@ -1223,6 +1259,12 @@ pub trait Simd:
     fn or_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    fn reduce_and_i64x2(self, a: i64x2<Self>) -> i64;
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    fn reduce_or_i64x2(self, a: i64x2<Self>) -> i64;
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    fn reduce_xor_i64x2(self, a: i64x2<Self>) -> i64;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
@@ -1329,6 +1371,12 @@ pub trait Simd:
     fn or_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    fn reduce_and_u64x2(self, a: u64x2<Self>) -> u64;
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    fn reduce_or_u64x2(self, a: u64x2<Self>) -> u64;
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    fn reduce_xor_u64x2(self, a: u64x2<Self>) -> u64;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u64x2(self, a: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
@@ -1854,6 +1902,24 @@ pub trait Simd:
         let (b0, b1) = self.split_i8x32(b);
         self.combine_i8x16(self.xor_i8x16(a0, b0), self.xor_i8x16(a1, b1))
     }
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_and_i8x32(self, a: i8x32<Self>) -> i8 {
+        let (a0, a1) = self.split_i8x32(a);
+        self.reduce_and_i8x16(self.and_i8x16(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_or_i8x32(self, a: i8x32<Self>) -> i8 {
+        let (a0, a1) = self.split_i8x32(a);
+        self.reduce_or_i8x16(self.or_i8x16(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_xor_i8x32(self, a: i8x32<Self>) -> i8 {
+        let (a0, a1) = self.split_i8x32(a);
+        self.reduce_xor_i8x16(self.xor_i8x16(a0, a1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
@@ -2090,6 +2156,24 @@ pub trait Simd:
         let (a0, a1) = self.split_u8x32(a);
         let (b0, b1) = self.split_u8x32(b);
         self.combine_u8x16(self.xor_u8x16(a0, b0), self.xor_u8x16(a1, b1))
+    }
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_and_u8x32(self, a: u8x32<Self>) -> u8 {
+        let (a0, a1) = self.split_u8x32(a);
+        self.reduce_and_u8x16(self.and_u8x16(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_or_u8x32(self, a: u8x32<Self>) -> u8 {
+        let (a0, a1) = self.split_u8x32(a);
+        self.reduce_or_u8x16(self.or_u8x16(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_xor_u8x32(self, a: u8x32<Self>) -> u8 {
+        let (a0, a1) = self.split_u8x32(a);
+        self.reduce_xor_u8x16(self.xor_u8x16(a0, a1))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
@@ -2428,6 +2512,24 @@ pub trait Simd:
         let (b0, b1) = self.split_i16x16(b);
         self.combine_i16x8(self.xor_i16x8(a0, b0), self.xor_i16x8(a1, b1))
     }
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_and_i16x16(self, a: i16x16<Self>) -> i16 {
+        let (a0, a1) = self.split_i16x16(a);
+        self.reduce_and_i16x8(self.and_i16x8(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_or_i16x16(self, a: i16x16<Self>) -> i16 {
+        let (a0, a1) = self.split_i16x16(a);
+        self.reduce_or_i16x8(self.or_i16x8(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_xor_i16x16(self, a: i16x16<Self>) -> i16 {
+        let (a0, a1) = self.split_i16x16(a);
+        self.reduce_xor_i16x8(self.xor_i16x8(a0, a1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
@@ -2696,6 +2798,24 @@ pub trait Simd:
         let (a0, a1) = self.split_u16x16(a);
         let (b0, b1) = self.split_u16x16(b);
         self.combine_u16x8(self.xor_u16x8(a0, b0), self.xor_u16x8(a1, b1))
+    }
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_and_u16x16(self, a: u16x16<Self>) -> u16 {
+        let (a0, a1) = self.split_u16x16(a);
+        self.reduce_and_u16x8(self.and_u16x8(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_or_u16x16(self, a: u16x16<Self>) -> u16 {
+        let (a0, a1) = self.split_u16x16(a);
+        self.reduce_or_u16x8(self.or_u16x8(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_xor_u16x16(self, a: u16x16<Self>) -> u16 {
+        let (a0, a1) = self.split_u16x16(a);
+        self.reduce_xor_u16x8(self.xor_u16x8(a0, a1))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
@@ -3057,6 +3177,24 @@ pub trait Simd:
         let (b0, b1) = self.split_i32x8(b);
         self.combine_i32x4(self.xor_i32x4(a0, b0), self.xor_i32x4(a1, b1))
     }
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_and_i32x8(self, a: i32x8<Self>) -> i32 {
+        let (a0, a1) = self.split_i32x8(a);
+        self.reduce_and_i32x4(self.and_i32x4(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_or_i32x8(self, a: i32x8<Self>) -> i32 {
+        let (a0, a1) = self.split_i32x8(a);
+        self.reduce_or_i32x4(self.or_i32x4(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_xor_i32x8(self, a: i32x8<Self>) -> i32 {
+        let (a0, a1) = self.split_i32x8(a);
+        self.reduce_xor_i32x4(self.xor_i32x4(a0, a1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
@@ -3327,6 +3465,24 @@ pub trait Simd:
         let (a0, a1) = self.split_u32x8(a);
         let (b0, b1) = self.split_u32x8(b);
         self.combine_u32x4(self.xor_u32x4(a0, b0), self.xor_u32x4(a1, b1))
+    }
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_and_u32x8(self, a: u32x8<Self>) -> u32 {
+        let (a0, a1) = self.split_u32x8(a);
+        self.reduce_and_u32x4(self.and_u32x4(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_or_u32x8(self, a: u32x8<Self>) -> u32 {
+        let (a0, a1) = self.split_u32x8(a);
+        self.reduce_or_u32x4(self.or_u32x4(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_xor_u32x8(self, a: u32x8<Self>) -> u32 {
+        let (a0, a1) = self.split_u32x8(a);
+        self.reduce_xor_u32x4(self.xor_u32x4(a0, a1))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
@@ -4060,6 +4216,24 @@ pub trait Simd:
         let (b0, b1) = self.split_i64x4(b);
         self.combine_i64x2(self.xor_i64x2(a0, b0), self.xor_i64x2(a1, b1))
     }
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_and_i64x4(self, a: i64x4<Self>) -> i64 {
+        let (a0, a1) = self.split_i64x4(a);
+        self.reduce_and_i64x2(self.and_i64x2(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_or_i64x4(self, a: i64x4<Self>) -> i64 {
+        let (a0, a1) = self.split_i64x4(a);
+        self.reduce_or_i64x2(self.or_i64x2(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_xor_i64x4(self, a: i64x4<Self>) -> i64 {
+        let (a0, a1) = self.split_i64x4(a);
+        self.reduce_xor_i64x2(self.xor_i64x2(a0, a1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
@@ -4322,6 +4496,24 @@ pub trait Simd:
         let (a0, a1) = self.split_u64x4(a);
         let (b0, b1) = self.split_u64x4(b);
         self.combine_u64x2(self.xor_u64x2(a0, b0), self.xor_u64x2(a1, b1))
+    }
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_and_u64x4(self, a: u64x4<Self>) -> u64 {
+        let (a0, a1) = self.split_u64x4(a);
+        self.reduce_and_u64x2(self.and_u64x2(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_or_u64x4(self, a: u64x4<Self>) -> u64 {
+        let (a0, a1) = self.split_u64x4(a);
+        self.reduce_or_u64x2(self.or_u64x2(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_xor_u64x4(self, a: u64x4<Self>) -> u64 {
+        let (a0, a1) = self.split_u64x4(a);
+        self.reduce_xor_u64x2(self.xor_u64x2(a0, a1))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
@@ -5040,6 +5232,24 @@ pub trait Simd:
         let (b0, b1) = self.split_i8x64(b);
         self.combine_i8x32(self.xor_i8x32(a0, b0), self.xor_i8x32(a1, b1))
     }
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_and_i8x64(self, a: i8x64<Self>) -> i8 {
+        let (a0, a1) = self.split_i8x64(a);
+        self.reduce_and_i8x32(self.and_i8x32(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_or_i8x64(self, a: i8x64<Self>) -> i8 {
+        let (a0, a1) = self.split_i8x64(a);
+        self.reduce_or_i8x32(self.or_i8x32(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_xor_i8x64(self, a: i8x64<Self>) -> i8 {
+        let (a0, a1) = self.split_i8x64(a);
+        self.reduce_xor_i8x32(self.xor_i8x32(a0, a1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
@@ -5274,6 +5484,24 @@ pub trait Simd:
         let (a0, a1) = self.split_u8x64(a);
         let (b0, b1) = self.split_u8x64(b);
         self.combine_u8x32(self.xor_u8x32(a0, b0), self.xor_u8x32(a1, b1))
+    }
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_and_u8x64(self, a: u8x64<Self>) -> u8 {
+        let (a0, a1) = self.split_u8x64(a);
+        self.reduce_and_u8x32(self.and_u8x32(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_or_u8x64(self, a: u8x64<Self>) -> u8 {
+        let (a0, a1) = self.split_u8x64(a);
+        self.reduce_or_u8x32(self.or_u8x32(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_xor_u8x64(self, a: u8x64<Self>) -> u8 {
+        let (a0, a1) = self.split_u8x64(a);
+        self.reduce_xor_u8x32(self.xor_u8x32(a0, a1))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
@@ -5608,6 +5836,24 @@ pub trait Simd:
         let (b0, b1) = self.split_i16x32(b);
         self.combine_i16x16(self.xor_i16x16(a0, b0), self.xor_i16x16(a1, b1))
     }
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_and_i16x32(self, a: i16x32<Self>) -> i16 {
+        let (a0, a1) = self.split_i16x32(a);
+        self.reduce_and_i16x16(self.and_i16x16(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_or_i16x32(self, a: i16x32<Self>) -> i16 {
+        let (a0, a1) = self.split_i16x32(a);
+        self.reduce_or_i16x16(self.or_i16x16(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_xor_i16x32(self, a: i16x32<Self>) -> i16 {
+        let (a0, a1) = self.split_i16x32(a);
+        self.reduce_xor_i16x16(self.xor_i16x16(a0, a1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
@@ -5880,6 +6126,24 @@ pub trait Simd:
         let (a0, a1) = self.split_u16x32(a);
         let (b0, b1) = self.split_u16x32(b);
         self.combine_u16x16(self.xor_u16x16(a0, b0), self.xor_u16x16(a1, b1))
+    }
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_and_u16x32(self, a: u16x32<Self>) -> u16 {
+        let (a0, a1) = self.split_u16x32(a);
+        self.reduce_and_u16x16(self.and_u16x16(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_or_u16x32(self, a: u16x32<Self>) -> u16 {
+        let (a0, a1) = self.split_u16x32(a);
+        self.reduce_or_u16x16(self.or_u16x16(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_xor_u16x32(self, a: u16x32<Self>) -> u16 {
+        let (a0, a1) = self.split_u16x32(a);
+        self.reduce_xor_u16x16(self.xor_u16x16(a0, a1))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
@@ -6250,6 +6514,24 @@ pub trait Simd:
         let (b0, b1) = self.split_i32x16(b);
         self.combine_i32x8(self.xor_i32x8(a0, b0), self.xor_i32x8(a1, b1))
     }
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_and_i32x16(self, a: i32x16<Self>) -> i32 {
+        let (a0, a1) = self.split_i32x16(a);
+        self.reduce_and_i32x8(self.and_i32x8(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_or_i32x16(self, a: i32x16<Self>) -> i32 {
+        let (a0, a1) = self.split_i32x16(a);
+        self.reduce_or_i32x8(self.or_i32x8(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_xor_i32x16(self, a: i32x16<Self>) -> i32 {
+        let (a0, a1) = self.split_i32x16(a);
+        self.reduce_xor_i32x8(self.xor_i32x8(a0, a1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
@@ -6522,6 +6804,24 @@ pub trait Simd:
         let (a0, a1) = self.split_u32x16(a);
         let (b0, b1) = self.split_u32x16(b);
         self.combine_u32x8(self.xor_u32x8(a0, b0), self.xor_u32x8(a1, b1))
+    }
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_and_u32x16(self, a: u32x16<Self>) -> u32 {
+        let (a0, a1) = self.split_u32x16(a);
+        self.reduce_and_u32x8(self.and_u32x8(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_or_u32x16(self, a: u32x16<Self>) -> u32 {
+        let (a0, a1) = self.split_u32x16(a);
+        self.reduce_or_u32x8(self.or_u32x8(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_xor_u32x16(self, a: u32x16<Self>) -> u32 {
+        let (a0, a1) = self.split_u32x16(a);
+        self.reduce_xor_u32x8(self.xor_u32x8(a0, a1))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
@@ -7249,6 +7549,24 @@ pub trait Simd:
         let (b0, b1) = self.split_i64x8(b);
         self.combine_i64x4(self.xor_i64x4(a0, b0), self.xor_i64x4(a1, b1))
     }
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_and_i64x8(self, a: i64x8<Self>) -> i64 {
+        let (a0, a1) = self.split_i64x8(a);
+        self.reduce_and_i64x4(self.and_i64x4(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_or_i64x8(self, a: i64x8<Self>) -> i64 {
+        let (a0, a1) = self.split_i64x8(a);
+        self.reduce_or_i64x4(self.or_i64x4(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_xor_i64x8(self, a: i64x8<Self>) -> i64 {
+        let (a0, a1) = self.split_i64x8(a);
+        self.reduce_xor_i64x4(self.xor_i64x4(a0, a1))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
@@ -7509,6 +7827,24 @@ pub trait Simd:
         let (a0, a1) = self.split_u64x8(a);
         let (b0, b1) = self.split_u64x8(b);
         self.combine_u64x4(self.xor_u64x4(a0, b0), self.xor_u64x4(a1, b1))
+    }
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_and_u64x8(self, a: u64x8<Self>) -> u64 {
+        let (a0, a1) = self.split_u64x8(a);
+        self.reduce_and_u64x4(self.and_u64x4(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_or_u64x8(self, a: u64x8<Self>) -> u64 {
+        let (a0, a1) = self.split_u64x8(a);
+        self.reduce_or_u64x4(self.or_u64x4(a0, a1))
+    }
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_xor_u64x8(self, a: u64x8<Self>) -> u64 {
+        let (a0, a1) = self.split_u64x8(a);
+        self.reduce_xor_u64x4(self.xor_u64x4(a0, a1))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
@@ -8473,6 +8809,12 @@ pub trait SimdInt<S: Simd>:
     fn to_float<T: SimdCvtFloat<Self>>(self) -> T {
         T::float_from(self)
     }
+    #[doc = "Returns the cumulative bitwise AND across the elements of this vector."]
+    fn reduce_and(self) -> Self::Element;
+    #[doc = "Returns the cumulative bitwise OR across the elements of this vector."]
+    fn reduce_or(self) -> Self::Element;
+    #[doc = "Returns the cumulative bitwise XOR across the elements of this vector."]
+    fn reduce_xor(self) -> Self::Element;
 }
 #[doc = r" Functionality implemented by SIMD masks."]
 #[doc = r""]

@@ -7,7 +7,7 @@ use crate::generic::{
     integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
-use crate::ops::{NarrowingMode, Op, OpSig, relaxed_narrow_method};
+use crate::ops::{CoreOpTrait, NarrowingMode, Op, OpSig, relaxed_narrow_method};
 use crate::types::{ScalarType, VecType};
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -644,6 +644,20 @@ impl Level for Fallback {
                     }
                 };
 
+                quote! {
+                    #method_sig {
+                        #expr
+                    }
+                }
+            }
+            OpSig::BitwiseReduction { op: combine_op } => {
+                let lanes = (0..vec_ty.len).map(|idx| lane(quote! { a }, vec_ty, idx));
+                let expr = match combine_op {
+                    CoreOpTrait::BitAnd => quote! { #(#lanes)&* },
+                    CoreOpTrait::BitOr => quote! { #(#lanes)|* },
+                    CoreOpTrait::BitXor => quote! { #(#lanes)^* },
+                    _ => unreachable!(),
+                };
                 quote! {
                     #method_sig {
                         #expr

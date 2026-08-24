@@ -105,6 +105,8 @@ pub(crate) enum OpSig {
         quantifier: Quantifier,
         condition: bool,
     },
+    /// Takes an integer vector and returns the cumulative bitwise reduction as a scalar.
+    BitwiseReduction { op: CoreOpTrait },
     /// Takes a compact bitmask and returns the corresponding mask vector type.
     MaskFromBitmask,
     /// Takes a mask vector type and returns its compact bitmask representation.
@@ -329,6 +331,10 @@ impl Op {
                 (vec![vec.clone(), vec], quote! { #result<#simd_ty> })
             }
             OpSig::MaskReduce { .. } => (vec![vec], quote! { bool }),
+            OpSig::BitwiseReduction { .. } => {
+                let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                (vec![vec], quote! { #scalar })
+            }
             OpSig::MaskFromBitmask => (vec![quote! { u64 }], vec),
             OpSig::MaskToBitmask => (vec![vec], quote! { u64 }),
             OpSig::MaskSet => (
@@ -379,6 +385,10 @@ impl Op {
             OpSig::MaskReduce { .. } => {
                 let arg0 = &arg_names[0];
                 quote! { (#arg0) -> bool }
+            }
+            OpSig::BitwiseReduction { .. } => {
+                let arg0 = &arg_names[0];
+                quote! { (#arg0) -> Self::Element }
             }
             OpSig::Binary | OpSig::Zip { .. } | OpSig::Unzip { .. } => {
                 let arg0 = &arg_names[0];
@@ -918,6 +928,30 @@ const INT_OPS: &[Op] = &[
         OpKind::Overloaded(CoreOpTrait::BitXor),
         OpSig::Binary,
         "Compute the bitwise XOR of two vectors.",
+    ),
+    Op::new(
+        "reduce_and",
+        OpKind::VecTraitMethod,
+        OpSig::BitwiseReduction {
+            op: CoreOpTrait::BitAnd,
+        },
+        "Returns the cumulative bitwise AND across the elements of this vector.",
+    ),
+    Op::new(
+        "reduce_or",
+        OpKind::VecTraitMethod,
+        OpSig::BitwiseReduction {
+            op: CoreOpTrait::BitOr,
+        },
+        "Returns the cumulative bitwise OR across the elements of this vector.",
+    ),
+    Op::new(
+        "reduce_xor",
+        OpKind::VecTraitMethod,
+        OpSig::BitwiseReduction {
+            op: CoreOpTrait::BitXor,
+        },
+        "Returns the cumulative bitwise XOR across the elements of this vector.",
     ),
     Op::new(
         "not",
@@ -1584,6 +1618,13 @@ impl OpSig {
             return true;
         }
 
+        // Horizontal reductions deliberately use a single 128-bit reduction after
+        // recursively combining corresponding halves. This keeps code generation
+        // consistent even on backends with wider native vector registers.
+        if matches!(self, Self::BitwiseReduction { .. }) {
+            return vec_ty.n_bits() > 128;
+        }
+
         // Otherwise, defer to split/combine if this is a wider operation than natively supported.
         if vec_ty.n_bits() <= native_width {
             return false;
@@ -1602,6 +1643,7 @@ impl OpSig {
             | Self::Cvt { .. }
             | Self::Widen { .. }
             | Self::MaskReduce { .. }
+            | Self::BitwiseReduction { .. }
             | Self::MaskToBitmask => &["a"],
             Self::SwizzleDynWithinBlocks | Self::SwizzleDyn | Self::SwizzleDynPrecise => {
                 &["a", "indices"]
@@ -1630,7 +1672,10 @@ impl OpSig {
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
             | Self::MaskSet => &[],
-            Self::Unary | Self::Cvt { .. } | Self::MaskReduce { .. } => &["self"],
+            Self::Unary
+            | Self::Cvt { .. }
+            | Self::MaskReduce { .. }
+            | Self::BitwiseReduction { .. } => &["self"],
             Self::Widen { .. } => &[],
             Self::Narrow { .. } => &[],
             Self::SwizzleDynWithinBlocks | Self::SwizzleDyn | Self::SwizzleDynPrecise => {
@@ -1660,7 +1705,7 @@ impl OpSig {
                 let arg1 = &arg_names[1];
                 quote! { #arg1 }
             }
-            Self::Unary | Self::MaskReduce { .. } => {
+            Self::Unary | Self::MaskReduce { .. } | Self::BitwiseReduction { .. } => {
                 let arg0 = &arg_names[0];
                 quote! { #arg0 }
             }

@@ -874,6 +874,30 @@ impl Simd for Sse4_2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn reduce_and_i8x16(self, a: i8x16<Self>) -> i8 {
+        let mut reduced = a;
+        reduced = self.and_i8x16(reduced, self.slide_i8x16::<8>(reduced, reduced));
+        reduced = self.and_i8x16(reduced, self.slide_i8x16::<4>(reduced, reduced));
+        reduced = self.and_i8x16(reduced, self.slide_i8x16::<2>(reduced, reduced));
+        reduced[0] & reduced[1]
+    }
+    #[inline(always)]
+    fn reduce_or_i8x16(self, a: i8x16<Self>) -> i8 {
+        let mut reduced = a;
+        reduced = self.or_i8x16(reduced, self.slide_i8x16::<8>(reduced, reduced));
+        reduced = self.or_i8x16(reduced, self.slide_i8x16::<4>(reduced, reduced));
+        reduced = self.or_i8x16(reduced, self.slide_i8x16::<2>(reduced, reduced));
+        reduced[0] | reduced[1]
+    }
+    #[inline(always)]
+    fn reduce_xor_i8x16(self, a: i8x16<Self>) -> i8 {
+        let mut reduced = a;
+        reduced = self.xor_i8x16(reduced, self.slide_i8x16::<8>(reduced, reduced));
+        reduced = self.xor_i8x16(reduced, self.slide_i8x16::<4>(reduced, reduced));
+        reduced = self.xor_i8x16(reduced, self.slide_i8x16::<2>(reduced, reduced));
+        reduced[0] ^ reduced[1]
+    }
+    #[inline(always)]
     fn not_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
         a ^ !0
     }
@@ -1338,6 +1362,30 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn reduce_and_u8x16(self, a: u8x16<Self>) -> u8 {
+        let mut reduced = a;
+        reduced = self.and_u8x16(reduced, self.slide_u8x16::<8>(reduced, reduced));
+        reduced = self.and_u8x16(reduced, self.slide_u8x16::<4>(reduced, reduced));
+        reduced = self.and_u8x16(reduced, self.slide_u8x16::<2>(reduced, reduced));
+        reduced[0] & reduced[1]
+    }
+    #[inline(always)]
+    fn reduce_or_u8x16(self, a: u8x16<Self>) -> u8 {
+        let mut reduced = a;
+        reduced = self.or_u8x16(reduced, self.slide_u8x16::<8>(reduced, reduced));
+        reduced = self.or_u8x16(reduced, self.slide_u8x16::<4>(reduced, reduced));
+        reduced = self.or_u8x16(reduced, self.slide_u8x16::<2>(reduced, reduced));
+        reduced[0] | reduced[1]
+    }
+    #[inline(always)]
+    fn reduce_xor_u8x16(self, a: u8x16<Self>) -> u8 {
+        let mut reduced = a;
+        reduced = self.xor_u8x16(reduced, self.slide_u8x16::<8>(reduced, reduced));
+        reduced = self.xor_u8x16(reduced, self.slide_u8x16::<4>(reduced, reduced));
+        reduced = self.xor_u8x16(reduced, self.slide_u8x16::<2>(reduced, reduced));
+        reduced[0] ^ reduced[1]
     }
     #[inline(always)]
     fn not_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
@@ -1906,6 +1954,27 @@ impl Simd for Sse4_2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn reduce_and_i16x8(self, a: i16x8<Self>) -> i16 {
+        let mut reduced = a;
+        reduced = self.and_i16x8(reduced, self.slide_i16x8::<4>(reduced, reduced));
+        reduced = self.and_i16x8(reduced, self.slide_i16x8::<2>(reduced, reduced));
+        reduced[0] & reduced[1]
+    }
+    #[inline(always)]
+    fn reduce_or_i16x8(self, a: i16x8<Self>) -> i16 {
+        let mut reduced = a;
+        reduced = self.or_i16x8(reduced, self.slide_i16x8::<4>(reduced, reduced));
+        reduced = self.or_i16x8(reduced, self.slide_i16x8::<2>(reduced, reduced));
+        reduced[0] | reduced[1]
+    }
+    #[inline(always)]
+    fn reduce_xor_i16x8(self, a: i16x8<Self>) -> i16 {
+        let mut reduced = a;
+        reduced = self.xor_i16x8(reduced, self.slide_i16x8::<4>(reduced, reduced));
+        reduced = self.xor_i16x8(reduced, self.slide_i16x8::<2>(reduced, reduced));
+        reduced[0] ^ reduced[1]
+    }
+    #[inline(always)]
     fn not_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
         a ^ !0
     }
@@ -2318,6 +2387,27 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn reduce_and_u16x8(self, a: u16x8<Self>) -> u16 {
+        let mut reduced = a;
+        reduced = self.and_u16x8(reduced, self.slide_u16x8::<4>(reduced, reduced));
+        reduced = self.and_u16x8(reduced, self.slide_u16x8::<2>(reduced, reduced));
+        reduced[0] & reduced[1]
+    }
+    #[inline(always)]
+    fn reduce_or_u16x8(self, a: u16x8<Self>) -> u16 {
+        let mut reduced = a;
+        reduced = self.or_u16x8(reduced, self.slide_u16x8::<4>(reduced, reduced));
+        reduced = self.or_u16x8(reduced, self.slide_u16x8::<2>(reduced, reduced));
+        reduced[0] | reduced[1]
+    }
+    #[inline(always)]
+    fn reduce_xor_u16x8(self, a: u16x8<Self>) -> u16 {
+        let mut reduced = a;
+        reduced = self.xor_u16x8(reduced, self.slide_u16x8::<4>(reduced, reduced));
+        reduced = self.xor_u16x8(reduced, self.slide_u16x8::<2>(reduced, reduced));
+        reduced[0] ^ reduced[1]
     }
     #[inline(always)]
     fn not_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
@@ -2896,6 +2986,24 @@ impl Simd for Sse4_2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn reduce_and_i32x4(self, a: i32x4<Self>) -> i32 {
+        let mut reduced = a;
+        reduced = self.and_i32x4(reduced, self.slide_i32x4::<2>(reduced, reduced));
+        reduced[0] & reduced[1]
+    }
+    #[inline(always)]
+    fn reduce_or_i32x4(self, a: i32x4<Self>) -> i32 {
+        let mut reduced = a;
+        reduced = self.or_i32x4(reduced, self.slide_i32x4::<2>(reduced, reduced));
+        reduced[0] | reduced[1]
+    }
+    #[inline(always)]
+    fn reduce_xor_i32x4(self, a: i32x4<Self>) -> i32 {
+        let mut reduced = a;
+        reduced = self.xor_i32x4(reduced, self.slide_i32x4::<2>(reduced, reduced));
+        reduced[0] ^ reduced[1]
+    }
+    #[inline(always)]
     fn not_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
         a ^ !0
     }
@@ -3298,6 +3406,24 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn reduce_and_u32x4(self, a: u32x4<Self>) -> u32 {
+        let mut reduced = a;
+        reduced = self.and_u32x4(reduced, self.slide_u32x4::<2>(reduced, reduced));
+        reduced[0] & reduced[1]
+    }
+    #[inline(always)]
+    fn reduce_or_u32x4(self, a: u32x4<Self>) -> u32 {
+        let mut reduced = a;
+        reduced = self.or_u32x4(reduced, self.slide_u32x4::<2>(reduced, reduced));
+        reduced[0] | reduced[1]
+    }
+    #[inline(always)]
+    fn reduce_xor_u32x4(self, a: u32x4<Self>) -> u32 {
+        let mut reduced = a;
+        reduced = self.xor_u32x4(reduced, self.slide_u32x4::<2>(reduced, reduced));
+        reduced[0] ^ reduced[1]
     }
     #[inline(always)]
     fn not_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
@@ -4398,6 +4524,21 @@ impl Simd for Sse4_2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn reduce_and_i64x2(self, a: i64x2<Self>) -> i64 {
+        let reduced = a;
+        reduced[0] & reduced[1]
+    }
+    #[inline(always)]
+    fn reduce_or_i64x2(self, a: i64x2<Self>) -> i64 {
+        let reduced = a;
+        reduced[0] | reduced[1]
+    }
+    #[inline(always)]
+    fn reduce_xor_i64x2(self, a: i64x2<Self>) -> i64 {
+        let reduced = a;
+        reduced[0] ^ reduced[1]
+    }
+    #[inline(always)]
     fn not_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
         a ^ !0
     }
@@ -4768,6 +4909,21 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn reduce_and_u64x2(self, a: u64x2<Self>) -> u64 {
+        let reduced = a;
+        reduced[0] & reduced[1]
+    }
+    #[inline(always)]
+    fn reduce_or_u64x2(self, a: u64x2<Self>) -> u64 {
+        let reduced = a;
+        reduced[0] | reduced[1]
+    }
+    #[inline(always)]
+    fn reduce_xor_u64x2(self, a: u64x2<Self>) -> u64 {
+        let reduced = a;
+        reduced[0] ^ reduced[1]
     }
     #[inline(always)]
     fn not_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {

@@ -6,8 +6,9 @@ use quote::{format_ident, quote};
 
 use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
-    fallback_method, generic_block_combine, generic_block_split, generic_mask_set, generic_op_name,
-    integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
+    bitwise_reduction_method, fallback_method, generic_block_combine, generic_block_split,
+    generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
+    recursive_swizzle_dyn_precise_body,
 };
 use crate::level::Level;
 use crate::ops::{NarrowingMode, Op, Quantifier, SlideGranularity, relaxed_narrow_method};
@@ -780,6 +781,9 @@ impl Level for WasmSimd128 {
                         #negate #intrinsic(a.into())
                     }
                 }
+            }
+            OpSig::BitwiseReduction { op: combine_op } => {
+                bitwise_reduction_method(op, vec_ty, combine_op)
             }
             OpSig::MaskFromBitmask => mask_from_bitmask(method_sig, vec_ty),
             OpSig::MaskToBitmask => mask_to_bitmask(method_sig, vec_ty),

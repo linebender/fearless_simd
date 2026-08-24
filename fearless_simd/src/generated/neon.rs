@@ -599,6 +599,54 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn reduce_and_i8x16(self, a: i8x16<Self>) -> i8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>) -> i8 {
+                let bits = vreinterpretq_u64_s8(a.into());
+                let halves = vand_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced &= reduced >> 32;
+                reduced &= reduced >> 16;
+                reduced &= reduced >> 8;
+                reduced as i8
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_or_i8x16(self, a: i8x16<Self>) -> i8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>) -> i8 {
+                let bits = vreinterpretq_u64_s8(a.into());
+                let halves = vorr_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced |= reduced >> 32;
+                reduced |= reduced >> 16;
+                reduced |= reduced >> 8;
+                reduced as i8
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_xor_i8x16(self, a: i8x16<Self>) -> i8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>) -> i8 {
+                let bits = vreinterpretq_u64_s8(a.into());
+                let halves = veor_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced ^= reduced >> 32;
+                reduced ^= reduced >> 16;
+                reduced ^= reduced >> 8;
+                reduced as i8
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn not_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -940,6 +988,54 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn reduce_and_u8x16(self, a: u8x16<Self>) -> u8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>) -> u8 {
+                let bits = vreinterpretq_u64_u8(a.into());
+                let halves = vand_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced &= reduced >> 32;
+                reduced &= reduced >> 16;
+                reduced &= reduced >> 8;
+                reduced as u8
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_or_u8x16(self, a: u8x16<Self>) -> u8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>) -> u8 {
+                let bits = vreinterpretq_u64_u8(a.into());
+                let halves = vorr_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced |= reduced >> 32;
+                reduced |= reduced >> 16;
+                reduced |= reduced >> 8;
+                reduced as u8
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_xor_u8x16(self, a: u8x16<Self>) -> u8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>) -> u8 {
+                let bits = vreinterpretq_u64_u8(a.into());
+                let halves = veor_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced ^= reduced >> 32;
+                reduced ^= reduced >> 16;
+                reduced ^= reduced >> 8;
+                reduced as u8
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn not_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
@@ -1419,6 +1515,51 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn reduce_and_i16x8(self, a: i16x8<Self>) -> i16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>) -> i16 {
+                let bits = vreinterpretq_u64_s16(a.into());
+                let halves = vand_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced &= reduced >> 32;
+                reduced &= reduced >> 16;
+                reduced as i16
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_or_i16x8(self, a: i16x8<Self>) -> i16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>) -> i16 {
+                let bits = vreinterpretq_u64_s16(a.into());
+                let halves = vorr_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced |= reduced >> 32;
+                reduced |= reduced >> 16;
+                reduced as i16
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_xor_i16x8(self, a: i16x8<Self>) -> i16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>) -> i16 {
+                let bits = vreinterpretq_u64_s16(a.into());
+                let halves = veor_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced ^= reduced >> 32;
+                reduced ^= reduced >> 16;
+                reduced as i16
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn not_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1759,6 +1900,51 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn reduce_and_u16x8(self, a: u16x8<Self>) -> u16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>) -> u16 {
+                let bits = vreinterpretq_u64_u16(a.into());
+                let halves = vand_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced &= reduced >> 32;
+                reduced &= reduced >> 16;
+                reduced as u16
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_or_u16x8(self, a: u16x8<Self>) -> u16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>) -> u16 {
+                let bits = vreinterpretq_u64_u16(a.into());
+                let halves = vorr_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced |= reduced >> 32;
+                reduced |= reduced >> 16;
+                reduced as u16
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_xor_u16x8(self, a: u16x8<Self>) -> u16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>) -> u16 {
+                let bits = vreinterpretq_u64_u16(a.into());
+                let halves = veor_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced ^= reduced >> 32;
+                reduced ^= reduced >> 16;
+                reduced as u16
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn not_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
@@ -2261,6 +2447,48 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn reduce_and_i32x4(self, a: i32x4<Self>) -> i32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>) -> i32 {
+                let bits = vreinterpretq_u64_s32(a.into());
+                let halves = vand_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced &= reduced >> 32;
+                reduced as i32
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_or_i32x4(self, a: i32x4<Self>) -> i32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>) -> i32 {
+                let bits = vreinterpretq_u64_s32(a.into());
+                let halves = vorr_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced |= reduced >> 32;
+                reduced as i32
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_xor_i32x4(self, a: i32x4<Self>) -> i32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>) -> i32 {
+                let bits = vreinterpretq_u64_s32(a.into());
+                let halves = veor_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced ^= reduced >> 32;
+                reduced as i32
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn not_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2611,6 +2839,48 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn reduce_and_u32x4(self, a: u32x4<Self>) -> u32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>) -> u32 {
+                let bits = vreinterpretq_u64_u32(a.into());
+                let halves = vand_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced &= reduced >> 32;
+                reduced as u32
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_or_u32x4(self, a: u32x4<Self>) -> u32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>) -> u32 {
+                let bits = vreinterpretq_u64_u32(a.into());
+                let halves = vorr_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced |= reduced >> 32;
+                reduced as u32
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_xor_u32x4(self, a: u32x4<Self>) -> u32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>) -> u32 {
+                let bits = vreinterpretq_u64_u32(a.into());
+                let halves = veor_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let mut reduced = vget_lane_u64::<0>(halves);
+                reduced ^= reduced >> 32;
+                reduced as u32
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn not_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
@@ -3529,6 +3799,45 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn reduce_and_i64x2(self, a: i64x2<Self>) -> i64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i64x2<Neon>) -> i64 {
+                let bits = vreinterpretq_u64_s64(a.into());
+                let halves = vand_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let reduced = vget_lane_u64::<0>(halves);
+                reduced as i64
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_or_i64x2(self, a: i64x2<Self>) -> i64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i64x2<Neon>) -> i64 {
+                let bits = vreinterpretq_u64_s64(a.into());
+                let halves = vorr_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let reduced = vget_lane_u64::<0>(halves);
+                reduced as i64
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_xor_i64x2(self, a: i64x2<Self>) -> i64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i64x2<Neon>) -> i64 {
+                let bits = vreinterpretq_u64_s64(a.into());
+                let halves = veor_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let reduced = vget_lane_u64::<0>(halves);
+                reduced as i64
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn not_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3860,6 +4169,45 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn reduce_and_u64x2(self, a: u64x2<Self>) -> u64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u64x2<Neon>) -> u64 {
+                let bits = a.into();
+                let halves = vand_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let reduced = vget_lane_u64::<0>(halves);
+                reduced as u64
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_or_u64x2(self, a: u64x2<Self>) -> u64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u64x2<Neon>) -> u64 {
+                let bits = a.into();
+                let halves = vorr_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let reduced = vget_lane_u64::<0>(halves);
+                reduced as u64
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_xor_u64x2(self, a: u64x2<Self>) -> u64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u64x2<Neon>) -> u64 {
+                let bits = a.into();
+                let halves = veor_u64(vget_low_u64(bits), vget_high_u64(bits));
+                let reduced = vget_lane_u64::<0>(halves);
+                reduced as u64
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn not_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {

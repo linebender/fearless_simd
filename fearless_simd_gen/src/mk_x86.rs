@@ -7,8 +7,8 @@ use crate::arch::x86::{
     unpack_intrinsic,
 };
 use crate::generic::{
-    fallback_method, generic_block_combine, generic_block_split, generic_mask_from_bitmask,
-    generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
+    bitwise_reduction_method, fallback_method, generic_block_combine, generic_block_split,
+    generic_mask_from_bitmask, generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
     recursive_swizzle_dyn_precise_body,
 };
 use crate::level::Level;
@@ -341,6 +341,9 @@ impl Level for X86 {
                 quantifier,
                 condition,
             } => self.handle_mask_reduce(op, vec_ty, quantifier, condition),
+            OpSig::BitwiseReduction { op: combine_op } => {
+                bitwise_reduction_method(op, vec_ty, combine_op)
+            }
             OpSig::MaskFromBitmask => self.handle_mask_from_bitmask(op, vec_ty),
             OpSig::MaskToBitmask => self.handle_mask_to_bitmask(op, vec_ty),
             OpSig::MaskSet if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask => {
