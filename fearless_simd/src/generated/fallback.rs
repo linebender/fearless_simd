@@ -607,7 +607,25 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn count_zeros_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        self.count_ones_i8x16(self.not_i8x16(a))
+        [
+            i8::try_from(a[0usize].count_zeros()).unwrap(),
+            i8::try_from(a[1usize].count_zeros()).unwrap(),
+            i8::try_from(a[2usize].count_zeros()).unwrap(),
+            i8::try_from(a[3usize].count_zeros()).unwrap(),
+            i8::try_from(a[4usize].count_zeros()).unwrap(),
+            i8::try_from(a[5usize].count_zeros()).unwrap(),
+            i8::try_from(a[6usize].count_zeros()).unwrap(),
+            i8::try_from(a[7usize].count_zeros()).unwrap(),
+            i8::try_from(a[8usize].count_zeros()).unwrap(),
+            i8::try_from(a[9usize].count_zeros()).unwrap(),
+            i8::try_from(a[10usize].count_zeros()).unwrap(),
+            i8::try_from(a[11usize].count_zeros()).unwrap(),
+            i8::try_from(a[12usize].count_zeros()).unwrap(),
+            i8::try_from(a[13usize].count_zeros()).unwrap(),
+            i8::try_from(a[14usize].count_zeros()).unwrap(),
+            i8::try_from(a[15usize].count_zeros()).unwrap(),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -1430,7 +1448,25 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn count_zeros_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        self.count_ones_u8x16(self.not_u8x16(a))
+        [
+            u8::try_from(a[0usize].count_zeros()).unwrap(),
+            u8::try_from(a[1usize].count_zeros()).unwrap(),
+            u8::try_from(a[2usize].count_zeros()).unwrap(),
+            u8::try_from(a[3usize].count_zeros()).unwrap(),
+            u8::try_from(a[4usize].count_zeros()).unwrap(),
+            u8::try_from(a[5usize].count_zeros()).unwrap(),
+            u8::try_from(a[6usize].count_zeros()).unwrap(),
+            u8::try_from(a[7usize].count_zeros()).unwrap(),
+            u8::try_from(a[8usize].count_zeros()).unwrap(),
+            u8::try_from(a[9usize].count_zeros()).unwrap(),
+            u8::try_from(a[10usize].count_zeros()).unwrap(),
+            u8::try_from(a[11usize].count_zeros()).unwrap(),
+            u8::try_from(a[12usize].count_zeros()).unwrap(),
+            u8::try_from(a[13usize].count_zeros()).unwrap(),
+            u8::try_from(a[14usize].count_zeros()).unwrap(),
+            u8::try_from(a[15usize].count_zeros()).unwrap(),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -2463,7 +2499,17 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn count_zeros_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
-        self.count_ones_i16x8(self.not_i16x8(a))
+        [
+            i16::try_from(a[0usize].count_zeros()).unwrap(),
+            i16::try_from(a[1usize].count_zeros()).unwrap(),
+            i16::try_from(a[2usize].count_zeros()).unwrap(),
+            i16::try_from(a[3usize].count_zeros()).unwrap(),
+            i16::try_from(a[4usize].count_zeros()).unwrap(),
+            i16::try_from(a[5usize].count_zeros()).unwrap(),
+            i16::try_from(a[6usize].count_zeros()).unwrap(),
+            i16::try_from(a[7usize].count_zeros()).unwrap(),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -2983,7 +3029,17 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn count_zeros_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
-        self.count_ones_u16x8(self.not_u16x8(a))
+        [
+            u16::try_from(a[0usize].count_zeros()).unwrap(),
+            u16::try_from(a[1usize].count_zeros()).unwrap(),
+            u16::try_from(a[2usize].count_zeros()).unwrap(),
+            u16::try_from(a[3usize].count_zeros()).unwrap(),
+            u16::try_from(a[4usize].count_zeros()).unwrap(),
+            u16::try_from(a[5usize].count_zeros()).unwrap(),
+            u16::try_from(a[6usize].count_zeros()).unwrap(),
+            u16::try_from(a[7usize].count_zeros()).unwrap(),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -3700,7 +3756,13 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn count_zeros_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
-        self.count_ones_i32x4(self.not_i32x4(a))
+        [
+            a[0usize].count_zeros().cast_signed(),
+            a[1usize].count_zeros().cast_signed(),
+            a[2usize].count_zeros().cast_signed(),
+            a[3usize].count_zeros().cast_signed(),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -4042,7 +4104,13 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn count_zeros_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
-        self.count_ones_u32x4(self.not_u32x4(a))
+        [
+            a[0usize].count_zeros(),
+            a[1usize].count_zeros(),
+            a[2usize].count_zeros(),
+            a[3usize].count_zeros(),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -4795,7 +4863,11 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn count_zeros_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
-        self.count_ones_i64x2(self.not_i64x2(a))
+        [
+            i64::from(a[0usize].count_zeros()),
+            i64::from(a[1usize].count_zeros()),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -5054,7 +5126,11 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn count_zeros_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
-        self.count_ones_u64x2(self.not_u64x2(a))
+        [
+            u64::from(a[0usize].count_zeros()),
+            u64::from(a[1usize].count_zeros()),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
