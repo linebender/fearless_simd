@@ -190,6 +190,15 @@ impl Simd for Sse4_2 {
         unsafe { vectorize_sse4_2(f) }
     }
     #[inline(always)]
+    fn vectorize_inline<F: FnOnce() -> R, R>(self, f: F) -> R {
+        #[inline]
+        #[target_feature(enable = "fxsr,sse4.2,cmpxchg16b,popcnt")]
+        fn vectorize_inline_sse4_2<F: FnOnce() -> R, R>(f: F) -> R {
+            f()
+        }
+        unsafe { vectorize_inline_sse4_2(f) }
+    }
+    #[inline(always)]
     fn splat_f32x4(self, val: f32) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]

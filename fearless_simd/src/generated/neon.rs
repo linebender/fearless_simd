@@ -109,6 +109,15 @@ impl Simd for Neon {
         unsafe { vectorize_neon(f) }
     }
     #[inline(always)]
+    fn vectorize_inline<F: FnOnce() -> R, R>(self, f: F) -> R {
+        #[inline]
+        #[target_feature(enable = "neon")]
+        fn vectorize_inline_neon<F: FnOnce() -> R, R>(f: F) -> R {
+            f()
+        }
+        unsafe { vectorize_inline_neon(f) }
+    }
+    #[inline(always)]
     fn splat_f32x4(self, val: f32) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]

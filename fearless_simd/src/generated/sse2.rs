@@ -212,6 +212,15 @@ impl Simd for Sse2 {
         unsafe { vectorize_sse2(f) }
     }
     #[inline(always)]
+    fn vectorize_inline<F: FnOnce() -> R, R>(self, f: F) -> R {
+        #[inline]
+        #[target_feature(enable = "fxsr,sse,sse2")]
+        fn vectorize_inline_sse2<F: FnOnce() -> R, R>(f: F) -> R {
+            f()
+        }
+        unsafe { vectorize_inline_sse2(f) }
+    }
+    #[inline(always)]
     fn splat_f32x4(self, val: f32) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]

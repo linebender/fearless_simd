@@ -186,6 +186,48 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
             /// assert_eq!(values, [2, 4, 6, 8, 10]);
             /// ```
             fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R;
+
+            /// Call function with SIMD instructions enabled, without forcing [inlining](https://matklad.github.io/2021/07/09/inline-in-rust.html).
+            ///
+            /// `vectorize()` will set the correct `#[target_feature]` annotations for the SIMD level.
+            /// The provided function should be `#[inline(always)]`, otherwise it may not
+            /// be able to utilize the best SIMD instructions available.
+            /// `vectorize()` itself acts as the function boundary in machine code.
+            ///
+            /// This is useful when the SIMD implementation has already been selected and you want
+            /// to keep a SIMD-generic function outlined instead of forcing the entire function to
+            /// be inlined into its caller.
+            ///
+            /// # Example
+            ///
+            /// `double_u32s` is deliberately not marked `#[inline(always)]`. Instead, only its
+            /// closure is inlined into the target-feature-enabled boundary created by `vectorize()`.
+            ///
+            /// ```
+            /// use fearless_simd::{dispatch, prelude::*, Level};
+            ///
+            /// fn double_u32s<S: Simd>(simd: S, values: &mut [u32]) {
+            ///     simd.vectorize(
+            ///         #[inline(always)]
+            ///         || {
+            ///             let mut chunks = values.chunks_exact_mut(S::u32s::N);
+            ///             for chunk in &mut chunks {
+            ///                 let value = S::u32s::from_slice(simd, chunk);
+            ///                 (value * 2).store_slice(chunk);
+            ///             }
+            ///             for value in chunks.into_remainder() {
+            ///                 *value *= 2;
+            ///             }
+            ///         },
+            ///     );
+            /// }
+            ///
+            /// let mut values = [1, 2, 3, 4, 5];
+            /// let level = Level::new();
+            /// dispatch!(level, simd => double_u32s(simd, &mut values));
+            /// assert_eq!(values, [2, 4, 6, 8, 10]);
+            /// ```
+            fn vectorize_inline<F: FnOnce() -> R, R>(self, f: F) -> R;
             #( #methods )*
         }
     };
