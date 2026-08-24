@@ -98,12 +98,103 @@ fn cvt_i64_precise_f64x8<S: Simd>(simd: S) {
 }
 
 #[simd_test]
-#[ignore = "randomly checks 10 million arbitrary f64 bit patterns"]
+fn cvt_i64_precise_f64_all_exponents_and_special_values<S: Simd>(simd: S) {
+    simd.vectorize(
+        #[inline(always)]
+        || {
+            const FRACTIONS: [u64; 4] = [0, 1, 0x0005_5555_aaaa_aaaa, 0x000f_ffff_ffff_ffff];
+
+            // Cover every exponent with zero, minimal, alternating, and maximal fraction fields,
+            // for both signs. Besides every reconstruction shift, exponent 2047 supplies both
+            // infinities and signaling/quiet NaNs with different payloads.
+            for exponent in 0_u64..=2047 {
+                let positive = FRACTIONS.map(|fraction| f64::from_bits(exponent << 52 | fraction));
+                let expected_positive = positive.map(|value| value as i64);
+                let result_positive =
+                    f64x4::from_slice(simd, &positive).to_int_precise::<i64x4<_>>();
+                assert_eq!(
+                    *result_positive, expected_positive,
+                    "positive exponent field {exponent}",
+                );
+                let result_positive_x2 =
+                    f64x2::from_slice(simd, &positive[..2]).to_int_precise::<i64x2<_>>();
+                assert_eq!(
+                    *result_positive_x2,
+                    [expected_positive[0], expected_positive[1]],
+                    "positive x2 exponent field {exponent}",
+                );
+                let result_positive_x2_high =
+                    f64x2::from_slice(simd, &positive[2..]).to_int_precise::<i64x2<_>>();
+                assert_eq!(
+                    *result_positive_x2_high,
+                    [expected_positive[2], expected_positive[3]],
+                    "positive x2 high fractions, exponent field {exponent}",
+                );
+
+                let negative = FRACTIONS
+                    .map(|fraction| f64::from_bits(1_u64 << 63 | exponent << 52 | fraction));
+                let expected_negative = negative.map(|value| value as i64);
+                let result_negative =
+                    f64x4::from_slice(simd, &negative).to_int_precise::<i64x4<_>>();
+                assert_eq!(
+                    *result_negative, expected_negative,
+                    "negative exponent field {exponent}",
+                );
+                let result_negative_x2 =
+                    f64x2::from_slice(simd, &negative[..2]).to_int_precise::<i64x2<_>>();
+                assert_eq!(
+                    *result_negative_x2,
+                    [expected_negative[0], expected_negative[1]],
+                    "negative x2 exponent field {exponent}",
+                );
+                let result_negative_x2_high =
+                    f64x2::from_slice(simd, &negative[2..]).to_int_precise::<i64x2<_>>();
+                assert_eq!(
+                    *result_negative_x2_high,
+                    [expected_negative[2], expected_negative[3]],
+                    "negative x2 high fractions, exponent field {exponent}",
+                );
+            }
+
+            let boundary_bits = [
+                0xc3e0_0000_0000_0001,
+                0xc3e0_0000_0000_0000,
+                0xc3df_ffff_ffff_ffff,
+                0xbff0_0000_0000_0000,
+                0x43df_ffff_ffff_ffff,
+                0x43e0_0000_0000_0000,
+                0x43e0_0000_0000_0001,
+                0x7fef_ffff_ffff_ffff,
+                0xfff0_0000_0000_0000,
+                0x7ff0_0000_0000_0000,
+                0x7ff0_0000_0000_0001,
+                0xfff0_0000_0000_0001,
+                0x7ff8_0000_0000_0000,
+                0xfff8_0000_0000_0000,
+                0x7fff_ffff_ffff_ffff,
+                0xffff_ffff_ffff_ffff,
+            ];
+            for (group_index, bits) in boundary_bits.chunks_exact(8).enumerate() {
+                let values: [f64; 8] = core::array::from_fn(|lane| f64::from_bits(bits[lane]));
+                let expected = values.map(|value| value as i64);
+                let result = f64x8::from_slice(simd, &values).to_int_precise::<i64x8<_>>();
+                assert_eq!(*result, expected, "boundary/special x8 group {group_index}");
+            }
+        },
+    );
+}
+
+#[simd_test]
+#[ignore = "checks arbitrary bits plus randomized critical exponent fields"]
 // Run with: cargo test --release cvt_i64_precise_f64_random -- --ignored
 fn cvt_i64_precise_f64_random<S: Simd>(simd: S) {
     simd.vectorize(
         #[inline(always)]
         || {
+            const CRITICAL_EXPONENTS: [u64; 16] = [
+                0, 1, 1011, 1012, 1022, 1023, 1024, 1074, 1075, 1076, 1085, 1086, 1087, 1088, 2046,
+                2047,
+            ];
             let mut rng = fastrand::Rng::with_seed(0xa409_3822_299f_31d0);
 
             for iteration in 0..2_500_000 {
@@ -123,6 +214,28 @@ fn cvt_i64_precise_f64_random<S: Simd>(simd: S) {
                     *result_x2,
                     [expected[0], expected[1]],
                     "x2 iteration {iteration}",
+                );
+
+                let targeted: [f64; 4] = core::array::from_fn(|lane| {
+                    let exponent =
+                        CRITICAL_EXPONENTS[(iteration * 5 + lane) % CRITICAL_EXPONENTS.len()];
+                    let sign = if rng.bool() { 1_u64 << 63 } else { 0 };
+                    let fraction = rng.u64(..) & 0x000f_ffff_ffff_ffff;
+                    f64::from_bits(sign | exponent << 52 | fraction)
+                });
+                let expected_targeted = targeted.map(|value| value as i64);
+                let result_targeted =
+                    f64x4::from_slice(simd, &targeted).to_int_precise::<i64x4<_>>();
+                assert_eq!(
+                    *result_targeted, expected_targeted,
+                    "targeted x4 iteration {iteration}",
+                );
+                let result_targeted_x2 =
+                    f64x2::from_slice(simd, &targeted[..2]).to_int_precise::<i64x2<_>>();
+                assert_eq!(
+                    *result_targeted_x2,
+                    [expected_targeted[0], expected_targeted[1]],
+                    "targeted x2 iteration {iteration}",
                 );
             }
         },
