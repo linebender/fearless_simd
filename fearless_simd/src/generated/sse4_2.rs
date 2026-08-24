@@ -183,6 +183,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
+        #[inline]
         #[target_feature(enable = "fxsr,sse4.2,cmpxchg16b,popcnt")]
         fn vectorize_sse4_2<F: FnOnce() -> R, R>(f: F) -> R {
             f()
