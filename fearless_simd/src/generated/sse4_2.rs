@@ -181,7 +181,7 @@ impl Simd for Sse4_2 {
     fn level(self) -> Level {
         Level::Sse4_2(self)
     }
-    #[inline]
+    #[inline(always)]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
         #[target_feature(enable = "fxsr,sse4.2,cmpxchg16b,popcnt")]
         fn vectorize_sse4_2<F: FnOnce() -> R, R>(f: F) -> R {

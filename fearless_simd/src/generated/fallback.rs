@@ -190,7 +190,7 @@ impl Simd for Fallback {
         #[cfg(not(feature = "force_support_fallback"))]
         Level::baseline()
     }
-    #[inline]
+    #[inline(always)]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
         fn vectorize_inner<F: FnOnce() -> R, R>(f: F) -> R {
             f()

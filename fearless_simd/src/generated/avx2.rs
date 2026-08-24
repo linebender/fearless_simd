@@ -105,7 +105,7 @@ impl Simd for Avx2 {
     fn level(self) -> Level {
         Level::Avx2(self)
     }
-    #[inline]
+    #[inline(always)]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
         #[target_feature(
             enable = "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,fxsr,lzcnt,movbe,popcnt,xsave"

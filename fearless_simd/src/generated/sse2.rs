@@ -203,7 +203,7 @@ impl Simd for Sse2 {
     fn level(self) -> Level {
         Level::Sse2(self)
     }
-    #[inline]
+    #[inline(always)]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
         #[target_feature(enable = "fxsr,sse,sse2")]
         fn vectorize_sse2<F: FnOnce() -> R, R>(f: F) -> R {
