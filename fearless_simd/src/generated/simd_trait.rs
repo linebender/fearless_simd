@@ -8473,6 +8473,81 @@ pub trait SimdInt<S: Simd>:
     fn to_float<T: SimdCvtFloat<Self>>(self) -> T {
         T::float_from(self)
     }
+    #[doc = r" Returns the cumulative bitwise AND across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_and(self) -> Self::Element {
+        let padding = Self::splat(self.witness(), !Self::Element::default());
+        let mut reduced = self;
+        if Self::N > 32 {
+            reduced &= reduced.slide::<32>(padding);
+        }
+        if Self::N > 16 {
+            reduced &= reduced.slide::<16>(padding);
+        }
+        if Self::N > 8 {
+            reduced &= reduced.slide::<8>(padding);
+        }
+        if Self::N > 4 {
+            reduced &= reduced.slide::<4>(padding);
+        }
+        if Self::N > 2 {
+            reduced &= reduced.slide::<2>(padding);
+        }
+        if Self::N > 1 {
+            reduced &= reduced.slide::<1>(padding);
+        }
+        reduced[0]
+    }
+    #[doc = r" Returns the cumulative bitwise OR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_or(self) -> Self::Element {
+        let padding = Self::splat(self.witness(), Self::Element::default());
+        let mut reduced = self;
+        if Self::N > 32 {
+            reduced |= reduced.slide::<32>(padding);
+        }
+        if Self::N > 16 {
+            reduced |= reduced.slide::<16>(padding);
+        }
+        if Self::N > 8 {
+            reduced |= reduced.slide::<8>(padding);
+        }
+        if Self::N > 4 {
+            reduced |= reduced.slide::<4>(padding);
+        }
+        if Self::N > 2 {
+            reduced |= reduced.slide::<2>(padding);
+        }
+        if Self::N > 1 {
+            reduced |= reduced.slide::<1>(padding);
+        }
+        reduced[0]
+    }
+    #[doc = r" Returns the cumulative bitwise XOR across the elements of this vector."]
+    #[inline(always)]
+    fn reduce_xor(self) -> Self::Element {
+        let padding = Self::splat(self.witness(), Self::Element::default());
+        let mut reduced = self;
+        if Self::N > 32 {
+            reduced ^= reduced.slide::<32>(padding);
+        }
+        if Self::N > 16 {
+            reduced ^= reduced.slide::<16>(padding);
+        }
+        if Self::N > 8 {
+            reduced ^= reduced.slide::<8>(padding);
+        }
+        if Self::N > 4 {
+            reduced ^= reduced.slide::<4>(padding);
+        }
+        if Self::N > 2 {
+            reduced ^= reduced.slide::<2>(padding);
+        }
+        if Self::N > 1 {
+            reduced ^= reduced.slide::<1>(padding);
+        }
+        reduced[0]
+    }
 }
 #[doc = r" Functionality implemented by SIMD masks."]
 #[doc = r""]
