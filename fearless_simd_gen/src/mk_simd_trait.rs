@@ -145,21 +145,25 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
             /// This SIMD token's feature level.
             fn level(self) -> Level;
 
-            /// Call function with SIMD instructions enabled, without forcing [inlining](https://matklad.github.io/2021/07/09/inline-in-rust.html).
+            /// Call a closure with the instructions for this SIMD level enabled.
             ///
-            /// `vectorize()` will set the correct `#[target_feature]` annotations for the SIMD level.
-            /// The provided function should be `#[inline(always)]`, otherwise it may not
-            /// be able to utilize the best SIMD instructions available.
-            /// `vectorize()` itself acts as the function boundary in machine code.
+            /// `vectorize()` establishes the correct `#[target_feature]` context. The provided
+            /// closure should be `#[inline(always)]` so that its body is incorporated into that
+            /// context and can use all instructions supported by this SIMD level.
             ///
-            /// This is useful when the SIMD implementation has already been selected and you want
-            /// to keep a SIMD-generic function outlined instead of forcing the entire function to
-            /// be inlined into its caller.
+            /// The small wrappers used by `vectorize()` are eligible for inlining when the caller
+            /// has a compatible target-feature context. A function containing the call does not
+            /// itself need an `#[inline(always)]` annotation; a target-feature boundary is retained
+            /// whenever one is required.
+            ///
+            /// The experimental [`#[simd]`](https://docs.rs/fearless_simd_macros/latest/fearless_simd_macros/attr.simd.html)
+            /// attribute from the separate `fearless_simd_macros` crate performs this wrapping
+            /// automatically. Calling `vectorize()` directly is the dependency-free equivalent.
             ///
             /// # Example
             ///
-            /// `double_u32s` is deliberately not marked `#[inline(always)]`. Instead, only its
-            /// closure is inlined into the target-feature-enabled boundary created by `vectorize()`.
+            /// `double_u32s` does not need to be marked `#[inline(always)]`; only the closure passed
+            /// to `vectorize()` does.
             ///
             /// ```
             /// use fearless_simd::{dispatch, prelude::*, Level};

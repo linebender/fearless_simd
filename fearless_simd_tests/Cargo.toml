@@ -9,20 +9,32 @@ description = "Safer and easier SIMD"
 readme = "README.md"
 rust-version.workspace = true
 publish = false
-# Tests are collected through tests/mod.rs; files beside it are modules, not separate integration crates.
+# Functional tests are collected through tests/mod.rs; files beside it are modules rather than
+# separate integration crates. The simd_ui harness is declared explicitly below.
 autotests = false
 
 [[test]]
 name = "tests"
 path = "tests/mod.rs"
 
+[[test]]
+name = "simd_ui"
+path = "tests/simd_ui.rs"
+
 [lints]
 workspace = true
 
 [dependencies]
+fearless_simd = { workspace = true, features = ["libm"] }
+fearless_simd_macros = { workspace = true }
+
+[dev-dependencies]
 fastrand = "2.5.0"
 fearless_simd = { workspace = true, features = [
   "std",
   "force_support_fallback",
 ] }
 fearless_simd_dev_macros = { workspace = true }
+
+[target.'cfg(all(target_arch = "x86_64", target_os = "linux"))'.dev-dependencies]
+trybuild = "1.0.120"

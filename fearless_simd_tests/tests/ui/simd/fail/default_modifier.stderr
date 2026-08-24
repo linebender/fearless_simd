@@ -1,0 +1,5 @@
+error: expected `fn`
+  --> tests/ui/simd/fail/default_modifier.rs:16:5
+   |
+16 |     default fn operation<S: fearless_simd::Simd>(simd: S) {
+   |     ^^^^^^^

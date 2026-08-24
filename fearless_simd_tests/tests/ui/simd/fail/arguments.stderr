@@ -1,0 +1,5 @@
+error: `#[simd]` does not accept arguments
+ --> tests/ui/simd/fail/arguments.rs:6:8
+  |
+6 | #[simd(token = simd)]
+  |        ^^^^^^^^^^^^

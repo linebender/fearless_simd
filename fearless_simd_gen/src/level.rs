@@ -160,12 +160,10 @@ pub(crate) trait Level {
                 unsafe { #vectorize(f) }
             }
         } else {
-            // This SIMD level doesn't do runtime feature detection/enabling, so we could just call the passed closure as-is.
-            //
-            // But the inner function is required to be annotated `#[inline(always)]`,
-            // so we wrap it in a function that isn't `#[inline(always)]`
-            // to let the compiler make its own inlining decisions, as opposed to forcing it to inline everything.
+            // This SIMD level doesn't require a target-feature transition. Keep the same
+            // inline-friendly helper shape as the target-feature-enabled implementations.
             quote! {
+                #[inline]
                 fn vectorize_inner<F: FnOnce() -> R, R>(f: F) -> R {
                     f()
                 }

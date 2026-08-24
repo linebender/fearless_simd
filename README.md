@@ -23,7 +23,11 @@ For now, prefer updating the package-level readmes, e.g. fearless_simd/README.md
 
 </div>
 
-Full details of how to use Fearless SIMD can be found in the [Fearless SIMD package's README](./fearless_simd/README.md).
+Full details of how to use Fearless SIMD can be found in the
+[core package's README](./fearless_simd/README.md). The optional, experimental `#[simd]`
+attribute is provided by the separately versioned
+[`fearless_simd_macros` companion package](./fearless_simd_macros/README.md); the core package does
+not depend on it.
 
 ## Motivation
 
@@ -33,9 +37,12 @@ The blog post [Safe SIMD in Rust, even on the inside] describes the design and h
 
 ## Repository Structure
 
-The only package which is published to crates.io from this repository is Fearless SIMD, which can be found in the `fearless_simd` folder.
-This folder also contains the examples.
-The other packages are as follows:
+This repository contains two packages published to crates.io:
+
+- `fearless_simd`: The zero-dependency core library, including the examples.
+- `fearless_simd_macros`: A separately versioned, experimental companion crate providing the optional `#[simd]` procedural macro.
+
+The remaining packages are development tools and tests:
 
 - `fearless_simd_gen`: A code generator, used to generate the low signal-to-noise parts of the Fearless SIMD crate.
 - `fearless_simd_tests`: Tests of functionality in Fearless SIMD, to validate that all implementations give the same and correct results.

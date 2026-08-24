@@ -11,7 +11,7 @@ env:
   RUST_MIN_VER: "1.89"
   # List of packages that will be checked with the minimum supported Rust version.
   # This should be limited to packages that are intended for publishing.
-  RUST_MIN_VER_PKGS: "-p fearless_simd"
+  RUST_MIN_VER_PKGS: "-p fearless_simd -p fearless_simd_macros"
   # List of features that depend on the standard library and will be excluded from no_std checks.
   FEATURES_DEPENDING_ON_STD: "std,default"
   # List of packages that can not target Wasm.
@@ -128,6 +128,9 @@ jobs:
       - name: cargo clippy (no_std)
         run: cargo hack clippy -p fearless_simd --locked --optional-deps --each-feature --ignore-unknown-features --features libm --exclude-features ${{ env.FEATURES_DEPENDING_ON_STD }} --target x86_64-unknown-none -- -D warnings
 
+      - name: cargo clippy (simd macro in no_std)
+        run: cargo clippy -p fearless_simd_tests --lib --locked --target x86_64-unknown-none --no-default-features -- -D warnings
+
       - name: cargo clippy
         run: cargo hack clippy --workspace --locked --optional-deps --each-feature --ignore-unknown-features --features std -- -D warnings
 
@@ -218,6 +221,10 @@ jobs:
 
       - name: cargo test
         run: cargo test --workspace --locked --all-features --no-fail-fast --target ${{ matrix.platform.target }}
+
+      - name: cargo test (simd macro UI)
+        if: matrix.platform.target == 'x86_64-unknown-linux-gnu'
+        run: cargo test -p fearless_simd_tests --locked --test simd_ui --target ${{ matrix.platform.target }} -- --ignored
 
   test-sde:
     name: cargo test in an emulator

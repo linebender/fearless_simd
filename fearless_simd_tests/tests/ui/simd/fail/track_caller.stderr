@@ -1,0 +1,5 @@
+error: `#[simd]` cannot preserve `#[track_caller]` through its closure
+ --> tests/ui/simd/fail/track_caller.rs:7:1
+  |
+7 | #[track_caller]
+  | ^^^^^^^^^^^^^^^

@@ -20,8 +20,10 @@
 /// as seen in [the examples](#examples).
 /// For clarity, it will only be executed once per execution of `dispatch`.
 ///
-/// To guarantee target-feature-specific code generation, any functions called within the operation should
-/// be `#[inline(always)]`.
+/// To guarantee target-feature-specific code generation, functions called within the operation
+/// should either establish their own context with [`Simd::vectorize`], use the experimental
+/// [`#[simd]`](https://docs.rs/fearless_simd_macros/latest/fearless_simd_macros/attr.simd.html)
+/// attribute, or be `#[inline(always)]` so that they are incorporated into this operation.
 ///
 /// Note that as an implementation detail of this macro, the operation will be executed inside a closure.
 /// This is what enables the target features to be enabled for the code inside the operation.
@@ -46,6 +48,7 @@
 /// [`Level`]: crate::Level
 /// [`Level::new()`]: crate::Level::new
 /// [`Simd`]: crate::Simd
+/// [`Simd::vectorize`]: crate::Simd::vectorize
 #[macro_export]
 macro_rules! dispatch {
     ($level:expr, $simd:pat => $op:expr) => {{

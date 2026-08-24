@@ -194,6 +194,7 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
+        #[inline]
         fn vectorize_inner<F: FnOnce() -> R, R>(f: F) -> R {
             f()
         }
