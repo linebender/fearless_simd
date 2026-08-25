@@ -56,6 +56,11 @@ pub(crate) trait Level {
     /// Generate a single operation's method on the `Simd` implementation.
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream;
 
+    /// Whether this backend should inherit an operation's portable `Simd` trait implementation.
+    fn should_use_trait_default(&self, op: &Op, _vec_ty: &VecType) -> bool {
+        op.sig.has_trait_default()
+    }
+
     /// Determine whether an operation should defer to the generic split/combine implementation.
     fn should_use_generic_op(&self, op: &Op, vec_ty: &VecType) -> bool {
         op.sig.should_use_generic_op(vec_ty, self.native_width())
@@ -139,6 +144,7 @@ pub(crate) trait Level {
             for op in ops_for_type(vec_ty) {
                 if op.sig.should_route_swizzle_through_bytes(vec_ty)
                     || op.reversed_compare_method().is_some()
+                    || self.should_use_trait_default(&op, vec_ty)
                     || self.should_use_generic_op(&op, vec_ty)
                 {
                     continue;
@@ -176,7 +182,6 @@ pub(crate) trait Level {
         };
 
         let level_body = self.make_level_body();
-
         let mut assoc_types = vec![];
         for (scalar, scalar_bits) in [
             (ScalarType::Float, 32),

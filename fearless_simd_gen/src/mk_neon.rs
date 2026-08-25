@@ -5,8 +5,8 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
-    count_zeros_method, fallback_method, generic_mask_set, generic_op_name,
-    integer_lane_mask_splat_arg,
+    composed_concat_swizzle_dyn, count_zeros_method, fallback_method, generic_mask_set,
+    generic_op_name, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{NarrowingMode, Op, SlideGranularity, relaxed_narrow_method};
@@ -633,6 +633,13 @@ impl Level for Neon {
                     }
                 })
             }
+            OpSig::ConcatSwizzleDyn => composed_concat_swizzle_dyn(op, vec_ty),
+            OpSig::Multishift
+            | OpSig::Compress { .. }
+            | OpSig::Expand { .. }
+            | OpSig::LoadExpand { .. } => {
+                unreachable!("portable byte operation should use its trait default")
+            }
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
@@ -706,6 +713,10 @@ impl Level for Neon {
         } else {
             op.sig.should_use_generic_op(vec_ty, self.native_width())
         }
+    }
+
+    fn should_use_trait_default(&self, op: &Op, _vec_ty: &VecType) -> bool {
+        op.sig.has_trait_default() && !matches!(op.sig, OpSig::ConcatSwizzleDyn)
     }
 }
 

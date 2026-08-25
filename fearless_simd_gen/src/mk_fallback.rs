@@ -753,6 +753,13 @@ impl Level for Fallback {
                     }
                 }
             }
+            OpSig::ConcatSwizzleDyn
+            | OpSig::Multishift
+            | OpSig::Compress { .. }
+            | OpSig::Expand { .. }
+            | OpSig::LoadExpand { .. } => {
+                unreachable!("operation should use its portable trait default")
+            }
         }
     }
 

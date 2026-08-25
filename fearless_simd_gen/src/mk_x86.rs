@@ -7,9 +7,9 @@ use crate::arch::x86::{
     unpack_intrinsic,
 };
 use crate::generic::{
-    count_zeros_method, fallback_method, generic_block_combine, generic_block_split,
-    generic_mask_from_bitmask, generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
-    recursive_swizzle_dyn_precise_body,
+    composed_concat_swizzle_dyn, count_zeros_method, fallback_method, generic_block_combine,
+    generic_block_split, generic_mask_from_bitmask, generic_mask_set, generic_op_name,
+    integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
 };
 use crate::level::Level;
 use crate::ops::{NarrowingMode, Op, OpSig, Quantifier, SlideGranularity, relaxed_narrow_method};
@@ -310,6 +310,19 @@ impl Level for X86 {
         }
     }
 
+    fn should_use_trait_default(&self, op: &Op, vec_ty: &VecType) -> bool {
+        if !op.sig.has_trait_default() {
+            return false;
+        }
+
+        !matches!(
+            (self, op.sig, vec_ty.len),
+            (Self::Avx512, _, _)
+                | (Self::Sse4_2, OpSig::ConcatSwizzleDyn, 16 | 32)
+                | (Self::Avx2, OpSig::ConcatSwizzleDyn, _)
+        )
+    }
+
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         let Op { sig, method, .. } = op;
         let method_sig = op.simd_trait_method_sig(vec_ty);
@@ -332,6 +345,14 @@ impl Level for X86 {
             OpSig::SwizzleDynWithinBlocks => self.handle_swizzle_dyn_within_blocks(op, vec_ty),
             OpSig::SwizzleDyn => self.handle_swizzle_dyn(op, vec_ty),
             OpSig::SwizzleDynPrecise => self.handle_swizzle_dyn_precise(op, vec_ty),
+            OpSig::ConcatSwizzleDyn if *self == Self::Avx512 => {
+                self.handle_avx512_byte_op(op, vec_ty)
+            }
+            OpSig::ConcatSwizzleDyn => composed_concat_swizzle_dyn(op, vec_ty),
+            OpSig::Multishift
+            | OpSig::Compress { .. }
+            | OpSig::Expand { .. }
+            | OpSig::LoadExpand { .. } => self.handle_avx512_byte_op(op, vec_ty),
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
@@ -1110,6 +1131,92 @@ impl X86 {
             Self::Sse2 => fallback_method(op, vec_ty), // slightly faster than going through the generic code
             Self::Sse4_2 | Self::Avx2 | Self::Avx512 => count_zeros_method(op, vec_ty),
         }
+    }
+
+    fn handle_avx512_byte_op(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        assert!(*self == Self::Avx512, "byte intrinsics require AVX-512");
+        assert_eq!(
+            vec_ty.scalar,
+            ScalarType::Unsigned,
+            "byte intrinsics require unsigned vectors"
+        );
+        assert_eq!(vec_ty.scalar_bits, 8, "byte intrinsics require 8-bit lanes");
+
+        let prefix = match vec_ty.len {
+            16 => "_mm",
+            32 => "_mm256",
+            64 => "_mm512",
+            _ => unreachable!(),
+        };
+        let mask_ty = match vec_ty.len {
+            16 => quote! { u16 },
+            32 => quote! { u32 },
+            64 => quote! { u64 },
+            _ => unreachable!(),
+        };
+        let mask_bits = avx512_mask_bits_expr(quote! { mask });
+
+        self.kernel_method(op, vec_ty, |token| match op.sig {
+            OpSig::ConcatSwizzleDyn => {
+                let intrinsic = format_ident!("{prefix}_permutex2var_epi8");
+                quote! {
+                    #intrinsic(low.into(), indices.into(), high.into()).simd_into(#token)
+                }
+            }
+            OpSig::Multishift => {
+                let intrinsic = format_ident!("{prefix}_multishift_epi64_epi8");
+                quote! {
+                    #intrinsic(bit_offsets.into(), data.into()).simd_into(#token)
+                }
+            }
+            OpSig::Compress { merge: false } => {
+                let intrinsic = format_ident!("{prefix}_maskz_compress_epi8");
+                quote! {
+                    #intrinsic(#mask_bits as #mask_ty, values.into()).simd_into(#token)
+                }
+            }
+            OpSig::Compress { merge: true } => {
+                let intrinsic = format_ident!("{prefix}_mask_compress_epi8");
+                quote! {
+                    #intrinsic(merge.into(), #mask_bits as #mask_ty, values.into()).simd_into(#token)
+                }
+            }
+            OpSig::Expand { merge: false } => {
+                let intrinsic = format_ident!("{prefix}_maskz_expand_epi8");
+                quote! {
+                    #intrinsic(#mask_bits as #mask_ty, values.into()).simd_into(#token)
+                }
+            }
+            OpSig::Expand { merge: true } => {
+                let intrinsic = format_ident!("{prefix}_mask_expand_epi8");
+                quote! {
+                    #intrinsic(merge.into(), #mask_bits as #mask_ty, values.into()).simd_into(#token)
+                }
+            }
+            OpSig::LoadExpand { merge: false } => {
+                let intrinsic = format_ident!("{prefix}_maskz_expandloadu_epi8");
+                quote! {
+                    unsafe {
+                        #intrinsic(#mask_bits as #mask_ty, source.as_ptr().cast::<i8>())
+                            .simd_into(#token)
+                    }
+                }
+            }
+            OpSig::LoadExpand { merge: true } => {
+                let intrinsic = format_ident!("{prefix}_mask_expandloadu_epi8");
+                quote! {
+                    unsafe {
+                        #intrinsic(
+                            merge.into(),
+                            #mask_bits as #mask_ty,
+                            source.as_ptr().cast::<i8>(),
+                        )
+                        .simd_into(#token)
+                    }
+                }
+            }
+            _ => unreachable!(),
+        })
     }
 
     pub(crate) fn handle_splat(&self, op: Op, vec_ty: &VecType) -> TokenStream {

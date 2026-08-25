@@ -39,7 +39,7 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
                     #[inline(always)]
                     #method
                 });
-            } else if op.sig.should_use_generic_op(vec_ty, 128) {
+            } else if op.sig.has_trait_default() || op.sig.should_use_generic_op(vec_ty, 128) {
                 let method = generic_op(&op, vec_ty);
                 methods.extend(quote! {
                     #[doc = #doc]

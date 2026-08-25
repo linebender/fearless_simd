@@ -14,6 +14,7 @@ You can find its changes [documented below](#070-2026-08-11).
 ### Added
 
 - Added lane-wise `count_ones` and `count_zeros` operations for all integer vector types and backends.
+- Added portable concatenated byte swizzles, per-64-bit-lane byte multishifts, typed-mask byte compression and expansion, and safe typed-mask load-expansion operations from fixed-size source arrays for 128-, 256-, and 512-bit vectors. Zero-filled and explicit merge forms are provided where applicable. Ice Lake-class AVX-512 uses native VBMI/VBMI2 instructions; every other backend provides the same semantics through portable fallbacks.
 - Added `mul_add_precise` and `mul_sub_precise` for floating-point vectors. They guarantee the infinite-precision product-plus-add rounded once, including on SIMD levels without hardware fused multiply-add instructions. They are not susceptible to the [bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library, `std::simd` and musl libc that causes incorrect rounding for subnormal results. SSE4.2 gets SIMD emulation of these operations for better performance. ([#323][], [#324][] by [@Shnatsel][])
 - Documented the storage representation of the SIMD vector types. The documented representation will not change without a semver major version change.
 

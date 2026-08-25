@@ -1685,6 +1685,154 @@ impl Simd for Avx512 {
         kernel(self, a, b, c)
     }
     #[inline(always)]
+    fn concat_swizzle_dyn_u8x16(
+        self,
+        low: u8x16<Self>,
+        high: u8x16<Self>,
+        indices: u8x16<Self>,
+    ) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                low: u8x16<Avx512>,
+                high: u8x16<Avx512>,
+                indices: u8x16<Avx512>,
+            ) -> u8x16<Avx512> {
+                _mm_permutex2var_epi8(low.into(), indices.into(), high.into()).simd_into(token)
+            }
+        );
+        kernel(self, low, high, indices)
+    }
+    #[inline(always)]
+    fn multishift_u8x16(self, data: u64x2<Self>, bit_offsets: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                data: u64x2<Avx512>,
+                bit_offsets: u8x16<Avx512>,
+            ) -> u8x16<Avx512> {
+                _mm_multishift_epi64_epi8(bit_offsets.into(), data.into()).simd_into(token)
+            }
+        );
+        kernel(self, data, bit_offsets)
+    }
+    #[inline(always)]
+    fn compress_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                values: u8x16<Avx512>,
+                mask: mask8x16<Avx512>,
+            ) -> u8x16<Avx512> {
+                _mm_maskz_compress_epi8(u64::from((mask).val) as u16, values.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, values, mask)
+    }
+    #[inline(always)]
+    fn compress_merge_u8x16(
+        self,
+        values: u8x16<Self>,
+        mask: mask8x16<Self>,
+        merge: u8x16<Self>,
+    ) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                values: u8x16<Avx512>,
+                mask: mask8x16<Avx512>,
+                merge: u8x16<Avx512>,
+            ) -> u8x16<Avx512> {
+                _mm_mask_compress_epi8(merge.into(), u64::from((mask).val) as u16, values.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, values, mask, merge)
+    }
+    #[inline(always)]
+    fn expand_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                values: u8x16<Avx512>,
+                mask: mask8x16<Avx512>,
+            ) -> u8x16<Avx512> {
+                _mm_maskz_expand_epi8(u64::from((mask).val) as u16, values.into()).simd_into(token)
+            }
+        );
+        kernel(self, values, mask)
+    }
+    #[inline(always)]
+    fn expand_merge_u8x16(
+        self,
+        values: u8x16<Self>,
+        mask: mask8x16<Self>,
+        merge: u8x16<Self>,
+    ) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                values: u8x16<Avx512>,
+                mask: mask8x16<Avx512>,
+                merge: u8x16<Avx512>,
+            ) -> u8x16<Avx512> {
+                _mm_mask_expand_epi8(merge.into(), u64::from((mask).val) as u16, values.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, values, mask, merge)
+    }
+    #[inline(always)]
+    fn load_expand_u8x16(self, source: &[u8; 16], mask: mask8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, source: &[u8; 16], mask: mask8x16<Avx512>) -> u8x16<Avx512> {
+                unsafe {
+                    _mm_maskz_expandloadu_epi8(
+                        u64::from((mask).val) as u16,
+                        source.as_ptr().cast::<i8>(),
+                    )
+                    .simd_into(token)
+                }
+            }
+        );
+        kernel(self, source, mask)
+    }
+    #[inline(always)]
+    fn load_expand_merge_u8x16(
+        self,
+        source: &[u8; 16],
+        mask: mask8x16<Self>,
+        merge: u8x16<Self>,
+    ) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                source: &[u8; 16],
+                mask: mask8x16<Avx512>,
+                merge: u8x16<Avx512>,
+            ) -> u8x16<Avx512> {
+                unsafe {
+                    _mm_mask_expandloadu_epi8(
+                        merge.into(),
+                        u64::from((mask).val) as u16,
+                        source.as_ptr().cast::<i8>(),
+                    )
+                    .simd_into(token)
+                }
+            }
+        );
+        kernel(self, source, mask, merge)
+    }
+    #[inline(always)]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6611,6 +6759,155 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
+    }
+    #[inline(always)]
+    fn concat_swizzle_dyn_u8x32(
+        self,
+        low: u8x32<Self>,
+        high: u8x32<Self>,
+        indices: u8x32<Self>,
+    ) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                low: u8x32<Avx512>,
+                high: u8x32<Avx512>,
+                indices: u8x32<Avx512>,
+            ) -> u8x32<Avx512> {
+                _mm256_permutex2var_epi8(low.into(), indices.into(), high.into()).simd_into(token)
+            }
+        );
+        kernel(self, low, high, indices)
+    }
+    #[inline(always)]
+    fn multishift_u8x32(self, data: u64x4<Self>, bit_offsets: u8x32<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                data: u64x4<Avx512>,
+                bit_offsets: u8x32<Avx512>,
+            ) -> u8x32<Avx512> {
+                _mm256_multishift_epi64_epi8(bit_offsets.into(), data.into()).simd_into(token)
+            }
+        );
+        kernel(self, data, bit_offsets)
+    }
+    #[inline(always)]
+    fn compress_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                values: u8x32<Avx512>,
+                mask: mask8x32<Avx512>,
+            ) -> u8x32<Avx512> {
+                _mm256_maskz_compress_epi8(u64::from((mask).val) as u32, values.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, values, mask)
+    }
+    #[inline(always)]
+    fn compress_merge_u8x32(
+        self,
+        values: u8x32<Self>,
+        mask: mask8x32<Self>,
+        merge: u8x32<Self>,
+    ) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                values: u8x32<Avx512>,
+                mask: mask8x32<Avx512>,
+                merge: u8x32<Avx512>,
+            ) -> u8x32<Avx512> {
+                _mm256_mask_compress_epi8(merge.into(), u64::from((mask).val) as u32, values.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, values, mask, merge)
+    }
+    #[inline(always)]
+    fn expand_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                values: u8x32<Avx512>,
+                mask: mask8x32<Avx512>,
+            ) -> u8x32<Avx512> {
+                _mm256_maskz_expand_epi8(u64::from((mask).val) as u32, values.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, values, mask)
+    }
+    #[inline(always)]
+    fn expand_merge_u8x32(
+        self,
+        values: u8x32<Self>,
+        mask: mask8x32<Self>,
+        merge: u8x32<Self>,
+    ) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                values: u8x32<Avx512>,
+                mask: mask8x32<Avx512>,
+                merge: u8x32<Avx512>,
+            ) -> u8x32<Avx512> {
+                _mm256_mask_expand_epi8(merge.into(), u64::from((mask).val) as u32, values.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, values, mask, merge)
+    }
+    #[inline(always)]
+    fn load_expand_u8x32(self, source: &[u8; 32], mask: mask8x32<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, source: &[u8; 32], mask: mask8x32<Avx512>) -> u8x32<Avx512> {
+                unsafe {
+                    _mm256_maskz_expandloadu_epi8(
+                        u64::from((mask).val) as u32,
+                        source.as_ptr().cast::<i8>(),
+                    )
+                    .simd_into(token)
+                }
+            }
+        );
+        kernel(self, source, mask)
+    }
+    #[inline(always)]
+    fn load_expand_merge_u8x32(
+        self,
+        source: &[u8; 32],
+        mask: mask8x32<Self>,
+        merge: u8x32<Self>,
+    ) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                source: &[u8; 32],
+                mask: mask8x32<Avx512>,
+                merge: u8x32<Avx512>,
+            ) -> u8x32<Avx512> {
+                unsafe {
+                    _mm256_mask_expandloadu_epi8(
+                        merge.into(),
+                        u64::from((mask).val) as u32,
+                        source.as_ptr().cast::<i8>(),
+                    )
+                    .simd_into(token)
+                }
+            }
+        );
+        kernel(self, source, mask, merge)
     }
     #[inline(always)]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self> {
@@ -11841,6 +12138,155 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b, c)
+    }
+    #[inline(always)]
+    fn concat_swizzle_dyn_u8x64(
+        self,
+        low: u8x64<Self>,
+        high: u8x64<Self>,
+        indices: u8x64<Self>,
+    ) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                low: u8x64<Avx512>,
+                high: u8x64<Avx512>,
+                indices: u8x64<Avx512>,
+            ) -> u8x64<Avx512> {
+                _mm512_permutex2var_epi8(low.into(), indices.into(), high.into()).simd_into(token)
+            }
+        );
+        kernel(self, low, high, indices)
+    }
+    #[inline(always)]
+    fn multishift_u8x64(self, data: u64x8<Self>, bit_offsets: u8x64<Self>) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                data: u64x8<Avx512>,
+                bit_offsets: u8x64<Avx512>,
+            ) -> u8x64<Avx512> {
+                _mm512_multishift_epi64_epi8(bit_offsets.into(), data.into()).simd_into(token)
+            }
+        );
+        kernel(self, data, bit_offsets)
+    }
+    #[inline(always)]
+    fn compress_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                values: u8x64<Avx512>,
+                mask: mask8x64<Avx512>,
+            ) -> u8x64<Avx512> {
+                _mm512_maskz_compress_epi8(u64::from((mask).val) as u64, values.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, values, mask)
+    }
+    #[inline(always)]
+    fn compress_merge_u8x64(
+        self,
+        values: u8x64<Self>,
+        mask: mask8x64<Self>,
+        merge: u8x64<Self>,
+    ) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                values: u8x64<Avx512>,
+                mask: mask8x64<Avx512>,
+                merge: u8x64<Avx512>,
+            ) -> u8x64<Avx512> {
+                _mm512_mask_compress_epi8(merge.into(), u64::from((mask).val) as u64, values.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, values, mask, merge)
+    }
+    #[inline(always)]
+    fn expand_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                values: u8x64<Avx512>,
+                mask: mask8x64<Avx512>,
+            ) -> u8x64<Avx512> {
+                _mm512_maskz_expand_epi8(u64::from((mask).val) as u64, values.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, values, mask)
+    }
+    #[inline(always)]
+    fn expand_merge_u8x64(
+        self,
+        values: u8x64<Self>,
+        mask: mask8x64<Self>,
+        merge: u8x64<Self>,
+    ) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                values: u8x64<Avx512>,
+                mask: mask8x64<Avx512>,
+                merge: u8x64<Avx512>,
+            ) -> u8x64<Avx512> {
+                _mm512_mask_expand_epi8(merge.into(), u64::from((mask).val) as u64, values.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, values, mask, merge)
+    }
+    #[inline(always)]
+    fn load_expand_u8x64(self, source: &[u8; 64], mask: mask8x64<Self>) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, source: &[u8; 64], mask: mask8x64<Avx512>) -> u8x64<Avx512> {
+                unsafe {
+                    _mm512_maskz_expandloadu_epi8(
+                        u64::from((mask).val) as u64,
+                        source.as_ptr().cast::<i8>(),
+                    )
+                    .simd_into(token)
+                }
+            }
+        );
+        kernel(self, source, mask)
+    }
+    #[inline(always)]
+    fn load_expand_merge_u8x64(
+        self,
+        source: &[u8; 64],
+        mask: mask8x64<Self>,
+        merge: u8x64<Self>,
+    ) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                source: &[u8; 64],
+                mask: mask8x64<Avx512>,
+                merge: u8x64<Avx512>,
+            ) -> u8x64<Avx512> {
+                unsafe {
+                    _mm512_mask_expandloadu_epi8(
+                        merge.into(),
+                        u64::from((mask).val) as u64,
+                        source.as_ptr().cast::<i8>(),
+                    )
+                    .simd_into(token)
+                }
+            }
+        );
+        kernel(self, source, mask, merge)
     }
     #[inline(always)]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>) {

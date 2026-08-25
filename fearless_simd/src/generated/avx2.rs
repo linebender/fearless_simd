@@ -1438,6 +1438,18 @@ impl Simd for Avx2 {
         kernel(self, a, b, c)
     }
     #[inline(always)]
+    fn concat_swizzle_dyn_u8x16(
+        self,
+        low: u8x16<Self>,
+        high: u8x16<Self>,
+        indices: u8x16<Self>,
+    ) -> u8x16<Self> {
+        let from_low = self.swizzle_dyn_precise_u8x16(low, indices);
+        let high_indices = self.sub_u8x16(indices, u8x16::splat(self, 16));
+        let from_high = self.swizzle_dyn_precise_u8x16(high, high_indices);
+        self.or_u8x16(from_low, from_high)
+    }
+    #[inline(always)]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6653,6 +6665,18 @@ impl Simd for Avx2 {
         kernel(self, a, b, c)
     }
     #[inline(always)]
+    fn concat_swizzle_dyn_u8x32(
+        self,
+        low: u8x32<Self>,
+        high: u8x32<Self>,
+        indices: u8x32<Self>,
+    ) -> u8x32<Self> {
+        let from_low = self.swizzle_dyn_precise_u8x32(low, indices);
+        let high_indices = self.sub_u8x32(indices, u8x32::splat(self, 32));
+        let from_high = self.swizzle_dyn_precise_u8x32(high, high_indices);
+        self.or_u8x32(from_low, from_high)
+    }
+    #[inline(always)]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self> {
         u8x64 {
             val: crate::support::Aligned512([a.val.0, b.val.0]),
@@ -10581,6 +10605,18 @@ impl Simd for Avx2 {
             }
         );
         kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn concat_swizzle_dyn_u8x64(
+        self,
+        low: u8x64<Self>,
+        high: u8x64<Self>,
+        indices: u8x64<Self>,
+    ) -> u8x64<Self> {
+        let from_low = self.swizzle_dyn_precise_u8x64(low, indices);
+        let high_indices = self.sub_u8x64(indices, u8x64::splat(self, 64));
+        let from_high = self.swizzle_dyn_precise_u8x64(high, high_indices);
+        self.or_u8x64(from_low, from_high)
     }
     #[inline(always)]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>) {

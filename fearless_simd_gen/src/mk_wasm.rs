@@ -6,8 +6,8 @@ use quote::{format_ident, quote};
 
 use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
-    count_zeros_method, fallback_method, generic_block_combine, generic_block_split,
-    generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
+    composed_concat_swizzle_dyn, count_zeros_method, fallback_method, generic_block_combine,
+    generic_block_split, generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
     recursive_swizzle_dyn_precise_body,
 };
 use crate::level::Level;
@@ -762,6 +762,13 @@ impl Level for WasmSimd128 {
                 // and express it in terms of 256-bit or 512-bit vectors.
                 _ => crate::mk_fallback::Fallback.make_method(op, vec_ty),
             },
+            OpSig::ConcatSwizzleDyn => composed_concat_swizzle_dyn(op, vec_ty),
+            OpSig::Multishift
+            | OpSig::Compress { .. }
+            | OpSig::Expand { .. }
+            | OpSig::LoadExpand { .. } => {
+                unreachable!("portable byte operation should use its trait default")
+            }
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
@@ -1019,6 +1026,11 @@ impl Level for WasmSimd128 {
                 }
             }
         }
+    }
+
+    fn should_use_trait_default(&self, op: &Op, vec_ty: &VecType) -> bool {
+        op.sig.has_trait_default()
+            && !(matches!(op.sig, OpSig::ConcatSwizzleDyn) && matches!(vec_ty.len, 16 | 32))
     }
 }
 

@@ -184,6 +184,122 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
         OpSig::SwizzleDyn | OpSig::SwizzleDynPrecise => {
             panic!("whole-vector swizzles cannot be done via split/combine");
         }
+        OpSig::ConcatSwizzleDyn => {
+            let table_mask = Literal::u8_unsuffixed(
+                u8::try_from(ty.len * 2 - 1).expect("byte lookup table mask must fit in u8"),
+            );
+            let len = Literal::usize_unsuffixed(ty.len);
+            let ty = ty.rust();
+            quote! {
+                #method_sig {
+                    #ty::from_fn(self, |lane| {
+                        let index = usize::from(indices[lane] & #table_mask);
+                        if index < #len {
+                            low[index]
+                        } else {
+                            high[index - #len]
+                        }
+                    })
+                }
+            }
+        }
+        OpSig::Multishift => {
+            let ty = ty.rust();
+            quote! {
+                #method_sig {
+                    #ty::from_fn(self, |lane| {
+                        data[lane / 8].rotate_right(u32::from(bit_offsets[lane] & 63)) as u8
+                    })
+                }
+            }
+        }
+        OpSig::Compress { merge: false } => {
+            let merge_method = generic_op_name("compress_merge", ty);
+            let ty = ty.rust();
+            quote! {
+                #method_sig {
+                    self.#merge_method(values, mask, #ty::splat(self, 0))
+                }
+            }
+        }
+        OpSig::Compress { merge: true } => {
+            let len = Literal::usize_unsuffixed(ty.len);
+            let to_bitmask = generic_op_name("to_bitmask", &ty.mask_ty());
+            quote! {
+                #method_sig {
+                    let mask = self.#to_bitmask(mask);
+                    let mut result = merge;
+                    let mut output_lane = 0;
+                    let mut input_lane = 0;
+                    while input_lane < #len {
+                        if mask & (1u64 << input_lane) != 0 {
+                            result[output_lane] = values[input_lane];
+                            output_lane += 1;
+                        }
+                        input_lane += 1;
+                    }
+                    result
+                }
+            }
+        }
+        OpSig::Expand { merge: false } => {
+            let merge_method = generic_op_name("expand_merge", ty);
+            let ty = ty.rust();
+            quote! {
+                #method_sig {
+                    self.#merge_method(values, mask, #ty::splat(self, 0))
+                }
+            }
+        }
+        OpSig::Expand { merge: true } => {
+            let len = Literal::usize_unsuffixed(ty.len);
+            let to_bitmask = generic_op_name("to_bitmask", &ty.mask_ty());
+            quote! {
+                #method_sig {
+                    let mask = self.#to_bitmask(mask);
+                    let mut result = merge;
+                    let mut input_lane = 0;
+                    let mut output_lane = 0;
+                    while output_lane < #len {
+                        if mask & (1u64 << output_lane) != 0 {
+                            result[output_lane] = values[input_lane];
+                            input_lane += 1;
+                        }
+                        output_lane += 1;
+                    }
+                    result
+                }
+            }
+        }
+        OpSig::LoadExpand { merge: false } => {
+            let merge_method = generic_op_name("load_expand_merge", ty);
+            let ty = ty.rust();
+            quote! {
+                #method_sig {
+                    self.#merge_method(source, mask, #ty::splat(self, 0))
+                }
+            }
+        }
+        OpSig::LoadExpand { merge: true } => {
+            let len = Literal::usize_unsuffixed(ty.len);
+            let to_bitmask = generic_op_name("to_bitmask", &ty.mask_ty());
+            quote! {
+                #method_sig {
+                    let mask = self.#to_bitmask(mask);
+                    let mut result = merge;
+                    let mut source_index = 0;
+                    let mut output_lane = 0;
+                    while output_lane < #len {
+                        if mask & (1u64 << output_lane) != 0 {
+                            result[output_lane] = source[source_index];
+                            source_index += 1;
+                        }
+                        output_lane += 1;
+                    }
+                    result
+                }
+            }
+        }
         OpSig::Ternary => {
             quote! {
                 #method_sig {
@@ -419,6 +535,31 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                     panic!("Item-wise shifts across blocks cannot be done via split/combine");
                 }
             }
+        }
+    }
+}
+
+/// Compose a two-table byte swizzle from the backend's optimized precise swizzle.
+pub(crate) fn composed_concat_swizzle_dyn(op: Op, ty: &VecType) -> TokenStream {
+    assert!(
+        matches!(op.sig, OpSig::ConcatSwizzleDyn),
+        "composed byte swizzle requires ConcatSwizzleDyn"
+    );
+    let method_sig = op.simd_trait_method_sig(ty);
+    let swizzle = generic_op_name("swizzle_dyn_precise", ty);
+    let sub = generic_op_name("sub", ty);
+    let or = generic_op_name("or", ty);
+    let ty_name = ty.rust();
+    let len = Literal::u8_unsuffixed(
+        u8::try_from(ty.len).expect("byte vector lane count must fit in u8"),
+    );
+
+    quote! {
+        #method_sig {
+            let from_low = self.#swizzle(low, indices);
+            let high_indices = self.#sub(indices, #ty_name::splat(self, #len));
+            let from_high = self.#swizzle(high, high_indices);
+            self.#or(from_low, from_high)
         }
     }
 }

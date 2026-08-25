@@ -520,6 +520,108 @@ pub trait Simd:
     fn deinterleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Dynamically swizzle bytes from two concatenated vectors.\n\nIndices `0..N` address `low`, and indices `N..2*N` address `high`, where `N` is the number of lanes in the result. Out-of-range indices safely produce implementation-defined byte values."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_u8x16(
+        self,
+        low: u8x16<Self>,
+        high: u8x16<Self>,
+        indices: u8x16<Self>,
+    ) -> u8x16<Self> {
+        u8x16::from_fn(self, |lane| {
+            let index = usize::from(indices[lane] & 31);
+            if index < 16 {
+                low[index]
+            } else {
+                high[index - 16]
+            }
+        })
+    }
+    #[doc = "Select a byte at an arbitrary bit offset from each corresponding 64-bit lane.\n\nEach byte in `bit_offsets` supplies its low six bits as the offset. Selections that cross the end of a 64-bit lane wrap around to the start of that same lane."]
+    #[inline(always)]
+    fn multishift_u8x16(self, data: u64x2<Self>, bit_offsets: u8x16<Self>) -> u8x16<Self> {
+        u8x16::from_fn(self, |lane| {
+            data[lane / 8].rotate_right(u32::from(bit_offsets[lane] & 63)) as u8
+        })
+    }
+    #[doc = "Compact the bytes selected by `mask` into consecutive low lanes.\n\nLanes above the number of selected bytes are zero."]
+    #[inline(always)]
+    fn compress_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self> {
+        self.compress_merge_u8x16(values, mask, u8x16::splat(self, 0))
+    }
+    #[doc = "Compact the bytes selected by `mask` into consecutive low lanes.\n\nLanes above the number of selected bytes retain the corresponding values from `merge`."]
+    #[inline(always)]
+    fn compress_merge_u8x16(
+        self,
+        values: u8x16<Self>,
+        mask: mask8x16<Self>,
+        merge: u8x16<Self>,
+    ) -> u8x16<Self> {
+        let mask = self.to_bitmask_mask8x16(mask);
+        let mut result = merge;
+        let mut output_lane = 0;
+        let mut input_lane = 0;
+        while input_lane < 16 {
+            if mask & (1u64 << input_lane) != 0 {
+                result[output_lane] = values[input_lane];
+                output_lane += 1;
+            }
+            input_lane += 1;
+        }
+        result
+    }
+    #[doc = "Expand consecutive low bytes from `values` into the lanes selected by `mask`.\n\nUnselected lanes are zero."]
+    #[inline(always)]
+    fn expand_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self> {
+        self.expand_merge_u8x16(values, mask, u8x16::splat(self, 0))
+    }
+    #[doc = "Expand consecutive low bytes from `values` into the lanes selected by `mask`.\n\nUnselected lanes retain the corresponding values from `merge`."]
+    #[inline(always)]
+    fn expand_merge_u8x16(
+        self,
+        values: u8x16<Self>,
+        mask: mask8x16<Self>,
+        merge: u8x16<Self>,
+    ) -> u8x16<Self> {
+        let mask = self.to_bitmask_mask8x16(mask);
+        let mut result = merge;
+        let mut input_lane = 0;
+        let mut output_lane = 0;
+        while output_lane < 16 {
+            if mask & (1u64 << output_lane) != 0 {
+                result[output_lane] = values[input_lane];
+                input_lane += 1;
+            }
+            output_lane += 1;
+        }
+        result
+    }
+    #[doc = "Load consecutive bytes from `source` into the lanes selected by `mask`.\n\nThe first selected-lane-count bytes are consumed. Unselected lanes are zero."]
+    #[inline(always)]
+    fn load_expand_u8x16(self, source: &[u8; 16], mask: mask8x16<Self>) -> u8x16<Self> {
+        self.load_expand_merge_u8x16(source, mask, u8x16::splat(self, 0))
+    }
+    #[doc = "Load consecutive bytes from `source` into the lanes selected by `mask`.\n\nThe first selected-lane-count bytes are consumed. Unselected lanes retain the corresponding values from `merge`."]
+    #[inline(always)]
+    fn load_expand_merge_u8x16(
+        self,
+        source: &[u8; 16],
+        mask: mask8x16<Self>,
+        merge: u8x16<Self>,
+    ) -> u8x16<Self> {
+        let mask = self.to_bitmask_mask8x16(mask);
+        let mut result = merge;
+        let mut source_index = 0;
+        let mut output_lane = 0;
+        while output_lane < 16 {
+            if mask & (1u64 << output_lane) != 0 {
+                result[output_lane] = source[source_index];
+                source_index += 1;
+            }
+            output_lane += 1;
+        }
+        result
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self>;
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
@@ -2287,6 +2389,108 @@ pub trait Simd:
         let (b0, b1) = self.split_u8x32(b);
         let (c0, c1) = self.split_u8x32(c);
         self.combine_u8x16(self.select_u8x16(a0, b0, c0), self.select_u8x16(a1, b1, c1))
+    }
+    #[doc = "Dynamically swizzle bytes from two concatenated vectors.\n\nIndices `0..N` address `low`, and indices `N..2*N` address `high`, where `N` is the number of lanes in the result. Out-of-range indices safely produce implementation-defined byte values."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_u8x32(
+        self,
+        low: u8x32<Self>,
+        high: u8x32<Self>,
+        indices: u8x32<Self>,
+    ) -> u8x32<Self> {
+        u8x32::from_fn(self, |lane| {
+            let index = usize::from(indices[lane] & 63);
+            if index < 32 {
+                low[index]
+            } else {
+                high[index - 32]
+            }
+        })
+    }
+    #[doc = "Select a byte at an arbitrary bit offset from each corresponding 64-bit lane.\n\nEach byte in `bit_offsets` supplies its low six bits as the offset. Selections that cross the end of a 64-bit lane wrap around to the start of that same lane."]
+    #[inline(always)]
+    fn multishift_u8x32(self, data: u64x4<Self>, bit_offsets: u8x32<Self>) -> u8x32<Self> {
+        u8x32::from_fn(self, |lane| {
+            data[lane / 8].rotate_right(u32::from(bit_offsets[lane] & 63)) as u8
+        })
+    }
+    #[doc = "Compact the bytes selected by `mask` into consecutive low lanes.\n\nLanes above the number of selected bytes are zero."]
+    #[inline(always)]
+    fn compress_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self> {
+        self.compress_merge_u8x32(values, mask, u8x32::splat(self, 0))
+    }
+    #[doc = "Compact the bytes selected by `mask` into consecutive low lanes.\n\nLanes above the number of selected bytes retain the corresponding values from `merge`."]
+    #[inline(always)]
+    fn compress_merge_u8x32(
+        self,
+        values: u8x32<Self>,
+        mask: mask8x32<Self>,
+        merge: u8x32<Self>,
+    ) -> u8x32<Self> {
+        let mask = self.to_bitmask_mask8x32(mask);
+        let mut result = merge;
+        let mut output_lane = 0;
+        let mut input_lane = 0;
+        while input_lane < 32 {
+            if mask & (1u64 << input_lane) != 0 {
+                result[output_lane] = values[input_lane];
+                output_lane += 1;
+            }
+            input_lane += 1;
+        }
+        result
+    }
+    #[doc = "Expand consecutive low bytes from `values` into the lanes selected by `mask`.\n\nUnselected lanes are zero."]
+    #[inline(always)]
+    fn expand_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self> {
+        self.expand_merge_u8x32(values, mask, u8x32::splat(self, 0))
+    }
+    #[doc = "Expand consecutive low bytes from `values` into the lanes selected by `mask`.\n\nUnselected lanes retain the corresponding values from `merge`."]
+    #[inline(always)]
+    fn expand_merge_u8x32(
+        self,
+        values: u8x32<Self>,
+        mask: mask8x32<Self>,
+        merge: u8x32<Self>,
+    ) -> u8x32<Self> {
+        let mask = self.to_bitmask_mask8x32(mask);
+        let mut result = merge;
+        let mut input_lane = 0;
+        let mut output_lane = 0;
+        while output_lane < 32 {
+            if mask & (1u64 << output_lane) != 0 {
+                result[output_lane] = values[input_lane];
+                input_lane += 1;
+            }
+            output_lane += 1;
+        }
+        result
+    }
+    #[doc = "Load consecutive bytes from `source` into the lanes selected by `mask`.\n\nThe first selected-lane-count bytes are consumed. Unselected lanes are zero."]
+    #[inline(always)]
+    fn load_expand_u8x32(self, source: &[u8; 32], mask: mask8x32<Self>) -> u8x32<Self> {
+        self.load_expand_merge_u8x32(source, mask, u8x32::splat(self, 0))
+    }
+    #[doc = "Load consecutive bytes from `source` into the lanes selected by `mask`.\n\nThe first selected-lane-count bytes are consumed. Unselected lanes retain the corresponding values from `merge`."]
+    #[inline(always)]
+    fn load_expand_merge_u8x32(
+        self,
+        source: &[u8; 32],
+        mask: mask8x32<Self>,
+        merge: u8x32<Self>,
+    ) -> u8x32<Self> {
+        let mask = self.to_bitmask_mask8x32(mask);
+        let mut result = merge;
+        let mut source_index = 0;
+        let mut output_lane = 0;
+        while output_lane < 32 {
+            if mask & (1u64 << output_lane) != 0 {
+                result[output_lane] = source[source_index];
+                source_index += 1;
+            }
+            output_lane += 1;
+        }
+        result
     }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self>;
@@ -5567,6 +5771,108 @@ pub trait Simd:
         let (b0, b1) = self.split_u8x64(b);
         let (c0, c1) = self.split_u8x64(c);
         self.combine_u8x32(self.select_u8x32(a0, b0, c0), self.select_u8x32(a1, b1, c1))
+    }
+    #[doc = "Dynamically swizzle bytes from two concatenated vectors.\n\nIndices `0..N` address `low`, and indices `N..2*N` address `high`, where `N` is the number of lanes in the result. Out-of-range indices safely produce implementation-defined byte values."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_u8x64(
+        self,
+        low: u8x64<Self>,
+        high: u8x64<Self>,
+        indices: u8x64<Self>,
+    ) -> u8x64<Self> {
+        u8x64::from_fn(self, |lane| {
+            let index = usize::from(indices[lane] & 127);
+            if index < 64 {
+                low[index]
+            } else {
+                high[index - 64]
+            }
+        })
+    }
+    #[doc = "Select a byte at an arbitrary bit offset from each corresponding 64-bit lane.\n\nEach byte in `bit_offsets` supplies its low six bits as the offset. Selections that cross the end of a 64-bit lane wrap around to the start of that same lane."]
+    #[inline(always)]
+    fn multishift_u8x64(self, data: u64x8<Self>, bit_offsets: u8x64<Self>) -> u8x64<Self> {
+        u8x64::from_fn(self, |lane| {
+            data[lane / 8].rotate_right(u32::from(bit_offsets[lane] & 63)) as u8
+        })
+    }
+    #[doc = "Compact the bytes selected by `mask` into consecutive low lanes.\n\nLanes above the number of selected bytes are zero."]
+    #[inline(always)]
+    fn compress_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self> {
+        self.compress_merge_u8x64(values, mask, u8x64::splat(self, 0))
+    }
+    #[doc = "Compact the bytes selected by `mask` into consecutive low lanes.\n\nLanes above the number of selected bytes retain the corresponding values from `merge`."]
+    #[inline(always)]
+    fn compress_merge_u8x64(
+        self,
+        values: u8x64<Self>,
+        mask: mask8x64<Self>,
+        merge: u8x64<Self>,
+    ) -> u8x64<Self> {
+        let mask = self.to_bitmask_mask8x64(mask);
+        let mut result = merge;
+        let mut output_lane = 0;
+        let mut input_lane = 0;
+        while input_lane < 64 {
+            if mask & (1u64 << input_lane) != 0 {
+                result[output_lane] = values[input_lane];
+                output_lane += 1;
+            }
+            input_lane += 1;
+        }
+        result
+    }
+    #[doc = "Expand consecutive low bytes from `values` into the lanes selected by `mask`.\n\nUnselected lanes are zero."]
+    #[inline(always)]
+    fn expand_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self> {
+        self.expand_merge_u8x64(values, mask, u8x64::splat(self, 0))
+    }
+    #[doc = "Expand consecutive low bytes from `values` into the lanes selected by `mask`.\n\nUnselected lanes retain the corresponding values from `merge`."]
+    #[inline(always)]
+    fn expand_merge_u8x64(
+        self,
+        values: u8x64<Self>,
+        mask: mask8x64<Self>,
+        merge: u8x64<Self>,
+    ) -> u8x64<Self> {
+        let mask = self.to_bitmask_mask8x64(mask);
+        let mut result = merge;
+        let mut input_lane = 0;
+        let mut output_lane = 0;
+        while output_lane < 64 {
+            if mask & (1u64 << output_lane) != 0 {
+                result[output_lane] = values[input_lane];
+                input_lane += 1;
+            }
+            output_lane += 1;
+        }
+        result
+    }
+    #[doc = "Load consecutive bytes from `source` into the lanes selected by `mask`.\n\nThe first selected-lane-count bytes are consumed. Unselected lanes are zero."]
+    #[inline(always)]
+    fn load_expand_u8x64(self, source: &[u8; 64], mask: mask8x64<Self>) -> u8x64<Self> {
+        self.load_expand_merge_u8x64(source, mask, u8x64::splat(self, 0))
+    }
+    #[doc = "Load consecutive bytes from `source` into the lanes selected by `mask`.\n\nThe first selected-lane-count bytes are consumed. Unselected lanes retain the corresponding values from `merge`."]
+    #[inline(always)]
+    fn load_expand_merge_u8x64(
+        self,
+        source: &[u8; 64],
+        mask: mask8x64<Self>,
+        merge: u8x64<Self>,
+    ) -> u8x64<Self> {
+        let mask = self.to_bitmask_mask8x64(mask);
+        let mut result = merge;
+        let mut source_index = 0;
+        let mut output_lane = 0;
+        while output_lane < 64 {
+            if mask & (1u64 << output_lane) != 0 {
+                result[output_lane] = source[source_index];
+                source_index += 1;
+            }
+            output_lane += 1;
+        }
+        result
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>);
