@@ -18,6 +18,23 @@ pub(crate) fn fallback_method(op: Op, vec_ty: &VecType) -> TokenStream {
     crate::mk_fallback::Fallback.make_method(op, vec_ty)
 }
 
+/// Implement `count_zeros` in terms of `count_ones`, matching the scalar and
+/// portable-SIMD formulations.
+pub(crate) fn count_zeros_method(op: Op, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(
+        op.method, "count_zeros",
+        "count_zeros_method only implements count_zeros"
+    );
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let not = generic_op_name("not", vec_ty);
+    let count_ones = generic_op_name("count_ones", vec_ty);
+    quote! {
+        #method_sig {
+            self.#count_ones(self.#not(a))
+        }
+    }
+}
+
 /// Implement a typed byte swizzle by forwarding to the corresponding byte-vector operation.
 pub(crate) fn byte_swizzle_op(op: &Op, vec_ty: &VecType) -> TokenStream {
     assert!(

@@ -884,6 +884,18 @@ const FLOAT_OPS: &[Op] = &[
 
 const INT_OPS: &[Op] = &[
     Op::new(
+        "count_ones",
+        OpKind::VecTraitMethod,
+        OpSig::Unary,
+        "Return the number of ones in the binary representation of each element.",
+    ),
+    Op::new(
+        "count_zeros",
+        OpKind::VecTraitMethod,
+        OpSig::Unary,
+        "Return the number of zeros in the binary representation of each element.",
+    ),
+    Op::new(
         "add",
         OpKind::Overloaded(CoreOpTrait::Add),
         OpSig::Binary,

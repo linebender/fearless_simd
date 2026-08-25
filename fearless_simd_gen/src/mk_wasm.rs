@@ -6,8 +6,9 @@ use quote::{format_ident, quote};
 
 use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
-    fallback_method, generic_block_combine, generic_block_split, generic_mask_set, generic_op_name,
-    integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
+    count_zeros_method, fallback_method, generic_block_combine, generic_block_split,
+    generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
+    recursive_swizzle_dyn_precise_body,
 };
 use crate::level::Level;
 use crate::ops::{NarrowingMode, Op, Quantifier, SlideGranularity, relaxed_narrow_method};
@@ -91,6 +92,40 @@ fn mask_to_bitmask(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
     }
 }
 
+fn count_ones_method(op: Op, vec_ty: &VecType) -> TokenStream {
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let expr = match vec_ty.scalar_bits {
+        8 => quote! { i8x16_popcnt(a.into()) },
+        16 => quote! {
+            u16x8_extadd_pairwise_u8x16(i8x16_popcnt(a.into()))
+        },
+        32 => quote! {
+            u32x4_extadd_pairwise_u16x8(
+                u16x8_extadd_pairwise_u8x16(i8x16_popcnt(a.into()))
+            )
+        },
+        64 => quote! {
+            {
+                let counts = u32x4_extadd_pairwise_u16x8(
+                    u16x8_extadd_pairwise_u8x16(i8x16_popcnt(a.into()))
+                );
+                let even = u32x4_shuffle::<0, 2, 0, 2>(counts, counts);
+                let odd = u32x4_shuffle::<1, 3, 1, 3>(counts, counts);
+                i64x2_add(
+                    u64x2_extend_low_u32x4(even),
+                    u64x2_extend_low_u32x4(odd),
+                )
+            }
+        },
+        _ => unreachable!(),
+    };
+    quote! {
+        #method_sig {
+            #expr.simd_into(self)
+        }
+    }
+}
+
 impl Level for WasmSimd128 {
     fn name(&self) -> &'static str {
         "WasmSimd128"
@@ -165,6 +200,14 @@ impl Level for WasmSimd128 {
                 }
             }
             OpSig::Unary => {
+                if method == "count_zeros" {
+                    return count_zeros_method(op, vec_ty);
+                }
+
+                if method == "count_ones" {
+                    return count_ones_method(op, vec_ty);
+                }
+
                 let args = [quote! { a.into() }];
                 let expr = if matches!(method, "fract") {
                     assert_eq!(

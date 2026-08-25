@@ -5,7 +5,8 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
-    fallback_method, generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
+    count_zeros_method, fallback_method, generic_mask_set, generic_op_name,
+    integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{NarrowingMode, Op, SlideGranularity, relaxed_narrow_method};
@@ -17,6 +18,51 @@ use crate::{
 
 #[derive(Clone, Copy)]
 pub(crate) struct Neon;
+
+impl Neon {
+    fn handle_count_ones(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        let input = match vec_ty.scalar {
+            ScalarType::Unsigned if vec_ty.scalar_bits == 8 => quote! { a.into() },
+            ScalarType::Unsigned => {
+                let reinterpret = Ident::new(
+                    &format!("vreinterpretq_u8_u{}", vec_ty.scalar_bits),
+                    Span::call_site(),
+                );
+                quote! { #reinterpret(a.into()) }
+            }
+            ScalarType::Int => {
+                let reinterpret = Ident::new(
+                    &format!("vreinterpretq_u8_s{}", vec_ty.scalar_bits),
+                    Span::call_site(),
+                );
+                quote! { #reinterpret(a.into()) }
+            }
+            _ => unreachable!("count_ones is only defined for integers"),
+        };
+        let count = match vec_ty.scalar_bits {
+            8 => quote! { vcntq_u8(#input) },
+            16 => quote! { vpaddlq_u8(vcntq_u8(#input)) },
+            32 => quote! { vpaddlq_u16(vpaddlq_u8(vcntq_u8(#input))) },
+            64 => quote! { vpaddlq_u32(vpaddlq_u16(vpaddlq_u8(vcntq_u8(#input)))) },
+            _ => unreachable!(),
+        };
+        let result = if vec_ty.scalar == ScalarType::Int {
+            let reinterpret = Ident::new(
+                &format!(
+                    "vreinterpretq_s{}_u{}",
+                    vec_ty.scalar_bits, vec_ty.scalar_bits
+                ),
+                Span::call_site(),
+            );
+            quote! { #reinterpret(#count) }
+        } else {
+            count
+        };
+        self.kernel_method(op, vec_ty, |token| {
+            quote! { #result.simd_into(#token) }
+        })
+    }
+}
 
 fn neon_multi_vector_ty(vec_ty: &VecType, count: u16) -> Ident {
     let scalar = match vec_ty.scalar {
@@ -138,6 +184,14 @@ impl Level for Neon {
                 })
             }
             OpSig::Unary => {
+                if method == "count_zeros" {
+                    return count_zeros_method(op, vec_ty);
+                }
+
+                if method == "count_ones" {
+                    return self.handle_count_ones(op, vec_ty);
+                }
+
                 let args = [quote! { a.into() }];
 
                 let expr = neon::expr(method, vec_ty, &args);

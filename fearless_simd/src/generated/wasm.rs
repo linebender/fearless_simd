@@ -505,6 +505,14 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
+    fn count_ones_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        i8x16_popcnt(a.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn count_zeros_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        self.count_ones_i8x16(self.not_i8x16(a))
+    }
+    #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         i8x16_add(a.into(), b.into()).simd_into(self)
     }
@@ -792,6 +800,14 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        i8x16_popcnt(a.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn count_zeros_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        self.count_ones_u8x16(self.not_u8x16(a))
     }
     #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -1140,6 +1156,14 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
+    fn count_ones_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        u16x8_extadd_pairwise_u8x16(i8x16_popcnt(a.into())).simd_into(self)
+    }
+    #[inline(always)]
+    fn count_zeros_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        self.count_ones_i16x8(self.not_i16x8(a))
+    }
+    #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         i16x8_add(a.into(), b.into()).simd_into(self)
     }
@@ -1364,6 +1388,14 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        u16x8_extadd_pairwise_u8x16(i8x16_popcnt(a.into())).simd_into(self)
+    }
+    #[inline(always)]
+    fn count_zeros_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        self.count_ones_u16x8(self.not_u16x8(a))
     }
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -1675,6 +1707,15 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
+    fn count_ones_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        u32x4_extadd_pairwise_u16x8(u16x8_extadd_pairwise_u8x16(i8x16_popcnt(a.into())))
+            .simd_into(self)
+    }
+    #[inline(always)]
+    fn count_zeros_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        self.count_ones_i32x4(self.not_i32x4(a))
+    }
+    #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         i32x4_add(a.into(), b.into()).simd_into(self)
     }
@@ -1895,6 +1936,15 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        u32x4_extadd_pairwise_u16x8(u16x8_extadd_pairwise_u8x16(i8x16_popcnt(a.into())))
+            .simd_into(self)
+    }
+    #[inline(always)]
+    fn count_zeros_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        self.count_ones_u32x4(self.not_u32x4(a))
     }
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -2474,6 +2524,21 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
+    fn count_ones_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        {
+            let counts =
+                u32x4_extadd_pairwise_u16x8(u16x8_extadd_pairwise_u8x16(i8x16_popcnt(a.into())));
+            let even = u32x4_shuffle::<0, 2, 0, 2>(counts, counts);
+            let odd = u32x4_shuffle::<1, 3, 1, 3>(counts, counts);
+            i64x2_add(u64x2_extend_low_u32x4(even), u64x2_extend_low_u32x4(odd))
+        }
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn count_zeros_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        self.count_ones_i64x2(self.not_i64x2(a))
+    }
+    #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         i64x2_add(a.into(), b.into()).simd_into(self)
     }
@@ -2692,6 +2757,21 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn count_ones_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        {
+            let counts =
+                u32x4_extadd_pairwise_u16x8(u16x8_extadd_pairwise_u8x16(i8x16_popcnt(a.into())));
+            let even = u32x4_shuffle::<0, 2, 0, 2>(counts, counts);
+            let odd = u32x4_shuffle::<1, 3, 1, 3>(counts, counts);
+            i64x2_add(u64x2_extend_low_u32x4(even), u64x2_extend_low_u32x4(odd))
+        }
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn count_zeros_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        self.count_ones_u64x2(self.not_u64x2(a))
     }
     #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
