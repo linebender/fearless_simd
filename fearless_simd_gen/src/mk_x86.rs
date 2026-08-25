@@ -3752,13 +3752,50 @@ impl X86 {
             precision,
         );
 
-        // Deal with whole-method scalar fallbacks before constructing an intrinsic-backed kernel.
-        // Pre-AVX-512 x86 has no packed 64-bit conversion instructions. Some SSE2 32-bit cases are
-        // also absent or slower than converting the lanes individually.
+        // For a two-lane signed approximate conversion, scalar casts outperform SIMD formulations.
+        // CVTTSD2SI cast is not required to saturate, so it is cheaper than `as` casts too.
+        //
+        // CVTTSD2SI is available starting with SSE2, so use it for every pre-AVX-512 x86 level.
+        // The SIMD implementation below is faster for u64, for precise semantics,
+        // and for vectors larger than 2 elements.
+        //
+        // CVTTSD2SI with a 64-bit destination only exists in 64-bit mode.
+        // 32-bit x86 is not an optimization target in 2026, so route it through scalar fallback.
         if matches!(
             conversion,
-            (Self::Sse2 | Self::Sse4_2, _, _, 64, 128, _)
-                | (Self::Avx2, _, _, 64, 128 | 256, _)
+            (
+                Self::Sse2 | Self::Sse4_2 | Self::Avx2,
+                Float,
+                Int,
+                64,
+                128,
+                Approx,
+            )
+        ) {
+            let unpack_high = simple_intrinsic("unpackhi", vec_ty);
+            let specialized = self.kernel_method(op, vec_ty, |token| {
+                quote! {
+                    let a = a.into();
+                    let low = _mm_cvttsd_si64(a);
+                    let high = _mm_cvttsd_si64(#unpack_high(a, a));
+                    _mm_set_epi64x(high, low).simd_into(#token)
+                }
+            });
+            let fallback = fallback_method(op, vec_ty);
+            return quote! {
+                #[cfg(target_arch = "x86_64")]
+                #specialized
+                #[cfg(target_arch = "x86")]
+                #fallback
+            };
+        }
+
+        // Deal with whole-method scalar fallbacks before constructing an intrinsic-backed kernel.
+        // Some conversions have no native SIMD versions, or are slower than scalar fallbacks.
+        if matches!(
+            conversion,
+            (Self::Sse2, _, _, 64, 128, _)
+                | (Self::Sse4_2, Float, Int | Unsigned, 64, 128, _)
                 | (Self::Sse2, _, _, 32, 128, Precise)
                 | (Self::Sse2, Unsigned, _, 32, 128, _)
                 | (Self::Sse2, _, Unsigned, 32, 128, _)
@@ -3917,6 +3954,159 @@ impl X86 {
                     #convert(a.into()).simd_into(#token)
                 }
             }
+            (Self::Sse4_2, source @ (Int | Unsigned), Float, 64, 128, _)
+            | (Self::Avx2, source @ (Int | Unsigned), Float, 64, 128 | 256, _) => {
+                // Before AVX-512 there's no packed 64-bit integer -> f64 instruction.
+                // Split each integer into 32-bit halves, embed those halves in the fraction fields
+                // of exact powers of two, then remove the biases. This is LLVM's u64 expansion,
+                // extended to signed values by biasing the high half around i32::MIN.
+                //
+                // The subtraction is exact; the final addition performs the one rounding required
+                // by the integer -> f64 conversion.
+                // https://github.com/llvm/llvm-project/blob/llvmorg-22.1.8/llvm/lib/CodeGen/SelectionDAG/TargetLowering.cpp#L8670-L8726
+                let target_ty = vec_ty.cast(target_scalar);
+                let bits = vec_ty.n_bits();
+                let set1_int = set1_intrinsic(vec_ty);
+                let set1_float = set1_intrinsic(&target_ty);
+                let srli = intrinsic_ident("srli", "epi64", bits);
+                let xor = intrinsic_ident("xor", coarse_type(vec_ty), bits);
+                let cast_to_float = cast_ident(Int, Float, 64, 64, bits);
+                let sub = simple_intrinsic("sub", &target_ty);
+                let add = simple_intrinsic("add", &target_ty);
+                let (blend, blend_mask) = match bits {
+                    128 => (intrinsic_ident("blend", "epi16", bits), quote! { 0xcc }),
+                    256 => (intrinsic_ident("blend", "epi32", bits), quote! { 0xaa }),
+                    _ => unreachable!(),
+                };
+                let (high_bias_bits, combined_bias_bits) = match source {
+                    Unsigned => (0x4530_0000_0000_0000_i64, 0x4530_0000_0010_0000_u64),
+                    Int => (0x4530_0000_8000_0000_i64, 0x4530_0000_8010_0000_u64),
+                    _ => unreachable!(),
+                };
+
+                quote! {
+                    let a = a.into();
+                    let low = #blend::<#blend_mask>(a, #set1_int(0x4330_0000_0000_0000));
+                    let high = #srli::<32>(a);
+                    let high = #xor(high, #set1_int(#high_bias_bits));
+                    let high = #sub(
+                        #cast_to_float(high),
+                        #set1_float(f64::from_bits(#combined_bias_bits)),
+                    );
+                    #add(#cast_to_float(low), high).simd_into(#token)
+                }
+            }
+            (
+                Self::Avx2,
+                Float,
+                target @ (Int | Unsigned),
+                64,
+                128 | 256,
+                precision,
+            ) => {
+                // Recover the integer magnitude directly from the binary64 exponent and
+                // significand. AVX2 variable shifts produce zero for counts above 63, so doing
+                // both shift directions and ORing them avoids a per-lane branch or blend:
+                //
+                // magnitude = (significand >> (1075 - exponent))
+                //           | (significand << (exponent - 1075))
+                //
+                // Subnormals, values below one, infinities, and NaNs naturally become zero.
+                // This adapts LLVM's/compiler-rt's scalar significand-and-exponent expansion to
+                // AVX2's packed variable shifts.
+                // https://github.com/llvm/llvm-project/blob/llvmorg-22.1.8/llvm/lib/CodeGen/SelectionDAG/TargetLowering.cpp#L8497-L8565
+                let target_ty = vec_ty.cast(target);
+                let bits = vec_ty.n_bits();
+                let set1_int = set1_intrinsic(&target_ty);
+                let set1_float = set1_intrinsic(vec_ty);
+                let setzero = intrinsic_ident("setzero", coarse_type(&target_ty), bits);
+                let and = intrinsic_ident("and", coarse_type(&target_ty), bits);
+                let or = intrinsic_ident("or", coarse_type(&target_ty), bits);
+                let xor = intrinsic_ident("xor", coarse_type(&target_ty), bits);
+                let sub = intrinsic_ident("sub", "epi64", bits);
+                let srli = intrinsic_ident("srli", "epi64", bits);
+                let srlv = intrinsic_ident("srlv", "epi64", bits);
+                let sllv = intrinsic_ident("sllv", "epi64", bits);
+                let cmpgt = intrinsic_ident("cmpgt", "epi64", bits);
+                let blend = intrinsic_ident("blendv", "epi8", bits);
+                let cast_to_int = cast_ident(Float, target, 64, 64, bits);
+                let cast_to_float = cast_ident(target, Float, 64, 64, bits);
+                let cmpge = float_compare_method("simd_ge", vec_ty);
+
+                match (target, precision) {
+                    (Unsigned, precision) => {
+                        let finish = match precision {
+                            Approx => quote! { converted },
+                            Precise => quote! {
+                                // Keeping the sign bit in `exponent` makes all negative lanes zero.
+                                // NaN is also already zero; only positive overflow needs correction.
+                                let overflow = #cast_to_int(#cmpge(
+                                    a,
+                                    #set1_float(18_446_744_073_709_551_616.0),
+                                ));
+                                #or(converted, overflow)
+                            },
+                        };
+
+                        quote! {
+                            let a = a.into();
+                            let bits = #cast_to_int(a);
+                            // Deliberately retain the sign bit. For a negative lane it makes both
+                            // variable-shift counts exceed 63, producing zero.
+                            let exponent = #srli::<52>(bits);
+                            let significand = #or(
+                                #and(bits, #set1_int(0x000f_ffff_ffff_ffff)),
+                                #set1_int(0x0010_0000_0000_0000),
+                            );
+                            let shift_bias = #set1_int(1075);
+                            let right_count = #sub(shift_bias, exponent);
+                            let left_count = #sub(exponent, shift_bias);
+                            let converted = #or(
+                                #srlv(significand, right_count),
+                                #sllv(significand, left_count),
+                            );
+                            #finish.simd_into(#token)
+                        }
+                    }
+                    (Int, precision) => {
+                        let finish = match precision {
+                            Approx => quote! { converted },
+                            Precise => quote! {
+                                // At |a| >= 2^63, choose MIN or MAX from the original sign. The
+                                // ordered comparison is false for NaN, whose magnitude is already 0.
+                                let overflow = #cast_to_int(#cmpge(
+                                    #cast_to_float(absolute),
+                                    #set1_float(9_223_372_036_854_775_808.0),
+                                ));
+                                let bound = #xor(#set1_int(i64::MAX), sign);
+                                #blend(converted, bound, overflow)
+                            },
+                        };
+
+                        quote! {
+                            let a = a.into();
+                            let bits = #cast_to_int(a);
+                            let absolute = #and(bits, #set1_int(i64::MAX));
+                            let exponent = #srli::<52>(absolute);
+                            let significand = #or(
+                                #and(bits, #set1_int(0x000f_ffff_ffff_ffff)),
+                                #set1_int(0x0010_0000_0000_0000),
+                            );
+                            let shift_bias = #set1_int(1075);
+                            let right_count = #sub(shift_bias, exponent);
+                            let left_count = #sub(exponent, shift_bias);
+                            let magnitude = #or(
+                                #srlv(significand, right_count),
+                                #sllv(significand, left_count),
+                            );
+                            let sign = #cmpgt(#setzero(), bits);
+                            let converted = #sub(#xor(magnitude, sign), sign);
+                            #finish.simd_into(#token)
+                        }
+                    }
+                    _ => unreachable!(),
+                }
+            }
             (
                 Self::Sse2 | Self::Sse4_2,
                 Float,
@@ -3939,6 +4129,7 @@ impl X86 {
                 let max = simple_intrinsic("max", vec_ty);
                 let set0 = intrinsic_ident("setzero", coarse_type(vec_ty), vec_ty.n_bits());
                 let cmplt = float_compare_method("simd_lt", vec_ty);
+                let cmple = float_compare_method("simd_le", vec_ty);
                 let cmpord = float_compare_method("ord", vec_ty);
                 let set1_float = set1_intrinsic(vec_ty);
                 let set1_int = set1_intrinsic(&target_ty);
@@ -3958,6 +4149,7 @@ impl X86 {
                 );
                 let blend = intrinsic_ident("blendv", "epi8", vec_ty.n_bits());
                 let and = intrinsic_ident("and", coarse_type(&target_ty), vec_ty.n_bits());
+                let xor = intrinsic_ident("xor", coarse_type(&target_ty), vec_ty.n_bits());
                 let andnot = simple_intrinsic("andnot", vec_ty);
                 let add_int = simple_sign_unaware_intrinsic("add", &target_ty);
                 let sub_float = simple_intrinsic("sub", vec_ty);
@@ -3989,24 +4181,18 @@ impl X86 {
                     (Int, Precise) => {
                         quote! {
                             let a = a.into();
-
-                            let mut converted = #convert(a);
-
-                            // In the common case where everything is in range, we don't need to do anything else.
-                            let in_range = #cmplt(a, #set1_float(2147483648.0));
-                            let all_in_range = #movemask(in_range) == #all_ones;
-
-                            if !all_in_range {
-                                // If we are above i32::MAX (2147483647), clamp to it.
-                                converted = #blend(#set1_int(i32::MAX), converted, #cast_to_int(in_range));
-                                // Set NaN to 0. Using `and` seems slightly faster than `blend`.
-                                let is_not_nan = #cast_to_int(#cmpord(a, a));
-                                converted = #and(converted, is_not_nan);
-                                // We don't need to handle negative overflow because Intel's "invalid result" sentinel
-                                // value is -2147483648, which is what we want anyway.
-                            }
-
-                            converted.simd_into(#token)
+                            let converted = #convert(a);
+                            // The truncating instruction returns i32::MIN for every invalid lane.
+                            // Flipping its bits for positive overflow turns that sentinel into
+                            // i32::MAX. Negative overflow already has the desired value.
+                            let positive_overflow = #cast_to_int(#cmple(
+                                #set1_float(2147483648.0),
+                                a,
+                            ));
+                            let converted = #xor(converted, positive_overflow);
+                            // The ordered mask is false only for NaN, which Rust converts to zero.
+                            let is_not_nan = #cast_to_int(#cmpord(a, a));
+                            #and(converted, is_not_nan).simd_into(#token)
                         }
                     }
                     (Unsigned, Precise) => {

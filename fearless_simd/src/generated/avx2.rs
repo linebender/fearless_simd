@@ -613,19 +613,12 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: f32x4<Avx2>) -> i32x4<Avx2> {
                 let a = a.into();
-                let mut converted = _mm_cvttps_epi32(a);
-                let in_range = _mm_cmplt_ps(a, _mm_set1_ps(2147483648.0));
-                let all_in_range = _mm_movemask_ps(in_range) == 0b1111;
-                if !all_in_range {
-                    converted = _mm_blendv_epi8(
-                        _mm_set1_epi32(i32::MAX),
-                        converted,
-                        _mm_castps_si128(in_range),
-                    );
-                    let is_not_nan = _mm_castps_si128(_mm_cmpord_ps(a, a));
-                    converted = _mm_and_si128(converted, is_not_nan);
-                }
-                converted.simd_into(token)
+                let converted = _mm_cvttps_epi32(a);
+                let positive_overflow =
+                    _mm_castps_si128(_mm_cmple_ps(_mm_set1_ps(2147483648.0), a));
+                let converted = _mm_xor_si128(converted, positive_overflow);
+                let is_not_nan = _mm_castps_si128(_mm_cmpord_ps(a, a));
+                _mm_and_si128(converted, is_not_nan).simd_into(token)
             }
         );
         kernel(self, a)
@@ -4219,19 +4212,103 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn cvt_u64_f64x2(self, a: f64x2<Self>) -> u64x2<Self> {
-        [a[0usize] as u64, a[1usize] as u64].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: f64x2<Avx2>) -> u64x2<Avx2> {
+                let a = a.into();
+                let bits = _mm_castpd_si128(a);
+                let exponent = _mm_srli_epi64::<52>(bits);
+                let significand = _mm_or_si128(
+                    _mm_and_si128(bits, _mm_set1_epi64x(0x000f_ffff_ffff_ffff)),
+                    _mm_set1_epi64x(0x0010_0000_0000_0000),
+                );
+                let shift_bias = _mm_set1_epi64x(1075);
+                let right_count = _mm_sub_epi64(shift_bias, exponent);
+                let left_count = _mm_sub_epi64(exponent, shift_bias);
+                let converted = _mm_or_si128(
+                    _mm_srlv_epi64(significand, right_count),
+                    _mm_sllv_epi64(significand, left_count),
+                );
+                converted.simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_u64_precise_f64x2(self, a: f64x2<Self>) -> u64x2<Self> {
-        [a[0usize] as u64, a[1usize] as u64].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: f64x2<Avx2>) -> u64x2<Avx2> {
+                let a = a.into();
+                let bits = _mm_castpd_si128(a);
+                let exponent = _mm_srli_epi64::<52>(bits);
+                let significand = _mm_or_si128(
+                    _mm_and_si128(bits, _mm_set1_epi64x(0x000f_ffff_ffff_ffff)),
+                    _mm_set1_epi64x(0x0010_0000_0000_0000),
+                );
+                let shift_bias = _mm_set1_epi64x(1075);
+                let right_count = _mm_sub_epi64(shift_bias, exponent);
+                let left_count = _mm_sub_epi64(exponent, shift_bias);
+                let converted = _mm_or_si128(
+                    _mm_srlv_epi64(significand, right_count),
+                    _mm_sllv_epi64(significand, left_count),
+                );
+                let overflow =
+                    _mm_castpd_si128(_mm_cmpge_pd(a, _mm_set1_pd(18_446_744_073_709_551_616.0)));
+                _mm_or_si128(converted, overflow).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
+    #[cfg(target_arch = "x86_64")]
+    fn cvt_i64_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: f64x2<Avx2>) -> i64x2<Avx2> {
+                let a = a.into();
+                let low = _mm_cvttsd_si64(a);
+                let high = _mm_cvttsd_si64(_mm_unpackhi_pd(a, a));
+                _mm_set_epi64x(high, low).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[cfg(target_arch = "x86")]
     fn cvt_i64_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
         [a[0usize] as i64, a[1usize] as i64].simd_into(self)
     }
     #[inline(always)]
     fn cvt_i64_precise_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
-        [a[0usize] as i64, a[1usize] as i64].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: f64x2<Avx2>) -> i64x2<Avx2> {
+                let a = a.into();
+                let bits = _mm_castpd_si128(a);
+                let absolute = _mm_and_si128(bits, _mm_set1_epi64x(i64::MAX));
+                let exponent = _mm_srli_epi64::<52>(absolute);
+                let significand = _mm_or_si128(
+                    _mm_and_si128(bits, _mm_set1_epi64x(0x000f_ffff_ffff_ffff)),
+                    _mm_set1_epi64x(0x0010_0000_0000_0000),
+                );
+                let shift_bias = _mm_set1_epi64x(1075);
+                let right_count = _mm_sub_epi64(shift_bias, exponent);
+                let left_count = _mm_sub_epi64(exponent, shift_bias);
+                let magnitude = _mm_or_si128(
+                    _mm_srlv_epi64(significand, right_count),
+                    _mm_sllv_epi64(significand, left_count),
+                );
+                let sign = _mm_cmpgt_epi64(_mm_setzero_si128(), bits);
+                let converted = _mm_sub_epi64(_mm_xor_si128(magnitude, sign), sign);
+                let overflow = _mm_castpd_si128(_mm_cmpge_pd(
+                    _mm_castsi128_pd(absolute),
+                    _mm_set1_pd(9_223_372_036_854_775_808.0),
+                ));
+                let bound = _mm_xor_si128(_mm_set1_epi64x(i64::MAX), sign);
+                _mm_blendv_epi8(converted, bound, overflow).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
@@ -4628,7 +4705,21 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn cvt_f64_i64x2(self, a: i64x2<Self>) -> f64x2<Self> {
-        [a[0usize] as f64, a[1usize] as f64].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>) -> f64x2<Avx2> {
+                let a = a.into();
+                let low = _mm_blend_epi16::<0xcc>(a, _mm_set1_epi64x(0x4330_0000_0000_0000));
+                let high = _mm_srli_epi64::<32>(a);
+                let high = _mm_xor_si128(high, _mm_set1_epi64x(4985484789646622720i64));
+                let high = _mm_sub_pd(
+                    _mm_castsi128_pd(high),
+                    _mm_set1_pd(f64::from_bits(4985484789647671296u64)),
+                );
+                _mm_add_pd(_mm_castsi128_pd(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
@@ -5011,7 +5102,21 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn cvt_f64_u64x2(self, a: u64x2<Self>) -> f64x2<Self> {
-        [a[0usize] as f64, a[1usize] as f64].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>) -> f64x2<Avx2> {
+                let a = a.into();
+                let low = _mm_blend_epi16::<0xcc>(a, _mm_set1_epi64x(0x4330_0000_0000_0000));
+                let high = _mm_srli_epi64::<32>(a);
+                let high = _mm_xor_si128(high, _mm_set1_epi64x(4985484787499139072i64));
+                let high = _mm_sub_pd(
+                    _mm_castsi128_pd(high),
+                    _mm_set1_pd(f64::from_bits(4985484787500187648u64)),
+                );
+                _mm_add_pd(_mm_castsi128_pd(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
@@ -5660,19 +5765,12 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: f32x8<Avx2>) -> i32x8<Avx2> {
                 let a = a.into();
-                let mut converted = _mm256_cvttps_epi32(a);
-                let in_range = _mm256_cmp_ps::<17i32>(a, _mm256_set1_ps(2147483648.0));
-                let all_in_range = _mm256_movemask_ps(in_range) == 0b11111111;
-                if !all_in_range {
-                    converted = _mm256_blendv_epi8(
-                        _mm256_set1_epi32(i32::MAX),
-                        converted,
-                        _mm256_castps_si256(in_range),
-                    );
-                    let is_not_nan = _mm256_castps_si256(_mm256_cmp_ps::<7i32>(a, a));
-                    converted = _mm256_and_si256(converted, is_not_nan);
-                }
-                converted.simd_into(token)
+                let converted = _mm256_cvttps_epi32(a);
+                let positive_overflow =
+                    _mm256_castps_si256(_mm256_cmp_ps::<18i32>(_mm256_set1_ps(2147483648.0), a));
+                let converted = _mm256_xor_si256(converted, positive_overflow);
+                let is_not_nan = _mm256_castps_si256(_mm256_cmp_ps::<7i32>(a, a));
+                _mm256_and_si256(converted, is_not_nan).simd_into(token)
             }
         );
         kernel(self, a)
@@ -9460,43 +9558,114 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn cvt_u64_f64x4(self, a: f64x4<Self>) -> u64x4<Self> {
-        [
-            a[0usize] as u64,
-            a[1usize] as u64,
-            a[2usize] as u64,
-            a[3usize] as u64,
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: f64x4<Avx2>) -> u64x4<Avx2> {
+                let a = a.into();
+                let bits = _mm256_castpd_si256(a);
+                let exponent = _mm256_srli_epi64::<52>(bits);
+                let significand = _mm256_or_si256(
+                    _mm256_and_si256(bits, _mm256_set1_epi64x(0x000f_ffff_ffff_ffff)),
+                    _mm256_set1_epi64x(0x0010_0000_0000_0000),
+                );
+                let shift_bias = _mm256_set1_epi64x(1075);
+                let right_count = _mm256_sub_epi64(shift_bias, exponent);
+                let left_count = _mm256_sub_epi64(exponent, shift_bias);
+                let converted = _mm256_or_si256(
+                    _mm256_srlv_epi64(significand, right_count),
+                    _mm256_sllv_epi64(significand, left_count),
+                );
+                converted.simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_u64_precise_f64x4(self, a: f64x4<Self>) -> u64x4<Self> {
-        [
-            a[0usize] as u64,
-            a[1usize] as u64,
-            a[2usize] as u64,
-            a[3usize] as u64,
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: f64x4<Avx2>) -> u64x4<Avx2> {
+                let a = a.into();
+                let bits = _mm256_castpd_si256(a);
+                let exponent = _mm256_srli_epi64::<52>(bits);
+                let significand = _mm256_or_si256(
+                    _mm256_and_si256(bits, _mm256_set1_epi64x(0x000f_ffff_ffff_ffff)),
+                    _mm256_set1_epi64x(0x0010_0000_0000_0000),
+                );
+                let shift_bias = _mm256_set1_epi64x(1075);
+                let right_count = _mm256_sub_epi64(shift_bias, exponent);
+                let left_count = _mm256_sub_epi64(exponent, shift_bias);
+                let converted = _mm256_or_si256(
+                    _mm256_srlv_epi64(significand, right_count),
+                    _mm256_sllv_epi64(significand, left_count),
+                );
+                let overflow = _mm256_castpd_si256(_mm256_cmp_pd::<29i32>(
+                    a,
+                    _mm256_set1_pd(18_446_744_073_709_551_616.0),
+                ));
+                _mm256_or_si256(converted, overflow).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_i64_f64x4(self, a: f64x4<Self>) -> i64x4<Self> {
-        [
-            a[0usize] as i64,
-            a[1usize] as i64,
-            a[2usize] as i64,
-            a[3usize] as i64,
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: f64x4<Avx2>) -> i64x4<Avx2> {
+                let a = a.into();
+                let bits = _mm256_castpd_si256(a);
+                let absolute = _mm256_and_si256(bits, _mm256_set1_epi64x(i64::MAX));
+                let exponent = _mm256_srli_epi64::<52>(absolute);
+                let significand = _mm256_or_si256(
+                    _mm256_and_si256(bits, _mm256_set1_epi64x(0x000f_ffff_ffff_ffff)),
+                    _mm256_set1_epi64x(0x0010_0000_0000_0000),
+                );
+                let shift_bias = _mm256_set1_epi64x(1075);
+                let right_count = _mm256_sub_epi64(shift_bias, exponent);
+                let left_count = _mm256_sub_epi64(exponent, shift_bias);
+                let magnitude = _mm256_or_si256(
+                    _mm256_srlv_epi64(significand, right_count),
+                    _mm256_sllv_epi64(significand, left_count),
+                );
+                let sign = _mm256_cmpgt_epi64(_mm256_setzero_si256(), bits);
+                let converted = _mm256_sub_epi64(_mm256_xor_si256(magnitude, sign), sign);
+                converted.simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_i64_precise_f64x4(self, a: f64x4<Self>) -> i64x4<Self> {
-        [
-            a[0usize] as i64,
-            a[1usize] as i64,
-            a[2usize] as i64,
-            a[3usize] as i64,
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: f64x4<Avx2>) -> i64x4<Avx2> {
+                let a = a.into();
+                let bits = _mm256_castpd_si256(a);
+                let absolute = _mm256_and_si256(bits, _mm256_set1_epi64x(i64::MAX));
+                let exponent = _mm256_srli_epi64::<52>(absolute);
+                let significand = _mm256_or_si256(
+                    _mm256_and_si256(bits, _mm256_set1_epi64x(0x000f_ffff_ffff_ffff)),
+                    _mm256_set1_epi64x(0x0010_0000_0000_0000),
+                );
+                let shift_bias = _mm256_set1_epi64x(1075);
+                let right_count = _mm256_sub_epi64(shift_bias, exponent);
+                let left_count = _mm256_sub_epi64(exponent, shift_bias);
+                let magnitude = _mm256_or_si256(
+                    _mm256_srlv_epi64(significand, right_count),
+                    _mm256_sllv_epi64(significand, left_count),
+                );
+                let sign = _mm256_cmpgt_epi64(_mm256_setzero_si256(), bits);
+                let converted = _mm256_sub_epi64(_mm256_xor_si256(magnitude, sign), sign);
+                let overflow = _mm256_castpd_si256(_mm256_cmp_pd::<29i32>(
+                    _mm256_castsi256_pd(absolute),
+                    _mm256_set1_pd(9_223_372_036_854_775_808.0),
+                ));
+                let bound = _mm256_xor_si256(_mm256_set1_epi64x(i64::MAX), sign);
+                _mm256_blendv_epi8(converted, bound, overflow).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_i64x4(self, val: i64) -> i64x4<Self> {
@@ -9902,13 +10071,21 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn cvt_f64_i64x4(self, a: i64x4<Self>) -> f64x4<Self> {
-        [
-            a[0usize] as f64,
-            a[1usize] as f64,
-            a[2usize] as f64,
-            a[3usize] as f64,
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>) -> f64x4<Avx2> {
+                let a = a.into();
+                let low = _mm256_blend_epi32::<0xaa>(a, _mm256_set1_epi64x(0x4330_0000_0000_0000));
+                let high = _mm256_srli_epi64::<32>(a);
+                let high = _mm256_xor_si256(high, _mm256_set1_epi64x(4985484789646622720i64));
+                let high = _mm256_sub_pd(
+                    _mm256_castsi256_pd(high),
+                    _mm256_set1_pd(f64::from_bits(4985484789647671296u64)),
+                );
+                _mm256_add_pd(_mm256_castsi256_pd(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_u64x4(self, val: u64) -> u64x4<Self> {
@@ -10298,13 +10475,21 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn cvt_f64_u64x4(self, a: u64x4<Self>) -> f64x4<Self> {
-        [
-            a[0usize] as f64,
-            a[1usize] as f64,
-            a[2usize] as f64,
-            a[3usize] as f64,
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>) -> f64x4<Avx2> {
+                let a = a.into();
+                let low = _mm256_blend_epi32::<0xaa>(a, _mm256_set1_epi64x(0x4330_0000_0000_0000));
+                let high = _mm256_srli_epi64::<32>(a);
+                let high = _mm256_xor_si256(high, _mm256_set1_epi64x(4985484787499139072i64));
+                let high = _mm256_sub_pd(
+                    _mm256_castsi256_pd(high),
+                    _mm256_set1_pd(f64::from_bits(4985484787500187648u64)),
+                );
+                _mm256_add_pd(_mm256_castsi256_pd(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask64x4(self, val: bool) -> mask64x4<Self> {
