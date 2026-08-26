@@ -6226,23 +6226,17 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i8x32<Avx2>, b: i8x32<Avx2>) -> (i8x32<Avx2>, i8x32<Avx2>) {
-                let t1 = _mm256_permute4x64_epi64::<0b11_01_10_00>(_mm256_shuffle_epi8(
-                    a.into(),
-                    _mm256_setr_epi8(
-                        0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10,
-                        12, 14, 1, 3, 5, 7, 9, 11, 13, 15,
-                    ),
-                ));
-                let t2 = _mm256_permute4x64_epi64::<0b11_01_10_00>(_mm256_shuffle_epi8(
-                    b.into(),
-                    _mm256_setr_epi8(
-                        0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10,
-                        12, 14, 1, 3, 5, 7, 9, 11, 13, 15,
-                    ),
-                ));
+                let mask = _mm256_setr_epi8(
+                    0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12,
+                    14, 1, 3, 5, 7, 9, 11, 13, 15,
+                );
+                let a = _mm256_shuffle_epi8(a.into(), mask);
+                let b = _mm256_shuffle_epi8(b.into(), mask);
+                let low = _mm256_permute2x128_si256::<0b0010_0000>(a, b);
+                let high = _mm256_permute2x128_si256::<0b0011_0001>(a, b);
                 (
-                    _mm256_permute2x128_si256::<0b0010_0000>(t1, t2).simd_into(token),
-                    _mm256_permute2x128_si256::<0b0011_0001>(t1, t2).simd_into(token),
+                    _mm256_unpacklo_epi64(low, high).simd_into(token),
+                    _mm256_unpackhi_epi64(low, high).simd_into(token),
                 )
             }
         );
@@ -6765,23 +6759,17 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u8x32<Avx2>, b: u8x32<Avx2>) -> (u8x32<Avx2>, u8x32<Avx2>) {
-                let t1 = _mm256_permute4x64_epi64::<0b11_01_10_00>(_mm256_shuffle_epi8(
-                    a.into(),
-                    _mm256_setr_epi8(
-                        0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10,
-                        12, 14, 1, 3, 5, 7, 9, 11, 13, 15,
-                    ),
-                ));
-                let t2 = _mm256_permute4x64_epi64::<0b11_01_10_00>(_mm256_shuffle_epi8(
-                    b.into(),
-                    _mm256_setr_epi8(
-                        0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10,
-                        12, 14, 1, 3, 5, 7, 9, 11, 13, 15,
-                    ),
-                ));
+                let mask = _mm256_setr_epi8(
+                    0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12,
+                    14, 1, 3, 5, 7, 9, 11, 13, 15,
+                );
+                let a = _mm256_shuffle_epi8(a.into(), mask);
+                let b = _mm256_shuffle_epi8(b.into(), mask);
+                let low = _mm256_permute2x128_si256::<0b0010_0000>(a, b);
+                let high = _mm256_permute2x128_si256::<0b0011_0001>(a, b);
                 (
-                    _mm256_permute2x128_si256::<0b0010_0000>(t1, t2).simd_into(token),
-                    _mm256_permute2x128_si256::<0b0011_0001>(t1, t2).simd_into(token),
+                    _mm256_unpacklo_epi64(low, high).simd_into(token),
+                    _mm256_unpackhi_epi64(low, high).simd_into(token),
                 )
             }
         );
@@ -7367,23 +7355,17 @@ impl Simd for Avx2 {
                 a: i16x16<Avx2>,
                 b: i16x16<Avx2>,
             ) -> (i16x16<Avx2>, i16x16<Avx2>) {
-                let t1 = _mm256_permute4x64_epi64::<0b11_01_10_00>(_mm256_shuffle_epi8(
-                    a.into(),
-                    _mm256_setr_epi8(
-                        0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 4, 5, 8, 9, 12,
-                        13, 2, 3, 6, 7, 10, 11, 14, 15,
-                    ),
-                ));
-                let t2 = _mm256_permute4x64_epi64::<0b11_01_10_00>(_mm256_shuffle_epi8(
-                    b.into(),
-                    _mm256_setr_epi8(
-                        0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 4, 5, 8, 9, 12,
-                        13, 2, 3, 6, 7, 10, 11, 14, 15,
-                    ),
-                ));
+                let mask = _mm256_setr_epi8(
+                    0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 4, 5, 8, 9, 12, 13,
+                    2, 3, 6, 7, 10, 11, 14, 15,
+                );
+                let a = _mm256_shuffle_epi8(a.into(), mask);
+                let b = _mm256_shuffle_epi8(b.into(), mask);
+                let low = _mm256_permute2x128_si256::<0b0010_0000>(a, b);
+                let high = _mm256_permute2x128_si256::<0b0011_0001>(a, b);
                 (
-                    _mm256_permute2x128_si256::<0b0010_0000>(t1, t2).simd_into(token),
-                    _mm256_permute2x128_si256::<0b0011_0001>(t1, t2).simd_into(token),
+                    _mm256_unpacklo_epi64(low, high).simd_into(token),
+                    _mm256_unpackhi_epi64(low, high).simd_into(token),
                 )
             }
         );
@@ -7843,23 +7825,17 @@ impl Simd for Avx2 {
                 a: u16x16<Avx2>,
                 b: u16x16<Avx2>,
             ) -> (u16x16<Avx2>, u16x16<Avx2>) {
-                let t1 = _mm256_permute4x64_epi64::<0b11_01_10_00>(_mm256_shuffle_epi8(
-                    a.into(),
-                    _mm256_setr_epi8(
-                        0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 4, 5, 8, 9, 12,
-                        13, 2, 3, 6, 7, 10, 11, 14, 15,
-                    ),
-                ));
-                let t2 = _mm256_permute4x64_epi64::<0b11_01_10_00>(_mm256_shuffle_epi8(
-                    b.into(),
-                    _mm256_setr_epi8(
-                        0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 4, 5, 8, 9, 12,
-                        13, 2, 3, 6, 7, 10, 11, 14, 15,
-                    ),
-                ));
+                let mask = _mm256_setr_epi8(
+                    0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 4, 5, 8, 9, 12, 13,
+                    2, 3, 6, 7, 10, 11, 14, 15,
+                );
+                let a = _mm256_shuffle_epi8(a.into(), mask);
+                let b = _mm256_shuffle_epi8(b.into(), mask);
+                let low = _mm256_permute2x128_si256::<0b0010_0000>(a, b);
+                let high = _mm256_permute2x128_si256::<0b0011_0001>(a, b);
                 (
-                    _mm256_permute2x128_si256::<0b0010_0000>(t1, t2).simd_into(token),
-                    _mm256_permute2x128_si256::<0b0011_0001>(t1, t2).simd_into(token),
+                    _mm256_unpacklo_epi64(low, high).simd_into(token),
+                    _mm256_unpackhi_epi64(low, high).simd_into(token),
                 )
             }
         );

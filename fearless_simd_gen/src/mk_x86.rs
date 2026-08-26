@@ -1032,6 +1032,21 @@ fn avx512_index_vector(vec_ty: &VecType, indices: impl IntoIterator<Item = usize
     }
 }
 
+/// A lane-local `pshufb` mask that groups the even elements before the odd elements.
+fn narrow_unzip_shuffle_mask(vec_ty: &VecType) -> TokenStream {
+    let lane_mask = match vec_ty.scalar_bits {
+        8 => quote! { 0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15 },
+        16 => quote! { 0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15 },
+        _ => unreachable!(),
+    };
+
+    match vec_ty.n_bits() {
+        128 => quote! { _mm_setr_epi8(#lane_mask) },
+        256 => quote! { _mm256_setr_epi8(#lane_mask, #lane_mask) },
+        _ => unreachable!(),
+    }
+}
+
 fn interleaved_load_indices(len: usize, block_count: usize) -> Vec<usize> {
     let stream_len = len / block_count;
     (0..block_count)
@@ -3218,19 +3233,36 @@ impl X86 {
             && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
             && matches!(vec_ty.scalar_bits, 8 | 16)
         {
-            let mask = match vec_ty.scalar_bits {
-                8 => quote! { 0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15 },
-                16 => quote! { 0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15 },
-                _ => unreachable!(),
-            };
+            let mask = narrow_unzip_shuffle_mask(vec_ty);
             return self.kernel_method(op, vec_ty, |token| {
                 quote! {
-                    let mask = _mm_setr_epi8(#mask);
+                    let mask = #mask;
                     let a = _mm_shuffle_epi8(a.into(), mask);
                     let b = _mm_shuffle_epi8(b.into(), mask);
                     (
                         _mm_unpacklo_epi64(a, b).simd_into(#token),
                         _mm_unpackhi_epi64(a, b).simd_into(#token),
+                    )
+                }
+            });
+        }
+
+        if *self == Self::Avx2
+            && vec_ty.n_bits() == 256
+            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
+            && matches!(vec_ty.scalar_bits, 8 | 16)
+        {
+            let mask = narrow_unzip_shuffle_mask(vec_ty);
+            return self.kernel_method(op, vec_ty, |token| {
+                quote! {
+                    let mask = #mask;
+                    let a = _mm256_shuffle_epi8(a.into(), mask);
+                    let b = _mm256_shuffle_epi8(b.into(), mask);
+                    let low = _mm256_permute2x128_si256::<0b0010_0000>(a, b);
+                    let high = _mm256_permute2x128_si256::<0b0011_0001>(a, b);
+                    (
+                        _mm256_unpacklo_epi64(low, high).simd_into(#token),
+                        _mm256_unpackhi_epi64(low, high).simd_into(#token),
                     )
                 }
             });
@@ -3301,15 +3333,11 @@ impl X86 {
                 (shuf(quote! { a.into() }), shuf(quote! { b.into() }))
             }
             8 | 16 => {
-                let mask = match vec_ty.scalar_bits {
-                    8 => quote! { 0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15 },
-                    16 => quote! { 0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15 },
-                    _ => unreachable!(),
-                };
+                let mask = narrow_unzip_shuffle_mask(vec_ty);
                 let shuf = |input: TokenStream| {
                     quote! {
                         _mm256_permute4x64_epi64::<0b11_01_10_00>(
-                            _mm256_shuffle_epi8(#input, _mm256_setr_epi8(#mask, #mask)),
+                            _mm256_shuffle_epi8(#input, #mask),
                         )
                     }
                 };
@@ -3390,20 +3418,7 @@ impl X86 {
                 }
                 (ScalarType::Int | ScalarType::Mask | ScalarType::Unsigned, 128, 16 | 8) => {
                     // Separate out the even-indexed and odd-indexed elements
-                    let mask = match vec_ty.scalar_bits {
-                        8 => {
-                            quote! { 0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15 }
-                        }
-                        16 => {
-                            quote! { 0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15 }
-                        }
-                        _ => unreachable!(),
-                    };
-                    let mask_reg = match vec_ty.n_bits() {
-                        128 => quote! { _mm_setr_epi8(#mask) },
-                        256 => quote! { _mm256_setr_epi8(#mask, #mask) },
-                        _ => unreachable!(),
-                    };
+                    let mask = narrow_unzip_shuffle_mask(vec_ty);
                     let shuffle_epi8 = intrinsic_ident("shuffle", "epi8", vec_ty.n_bits());
 
                     // Select either the low or high half of each one
@@ -3411,7 +3426,7 @@ impl X86 {
                     let unpack_epi64 = intrinsic_ident(op, "epi64", vec_ty.n_bits());
 
                     quote! {
-                        let mask = #mask_reg;
+                        let mask = #mask;
 
                         let t1 = #shuffle_epi8(a.into(), mask);
                         let t2 = #shuffle_epi8(b.into(), mask);
