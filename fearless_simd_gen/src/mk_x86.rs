@@ -2276,10 +2276,8 @@ impl X86 {
     }
 
     fn handle_saturating_add(&self, op: Op, vec_ty: &VecType) -> TokenStream {
-        assert!(matches!(
-            vec_ty.scalar,
-            ScalarType::Int | ScalarType::Unsigned
-        ));
+        use ScalarType::{Float, Int, Unsigned};
+        assert!(matches!(vec_ty.scalar, Int | Unsigned));
         match (*self, vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits()) {
             // x86 has native instructions for 8-bit and 16-bit elements only.
             (_, _, 8 | 16, _) => {
@@ -2292,7 +2290,7 @@ impl X86 {
             }
             // SSE2 emulations are possible but complex so we don't bother, SSE2 is too rare.
             (Self::Sse2, _, 32 | 64, _) => fallback_method(op, vec_ty),
-            (Self::Avx512, ScalarType::Int, lane_bits @ (32 | 64), bits) => {
+            (Self::Avx512, Int, lane_bits @ (32 | 64), bits) => {
                 let shift = Literal::usize_unsuffixed(lane_bits - 1);
                 let max = match lane_bits {
                     32 => quote! { i32::MAX },
@@ -2331,8 +2329,8 @@ impl X86 {
                     }
                 })
             }
-            (Self::Sse4_2 | Self::Avx2, ScalarType::Unsigned, 32, _bits)
-            | (Self::Avx512, ScalarType::Unsigned, 32 | 64, _bits) => {
+            (Self::Sse4_2 | Self::Avx2, Unsigned, 32, _bits)
+            | (Self::Avx512, Unsigned, 32 | 64, _bits) => {
                 let bits = vec_ty.n_bits();
                 let add = simple_sign_unaware_intrinsic("add", vec_ty);
                 let xor = intrinsic_ident("xor", coarse_type(vec_ty), bits);
@@ -2350,7 +2348,7 @@ impl X86 {
                     }
                 })
             }
-            (Self::Sse4_2 | Self::Avx2, ScalarType::Unsigned, 64, _bits) => {
+            (Self::Sse4_2 | Self::Avx2, Unsigned, 64, _bits) => {
                 let bits = vec_ty.n_bits();
                 let add = simple_sign_unaware_intrinsic("add", vec_ty);
                 let xor = intrinsic_ident("xor", coarse_type(vec_ty), bits);
@@ -2374,7 +2372,7 @@ impl X86 {
                     }
                 })
             }
-            (Self::Sse4_2 | Self::Avx2, ScalarType::Int, lane_bits  @ (32 | 64), bits) => {
+            (Self::Sse4_2 | Self::Avx2, Int, lane_bits @ (32 | 64), bits) => {
                 let add = simple_sign_unaware_intrinsic("add", vec_ty);
                 let xor = intrinsic_ident("xor", coarse_type(vec_ty), bits);
                 let set1 = set1_intrinsic(vec_ty);
@@ -2404,20 +2402,8 @@ impl X86 {
                     }
                     _ => unreachable!(),
                 };
-                let to_float = cast_ident(
-                    ScalarType::Int,
-                    ScalarType::Float,
-                    lane_bits,
-                    lane_bits,
-                    bits,
-                );
-                let to_int = cast_ident(
-                    ScalarType::Float,
-                    ScalarType::Int,
-                    lane_bits,
-                    lane_bits,
-                    bits,
-                );
+                let to_float = cast_ident(Int, Float, lane_bits, lane_bits, bits);
+                let to_int = cast_ident(Float, Int, lane_bits, lane_bits, bits);
                 let blend_suffix = match lane_bits {
                     32 => "ps",
                     64 => "pd",
