@@ -41,6 +41,13 @@ pub(crate) enum NarrowingMode {
     Saturate,
     Relaxed,
 }
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum SaturatingOp {
+    Add,
+    Sub,
+}
+
 #[derive(Clone, Copy)]
 pub(crate) enum OpSig {
     /// Takes a single scalar argument, and returns the corresponding vector type.
@@ -982,6 +989,12 @@ const INT_OPS: &[Op] = &[
         OpKind::Overloaded(CoreOpTrait::Sub),
         OpSig::Binary,
         "Subtract two vectors element-wise, wrapping on overflow.",
+    ),
+    Op::new(
+        "saturating_sub",
+        OpKind::VecTraitMethod,
+        OpSig::Binary,
+        "Subtract two vectors element-wise, saturating at the numeric bounds instead of overflowing.",
     ),
     Op::new(
         "mul",

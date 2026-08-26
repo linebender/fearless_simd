@@ -645,6 +645,16 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_sub_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
+                vqsubq_s8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn mul_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1043,6 +1053,16 @@ impl Simd for Neon {
             #[inline(always)]
             fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> u8x16<Neon> {
                 vsubq_u8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> u8x16<Neon> {
+                vqsubq_u8(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -1598,6 +1618,16 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_sub_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
+                vqsubq_s16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn mul_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1995,6 +2025,16 @@ impl Simd for Neon {
             #[inline(always)]
             fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
                 vsubq_u16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
+                vqsubq_u16(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -2575,6 +2615,16 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_sub_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
+                vqsubq_s32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn mul_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2982,6 +3032,16 @@ impl Simd for Neon {
             #[inline(always)]
             fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
                 vsubq_u32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
+                vqsubq_u32(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -4036,6 +4096,16 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_sub_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i64x2<Neon>, b: i64x2<Neon>) -> i64x2<Neon> {
+                vqsubq_s64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn mul_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         [
             i64::wrapping_mul(a[0usize], b[0usize]),
@@ -4417,6 +4487,16 @@ impl Simd for Neon {
             #[inline(always)]
             fn kernel(token: Neon, a: u64x2<Neon>, b: u64x2<Neon>) -> u64x2<Neon> {
                 vsubq_u64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u64x2<Neon>, b: u64x2<Neon>) -> u64x2<Neon> {
+                vqsubq_u64(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)

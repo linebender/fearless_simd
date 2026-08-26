@@ -41,6 +41,10 @@ fn generic_saturating_add<S: Simd, V: SimdInt<S>>(lhs: V, rhs: V) -> V {
     lhs.saturating_add(rhs)
 }
 
+fn generic_saturating_sub<S: Simd, V: SimdInt<S>>(lhs: V, rhs: V) -> V {
+    lhs.saturating_sub(rhs)
+}
+
 // Ensure that a generic vector's byte representation is itself a same-token
 // byte vector whose byte representation is idempotent.
 fn generic_bytes<S: Simd, V: SimdBase<S>>(value: V) -> V {

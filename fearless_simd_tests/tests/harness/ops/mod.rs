@@ -67,6 +67,7 @@ mod rotate_elements_left;
 mod rotate_elements_right;
 mod round_ties_even;
 mod saturating_add;
+mod saturating_sub;
 mod select;
 mod set;
 mod shift_elements_left;

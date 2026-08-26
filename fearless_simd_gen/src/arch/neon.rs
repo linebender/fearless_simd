@@ -16,6 +16,7 @@ fn translate_op(op: &str) -> Option<&'static str> {
         "sqrt" => "vsqrt",
         "add" => "vadd",
         "saturating_add" => "vqadd",
+        "saturating_sub" => "vqsub",
         "sub" => "vsub",
         "mul" => "vmul",
         "div" => "vdiv",
