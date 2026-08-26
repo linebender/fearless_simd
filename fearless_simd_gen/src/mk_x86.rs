@@ -1032,6 +1032,21 @@ fn avx512_index_vector(vec_ty: &VecType, indices: impl IntoIterator<Item = usize
     }
 }
 
+/// A lane-local `pshufb` mask that groups the even elements before the odd elements.
+fn narrow_unzip_shuffle_mask(vec_ty: &VecType) -> TokenStream {
+    let lane_mask = match vec_ty.scalar_bits {
+        8 => quote! { 0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15 },
+        16 => quote! { 0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15 },
+        _ => unreachable!(),
+    };
+
+    match vec_ty.n_bits() {
+        128 => quote! { _mm_setr_epi8(#lane_mask) },
+        256 => quote! { _mm256_setr_epi8(#lane_mask, #lane_mask) },
+        _ => unreachable!(),
+    }
+}
+
 fn interleaved_load_indices(len: usize, block_count: usize) -> Vec<usize> {
     let stream_len = len / block_count;
     (0..block_count)
@@ -2177,12 +2192,32 @@ impl X86 {
                     let and = intrinsic_ident("and", coarse_type(vec_ty), vec_ty.n_bits());
                     let or = intrinsic_ident("or", coarse_type(vec_ty), vec_ty.n_bits());
                     let slli = intrinsic_ident("slli", "epi16", vec_ty.n_bits());
-                    let srli = intrinsic_ident("srli", "epi16", vec_ty.n_bits());
-                    quote! {
-                        let dst_even = #mullo(a.into(), b.into());
-                        let dst_odd = #mullo(#srli::<8>(a.into()), #srli::<8>(b.into()));
+                    if *self == Self::Sse2 {
+                        let srli = intrinsic_ident("srli", "epi16", vec_ty.n_bits());
+                        quote! {
+                            let dst_even = #mullo(a.into(), b.into());
+                            let dst_odd = #mullo(#srli::<8>(a.into()), #srli::<8>(b.into()));
 
-                        #or(#slli(dst_odd, 8), #and(dst_even, #set1(0xFF))).simd_into(#token)
+                            #or(#slli(dst_odd, 8), #and(dst_even, #set1(0xFF))).simd_into(#token)
+                        }
+                    } else {
+                        // LLVM's byte-multiplication lowering uses PMADDUBSW to calculate the
+                        // odd byte of every i16 lane. The cleared adjacent byte means there is
+                        // only one product per lane, so the saturating add cannot saturate.
+                        // LLVM only uses this for 128-bit vectors while we apply it everywhere.
+                        // Both llvm-mca and hardware benchmarks show this is beneficial.
+                        let andnot =
+                            intrinsic_ident("andnot", coarse_type(vec_ty), vec_ty.n_bits());
+                        let maddubs = intrinsic_ident("maddubs", "epi16", vec_ty.n_bits());
+                        quote! {
+                            let a = a.into();
+                            let b = b.into();
+                            let low_mask = #set1(0xFF);
+                            let dst_even = #mullo(a, b);
+                            let dst_odd = #maddubs(a, #andnot(low_mask, b));
+
+                            #or(#slli(dst_odd, 8), #and(dst_even, low_mask)).simd_into(#token)
+                        }
                     }
                 }
                 "shlv" | "shrv" => {
@@ -2238,11 +2273,41 @@ impl X86 {
         }
 
         let ty_bits = vec_ty.n_bits();
+        let and = intrinsic_ident("and", coarse_type(vec_ty), ty_bits);
+        let set1_epi16 = intrinsic_ident("set1", "epi16", ty_bits);
+
+        if method == "shlv" {
+            // AVX-512 has variable shifts for i16 lanes but not i8 lanes. Treat each pair
+            // of bytes as an i16 and shift its even and odd bytes along separate paths.
+            let andnot = intrinsic_ident("andnot", coarse_type(vec_ty), ty_bits);
+            let srli = intrinsic_ident("srli", "epi16", ty_bits);
+            let blend = avx512_mask_blend_intrinsic(vec_ty);
+            let odd_byte_mask = match ty_bits {
+                128 => quote! { 0xaaaa_u16 },
+                256 => quote! { 0xaaaa_aaaa_u32 },
+                512 => quote! { 0xaaaa_aaaa_aaaa_aaaa_u64 },
+                _ => unreachable!(),
+            };
+
+            return quote! {
+                let val = a.into();
+                let counts = b.into();
+                let byte_mask = #set1_epi16(0x00ff);
+                let lo_counts = #and(counts, byte_mask);
+                let hi_counts = #srli::<8>(counts);
+                // Left shifts cannot move bits from the odd byte into the even byte, so
+                // only the odd-byte path needs its adjacent input byte cleared.
+                let lo_shifted = #shift_intrinsic(val, lo_counts);
+                let hi_values = #andnot(byte_mask, val);
+                let hi_shifted = #shift_intrinsic(hi_values, hi_counts);
+                // Mask bits set in odd byte positions select `hi_shifted`.
+                #blend(#odd_byte_mask, lo_shifted, hi_shifted).simd_into(#token)
+            };
+        }
+
         let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false, ty_bits);
         let unpack_lo = unpack_intrinsic(ScalarType::Int, 8, true, ty_bits);
         let set0 = intrinsic_ident("setzero", coarse_type(vec_ty), ty_bits);
-        let and = intrinsic_ident("and", coarse_type(vec_ty), ty_bits);
-        let set1_epi16 = intrinsic_ident("set1", "epi16", ty_bits);
         let pack = pack_intrinsic(16, false, ty_bits);
         let value_extend = match (method, vec_ty.scalar) {
             ("shlv", _) | (_, ScalarType::Unsigned) => quote! { zero },
@@ -3193,6 +3258,46 @@ impl X86 {
             });
         }
 
+        if matches!(self, Self::Sse4_2 | Self::Avx2)
+            && vec_ty.n_bits() == 128
+            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
+            && matches!(vec_ty.scalar_bits, 8 | 16)
+        {
+            let mask = narrow_unzip_shuffle_mask(vec_ty);
+            return self.kernel_method(op, vec_ty, |token| {
+                quote! {
+                    let mask = #mask;
+                    let a = _mm_shuffle_epi8(a.into(), mask);
+                    let b = _mm_shuffle_epi8(b.into(), mask);
+                    (
+                        _mm_unpacklo_epi64(a, b).simd_into(#token),
+                        _mm_unpackhi_epi64(a, b).simd_into(#token),
+                    )
+                }
+            });
+        }
+
+        if *self == Self::Avx2
+            && vec_ty.n_bits() == 256
+            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
+            && matches!(vec_ty.scalar_bits, 8 | 16)
+        {
+            let mask = narrow_unzip_shuffle_mask(vec_ty);
+            return self.kernel_method(op, vec_ty, |token| {
+                quote! {
+                    let mask = #mask;
+                    let a = _mm256_shuffle_epi8(a.into(), mask);
+                    let b = _mm256_shuffle_epi8(b.into(), mask);
+                    let low = _mm256_permute2x128_si256::<0b0010_0000>(a, b);
+                    let high = _mm256_permute2x128_si256::<0b0011_0001>(a, b);
+                    (
+                        _mm256_unpacklo_epi64(low, high).simd_into(#token),
+                        _mm256_unpackhi_epi64(low, high).simd_into(#token),
+                    )
+                }
+            });
+        }
+
         match vec_ty.n_bits() {
             256 => {
                 // Optimized path: compute the per-input shuffles once, then use permute2f128 /
@@ -3258,15 +3363,11 @@ impl X86 {
                 (shuf(quote! { a.into() }), shuf(quote! { b.into() }))
             }
             8 | 16 => {
-                let mask = match vec_ty.scalar_bits {
-                    8 => quote! { 0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15 },
-                    16 => quote! { 0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15 },
-                    _ => unreachable!(),
-                };
+                let mask = narrow_unzip_shuffle_mask(vec_ty);
                 let shuf = |input: TokenStream| {
                     quote! {
                         _mm256_permute4x64_epi64::<0b11_01_10_00>(
-                            _mm256_shuffle_epi8(#input, _mm256_setr_epi8(#mask, #mask)),
+                            _mm256_shuffle_epi8(#input, #mask),
                         )
                     }
                 };
@@ -3347,20 +3448,7 @@ impl X86 {
                 }
                 (ScalarType::Int | ScalarType::Mask | ScalarType::Unsigned, 128, 16 | 8) => {
                     // Separate out the even-indexed and odd-indexed elements
-                    let mask = match vec_ty.scalar_bits {
-                        8 => {
-                            quote! { 0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15 }
-                        }
-                        16 => {
-                            quote! { 0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15 }
-                        }
-                        _ => unreachable!(),
-                    };
-                    let mask_reg = match vec_ty.n_bits() {
-                        128 => quote! { _mm_setr_epi8(#mask) },
-                        256 => quote! { _mm256_setr_epi8(#mask, #mask) },
-                        _ => unreachable!(),
-                    };
+                    let mask = narrow_unzip_shuffle_mask(vec_ty);
                     let shuffle_epi8 = intrinsic_ident("shuffle", "epi8", vec_ty.n_bits());
 
                     // Select either the low or high half of each one
@@ -3368,7 +3456,7 @@ impl X86 {
                     let unpack_epi64 = intrinsic_ident(op, "epi64", vec_ty.n_bits());
 
                     quote! {
-                        let mask = #mask_reg;
+                        let mask = #mask;
 
                         let t1 = #shuffle_epi8(a.into(), mask);
                         let t2 = #shuffle_epi8(b.into(), mask);

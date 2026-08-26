@@ -923,12 +923,14 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
-                let dst_even = _mm_mullo_epi16(a.into(), b.into());
-                let dst_odd =
-                    _mm_mullo_epi16(_mm_srli_epi16::<8>(a.into()), _mm_srli_epi16::<8>(b.into()));
+                let a = a.into();
+                let b = b.into();
+                let low_mask = _mm_set1_epi16(0xFF);
+                let dst_even = _mm_mullo_epi16(a, b);
+                let dst_odd = _mm_maddubs_epi16(a, _mm_andnot_si128(low_mask, b));
                 _mm_or_si128(
                     _mm_slli_epi16(dst_odd, 8),
-                    _mm_and_si128(dst_even, _mm_set1_epi16(0xFF)),
+                    _mm_and_si128(dst_even, low_mask),
                 )
                 .simd_into(token)
             }
@@ -990,16 +992,13 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
                 let val = a.into();
                 let counts = b.into();
-                let zero = _mm_setzero_si128();
-                let value_extend = zero;
-                let lo_values = _mm_unpacklo_epi8(val, value_extend);
-                let hi_values = _mm_unpackhi_epi8(val, value_extend);
-                let lo_counts = _mm_unpacklo_epi8(counts, zero);
-                let hi_counts = _mm_unpackhi_epi8(counts, zero);
                 let byte_mask = _mm_set1_epi16(0x00ff);
-                let lo_shifted = _mm_and_si128(_mm_sllv_epi16(lo_values, lo_counts), byte_mask);
-                let hi_shifted = _mm_and_si128(_mm_sllv_epi16(hi_values, hi_counts), byte_mask);
-                _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
+                let lo_counts = _mm_and_si128(counts, byte_mask);
+                let hi_counts = _mm_srli_epi16::<8>(counts);
+                let lo_shifted = _mm_sllv_epi16(val, lo_counts);
+                let hi_values = _mm_andnot_si128(byte_mask, val);
+                let hi_shifted = _mm_sllv_epi16(hi_values, hi_counts);
+                _mm_mask_blend_epi8(0xaaaa_u16, lo_shifted, hi_shifted).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -1409,12 +1408,14 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
-                let dst_even = _mm_mullo_epi16(a.into(), b.into());
-                let dst_odd =
-                    _mm_mullo_epi16(_mm_srli_epi16::<8>(a.into()), _mm_srli_epi16::<8>(b.into()));
+                let a = a.into();
+                let b = b.into();
+                let low_mask = _mm_set1_epi16(0xFF);
+                let dst_even = _mm_mullo_epi16(a, b);
+                let dst_odd = _mm_maddubs_epi16(a, _mm_andnot_si128(low_mask, b));
                 _mm_or_si128(
                     _mm_slli_epi16(dst_odd, 8),
-                    _mm_and_si128(dst_even, _mm_set1_epi16(0xFF)),
+                    _mm_and_si128(dst_even, low_mask),
                 )
                 .simd_into(token)
             }
@@ -1476,16 +1477,13 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
                 let val = a.into();
                 let counts = b.into();
-                let zero = _mm_setzero_si128();
-                let value_extend = zero;
-                let lo_values = _mm_unpacklo_epi8(val, value_extend);
-                let hi_values = _mm_unpackhi_epi8(val, value_extend);
-                let lo_counts = _mm_unpacklo_epi8(counts, zero);
-                let hi_counts = _mm_unpackhi_epi8(counts, zero);
                 let byte_mask = _mm_set1_epi16(0x00ff);
-                let lo_shifted = _mm_and_si128(_mm_sllv_epi16(lo_values, lo_counts), byte_mask);
-                let hi_shifted = _mm_and_si128(_mm_sllv_epi16(hi_values, hi_counts), byte_mask);
-                _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
+                let lo_counts = _mm_and_si128(counts, byte_mask);
+                let hi_counts = _mm_srli_epi16::<8>(counts);
+                let lo_shifted = _mm_sllv_epi16(val, lo_counts);
+                let hi_values = _mm_andnot_si128(byte_mask, val);
+                let hi_shifted = _mm_sllv_epi16(hi_values, hi_counts);
+                _mm_mask_blend_epi8(0xaaaa_u16, lo_shifted, hi_shifted).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -5733,14 +5731,14 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> i8x32<Avx512> {
-                let dst_even = _mm256_mullo_epi16(a.into(), b.into());
-                let dst_odd = _mm256_mullo_epi16(
-                    _mm256_srli_epi16::<8>(a.into()),
-                    _mm256_srli_epi16::<8>(b.into()),
-                );
+                let a = a.into();
+                let b = b.into();
+                let low_mask = _mm256_set1_epi16(0xFF);
+                let dst_even = _mm256_mullo_epi16(a, b);
+                let dst_odd = _mm256_maddubs_epi16(a, _mm256_andnot_si256(low_mask, b));
                 _mm256_or_si256(
                     _mm256_slli_epi16(dst_odd, 8),
-                    _mm256_and_si256(dst_even, _mm256_set1_epi16(0xFF)),
+                    _mm256_and_si256(dst_even, low_mask),
                 )
                 .simd_into(token)
             }
@@ -5802,18 +5800,13 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> i8x32<Avx512> {
                 let val = a.into();
                 let counts = b.into();
-                let zero = _mm256_setzero_si256();
-                let value_extend = zero;
-                let lo_values = _mm256_unpacklo_epi8(val, value_extend);
-                let hi_values = _mm256_unpackhi_epi8(val, value_extend);
-                let lo_counts = _mm256_unpacklo_epi8(counts, zero);
-                let hi_counts = _mm256_unpackhi_epi8(counts, zero);
                 let byte_mask = _mm256_set1_epi16(0x00ff);
-                let lo_shifted =
-                    _mm256_and_si256(_mm256_sllv_epi16(lo_values, lo_counts), byte_mask);
-                let hi_shifted =
-                    _mm256_and_si256(_mm256_sllv_epi16(hi_values, hi_counts), byte_mask);
-                _mm256_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
+                let lo_counts = _mm256_and_si256(counts, byte_mask);
+                let hi_counts = _mm256_srli_epi16::<8>(counts);
+                let lo_shifted = _mm256_sllv_epi16(val, lo_counts);
+                let hi_values = _mm256_andnot_si256(byte_mask, val);
+                let hi_shifted = _mm256_sllv_epi16(hi_values, hi_counts);
+                _mm256_mask_blend_epi8(0xaaaa_aaaa_u32, lo_shifted, hi_shifted).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -6272,14 +6265,14 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> u8x32<Avx512> {
-                let dst_even = _mm256_mullo_epi16(a.into(), b.into());
-                let dst_odd = _mm256_mullo_epi16(
-                    _mm256_srli_epi16::<8>(a.into()),
-                    _mm256_srli_epi16::<8>(b.into()),
-                );
+                let a = a.into();
+                let b = b.into();
+                let low_mask = _mm256_set1_epi16(0xFF);
+                let dst_even = _mm256_mullo_epi16(a, b);
+                let dst_odd = _mm256_maddubs_epi16(a, _mm256_andnot_si256(low_mask, b));
                 _mm256_or_si256(
                     _mm256_slli_epi16(dst_odd, 8),
-                    _mm256_and_si256(dst_even, _mm256_set1_epi16(0xFF)),
+                    _mm256_and_si256(dst_even, low_mask),
                 )
                 .simd_into(token)
             }
@@ -6341,18 +6334,13 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> u8x32<Avx512> {
                 let val = a.into();
                 let counts = b.into();
-                let zero = _mm256_setzero_si256();
-                let value_extend = zero;
-                let lo_values = _mm256_unpacklo_epi8(val, value_extend);
-                let hi_values = _mm256_unpackhi_epi8(val, value_extend);
-                let lo_counts = _mm256_unpacklo_epi8(counts, zero);
-                let hi_counts = _mm256_unpackhi_epi8(counts, zero);
                 let byte_mask = _mm256_set1_epi16(0x00ff);
-                let lo_shifted =
-                    _mm256_and_si256(_mm256_sllv_epi16(lo_values, lo_counts), byte_mask);
-                let hi_shifted =
-                    _mm256_and_si256(_mm256_sllv_epi16(hi_values, hi_counts), byte_mask);
-                _mm256_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
+                let lo_counts = _mm256_and_si256(counts, byte_mask);
+                let hi_counts = _mm256_srli_epi16::<8>(counts);
+                let lo_shifted = _mm256_sllv_epi16(val, lo_counts);
+                let hi_values = _mm256_andnot_si256(byte_mask, val);
+                let hi_shifted = _mm256_sllv_epi16(hi_values, hi_counts);
+                _mm256_mask_blend_epi8(0xaaaa_aaaa_u32, lo_shifted, hi_shifted).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -10939,14 +10927,14 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> i8x64<Avx512> {
-                let dst_even = _mm512_mullo_epi16(a.into(), b.into());
-                let dst_odd = _mm512_mullo_epi16(
-                    _mm512_srli_epi16::<8>(a.into()),
-                    _mm512_srli_epi16::<8>(b.into()),
-                );
+                let a = a.into();
+                let b = b.into();
+                let low_mask = _mm512_set1_epi16(0xFF);
+                let dst_even = _mm512_mullo_epi16(a, b);
+                let dst_odd = _mm512_maddubs_epi16(a, _mm512_andnot_si512(low_mask, b));
                 _mm512_or_si512(
                     _mm512_slli_epi16(dst_odd, 8),
-                    _mm512_and_si512(dst_even, _mm512_set1_epi16(0xFF)),
+                    _mm512_and_si512(dst_even, low_mask),
                 )
                 .simd_into(token)
             }
@@ -11008,18 +10996,14 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> i8x64<Avx512> {
                 let val = a.into();
                 let counts = b.into();
-                let zero = _mm512_setzero_si512();
-                let value_extend = zero;
-                let lo_values = _mm512_unpacklo_epi8(val, value_extend);
-                let hi_values = _mm512_unpackhi_epi8(val, value_extend);
-                let lo_counts = _mm512_unpacklo_epi8(counts, zero);
-                let hi_counts = _mm512_unpackhi_epi8(counts, zero);
                 let byte_mask = _mm512_set1_epi16(0x00ff);
-                let lo_shifted =
-                    _mm512_and_si512(_mm512_sllv_epi16(lo_values, lo_counts), byte_mask);
-                let hi_shifted =
-                    _mm512_and_si512(_mm512_sllv_epi16(hi_values, hi_counts), byte_mask);
-                _mm512_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
+                let lo_counts = _mm512_and_si512(counts, byte_mask);
+                let hi_counts = _mm512_srli_epi16::<8>(counts);
+                let lo_shifted = _mm512_sllv_epi16(val, lo_counts);
+                let hi_values = _mm512_andnot_si512(byte_mask, val);
+                let hi_shifted = _mm512_sllv_epi16(hi_values, hi_counts);
+                _mm512_mask_blend_epi8(0xaaaa_aaaa_aaaa_aaaa_u64, lo_shifted, hi_shifted)
+                    .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -11486,14 +11470,14 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> u8x64<Avx512> {
-                let dst_even = _mm512_mullo_epi16(a.into(), b.into());
-                let dst_odd = _mm512_mullo_epi16(
-                    _mm512_srli_epi16::<8>(a.into()),
-                    _mm512_srli_epi16::<8>(b.into()),
-                );
+                let a = a.into();
+                let b = b.into();
+                let low_mask = _mm512_set1_epi16(0xFF);
+                let dst_even = _mm512_mullo_epi16(a, b);
+                let dst_odd = _mm512_maddubs_epi16(a, _mm512_andnot_si512(low_mask, b));
                 _mm512_or_si512(
                     _mm512_slli_epi16(dst_odd, 8),
-                    _mm512_and_si512(dst_even, _mm512_set1_epi16(0xFF)),
+                    _mm512_and_si512(dst_even, low_mask),
                 )
                 .simd_into(token)
             }
@@ -11555,18 +11539,14 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> u8x64<Avx512> {
                 let val = a.into();
                 let counts = b.into();
-                let zero = _mm512_setzero_si512();
-                let value_extend = zero;
-                let lo_values = _mm512_unpacklo_epi8(val, value_extend);
-                let hi_values = _mm512_unpackhi_epi8(val, value_extend);
-                let lo_counts = _mm512_unpacklo_epi8(counts, zero);
-                let hi_counts = _mm512_unpackhi_epi8(counts, zero);
                 let byte_mask = _mm512_set1_epi16(0x00ff);
-                let lo_shifted =
-                    _mm512_and_si512(_mm512_sllv_epi16(lo_values, lo_counts), byte_mask);
-                let hi_shifted =
-                    _mm512_and_si512(_mm512_sllv_epi16(hi_values, hi_counts), byte_mask);
-                _mm512_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
+                let lo_counts = _mm512_and_si512(counts, byte_mask);
+                let hi_counts = _mm512_srli_epi16::<8>(counts);
+                let lo_shifted = _mm512_sllv_epi16(val, lo_counts);
+                let hi_values = _mm512_andnot_si512(byte_mask, val);
+                let hi_shifted = _mm512_sllv_epi16(hi_values, hi_counts);
+                _mm512_mask_blend_epi8(0xaaaa_aaaa_aaaa_aaaa_u64, lo_shifted, hi_shifted)
+                    .simd_into(token)
             }
         );
         kernel(self, a, b)
