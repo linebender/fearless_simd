@@ -2291,9 +2291,7 @@ impl X86 {
                 })
             }
             // SSE2 emulations are possible but complex so we don't bother, SSE2 is too rare.
-            (Self::Sse2, _, 32 | 64, _) => {
-                fallback_method(op, vec_ty)
-            }
+            (Self::Sse2, _, 32 | 64, _) => fallback_method(op, vec_ty),
             (Self::Avx512, ScalarType::Int, lane_bits @ (32 | 64), bits) => {
                 let shift = Literal::usize_unsuffixed(lane_bits - 1);
                 let max = match lane_bits {
@@ -2333,7 +2331,8 @@ impl X86 {
                     }
                 })
             }
-            (Self::Sse4_2 | Self::Avx2 | Self::Avx512, ScalarType::Unsigned, 32, _bits) => {
+            (Self::Sse4_2 | Self::Avx2, ScalarType::Unsigned, 32, _bits)
+            | (Self::Avx512, ScalarType::Unsigned, 32 | 64, _bits) => {
                 let bits = vec_ty.n_bits();
                 let add = simple_sign_unaware_intrinsic("add", vec_ty);
                 let xor = intrinsic_ident("xor", coarse_type(vec_ty), bits);
@@ -2375,88 +2374,66 @@ impl X86 {
                     }
                 })
             }
-            (Self::Sse4_2 | Self::Avx2, ScalarType::Int, 32, _bits) => {
-                let bits = vec_ty.n_bits();
+            (Self::Sse4_2 | Self::Avx2, ScalarType::Int, lane_bits  @ (32 | 64), bits) => {
                 let add = simple_sign_unaware_intrinsic("add", vec_ty);
                 let xor = intrinsic_ident("xor", coarse_type(vec_ty), bits);
                 let set1 = set1_intrinsic(vec_ty);
                 let cmpgt = simple_sign_unaware_intrinsic("cmpgt", vec_ty);
-                let shift = intrinsic_ident("srai", "epi32", bits);
-                let to_float = cast_ident(ScalarType::Int, ScalarType::Float, 32, 32, bits);
-                let to_int = cast_ident(ScalarType::Float, ScalarType::Int, 32, 32, bits);
-                let blend = intrinsic_ident("blendv", "ps", bits);
-                self.kernel_method(op, vec_ty, |token| {
-                    quote! {
-                        let a = a.into();
-                        let b = b.into();
-                        let sum = #add(a, b);
-
-                        // Only the sign bit of each lane is meaningful here, so use
-                        // BLENDVPS rather than the byte-granularity integer blend.
-                        let overflow = #xor(#cmpgt(a, sum), b);
-                        let bound = #xor(#shift::<31>(sum), #set1(i32::MIN));
-                        let result = #blend(
-                            #to_float(sum),
-                            #to_float(bound),
-                            #to_float(overflow),
-                        );
-                        #to_int(result).simd_into(#token)
+                let bound = match (*self, lane_bits) {
+                    (_, 32) => {
+                        let shift = intrinsic_ident("srai", "epi32", bits);
+                        quote! {
+                            let bound = #xor(#shift::<31>(sum), #set1(i32::MIN));
+                        }
                     }
-                })
-            }
-            (Self::Sse4_2, ScalarType::Int, 64, 128) => {
-                let bits = vec_ty.n_bits();
-                let add = simple_sign_unaware_intrinsic("add", vec_ty);
-                let xor = intrinsic_ident("xor", coarse_type(vec_ty), bits);
-                let set1 = set1_intrinsic(vec_ty);
-                let cmpgt = simple_sign_unaware_intrinsic("cmpgt", vec_ty);
-                let shuffle = intrinsic_ident("shuffle", "epi32", bits);
-                let shift = intrinsic_ident("srai", "epi32", bits);
-                let to_float = cast_ident(ScalarType::Int, ScalarType::Float, 64, 64, bits);
-                let to_int = cast_ident(ScalarType::Float, ScalarType::Int, 64, 64, bits);
-                let blend = intrinsic_ident("blendv", "pd", bits);
-                self.kernel_method(op, vec_ty, |token| {
-                    quote! {
-                        let a = a.into();
-                        let b = b.into();
-                        let sum = #add(a, b);
-
-                        // BLENDVPD reads one sign bit per qword, which is exactly the
-                        // meaningful part of this non-canonical overflow mask.
-                        let overflow = #xor(#cmpgt(a, sum), b);
-                        let sum_sign = #shift::<31>(#shuffle::<0xf5>(sum));
-                        let bound = #xor(sum_sign, #set1(i64::MIN));
-                        let result = #blend(
-                            #to_float(sum),
-                            #to_float(bound),
-                            #to_float(overflow),
-                        );
-                        #to_int(result).simd_into(#token)
+                    (Self::Sse4_2, 64) => {
+                        let shuffle = intrinsic_ident("shuffle", "epi32", bits);
+                        let shift = intrinsic_ident("srai", "epi32", bits);
+                        quote! {
+                            let sum_sign = #shift::<31>(#shuffle::<0xf5>(sum));
+                            let bound = #xor(sum_sign, #set1(i64::MIN));
+                        }
                     }
-                })
-            }
-            (Self::Avx2, ScalarType::Int, 64, 128 | 256) => {
-                let bits = vec_ty.n_bits();
-                let add = simple_sign_unaware_intrinsic("add", vec_ty);
-                let xor = intrinsic_ident("xor", coarse_type(vec_ty), bits);
-                let set1 = set1_intrinsic(vec_ty);
-                let cmpgt = simple_sign_unaware_intrinsic("cmpgt", vec_ty);
-                let shift = intrinsic_ident("srli", "epi64", bits);
-                let to_float = cast_ident(ScalarType::Int, ScalarType::Float, 64, 64, bits);
-                let to_int = cast_ident(ScalarType::Float, ScalarType::Int, 64, 64, bits);
-                let blend = intrinsic_ident("blendv", "pd", bits);
+                    (Self::Avx2, 64) => {
+                        let shift = intrinsic_ident("srli", "epi64", bits);
+                        quote! {
+                            // AVX2 can construct the endpoint directly from `a`'s sign
+                            // without the high-dword shuffle required by SSE4.2.
+                            let bound = #add(#shift::<63>(a), #set1(i64::MAX));
+                        }
+                    }
+                    _ => unreachable!(),
+                };
+                let to_float = cast_ident(
+                    ScalarType::Int,
+                    ScalarType::Float,
+                    lane_bits,
+                    lane_bits,
+                    bits,
+                );
+                let to_int = cast_ident(
+                    ScalarType::Float,
+                    ScalarType::Int,
+                    lane_bits,
+                    lane_bits,
+                    bits,
+                );
+                let blend_suffix = match lane_bits {
+                    32 => "ps",
+                    64 => "pd",
+                    _ => unreachable!(),
+                };
+                let blend = intrinsic_ident("blendv", blend_suffix, bits);
                 self.kernel_method(op, vec_ty, |token| {
                     quote! {
                         let a = a.into();
                         let b = b.into();
                         let sum = #add(a, b);
 
-                        // BLENDVPD reads one sign bit per qword, which is exactly the
-                        // meaningful part of this non-canonical overflow mask.
+                        // Only the sign bit of each lane is meaningful here, so use a
+                        // lane-granularity floating-point blend instead of BLENDV_EPI8.
                         let overflow = #xor(#cmpgt(a, sum), b);
-                        // AVX2 can construct the endpoint directly from `a`'s sign
-                        // without the high-dword shuffle required by SSE4.2.
-                        let bound = #add(#shift::<63>(a), #set1(i64::MAX));
+                        #bound
                         let result = #blend(
                             #to_float(sum),
                             #to_float(bound),
