@@ -972,6 +972,12 @@ const INT_OPS: &[Op] = &[
         "Add two vectors element-wise, wrapping on overflow.",
     ),
     Op::new(
+        "saturating_add",
+        OpKind::VecTraitMethod,
+        OpSig::Binary,
+        "Add two vectors element-wise, saturating at the numeric bounds instead of overflowing.",
+    ),
+    Op::new(
         "sub",
         OpKind::Overloaded(CoreOpTrait::Sub),
         OpSig::Binary,

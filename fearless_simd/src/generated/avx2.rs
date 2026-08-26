@@ -783,6 +783,16 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i8x16<Avx2>, b: i8x16<Avx2>) -> i8x16<Avx2> {
+                _mm_adds_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1346,6 +1356,16 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u8x16<Avx2>, b: u8x16<Avx2>) -> u8x16<Avx2> {
                 _mm_add_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u8x16<Avx2>, b: u8x16<Avx2>) -> u8x16<Avx2> {
+                _mm_adds_epu8(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -2041,6 +2061,16 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i16x8<Avx2>, b: i16x8<Avx2>) -> i16x8<Avx2> {
+                _mm_adds_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2549,6 +2579,16 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u16x8<Avx2>, b: u16x8<Avx2>) -> u16x8<Avx2> {
                 _mm_add_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u16x8<Avx2>, b: u16x8<Avx2>) -> u16x8<Avx2> {
+                _mm_adds_epu16(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -3248,6 +3288,26 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i32x4<Avx2>, b: i32x4<Avx2>) -> i32x4<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let sum = _mm_add_epi32(a, b);
+                let overflow = _mm_xor_si128(_mm_cmpgt_epi32(a, sum), b);
+                let bound = _mm_xor_si128(_mm_srai_epi32::<31>(sum), _mm_set1_epi32(i32::MIN));
+                let result = _mm_blendv_ps(
+                    _mm_castsi128_ps(sum),
+                    _mm_castsi128_ps(bound),
+                    _mm_castsi128_ps(overflow),
+                );
+                _mm_castps_si128(result).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3733,6 +3793,19 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u32x4<Avx2>, b: u32x4<Avx2>) -> u32x4<Avx2> {
                 _mm_add_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u32x4<Avx2>, b: u32x4<Avx2>) -> u32x4<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let threshold = _mm_xor_si128(b, _mm_set1_epi32(-1));
+                _mm_add_epi32(_mm_min_epu32(a, threshold), b).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -5001,6 +5074,26 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i64x2<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let sum = _mm_add_epi64(a, b);
+                let overflow = _mm_xor_si128(_mm_cmpgt_epi64(a, sum), b);
+                let bound = _mm_add_epi64(_mm_srli_epi64::<63>(a), _mm_set1_epi64x(i64::MAX));
+                let result = _mm_blendv_pd(
+                    _mm_castsi128_pd(sum),
+                    _mm_castsi128_pd(bound),
+                    _mm_castsi128_pd(overflow),
+                );
+                _mm_castpd_si128(result).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5448,6 +5541,22 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x2<Avx2> {
                 _mm_add_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x2<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let sum = _mm_add_epi64(a, b);
+                let sign_bias = _mm_set1_epi64x(i64::MIN);
+                let overflow =
+                    _mm_cmpgt_epi64(_mm_xor_si128(a, sign_bias), _mm_xor_si128(sum, sign_bias));
+                _mm_or_si128(sum, overflow).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -6595,6 +6704,16 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i8x32<Avx2>, b: i8x32<Avx2>) -> i8x32<Avx2> {
+                _mm256_adds_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -7132,6 +7251,16 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u8x32<Avx2>, b: u8x32<Avx2>) -> u8x32<Avx2> {
                 _mm256_add_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u8x32<Avx2>, b: u8x32<Avx2>) -> u8x32<Avx2> {
+                _mm256_adds_epu8(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -7803,6 +7932,16 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i16x16<Avx2>, b: i16x16<Avx2>) -> i16x16<Avx2> {
+                _mm256_adds_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -8271,6 +8410,16 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u16x16<Avx2>, b: u16x16<Avx2>) -> u16x16<Avx2> {
                 _mm256_add_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u16x16<Avx2>, b: u16x16<Avx2>) -> u16x16<Avx2> {
+                _mm256_adds_epu16(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -8946,6 +9095,27 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i32x8<Avx2>, b: i32x8<Avx2>) -> i32x8<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let sum = _mm256_add_epi32(a, b);
+                let overflow = _mm256_xor_si256(_mm256_cmpgt_epi32(a, sum), b);
+                let bound =
+                    _mm256_xor_si256(_mm256_srai_epi32::<31>(sum), _mm256_set1_epi32(i32::MIN));
+                let result = _mm256_blendv_ps(
+                    _mm256_castsi256_ps(sum),
+                    _mm256_castsi256_ps(bound),
+                    _mm256_castsi256_ps(overflow),
+                );
+                _mm256_castps_si256(result).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9384,6 +9554,19 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u32x8<Avx2>, b: u32x8<Avx2>) -> u32x8<Avx2> {
                 _mm256_add_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u32x8<Avx2>, b: u32x8<Avx2>) -> u32x8<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let threshold = _mm256_xor_si256(b, _mm256_set1_epi32(-1));
+                _mm256_add_epi32(_mm256_min_epu32(a, threshold), b).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -10562,6 +10745,27 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i64x4<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let sum = _mm256_add_epi64(a, b);
+                let overflow = _mm256_xor_si256(_mm256_cmpgt_epi64(a, sum), b);
+                let bound =
+                    _mm256_add_epi64(_mm256_srli_epi64::<63>(a), _mm256_set1_epi64x(i64::MAX));
+                let result = _mm256_blendv_pd(
+                    _mm256_castsi256_pd(sum),
+                    _mm256_castsi256_pd(bound),
+                    _mm256_castsi256_pd(overflow),
+                );
+                _mm256_castpd_si256(result).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10986,6 +11190,24 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u64x4<Avx2> {
                 _mm256_add_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_add_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u64x4<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let sum = _mm256_add_epi64(a, b);
+                let sign_bias = _mm256_set1_epi64x(i64::MIN);
+                let overflow = _mm256_cmpgt_epi64(
+                    _mm256_xor_si256(a, sign_bias),
+                    _mm256_xor_si256(sum, sign_bias),
+                );
+                _mm256_or_si256(sum, overflow).simd_into(token)
             }
         );
         kernel(self, a, b)

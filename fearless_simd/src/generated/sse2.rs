@@ -886,6 +886,16 @@ impl Simd for Sse2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i8x16<Sse2>, b: i8x16<Sse2>) -> i8x16<Sse2> {
+                _mm_adds_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1639,6 +1649,16 @@ impl Simd for Sse2 {
             #[inline(always)]
             fn kernel(token: Sse2, a: u8x16<Sse2>, b: u8x16<Sse2>) -> u8x16<Sse2> {
                 _mm_add_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u8x16<Sse2>, b: u8x16<Sse2>) -> u8x16<Sse2> {
+                _mm_adds_epu8(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -2400,6 +2420,16 @@ impl Simd for Sse2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i16x8<Sse2>, b: i16x8<Sse2>) -> i16x8<Sse2> {
+                _mm_adds_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2893,6 +2923,16 @@ impl Simd for Sse2 {
             #[inline(always)]
             fn kernel(token: Sse2, a: u16x8<Sse2>, b: u16x8<Sse2>) -> u16x8<Sse2> {
                 _mm_add_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u16x8<Sse2>, b: u16x8<Sse2>) -> u16x8<Sse2> {
+                _mm_adds_epu16(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -3665,6 +3705,16 @@ impl Simd for Sse2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        [
+            i32::saturating_add(a[0usize], b[0usize]),
+            i32::saturating_add(a[1usize], b[1usize]),
+            i32::saturating_add(a[2usize], b[2usize]),
+            i32::saturating_add(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn sub_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4192,6 +4242,16 @@ impl Simd for Sse2 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        [
+            u32::saturating_add(a[0usize], b[0usize]),
+            u32::saturating_add(a[1usize], b[1usize]),
+            u32::saturating_add(a[2usize], b[2usize]),
+            u32::saturating_add(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn sub_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -5449,6 +5509,14 @@ impl Simd for Sse2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        [
+            i64::saturating_add(a[0usize], b[0usize]),
+            i64::saturating_add(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn sub_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5865,6 +5933,14 @@ impl Simd for Sse2 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        [
+            u64::saturating_add(a[0usize], b[0usize]),
+            u64::saturating_add(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn sub_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {

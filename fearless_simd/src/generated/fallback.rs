@@ -705,6 +705,28 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn saturating_add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        [
+            i8::saturating_add(a[0usize], b[0usize]),
+            i8::saturating_add(a[1usize], b[1usize]),
+            i8::saturating_add(a[2usize], b[2usize]),
+            i8::saturating_add(a[3usize], b[3usize]),
+            i8::saturating_add(a[4usize], b[4usize]),
+            i8::saturating_add(a[5usize], b[5usize]),
+            i8::saturating_add(a[6usize], b[6usize]),
+            i8::saturating_add(a[7usize], b[7usize]),
+            i8::saturating_add(a[8usize], b[8usize]),
+            i8::saturating_add(a[9usize], b[9usize]),
+            i8::saturating_add(a[10usize], b[10usize]),
+            i8::saturating_add(a[11usize], b[11usize]),
+            i8::saturating_add(a[12usize], b[12usize]),
+            i8::saturating_add(a[13usize], b[13usize]),
+            i8::saturating_add(a[14usize], b[14usize]),
+            i8::saturating_add(a[15usize], b[15usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn sub_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         [
             i8::wrapping_sub(a[0usize], b[0usize]),
@@ -1626,6 +1648,28 @@ impl Simd for Fallback {
             u8::wrapping_add(a[13usize], b[13usize]),
             u8::wrapping_add(a[14usize], b[14usize]),
             u8::wrapping_add(a[15usize], b[15usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        [
+            u8::saturating_add(a[0usize], b[0usize]),
+            u8::saturating_add(a[1usize], b[1usize]),
+            u8::saturating_add(a[2usize], b[2usize]),
+            u8::saturating_add(a[3usize], b[3usize]),
+            u8::saturating_add(a[4usize], b[4usize]),
+            u8::saturating_add(a[5usize], b[5usize]),
+            u8::saturating_add(a[6usize], b[6usize]),
+            u8::saturating_add(a[7usize], b[7usize]),
+            u8::saturating_add(a[8usize], b[8usize]),
+            u8::saturating_add(a[9usize], b[9usize]),
+            u8::saturating_add(a[10usize], b[10usize]),
+            u8::saturating_add(a[11usize], b[11usize]),
+            u8::saturating_add(a[12usize], b[12usize]),
+            u8::saturating_add(a[13usize], b[13usize]),
+            u8::saturating_add(a[14usize], b[14usize]),
+            u8::saturating_add(a[15usize], b[15usize]),
         ]
         .simd_into(self)
     }
@@ -2769,6 +2813,20 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn saturating_add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        [
+            i16::saturating_add(a[0usize], b[0usize]),
+            i16::saturating_add(a[1usize], b[1usize]),
+            i16::saturating_add(a[2usize], b[2usize]),
+            i16::saturating_add(a[3usize], b[3usize]),
+            i16::saturating_add(a[4usize], b[4usize]),
+            i16::saturating_add(a[5usize], b[5usize]),
+            i16::saturating_add(a[6usize], b[6usize]),
+            i16::saturating_add(a[7usize], b[7usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn sub_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         [
             i16::wrapping_sub(a[0usize], b[0usize]),
@@ -3347,6 +3405,20 @@ impl Simd for Fallback {
             u16::wrapping_add(a[5usize], b[5usize]),
             u16::wrapping_add(a[6usize], b[6usize]),
             u16::wrapping_add(a[7usize], b[7usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        [
+            u16::saturating_add(a[0usize], b[0usize]),
+            u16::saturating_add(a[1usize], b[1usize]),
+            u16::saturating_add(a[2usize], b[2usize]),
+            u16::saturating_add(a[3usize], b[3usize]),
+            u16::saturating_add(a[4usize], b[4usize]),
+            u16::saturating_add(a[5usize], b[5usize]),
+            u16::saturating_add(a[6usize], b[6usize]),
+            u16::saturating_add(a[7usize], b[7usize]),
         ]
         .simd_into(self)
     }
@@ -4133,6 +4205,16 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn saturating_add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        [
+            i32::saturating_add(a[0usize], b[0usize]),
+            i32::saturating_add(a[1usize], b[1usize]),
+            i32::saturating_add(a[2usize], b[2usize]),
+            i32::saturating_add(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn sub_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         [
             i32::wrapping_sub(a[0usize], b[0usize]),
@@ -4508,6 +4590,16 @@ impl Simd for Fallback {
             u32::wrapping_add(a[1usize], b[1usize]),
             u32::wrapping_add(a[2usize], b[2usize]),
             u32::wrapping_add(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        [
+            u32::saturating_add(a[0usize], b[0usize]),
+            u32::saturating_add(a[1usize], b[1usize]),
+            u32::saturating_add(a[2usize], b[2usize]),
+            u32::saturating_add(a[3usize], b[3usize]),
         ]
         .simd_into(self)
     }
@@ -5337,6 +5429,14 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn saturating_add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        [
+            i64::saturating_add(a[0usize], b[0usize]),
+            i64::saturating_add(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn sub_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         [
             i64::wrapping_sub(a[0usize], b[0usize]),
@@ -5615,6 +5715,14 @@ impl Simd for Fallback {
         [
             u64::wrapping_add(a[0usize], b[0usize]),
             u64::wrapping_add(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        [
+            u64::saturating_add(a[0usize], b[0usize]),
+            u64::saturating_add(a[1usize], b[1usize]),
         ]
         .simd_into(self)
     }

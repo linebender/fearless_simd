@@ -219,6 +219,90 @@ fn reduce_sum(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
     }
 }
 
+fn saturating_add_method(op: Op, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(
+        vec_ty.n_bits(),
+        128,
+        "WASM saturating-add lowering only handles one native vector"
+    );
+    assert!(
+        matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned),
+        "saturating_add is only defined for integers"
+    );
+
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    if matches!(vec_ty.scalar_bits, 8 | 16) {
+        let expr = wasm::expr(
+            "saturating_add",
+            vec_ty,
+            &[quote! { a.into() }, quote! { b.into() }],
+        );
+        return quote! {
+            #method_sig {
+                #expr.simd_into(self)
+            }
+        };
+    }
+
+    let add = simple_intrinsic("add", vec_ty);
+    let body = match (vec_ty.scalar, vec_ty.scalar_bits) {
+        (ScalarType::Unsigned, 32) => {
+            // Clamp `a` to the greatest value that can be added to `b`, then add.
+            // `!b` is `u32::MAX - b` lane-wise.
+            let min = simple_intrinsic("min", vec_ty);
+            quote! {
+                #add(#min(a, v128_not(b)), b)
+            }
+        }
+        (ScalarType::Unsigned, 64) => {
+            // WebAssembly has no unsigned i64x2 comparison. Flip the sign bit so
+            // the signed ordering matches unsigned ordering, then detect carry by
+            // checking whether the wrapping sum is less than the first addend.
+            let signed_ty = vec_ty.cast(ScalarType::Int);
+            let signed_gt = simple_intrinsic("gt", &signed_ty);
+            let signed_splat = simple_intrinsic("splat", &signed_ty);
+            let signed_scalar = signed_ty.scalar.rust(signed_ty.scalar_bits);
+            quote! {
+                let sum = #add(a, b);
+                let sign_bit = #signed_splat(#signed_scalar::MIN);
+                let overflow_mask = #signed_gt(
+                    v128_xor(a, sign_bit),
+                    v128_xor(sum, sign_bit),
+                );
+                v128_or(sum, overflow_mask)
+            }
+        }
+        (ScalarType::Int, 32 | 64) => {
+            // Signed overflow has the same sign in `(sum ^ a)` and `(sum ^ b)`.
+            // Expand that sign bit into a lane mask, then select the appropriate
+            // endpoint. A wrapped negative sum means positive overflow and vice versa.
+            let shr = simple_intrinsic("shr", vec_ty);
+            let splat = simple_intrinsic("splat", vec_ty);
+            let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+            let sign_shift = Literal::u32_unsuffixed((vec_ty.scalar_bits - 1) as u32);
+            quote! {
+                let sum = #add(a, b);
+                let overflow_bits = v128_and(v128_xor(sum, a), v128_xor(sum, b));
+                let overflow_mask = #shr(overflow_bits, #sign_shift);
+                let saturation = v128_xor(
+                    #shr(sum, #sign_shift),
+                    #splat(#scalar::MIN),
+                );
+                v128_bitselect(saturation, sum, overflow_mask)
+            }
+        }
+        _ => unreachable!(),
+    };
+
+    quote! {
+        #method_sig {
+            let a: v128 = a.into();
+            let b: v128 = b.into();
+            #body.simd_into(self)
+        }
+    }
+}
+
 impl Level for WasmSimd128 {
     fn name(&self) -> &'static str {
         "WasmSimd128"
@@ -480,6 +564,10 @@ impl Level for WasmSimd128 {
                 mode: NarrowingMode::Relaxed,
             } => relaxed_narrow_method(op, vec_ty, target_ty, "narrow"),
             OpSig::Binary => {
+                if method == "saturating_add" {
+                    return saturating_add_method(op, vec_ty);
+                }
+
                 if matches!(method, "shlv" | "shrv")
                     || (matches!(method, "min" | "max")
                         && vec_ty.scalar_bits == 64

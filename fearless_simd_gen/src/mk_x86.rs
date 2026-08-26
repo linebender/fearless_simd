@@ -2275,8 +2275,191 @@ impl X86 {
         }
     }
 
+    fn handle_avx512_signed_saturating_add(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        assert!(*self == Self::Avx512);
+        assert_eq!(vec_ty.scalar, ScalarType::Int);
+        assert!(matches!(vec_ty.scalar_bits, 32 | 64));
+
+        let bits = vec_ty.n_bits();
+        let lane_bits = vec_ty.scalar_bits;
+        let shift = Literal::usize_unsuffixed(lane_bits - 1);
+        let max = match lane_bits {
+            32 => quote! { i32::MAX },
+            64 => quote! { i64::MAX },
+            _ => unreachable!(),
+        };
+        let suffix = format!("epi{lane_bits}");
+        let add = intrinsic_ident("add", &suffix, bits);
+        let shift_right_logical = intrinsic_ident("srli", &suffix, bits);
+        let shift_right_arithmetic = intrinsic_ident("srai", &suffix, bits);
+        let set1 = set1_intrinsic(vec_ty);
+        let ternary = intrinsic_ident("ternarylogic", &suffix, bits);
+
+        self.kernel_method(op, vec_ty, |token| {
+            quote! {
+                let a = a.into();
+                let b = b.into();
+                let sum = #add(a, b);
+
+                // The 0x42 truth table computes `(a ^ sum) & (b ^ sum)`, whose
+                // sign bit is set exactly when signed addition overflows.
+                let overflow_bits = #ternary::<0x42>(a, b, sum);
+                let overflow_mask = #shift_right_arithmetic::<#shift>(overflow_bits);
+
+                // The top bit of `a` selects the saturation direction. Logical
+                // shift produces 0 or 1; adding that to MAX gives MAX or MIN.
+                let direction = #add(
+                    #shift_right_logical::<#shift>(a),
+                    #set1(#max),
+                );
+
+                // 0xca is a bitwise select: use `direction` where overflowed,
+                // and the wrapped sum everywhere else.
+                #ternary::<0xca>(overflow_mask, direction, sum).simd_into(#token)
+            }
+        })
+    }
+
+    fn handle_saturating_add(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        assert!(matches!(
+            vec_ty.scalar,
+            ScalarType::Int | ScalarType::Unsigned
+        ));
+
+        if matches!(vec_ty.scalar_bits, 8 | 16) {
+            let adds = simple_intrinsic("adds", vec_ty);
+            return self.kernel_method(op, vec_ty, |token| {
+                quote! {
+                    #adds(a.into(), b.into()).simd_into(#token)
+                }
+            });
+        }
+
+        // SSE2 is a correctness target, not an optimization target. Its 32/64-bit
+        // packed emulations are substantially more complex than the scalar fallback.
+        if *self == Self::Sse2 {
+            return fallback_method(op, vec_ty);
+        }
+
+        if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Int {
+            return self.handle_avx512_signed_saturating_add(op, vec_ty);
+        }
+
+        let bits = vec_ty.n_bits();
+        let add = simple_sign_unaware_intrinsic("add", vec_ty);
+        let xor = intrinsic_ident("xor", coarse_type(vec_ty), bits);
+        let set1 = set1_intrinsic(vec_ty);
+
+        if vec_ty.scalar == ScalarType::Unsigned
+            && (vec_ty.scalar_bits == 32 || *self == Self::Avx512)
+        {
+            // Unsigned saturation can be expressed without detecting carry:
+            // clamp `a` to the greatest value that can be added to `b`, then add.
+            let min = simple_intrinsic("min", vec_ty);
+            return self.kernel_method(op, vec_ty, |token| {
+                quote! {
+                    let a = a.into();
+                    let b = b.into();
+                    let threshold = #xor(b, #set1(-1));
+                    #add(#min(a, threshold), b).simd_into(#token)
+                }
+            });
+        }
+
+        if vec_ty.scalar == ScalarType::Unsigned && vec_ty.scalar_bits == 64 {
+            // SSE4.2 and AVX2 have signed, but not unsigned, qword comparisons.
+            // Flipping the sign bit maps unsigned order onto signed order.
+            let cmpgt = simple_sign_unaware_intrinsic("cmpgt", vec_ty);
+            let or = intrinsic_ident("or", coarse_type(vec_ty), bits);
+            return self.kernel_method(op, vec_ty, |token| {
+                quote! {
+                    let a = a.into();
+                    let b = b.into();
+                    let sum = #add(a, b);
+                    let sign_bias = #set1(i64::MIN);
+                    let overflow = #cmpgt(
+                        #xor(a, sign_bias),
+                        #xor(sum, sign_bias),
+                    );
+                    #or(sum, overflow).simd_into(#token)
+                }
+            });
+        }
+
+        let cmpgt = simple_sign_unaware_intrinsic("cmpgt", vec_ty);
+        match vec_ty.scalar_bits {
+            32 => {
+                let shift = intrinsic_ident("srai", "epi32", bits);
+                let to_float = cast_ident(ScalarType::Int, ScalarType::Float, 32, 32, bits);
+                let to_int = cast_ident(ScalarType::Float, ScalarType::Int, 32, 32, bits);
+                let blend = intrinsic_ident("blendv", "ps", bits);
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        let a = a.into();
+                        let b = b.into();
+                        let sum = #add(a, b);
+
+                        // Only the sign bit of each lane is meaningful here, so use
+                        // BLENDVPS rather than the byte-granularity integer blend.
+                        let overflow = #xor(#cmpgt(a, sum), b);
+                        let bound = #xor(#shift::<31>(sum), #set1(i32::MIN));
+                        let result = #blend(
+                            #to_float(sum),
+                            #to_float(bound),
+                            #to_float(overflow),
+                        );
+                        #to_int(result).simd_into(#token)
+                    }
+                })
+            }
+            64 => {
+                let to_float = cast_ident(ScalarType::Int, ScalarType::Float, 64, 64, bits);
+                let to_int = cast_ident(ScalarType::Float, ScalarType::Int, 64, 64, bits);
+                let blend = intrinsic_ident("blendv", "pd", bits);
+                let bound = if *self == Self::Avx2 {
+                    let shift = intrinsic_ident("srli", "epi64", bits);
+                    quote! {
+                        // AVX2 can construct the endpoint directly from `a`'s sign
+                        // without the high-dword shuffle required by SSE4.2.
+                        let bound = #add(#shift::<63>(a), #set1(i64::MAX));
+                    }
+                } else {
+                    let shuffle = intrinsic_ident("shuffle", "epi32", bits);
+                    let shift = intrinsic_ident("srai", "epi32", bits);
+                    quote! {
+                        let sum_sign = #shift::<31>(#shuffle::<0xf5>(sum));
+                        let bound = #xor(sum_sign, #set1(i64::MIN));
+                    }
+                };
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        let a = a.into();
+                        let b = b.into();
+                        let sum = #add(a, b);
+
+                        // BLENDVPD reads one sign bit per qword, which is exactly the
+                        // meaningful part of this non-canonical overflow mask.
+                        let overflow = #xor(#cmpgt(a, sum), b);
+                        #bound
+                        let result = #blend(
+                            #to_float(sum),
+                            #to_float(bound),
+                            #to_float(overflow),
+                        );
+                        #to_int(result).simd_into(#token)
+                    }
+                })
+            }
+            _ => unreachable!(),
+        }
+    }
+
     pub(crate) fn handle_binary(&self, op: Op, method: &str, vec_ty: &VecType) -> TokenStream {
         let method_sig = op.simd_trait_method_sig(vec_ty);
+
+        if method == "saturating_add" {
+            return self.handle_saturating_add(op, vec_ty);
+        }
 
         if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask {
             let lane_mask = avx512_mask_lane_bits(vec_ty);

@@ -572,6 +572,10 @@ impl Simd for WasmSimd128 {
         i8x16_add(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
+    fn saturating_add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        i8x16_add_sat(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn sub_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         i8x16_sub(a.into(), b.into()).simd_into(self)
     }
@@ -952,6 +956,10 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
         u8x16_add(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        u8x16_add_sat(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
     fn sub_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -1405,6 +1413,10 @@ impl Simd for WasmSimd128 {
         i16x8_add(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
+    fn saturating_add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        i16x8_add_sat(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn sub_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         i16x8_sub(a.into(), b.into()).simd_into(self)
     }
@@ -1679,6 +1691,10 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         u16x8_add(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        u16x8_add_sat(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
     fn sub_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -2053,6 +2069,16 @@ impl Simd for WasmSimd128 {
         i32x4_add(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
+    fn saturating_add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        let a: v128 = a.into();
+        let b: v128 = b.into();
+        let sum = i32x4_add(a, b);
+        let overflow_bits = v128_and(v128_xor(sum, a), v128_xor(sum, b));
+        let overflow_mask = i32x4_shr(overflow_bits, 31);
+        let saturation = v128_xor(i32x4_shr(sum, 31), i32x4_splat(i32::MIN));
+        v128_bitselect(saturation, sum, overflow_mask).simd_into(self)
+    }
+    #[inline(always)]
     fn sub_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         i32x4_sub(a.into(), b.into()).simd_into(self)
     }
@@ -2313,6 +2339,12 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         u32x4_add(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        let a: v128 = a.into();
+        let b: v128 = b.into();
+        u32x4_add(u32x4_min(a, v128_not(b)), b).simd_into(self)
     }
     #[inline(always)]
     fn sub_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -2990,6 +3022,16 @@ impl Simd for WasmSimd128 {
         i64x2_add(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
+    fn saturating_add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        let a: v128 = a.into();
+        let b: v128 = b.into();
+        let sum = i64x2_add(a, b);
+        let overflow_bits = v128_and(v128_xor(sum, a), v128_xor(sum, b));
+        let overflow_mask = i64x2_shr(overflow_bits, 63);
+        let saturation = v128_xor(i64x2_shr(sum, 63), i64x2_splat(i64::MIN));
+        v128_bitselect(saturation, sum, overflow_mask).simd_into(self)
+    }
+    #[inline(always)]
     fn sub_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         i64x2_sub(a.into(), b.into()).simd_into(self)
     }
@@ -3245,6 +3287,15 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
         u64x2_add(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        let a: v128 = a.into();
+        let b: v128 = b.into();
+        let sum = u64x2_add(a, b);
+        let sign_bit = i64x2_splat(i64::MIN);
+        let overflow_mask = i64x2_gt(v128_xor(a, sign_bit), v128_xor(sum, sign_bit));
+        v128_or(sum, overflow_mask).simd_into(self)
     }
     #[inline(always)]
     fn sub_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
