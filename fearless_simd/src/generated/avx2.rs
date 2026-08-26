@@ -697,12 +697,14 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i8x16<Avx2>, b: i8x16<Avx2>) -> i8x16<Avx2> {
-                let dst_even = _mm_mullo_epi16(a.into(), b.into());
-                let dst_odd =
-                    _mm_mullo_epi16(_mm_srli_epi16::<8>(a.into()), _mm_srli_epi16::<8>(b.into()));
+                let a = a.into();
+                let b = b.into();
+                let low_mask = _mm_set1_epi16(0xFF);
+                let dst_even = _mm_mullo_epi16(a, b);
+                let dst_odd = _mm_maddubs_epi16(a, _mm_andnot_si128(low_mask, b));
                 _mm_or_si128(
                     _mm_slli_epi16(dst_odd, 8),
-                    _mm_and_si128(dst_even, _mm_set1_epi16(0xFF)),
+                    _mm_and_si128(dst_even, low_mask),
                 )
                 .simd_into(token)
             }
@@ -1185,12 +1187,14 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u8x16<Avx2>, b: u8x16<Avx2>) -> u8x16<Avx2> {
-                let dst_even = _mm_mullo_epi16(a.into(), b.into());
-                let dst_odd =
-                    _mm_mullo_epi16(_mm_srli_epi16::<8>(a.into()), _mm_srli_epi16::<8>(b.into()));
+                let a = a.into();
+                let b = b.into();
+                let low_mask = _mm_set1_epi16(0xFF);
+                let dst_even = _mm_mullo_epi16(a, b);
+                let dst_odd = _mm_maddubs_epi16(a, _mm_andnot_si128(low_mask, b));
                 _mm_or_si128(
                     _mm_slli_epi16(dst_odd, 8),
-                    _mm_and_si128(dst_even, _mm_set1_epi16(0xFF)),
+                    _mm_and_si128(dst_even, low_mask),
                 )
                 .simd_into(token)
             }
@@ -5872,14 +5876,14 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i8x32<Avx2>, b: i8x32<Avx2>) -> i8x32<Avx2> {
-                let dst_even = _mm256_mullo_epi16(a.into(), b.into());
-                let dst_odd = _mm256_mullo_epi16(
-                    _mm256_srli_epi16::<8>(a.into()),
-                    _mm256_srli_epi16::<8>(b.into()),
-                );
+                let a = a.into();
+                let b = b.into();
+                let low_mask = _mm256_set1_epi16(0xFF);
+                let dst_even = _mm256_mullo_epi16(a, b);
+                let dst_odd = _mm256_maddubs_epi16(a, _mm256_andnot_si256(low_mask, b));
                 _mm256_or_si256(
                     _mm256_slli_epi16(dst_odd, 8),
-                    _mm256_and_si256(dst_even, _mm256_set1_epi16(0xFF)),
+                    _mm256_and_si256(dst_even, low_mask),
                 )
                 .simd_into(token)
             }
@@ -6411,14 +6415,14 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u8x32<Avx2>, b: u8x32<Avx2>) -> u8x32<Avx2> {
-                let dst_even = _mm256_mullo_epi16(a.into(), b.into());
-                let dst_odd = _mm256_mullo_epi16(
-                    _mm256_srli_epi16::<8>(a.into()),
-                    _mm256_srli_epi16::<8>(b.into()),
-                );
+                let a = a.into();
+                let b = b.into();
+                let low_mask = _mm256_set1_epi16(0xFF);
+                let dst_even = _mm256_mullo_epi16(a, b);
+                let dst_odd = _mm256_maddubs_epi16(a, _mm256_andnot_si256(low_mask, b));
                 _mm256_or_si256(
                     _mm256_slli_epi16(dst_odd, 8),
-                    _mm256_and_si256(dst_even, _mm256_set1_epi16(0xFF)),
+                    _mm256_and_si256(dst_even, low_mask),
                 )
                 .simd_into(token)
             }

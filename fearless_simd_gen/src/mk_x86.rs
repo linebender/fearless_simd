@@ -2177,12 +2177,32 @@ impl X86 {
                     let and = intrinsic_ident("and", coarse_type(vec_ty), vec_ty.n_bits());
                     let or = intrinsic_ident("or", coarse_type(vec_ty), vec_ty.n_bits());
                     let slli = intrinsic_ident("slli", "epi16", vec_ty.n_bits());
-                    let srli = intrinsic_ident("srli", "epi16", vec_ty.n_bits());
-                    quote! {
-                        let dst_even = #mullo(a.into(), b.into());
-                        let dst_odd = #mullo(#srli::<8>(a.into()), #srli::<8>(b.into()));
+                    if *self == Self::Sse2 {
+                        let srli = intrinsic_ident("srli", "epi16", vec_ty.n_bits());
+                        quote! {
+                            let dst_even = #mullo(a.into(), b.into());
+                            let dst_odd = #mullo(#srli::<8>(a.into()), #srli::<8>(b.into()));
 
-                        #or(#slli(dst_odd, 8), #and(dst_even, #set1(0xFF))).simd_into(#token)
+                            #or(#slli(dst_odd, 8), #and(dst_even, #set1(0xFF))).simd_into(#token)
+                        }
+                    } else {
+                        // LLVM's byte-multiplication lowering uses PMADDUBSW to calculate the
+                        // odd byte of every i16 lane. The cleared adjacent byte means there is
+                        // only one product per lane, so the saturating add cannot saturate.
+                        // LLVM only uses this for 128-bit vectors while we apply it everywhere.
+                        // Both llvm-mca and hardware benchmarks show this is beneficial.
+                        let andnot =
+                            intrinsic_ident("andnot", coarse_type(vec_ty), vec_ty.n_bits());
+                        let maddubs = intrinsic_ident("maddubs", "epi16", vec_ty.n_bits());
+                        quote! {
+                            let a = a.into();
+                            let b = b.into();
+                            let low_mask = #set1(0xFF);
+                            let dst_even = #mullo(a, b);
+                            let dst_odd = #maddubs(a, #andnot(low_mask, b));
+
+                            #or(#slli(dst_odd, 8), #and(dst_even, low_mask)).simd_into(#token)
+                        }
                     }
                 }
                 "shlv" | "shrv" => {
