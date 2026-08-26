@@ -3213,6 +3213,29 @@ impl X86 {
             });
         }
 
+        if matches!(self, Self::Sse4_2 | Self::Avx2)
+            && vec_ty.n_bits() == 128
+            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
+            && matches!(vec_ty.scalar_bits, 8 | 16)
+        {
+            let mask = match vec_ty.scalar_bits {
+                8 => quote! { 0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15 },
+                16 => quote! { 0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15 },
+                _ => unreachable!(),
+            };
+            return self.kernel_method(op, vec_ty, |token| {
+                quote! {
+                    let mask = _mm_setr_epi8(#mask);
+                    let a = _mm_shuffle_epi8(a.into(), mask);
+                    let b = _mm_shuffle_epi8(b.into(), mask);
+                    (
+                        _mm_unpacklo_epi64(a, b).simd_into(#token),
+                        _mm_unpackhi_epi64(a, b).simd_into(#token),
+                    )
+                }
+            });
+        }
+
         match vec_ty.n_bits() {
             256 => {
                 // Optimized path: compute the per-input shuffles once, then use permute2f128 /

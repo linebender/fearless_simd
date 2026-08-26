@@ -1077,7 +1077,23 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn deinterleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>) {
-        (self.unzip_low_i8x16(a, b), self.unzip_high_i8x16(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                a: i8x16<Sse4_2>,
+                b: i8x16<Sse4_2>,
+            ) -> (i8x16<Sse4_2>, i8x16<Sse4_2>) {
+                let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
+                let a = _mm_shuffle_epi8(a.into(), mask);
+                let b = _mm_shuffle_epi8(b.into(), mask);
+                (
+                    _mm_unpacklo_epi64(a, b).simd_into(token),
+                    _mm_unpackhi_epi64(a, b).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
@@ -1568,7 +1584,23 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn deinterleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>) {
-        (self.unzip_low_u8x16(a, b), self.unzip_high_u8x16(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                a: u8x16<Sse4_2>,
+                b: u8x16<Sse4_2>,
+            ) -> (u8x16<Sse4_2>, u8x16<Sse4_2>) {
+                let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
+                let a = _mm_shuffle_epi8(a.into(), mask);
+                let b = _mm_shuffle_epi8(b.into(), mask);
+                (
+                    _mm_unpacklo_epi64(a, b).simd_into(token),
+                    _mm_unpackhi_epi64(a, b).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
@@ -2125,7 +2157,23 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn deinterleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>) {
-        (self.unzip_low_i16x8(a, b), self.unzip_high_i16x8(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                a: i16x8<Sse4_2>,
+                b: i16x8<Sse4_2>,
+            ) -> (i16x8<Sse4_2>, i16x8<Sse4_2>) {
+                let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
+                let a = _mm_shuffle_epi8(a.into(), mask);
+                let b = _mm_shuffle_epi8(b.into(), mask);
+                (
+                    _mm_unpacklo_epi64(a, b).simd_into(token),
+                    _mm_unpackhi_epi64(a, b).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
@@ -2568,7 +2616,23 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn deinterleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>) {
-        (self.unzip_low_u16x8(a, b), self.unzip_high_u16x8(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                a: u16x8<Sse4_2>,
+                b: u16x8<Sse4_2>,
+            ) -> (u16x8<Sse4_2>, u16x8<Sse4_2>) {
+                let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
+                let a = _mm_shuffle_epi8(a.into(), mask);
+                let b = _mm_shuffle_epi8(b.into(), mask);
+                (
+                    _mm_unpacklo_epi64(a, b).simd_into(token),
+                    _mm_unpackhi_epi64(a, b).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
