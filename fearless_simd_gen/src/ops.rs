@@ -982,7 +982,9 @@ const INT_OPS: &[Op] = &[
         "saturating_add",
         OpKind::VecTraitMethod,
         OpSig::Binary,
-        "Add two vectors element-wise, saturating at the numeric bounds instead of overflowing.",
+        "Add two vectors element-wise, returning the maximum value on overflow.\n\n\
+        On x86 it is implemented in hardware only for 8-bit and 16-bit elements. \
+        For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86.",
     ),
     Op::new(
         "sub",
@@ -994,7 +996,9 @@ const INT_OPS: &[Op] = &[
         "saturating_sub",
         OpKind::VecTraitMethod,
         OpSig::Binary,
-        "Subtract two vectors element-wise, saturating at the numeric bounds instead of overflowing.",
+        "Subtract two vectors element-wise, returning the maximum value on overflow.\n\n\
+        On x86 it is implemented in hardware only for 8-bit and 16-bit elements. \
+        For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86.",
     ),
     Op::new(
         "mul",
