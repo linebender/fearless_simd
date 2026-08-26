@@ -105,14 +105,14 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     type Output = #rust_scalar;
                     #[inline(always)]
                     fn index(&self, i: usize) -> &Self::Output {
-                        &self.as_array_ref()[i]
+                        &self.as_array()[i]
                     }
                 }
 
                 impl<S: Simd> core::ops::IndexMut<usize> for #name<S> {
                     #[inline(always)]
                     fn index_mut (&mut self, i: usize) -> &mut Self::Output {
-                        &mut self.as_array_mut()[i]
+                        &mut self.as_mut_array()[i]
                     }
                 }
             }
@@ -337,7 +337,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
 
             impl<S: Simd + core::fmt::Debug> core::fmt::Debug for #name<S> {
                 fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-                    crate::support::simd_debug_impl(f, #name_str, &self.simd, self.as_array_ref())
+                    crate::support::simd_debug_impl(f, #name_str, &self.simd, self.as_array())
                 }
             }
 
@@ -561,12 +561,12 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
 
             #[inline(always)]
             fn as_slice(&self) -> &[#scalar] {
-                self.as_array_ref().as_slice()
+                self.as_array().as_slice()
             }
 
             #[inline(always)]
             fn as_mut_slice(&mut self) -> &mut [#scalar] {
-                self.as_array_mut().as_mut_slice()
+                self.as_mut_array().as_mut_slice()
             }
 
             #[inline(always)]

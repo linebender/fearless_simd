@@ -339,23 +339,23 @@ fn mk_simd_base() -> TokenStream {
             }
             /// Convert this SIMD vector to its corresponding lane array.
             #[inline(always)]
-            fn as_array(self) -> Self::Array {
+            fn to_array(self) -> Self::Array {
                 *self
             }
             /// Project this SIMD vector reference to its corresponding lane array reference.
             #[inline(always)]
-            fn as_array_ref(&self) -> &Self::Array {
+            fn as_array(&self) -> &Self::Array {
                 self
             }
             /// Project this mutable SIMD vector reference to its corresponding mutable lane array reference.
             #[inline(always)]
-            fn as_array_mut(&mut self) -> &mut Self::Array {
+            fn as_mut_array(&mut self) -> &mut Self::Array {
                 self
             }
             /// Store this SIMD vector into its corresponding lane array.
             #[inline(always)]
             fn store_array(self, dest: &mut Self::Array) {
-                *dest = self.as_array();
+                *dest = self.to_array();
             }
             /// Create a SIMD vector from a 128-bit vector of the same scalar
             /// type, repeated.

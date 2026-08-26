@@ -45,7 +45,7 @@ impl<S: Simd> core::ops::DerefMut for f32x4<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for f32x4<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "f32x4", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "f32x4", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<f32, S> for f32x4<S> {
@@ -58,13 +58,13 @@ impl<S: Simd> core::ops::Index<usize> for f32x4<S> {
     type Output = f32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for f32x4<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<f32x4<S>> for mask32x4<S> {
@@ -103,11 +103,11 @@ impl<S: Simd> SimdBase<S> for f32x4<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[f32] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f32] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[f32]) -> Self {
@@ -351,7 +351,7 @@ impl<S: Simd> core::ops::DerefMut for i8x16<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i8x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i8x16", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "i8x16", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<i8, S> for i8x16<S> {
@@ -364,13 +364,13 @@ impl<S: Simd> core::ops::Index<usize> for i8x16<S> {
     type Output = i8;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i8x16<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<i8x16<S>> for mask8x16<S> {
@@ -409,11 +409,11 @@ impl<S: Simd> SimdBase<S> for i8x16<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i8] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i8] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
@@ -615,7 +615,7 @@ impl<S: Simd> core::ops::DerefMut for u8x16<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u8x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u8x16", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "u8x16", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<u8, S> for u8x16<S> {
@@ -628,13 +628,13 @@ impl<S: Simd> core::ops::Index<usize> for u8x16<S> {
     type Output = u8;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u8x16<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<u8x16<S>> for mask8x16<S> {
@@ -673,11 +673,11 @@ impl<S: Simd> SimdBase<S> for u8x16<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u8] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u8] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u8]) -> Self {
@@ -973,7 +973,7 @@ impl<S: Simd> core::ops::DerefMut for i16x8<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i16x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i16x8", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "i16x8", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<i16, S> for i16x8<S> {
@@ -986,13 +986,13 @@ impl<S: Simd> core::ops::Index<usize> for i16x8<S> {
     type Output = i16;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i16x8<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<i16x8<S>> for mask16x8<S> {
@@ -1031,11 +1031,11 @@ impl<S: Simd> SimdBase<S> for i16x8<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i16] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i16] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
@@ -1244,7 +1244,7 @@ impl<S: Simd> core::ops::DerefMut for u16x8<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u16x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u16x8", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "u16x8", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<u16, S> for u16x8<S> {
@@ -1257,13 +1257,13 @@ impl<S: Simd> core::ops::Index<usize> for u16x8<S> {
     type Output = u16;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u16x8<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<u16x8<S>> for mask16x8<S> {
@@ -1302,11 +1302,11 @@ impl<S: Simd> SimdBase<S> for u16x8<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u16] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u16] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u16]) -> Self {
@@ -1609,7 +1609,7 @@ impl<S: Simd> core::ops::DerefMut for i32x4<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i32x4<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i32x4", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "i32x4", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<i32, S> for i32x4<S> {
@@ -1622,13 +1622,13 @@ impl<S: Simd> core::ops::Index<usize> for i32x4<S> {
     type Output = i32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i32x4<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<i32x4<S>> for mask32x4<S> {
@@ -1667,11 +1667,11 @@ impl<S: Simd> SimdBase<S> for i32x4<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i32] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i32] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
@@ -1880,7 +1880,7 @@ impl<S: Simd> core::ops::DerefMut for u32x4<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u32x4<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u32x4", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "u32x4", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<u32, S> for u32x4<S> {
@@ -1893,13 +1893,13 @@ impl<S: Simd> core::ops::Index<usize> for u32x4<S> {
     type Output = u32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u32x4<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<u32x4<S>> for mask32x4<S> {
@@ -1938,11 +1938,11 @@ impl<S: Simd> SimdBase<S> for u32x4<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u32] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u32] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u32]) -> Self {
@@ -2245,7 +2245,7 @@ impl<S: Simd> core::ops::DerefMut for f64x2<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for f64x2<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "f64x2", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "f64x2", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<f64, S> for f64x2<S> {
@@ -2258,13 +2258,13 @@ impl<S: Simd> core::ops::Index<usize> for f64x2<S> {
     type Output = f64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for f64x2<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<f64x2<S>> for mask64x2<S> {
@@ -2303,11 +2303,11 @@ impl<S: Simd> SimdBase<S> for f64x2<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[f64] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f64] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[f64]) -> Self {
@@ -2559,7 +2559,7 @@ impl<S: Simd> core::ops::DerefMut for i64x2<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i64x2<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i64x2", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "i64x2", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<i64, S> for i64x2<S> {
@@ -2572,13 +2572,13 @@ impl<S: Simd> core::ops::Index<usize> for i64x2<S> {
     type Output = i64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i64x2<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<i64x2<S>> for mask64x2<S> {
@@ -2617,11 +2617,11 @@ impl<S: Simd> SimdBase<S> for i64x2<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i64] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i64] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {
@@ -2823,7 +2823,7 @@ impl<S: Simd> core::ops::DerefMut for u64x2<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u64x2<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u64x2", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "u64x2", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<u64, S> for u64x2<S> {
@@ -2836,13 +2836,13 @@ impl<S: Simd> core::ops::Index<usize> for u64x2<S> {
     type Output = u64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u64x2<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<u64x2<S>> for mask64x2<S> {
@@ -2881,11 +2881,11 @@ impl<S: Simd> SimdBase<S> for u64x2<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u64] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u64] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u64]) -> Self {
@@ -3181,7 +3181,7 @@ impl<S: Simd> core::ops::DerefMut for f32x8<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for f32x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "f32x8", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "f32x8", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<f32, S> for f32x8<S> {
@@ -3194,13 +3194,13 @@ impl<S: Simd> core::ops::Index<usize> for f32x8<S> {
     type Output = f32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for f32x8<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<f32x8<S>> for mask32x8<S> {
@@ -3239,11 +3239,11 @@ impl<S: Simd> SimdBase<S> for f32x8<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[f32] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f32] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[f32]) -> Self {
@@ -3494,7 +3494,7 @@ impl<S: Simd> core::ops::DerefMut for i8x32<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i8x32<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i8x32", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "i8x32", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<i8, S> for i8x32<S> {
@@ -3507,13 +3507,13 @@ impl<S: Simd> core::ops::Index<usize> for i8x32<S> {
     type Output = i8;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i8x32<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<i8x32<S>> for mask8x32<S> {
@@ -3552,11 +3552,11 @@ impl<S: Simd> SimdBase<S> for i8x32<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i8] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i8] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
@@ -3769,7 +3769,7 @@ impl<S: Simd> core::ops::DerefMut for u8x32<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u8x32<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u8x32", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "u8x32", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<u8, S> for u8x32<S> {
@@ -3782,13 +3782,13 @@ impl<S: Simd> core::ops::Index<usize> for u8x32<S> {
     type Output = u8;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u8x32<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<u8x32<S>> for mask8x32<S> {
@@ -3827,11 +3827,11 @@ impl<S: Simd> SimdBase<S> for u8x32<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u8] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u8] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u8]) -> Self {
@@ -4138,7 +4138,7 @@ impl<S: Simd> core::ops::DerefMut for i16x16<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i16x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i16x16", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "i16x16", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<i16, S> for i16x16<S> {
@@ -4151,13 +4151,13 @@ impl<S: Simd> core::ops::Index<usize> for i16x16<S> {
     type Output = i16;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i16x16<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<i16x16<S>> for mask16x16<S> {
@@ -4196,11 +4196,11 @@ impl<S: Simd> SimdBase<S> for i16x16<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i16] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i16] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
@@ -4413,7 +4413,7 @@ impl<S: Simd> core::ops::DerefMut for u16x16<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u16x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u16x16", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "u16x16", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<u16, S> for u16x16<S> {
@@ -4426,13 +4426,13 @@ impl<S: Simd> core::ops::Index<usize> for u16x16<S> {
     type Output = u16;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u16x16<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<u16x16<S>> for mask16x16<S> {
@@ -4471,11 +4471,11 @@ impl<S: Simd> SimdBase<S> for u16x16<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u16] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u16] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u16]) -> Self {
@@ -4782,7 +4782,7 @@ impl<S: Simd> core::ops::DerefMut for i32x8<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i32x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i32x8", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "i32x8", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<i32, S> for i32x8<S> {
@@ -4795,13 +4795,13 @@ impl<S: Simd> core::ops::Index<usize> for i32x8<S> {
     type Output = i32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i32x8<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<i32x8<S>> for mask32x8<S> {
@@ -4840,11 +4840,11 @@ impl<S: Simd> SimdBase<S> for i32x8<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i32] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i32] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
@@ -5060,7 +5060,7 @@ impl<S: Simd> core::ops::DerefMut for u32x8<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u32x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u32x8", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "u32x8", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<u32, S> for u32x8<S> {
@@ -5073,13 +5073,13 @@ impl<S: Simd> core::ops::Index<usize> for u32x8<S> {
     type Output = u32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u32x8<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<u32x8<S>> for mask32x8<S> {
@@ -5118,11 +5118,11 @@ impl<S: Simd> SimdBase<S> for u32x8<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u32] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u32] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u32]) -> Self {
@@ -5432,7 +5432,7 @@ impl<S: Simd> core::ops::DerefMut for f64x4<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for f64x4<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "f64x4", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "f64x4", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<f64, S> for f64x4<S> {
@@ -5445,13 +5445,13 @@ impl<S: Simd> core::ops::Index<usize> for f64x4<S> {
     type Output = f64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for f64x4<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<f64x4<S>> for mask64x4<S> {
@@ -5490,11 +5490,11 @@ impl<S: Simd> SimdBase<S> for f64x4<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[f64] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f64] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[f64]) -> Self {
@@ -5741,7 +5741,7 @@ impl<S: Simd> core::ops::DerefMut for i64x4<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i64x4<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i64x4", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "i64x4", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<i64, S> for i64x4<S> {
@@ -5754,13 +5754,13 @@ impl<S: Simd> core::ops::Index<usize> for i64x4<S> {
     type Output = i64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i64x4<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<i64x4<S>> for mask64x4<S> {
@@ -5799,11 +5799,11 @@ impl<S: Simd> SimdBase<S> for i64x4<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i64] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i64] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {
@@ -6000,7 +6000,7 @@ impl<S: Simd> core::ops::DerefMut for u64x4<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u64x4<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u64x4", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "u64x4", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<u64, S> for u64x4<S> {
@@ -6013,13 +6013,13 @@ impl<S: Simd> core::ops::Index<usize> for u64x4<S> {
     type Output = u64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u64x4<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<u64x4<S>> for mask64x4<S> {
@@ -6058,11 +6058,11 @@ impl<S: Simd> SimdBase<S> for u64x4<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u64] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u64] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u64]) -> Self {
@@ -6353,7 +6353,7 @@ impl<S: Simd> core::ops::DerefMut for f32x16<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for f32x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "f32x16", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "f32x16", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<f32, S> for f32x16<S> {
@@ -6366,13 +6366,13 @@ impl<S: Simd> core::ops::Index<usize> for f32x16<S> {
     type Output = f32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for f32x16<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<f32x16<S>> for mask32x16<S> {
@@ -6411,11 +6411,11 @@ impl<S: Simd> SimdBase<S> for f32x16<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[f32] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f32] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[f32]) -> Self {
@@ -6669,7 +6669,7 @@ impl<S: Simd> core::ops::DerefMut for i8x64<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i8x64<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i8x64", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "i8x64", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<i8, S> for i8x64<S> {
@@ -6682,13 +6682,13 @@ impl<S: Simd> core::ops::Index<usize> for i8x64<S> {
     type Output = i8;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i8x64<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<i8x64<S>> for mask8x64<S> {
@@ -6727,11 +6727,11 @@ impl<S: Simd> SimdBase<S> for i8x64<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i8] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i8] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
@@ -6970,7 +6970,7 @@ impl<S: Simd> core::ops::DerefMut for u8x64<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u8x64<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u8x64", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "u8x64", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<u8, S> for u8x64<S> {
@@ -6983,13 +6983,13 @@ impl<S: Simd> core::ops::Index<usize> for u8x64<S> {
     type Output = u8;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u8x64<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<u8x64<S>> for mask8x64<S> {
@@ -7028,11 +7028,11 @@ impl<S: Simd> SimdBase<S> for u8x64<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u8] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u8] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u8]) -> Self {
@@ -7365,7 +7365,7 @@ impl<S: Simd> core::ops::DerefMut for i16x32<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i16x32<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i16x32", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "i16x32", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<i16, S> for i16x32<S> {
@@ -7378,13 +7378,13 @@ impl<S: Simd> core::ops::Index<usize> for i16x32<S> {
     type Output = i16;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i16x32<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<i16x32<S>> for mask16x32<S> {
@@ -7423,11 +7423,11 @@ impl<S: Simd> SimdBase<S> for i16x32<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i16] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i16] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
@@ -7650,7 +7650,7 @@ impl<S: Simd> core::ops::DerefMut for u16x32<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u16x32<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u16x32", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "u16x32", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<u16, S> for u16x32<S> {
@@ -7663,13 +7663,13 @@ impl<S: Simd> core::ops::Index<usize> for u16x32<S> {
     type Output = u16;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u16x32<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<u16x32<S>> for mask16x32<S> {
@@ -7708,11 +7708,11 @@ impl<S: Simd> SimdBase<S> for u16x32<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u16] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u16] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u16]) -> Self {
@@ -8029,7 +8029,7 @@ impl<S: Simd> core::ops::DerefMut for i32x16<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i32x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i32x16", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "i32x16", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<i32, S> for i32x16<S> {
@@ -8042,13 +8042,13 @@ impl<S: Simd> core::ops::Index<usize> for i32x16<S> {
     type Output = i32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i32x16<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<i32x16<S>> for mask32x16<S> {
@@ -8087,11 +8087,11 @@ impl<S: Simd> SimdBase<S> for i32x16<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i32] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i32] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
@@ -8310,7 +8310,7 @@ impl<S: Simd> core::ops::DerefMut for u32x16<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u32x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u32x16", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "u32x16", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<u32, S> for u32x16<S> {
@@ -8323,13 +8323,13 @@ impl<S: Simd> core::ops::Index<usize> for u32x16<S> {
     type Output = u32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u32x16<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<u32x16<S>> for mask32x16<S> {
@@ -8368,11 +8368,11 @@ impl<S: Simd> SimdBase<S> for u32x16<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u32] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u32] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u32]) -> Self {
@@ -8685,7 +8685,7 @@ impl<S: Simd> core::ops::DerefMut for f64x8<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for f64x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "f64x8", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "f64x8", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<f64, S> for f64x8<S> {
@@ -8698,13 +8698,13 @@ impl<S: Simd> core::ops::Index<usize> for f64x8<S> {
     type Output = f64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for f64x8<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<f64x8<S>> for mask64x8<S> {
@@ -8743,11 +8743,11 @@ impl<S: Simd> SimdBase<S> for f64x8<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[f64] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f64] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[f64]) -> Self {
@@ -9000,7 +9000,7 @@ impl<S: Simd> core::ops::DerefMut for i64x8<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i64x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i64x8", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "i64x8", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<i64, S> for i64x8<S> {
@@ -9013,13 +9013,13 @@ impl<S: Simd> core::ops::Index<usize> for i64x8<S> {
     type Output = i64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i64x8<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<i64x8<S>> for mask64x8<S> {
@@ -9058,11 +9058,11 @@ impl<S: Simd> SimdBase<S> for i64x8<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i64] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i64] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {
@@ -9265,7 +9265,7 @@ impl<S: Simd> core::ops::DerefMut for u64x8<S> {
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u64x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u64x8", &self.simd, self.as_array_ref())
+        crate::support::simd_debug_impl(f, "u64x8", &self.simd, self.as_array())
     }
 }
 impl<S: Simd> SimdFrom<u64, S> for u64x8<S> {
@@ -9278,13 +9278,13 @@ impl<S: Simd> core::ops::Index<usize> for u64x8<S> {
     type Output = u64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.as_array_ref()[i]
+        &self.as_array()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u64x8<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.as_array_mut()[i]
+        &mut self.as_mut_array()[i]
     }
 }
 impl<S: Simd> Select<u64x8<S>> for mask64x8<S> {
@@ -9323,11 +9323,11 @@ impl<S: Simd> SimdBase<S> for u64x8<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u64] {
-        self.as_array_ref().as_slice()
+        self.as_array().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u64] {
-        self.as_array_mut().as_mut_slice()
+        self.as_mut_array().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u64]) -> Self {
