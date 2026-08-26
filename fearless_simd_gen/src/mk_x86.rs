@@ -2288,7 +2288,7 @@ impl X86 {
 
         assert!(
             matches!(vec_ty.scalar, Int | Unsigned),
-            "Saturating artihmetic is not implementable for floats"
+            "Saturating arithmetic is not implementable for floats"
         );
 
         match (*self, vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits()) {
