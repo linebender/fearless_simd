@@ -309,7 +309,7 @@ fn saturating_add_sub_method(op: Op, vec_ty: &VecType, arithmetic: SaturatingOp)
             let shr = simple_intrinsic("shr", vec_ty);
             let splat = simple_intrinsic("splat", vec_ty);
             let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-            let sign_shift = Literal::u32_unsuffixed((vec_ty.scalar_bits - 1) as u32);
+            let sign_shift = Literal::u32_unsuffixed((vec_ty.scalar_bits - 1).try_into().unwrap());
             let overflow_bits = match arithmetic {
                 // `(a ^ wrapped) & (b ^ wrapped)` has its sign bit set exactly
                 // when signed addition overflows.

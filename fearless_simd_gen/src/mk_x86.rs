@@ -2286,7 +2286,10 @@ impl X86 {
         use SaturatingOp::{Add, Sub};
         use ScalarType::{Float, Int, Unsigned};
 
-        assert!(matches!(vec_ty.scalar, Int | Unsigned));
+        assert!(
+            matches!(vec_ty.scalar, Int | Unsigned),
+            "Saturating artihmetic is not implementable for floats"
+        );
 
         match (*self, vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits()) {
             // x86 has native instructions for 8-bit and 16-bit elements only.
