@@ -2273,11 +2273,41 @@ impl X86 {
         }
 
         let ty_bits = vec_ty.n_bits();
+        let and = intrinsic_ident("and", coarse_type(vec_ty), ty_bits);
+        let set1_epi16 = intrinsic_ident("set1", "epi16", ty_bits);
+
+        if method == "shlv" {
+            // AVX-512 has variable shifts for i16 lanes but not i8 lanes. Treat each pair
+            // of bytes as an i16 and shift its even and odd bytes along separate paths.
+            let andnot = intrinsic_ident("andnot", coarse_type(vec_ty), ty_bits);
+            let srli = intrinsic_ident("srli", "epi16", ty_bits);
+            let blend = avx512_mask_blend_intrinsic(vec_ty);
+            let odd_byte_mask = match ty_bits {
+                128 => quote! { 0xaaaa_u16 },
+                256 => quote! { 0xaaaa_aaaa_u32 },
+                512 => quote! { 0xaaaa_aaaa_aaaa_aaaa_u64 },
+                _ => unreachable!(),
+            };
+
+            return quote! {
+                let val = a.into();
+                let counts = b.into();
+                let byte_mask = #set1_epi16(0x00ff);
+                let lo_counts = #and(counts, byte_mask);
+                let hi_counts = #srli::<8>(counts);
+                // Left shifts cannot move bits from the odd byte into the even byte, so
+                // only the odd-byte path needs its adjacent input byte cleared.
+                let lo_shifted = #shift_intrinsic(val, lo_counts);
+                let hi_values = #andnot(byte_mask, val);
+                let hi_shifted = #shift_intrinsic(hi_values, hi_counts);
+                // Mask bits set in odd byte positions select `hi_shifted`.
+                #blend(#odd_byte_mask, lo_shifted, hi_shifted).simd_into(#token)
+            };
+        }
+
         let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false, ty_bits);
         let unpack_lo = unpack_intrinsic(ScalarType::Int, 8, true, ty_bits);
         let set0 = intrinsic_ident("setzero", coarse_type(vec_ty), ty_bits);
-        let and = intrinsic_ident("and", coarse_type(vec_ty), ty_bits);
-        let set1_epi16 = intrinsic_ident("set1", "epi16", ty_bits);
         let pack = pack_intrinsic(16, false, ty_bits);
         let value_extend = match (method, vec_ty.scalar) {
             ("shlv", _) | (_, ScalarType::Unsigned) => quote! { zero },
