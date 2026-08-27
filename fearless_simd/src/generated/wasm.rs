@@ -1259,6 +1259,113 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn compress_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self> {
+        let mask_bits = self.to_bitmask_mask8x16(mask);
+        let mut control = [u8::MAX; 16];
+        let mut output_lane = 0;
+        for block in 0..16 / 8 {
+            let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
+            let packed = crate::support::COMPRESS_8_CONTROLS[block_mask];
+            let base = (block * 8) as u64 * 0x0101_0101_0101_0101;
+            let adjusted =
+                ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base) | (packed & 0x8080_8080_8080_8080);
+            let adjusted = adjusted.to_le_bytes();
+            let write_len = core::cmp::min(8, 16 - output_lane);
+            control[output_lane..output_lane + write_len].copy_from_slice(&adjusted[..write_len]);
+            output_lane += block_mask.count_ones() as usize;
+        }
+        let control = u8x16::simd_from(self, control);
+        self.swizzle_dyn_precise_u8x16(values, control)
+    }
+    #[inline(always)]
+    fn compress_merge_u8x16(
+        self,
+        values: u8x16<Self>,
+        mask: mask8x16<Self>,
+        merge: u8x16<Self>,
+    ) -> u8x16<Self> {
+        let mask_bits = self.to_bitmask_mask8x16(mask);
+        let mut control = [u8::MAX; 16];
+        let mut output_lane = 0;
+        for block in 0..16 / 8 {
+            let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
+            let packed = crate::support::COMPRESS_8_CONTROLS[block_mask];
+            let base = (block * 8) as u64 * 0x0101_0101_0101_0101;
+            let adjusted =
+                ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base) | (packed & 0x8080_8080_8080_8080);
+            let adjusted = adjusted.to_le_bytes();
+            let write_len = core::cmp::min(8, 16 - output_lane);
+            control[output_lane..output_lane + write_len].copy_from_slice(&adjusted[..write_len]);
+            output_lane += block_mask.count_ones() as usize;
+        }
+        let control = u8x16::simd_from(self, control);
+        let compressed = self.swizzle_dyn_precise_u8x16(values, control);
+        let prefix_bits = if output_lane == 64 {
+            u64::MAX
+        } else {
+            (1u64 << output_lane) - 1
+        };
+        let prefix_mask = self.from_bitmask_mask8x16(prefix_bits);
+        self.select_u8x16(prefix_mask, compressed, merge)
+    }
+    #[inline(always)]
+    fn expand_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self> {
+        let mask_bits = self.to_bitmask_mask8x16(mask);
+        let mut control = [u8::MAX; 16];
+        let mut input_lane = 0;
+        for block in 0..16 / 8 {
+            let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
+            let packed = crate::support::EXPAND_8_CONTROLS[block_mask];
+            let base = input_lane as u64 * 0x0101_0101_0101_0101;
+            let adjusted =
+                ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base) | (packed & 0x8080_8080_8080_8080);
+            let output_lane = block * 8;
+            control[output_lane..output_lane + 8].copy_from_slice(&adjusted.to_le_bytes());
+            input_lane += block_mask.count_ones() as usize;
+        }
+        let control = u8x16::simd_from(self, control);
+        self.swizzle_dyn_precise_u8x16(values, control)
+    }
+    #[inline(always)]
+    fn expand_merge_u8x16(
+        self,
+        values: u8x16<Self>,
+        mask: mask8x16<Self>,
+        merge: u8x16<Self>,
+    ) -> u8x16<Self> {
+        let mask_bits = self.to_bitmask_mask8x16(mask);
+        let mut control = [u8::MAX; 16];
+        let mut input_lane = 0;
+        for block in 0..16 / 8 {
+            let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
+            let packed = crate::support::EXPAND_8_CONTROLS[block_mask];
+            let base = input_lane as u64 * 0x0101_0101_0101_0101;
+            let adjusted =
+                ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base) | (packed & 0x8080_8080_8080_8080);
+            let output_lane = block * 8;
+            control[output_lane..output_lane + 8].copy_from_slice(&adjusted.to_le_bytes());
+            input_lane += block_mask.count_ones() as usize;
+        }
+        let control = u8x16::simd_from(self, control);
+        let expanded = self.swizzle_dyn_precise_u8x16(values, control);
+        self.select_u8x16(mask, expanded, merge)
+    }
+    #[inline(always)]
+    fn load_expand_u8x16(self, source: &[u8; 16], mask: mask8x16<Self>) -> u8x16<Self> {
+        let values = u8x16::simd_from(self, *source);
+        self.expand_u8x16(values, mask)
+    }
+    #[inline(always)]
+    fn load_expand_merge_u8x16(
+        self,
+        source: &[u8; 16],
+        mask: mask8x16<Self>,
+        merge: u8x16<Self>,
+    ) -> u8x16<Self> {
+        let values = u8x16::simd_from(self, *source);
+        self.expand_merge_u8x16(values, mask, merge)
+    }
+    #[inline(always)]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self> {
         u8x32 {
             val: crate::support::Aligned256([a.val.0, b.val.0]),
@@ -4089,6 +4196,151 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
+    fn compress_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self> {
+        let mask_bits = self.to_bitmask_mask8x32(mask);
+        let mut output = [0u8; 32];
+        let mut output_lane = 0;
+        for block in 0..32 / 16 {
+            let block_bits = ((mask_bits >> (block * 16)) & 0xffff) as usize;
+            let low_mask = block_bits & 0xff;
+            let high_mask = block_bits >> 8;
+            let low_count = low_mask.count_ones() as usize;
+            let low = crate::support::COMPRESS_8_CONTROLS[low_mask];
+            let high = crate::support::COMPRESS_8_CONTROLS[high_mask];
+            let high = ((high & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                | (high & 0x8080_8080_8080_8080);
+            let mut control = [u8::MAX; 16];
+            control[..8].copy_from_slice(&low.to_le_bytes());
+            control[low_count..low_count + 8].copy_from_slice(&high.to_le_bytes());
+            let input = u8x16::from_slice(self, &values.as_array()[block * 16..block * 16 + 16]);
+            let control = u8x16::simd_from(self, control);
+            let compacted: [u8; 16] = self.swizzle_dyn_precise_u8x16(input, control).into();
+            let write_len = core::cmp::min(16, 32 - output_lane);
+            output[output_lane..output_lane + write_len].copy_from_slice(&compacted[..write_len]);
+            output_lane += low_count + high_mask.count_ones() as usize;
+        }
+        u8x32::simd_from(self, output)
+    }
+    #[inline(always)]
+    fn compress_merge_u8x32(
+        self,
+        values: u8x32<Self>,
+        mask: mask8x32<Self>,
+        merge: u8x32<Self>,
+    ) -> u8x32<Self> {
+        let mask_bits = self.to_bitmask_mask8x32(mask);
+        let mut output = [0u8; 32];
+        let mut output_lane = 0;
+        for block in 0..32 / 16 {
+            let block_bits = ((mask_bits >> (block * 16)) & 0xffff) as usize;
+            let low_mask = block_bits & 0xff;
+            let high_mask = block_bits >> 8;
+            let low_count = low_mask.count_ones() as usize;
+            let low = crate::support::COMPRESS_8_CONTROLS[low_mask];
+            let high = crate::support::COMPRESS_8_CONTROLS[high_mask];
+            let high = ((high & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                | (high & 0x8080_8080_8080_8080);
+            let mut control = [u8::MAX; 16];
+            control[..8].copy_from_slice(&low.to_le_bytes());
+            control[low_count..low_count + 8].copy_from_slice(&high.to_le_bytes());
+            let input = u8x16::from_slice(self, &values.as_array()[block * 16..block * 16 + 16]);
+            let control = u8x16::simd_from(self, control);
+            let compacted: [u8; 16] = self.swizzle_dyn_precise_u8x16(input, control).into();
+            let write_len = core::cmp::min(16, 32 - output_lane);
+            output[output_lane..output_lane + write_len].copy_from_slice(&compacted[..write_len]);
+            output_lane += low_count + high_mask.count_ones() as usize;
+        }
+        let compressed = u8x32::simd_from(self, output);
+        let prefix_bits = if output_lane == 64 {
+            u64::MAX
+        } else {
+            (1u64 << output_lane) - 1
+        };
+        let prefix_mask = self.from_bitmask_mask8x32(prefix_bits);
+        self.select_u8x32(prefix_mask, compressed, merge)
+    }
+    #[inline(always)]
+    fn expand_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self> {
+        let mask_bits = self.to_bitmask_mask8x32(mask);
+        let values: [u8; 32] = values.into();
+        let mut output = [0u8; 32];
+        let mut input_lane = 0;
+        for block in 0..32 / 16 {
+            let block_bits = ((mask_bits >> (block * 16)) & 0xffff) as usize;
+            let low_mask = block_bits & 0xff;
+            let high_mask = block_bits >> 8;
+            let low_count = low_mask.count_ones() as usize;
+            let low = crate::support::EXPAND_8_CONTROLS[low_mask];
+            let high = crate::support::EXPAND_8_CONTROLS[high_mask];
+            let high_base = low_count as u64 * 0x0101_0101_0101_0101;
+            let high =
+                ((high & 0x7f7f_7f7f_7f7f_7f7f) + high_base) | (high & 0x8080_8080_8080_8080);
+            let mut control = [0u8; 16];
+            control[..8].copy_from_slice(&low.to_le_bytes());
+            control[8..].copy_from_slice(&high.to_le_bytes());
+            let mut input = [0u8; 16];
+            let read_len = core::cmp::min(16, 32 - input_lane);
+            input[..read_len].copy_from_slice(&values[input_lane..input_lane + read_len]);
+            let input = u8x16::simd_from(self, input);
+            let control = u8x16::simd_from(self, control);
+            let expanded: [u8; 16] = self.swizzle_dyn_precise_u8x16(input, control).into();
+            output[block * 16..block * 16 + 16].copy_from_slice(&expanded);
+            input_lane += low_count + high_mask.count_ones() as usize;
+        }
+        u8x32::simd_from(self, output)
+    }
+    #[inline(always)]
+    fn expand_merge_u8x32(
+        self,
+        values: u8x32<Self>,
+        mask: mask8x32<Self>,
+        merge: u8x32<Self>,
+    ) -> u8x32<Self> {
+        let mask_bits = self.to_bitmask_mask8x32(mask);
+        let values: [u8; 32] = values.into();
+        let mut output = [0u8; 32];
+        let mut input_lane = 0;
+        for block in 0..32 / 16 {
+            let block_bits = ((mask_bits >> (block * 16)) & 0xffff) as usize;
+            let low_mask = block_bits & 0xff;
+            let high_mask = block_bits >> 8;
+            let low_count = low_mask.count_ones() as usize;
+            let low = crate::support::EXPAND_8_CONTROLS[low_mask];
+            let high = crate::support::EXPAND_8_CONTROLS[high_mask];
+            let high_base = low_count as u64 * 0x0101_0101_0101_0101;
+            let high =
+                ((high & 0x7f7f_7f7f_7f7f_7f7f) + high_base) | (high & 0x8080_8080_8080_8080);
+            let mut control = [0u8; 16];
+            control[..8].copy_from_slice(&low.to_le_bytes());
+            control[8..].copy_from_slice(&high.to_le_bytes());
+            let mut input = [0u8; 16];
+            let read_len = core::cmp::min(16, 32 - input_lane);
+            input[..read_len].copy_from_slice(&values[input_lane..input_lane + read_len]);
+            let input = u8x16::simd_from(self, input);
+            let control = u8x16::simd_from(self, control);
+            let expanded: [u8; 16] = self.swizzle_dyn_precise_u8x16(input, control).into();
+            output[block * 16..block * 16 + 16].copy_from_slice(&expanded);
+            input_lane += low_count + high_mask.count_ones() as usize;
+        }
+        let expanded = u8x32::simd_from(self, output);
+        self.select_u8x32(mask, expanded, merge)
+    }
+    #[inline(always)]
+    fn load_expand_u8x32(self, source: &[u8; 32], mask: mask8x32<Self>) -> u8x32<Self> {
+        let values = u8x32::simd_from(self, *source);
+        self.expand_u8x32(values, mask)
+    }
+    #[inline(always)]
+    fn load_expand_merge_u8x32(
+        self,
+        source: &[u8; 32],
+        mask: mask8x32<Self>,
+        merge: u8x32<Self>,
+    ) -> u8x32<Self> {
+        let values = u8x32::simd_from(self, *source);
+        self.expand_merge_u8x32(values, mask, merge)
+    }
+    #[inline(always)]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self> {
         u8x64 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -4709,6 +4961,151 @@ impl Simd for WasmSimd128 {
         }
         let result: u8x64<Self> = output.simd_into(self);
         Bytes::from_bytes(result)
+    }
+    #[inline(always)]
+    fn compress_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self> {
+        let mask_bits = self.to_bitmask_mask8x64(mask);
+        let mut output = [0u8; 64];
+        let mut output_lane = 0;
+        for block in 0..64 / 16 {
+            let block_bits = ((mask_bits >> (block * 16)) & 0xffff) as usize;
+            let low_mask = block_bits & 0xff;
+            let high_mask = block_bits >> 8;
+            let low_count = low_mask.count_ones() as usize;
+            let low = crate::support::COMPRESS_8_CONTROLS[low_mask];
+            let high = crate::support::COMPRESS_8_CONTROLS[high_mask];
+            let high = ((high & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                | (high & 0x8080_8080_8080_8080);
+            let mut control = [u8::MAX; 16];
+            control[..8].copy_from_slice(&low.to_le_bytes());
+            control[low_count..low_count + 8].copy_from_slice(&high.to_le_bytes());
+            let input = u8x16::from_slice(self, &values.as_array()[block * 16..block * 16 + 16]);
+            let control = u8x16::simd_from(self, control);
+            let compacted: [u8; 16] = self.swizzle_dyn_precise_u8x16(input, control).into();
+            let write_len = core::cmp::min(16, 64 - output_lane);
+            output[output_lane..output_lane + write_len].copy_from_slice(&compacted[..write_len]);
+            output_lane += low_count + high_mask.count_ones() as usize;
+        }
+        u8x64::simd_from(self, output)
+    }
+    #[inline(always)]
+    fn compress_merge_u8x64(
+        self,
+        values: u8x64<Self>,
+        mask: mask8x64<Self>,
+        merge: u8x64<Self>,
+    ) -> u8x64<Self> {
+        let mask_bits = self.to_bitmask_mask8x64(mask);
+        let mut output = [0u8; 64];
+        let mut output_lane = 0;
+        for block in 0..64 / 16 {
+            let block_bits = ((mask_bits >> (block * 16)) & 0xffff) as usize;
+            let low_mask = block_bits & 0xff;
+            let high_mask = block_bits >> 8;
+            let low_count = low_mask.count_ones() as usize;
+            let low = crate::support::COMPRESS_8_CONTROLS[low_mask];
+            let high = crate::support::COMPRESS_8_CONTROLS[high_mask];
+            let high = ((high & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                | (high & 0x8080_8080_8080_8080);
+            let mut control = [u8::MAX; 16];
+            control[..8].copy_from_slice(&low.to_le_bytes());
+            control[low_count..low_count + 8].copy_from_slice(&high.to_le_bytes());
+            let input = u8x16::from_slice(self, &values.as_array()[block * 16..block * 16 + 16]);
+            let control = u8x16::simd_from(self, control);
+            let compacted: [u8; 16] = self.swizzle_dyn_precise_u8x16(input, control).into();
+            let write_len = core::cmp::min(16, 64 - output_lane);
+            output[output_lane..output_lane + write_len].copy_from_slice(&compacted[..write_len]);
+            output_lane += low_count + high_mask.count_ones() as usize;
+        }
+        let compressed = u8x64::simd_from(self, output);
+        let prefix_bits = if output_lane == 64 {
+            u64::MAX
+        } else {
+            (1u64 << output_lane) - 1
+        };
+        let prefix_mask = self.from_bitmask_mask8x64(prefix_bits);
+        self.select_u8x64(prefix_mask, compressed, merge)
+    }
+    #[inline(always)]
+    fn expand_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self> {
+        let mask_bits = self.to_bitmask_mask8x64(mask);
+        let values: [u8; 64] = values.into();
+        let mut output = [0u8; 64];
+        let mut input_lane = 0;
+        for block in 0..64 / 16 {
+            let block_bits = ((mask_bits >> (block * 16)) & 0xffff) as usize;
+            let low_mask = block_bits & 0xff;
+            let high_mask = block_bits >> 8;
+            let low_count = low_mask.count_ones() as usize;
+            let low = crate::support::EXPAND_8_CONTROLS[low_mask];
+            let high = crate::support::EXPAND_8_CONTROLS[high_mask];
+            let high_base = low_count as u64 * 0x0101_0101_0101_0101;
+            let high =
+                ((high & 0x7f7f_7f7f_7f7f_7f7f) + high_base) | (high & 0x8080_8080_8080_8080);
+            let mut control = [0u8; 16];
+            control[..8].copy_from_slice(&low.to_le_bytes());
+            control[8..].copy_from_slice(&high.to_le_bytes());
+            let mut input = [0u8; 16];
+            let read_len = core::cmp::min(16, 64 - input_lane);
+            input[..read_len].copy_from_slice(&values[input_lane..input_lane + read_len]);
+            let input = u8x16::simd_from(self, input);
+            let control = u8x16::simd_from(self, control);
+            let expanded: [u8; 16] = self.swizzle_dyn_precise_u8x16(input, control).into();
+            output[block * 16..block * 16 + 16].copy_from_slice(&expanded);
+            input_lane += low_count + high_mask.count_ones() as usize;
+        }
+        u8x64::simd_from(self, output)
+    }
+    #[inline(always)]
+    fn expand_merge_u8x64(
+        self,
+        values: u8x64<Self>,
+        mask: mask8x64<Self>,
+        merge: u8x64<Self>,
+    ) -> u8x64<Self> {
+        let mask_bits = self.to_bitmask_mask8x64(mask);
+        let values: [u8; 64] = values.into();
+        let mut output = [0u8; 64];
+        let mut input_lane = 0;
+        for block in 0..64 / 16 {
+            let block_bits = ((mask_bits >> (block * 16)) & 0xffff) as usize;
+            let low_mask = block_bits & 0xff;
+            let high_mask = block_bits >> 8;
+            let low_count = low_mask.count_ones() as usize;
+            let low = crate::support::EXPAND_8_CONTROLS[low_mask];
+            let high = crate::support::EXPAND_8_CONTROLS[high_mask];
+            let high_base = low_count as u64 * 0x0101_0101_0101_0101;
+            let high =
+                ((high & 0x7f7f_7f7f_7f7f_7f7f) + high_base) | (high & 0x8080_8080_8080_8080);
+            let mut control = [0u8; 16];
+            control[..8].copy_from_slice(&low.to_le_bytes());
+            control[8..].copy_from_slice(&high.to_le_bytes());
+            let mut input = [0u8; 16];
+            let read_len = core::cmp::min(16, 64 - input_lane);
+            input[..read_len].copy_from_slice(&values[input_lane..input_lane + read_len]);
+            let input = u8x16::simd_from(self, input);
+            let control = u8x16::simd_from(self, control);
+            let expanded: [u8; 16] = self.swizzle_dyn_precise_u8x16(input, control).into();
+            output[block * 16..block * 16 + 16].copy_from_slice(&expanded);
+            input_lane += low_count + high_mask.count_ones() as usize;
+        }
+        let expanded = u8x64::simd_from(self, output);
+        self.select_u8x64(mask, expanded, merge)
+    }
+    #[inline(always)]
+    fn load_expand_u8x64(self, source: &[u8; 64], mask: mask8x64<Self>) -> u8x64<Self> {
+        let values = u8x64::simd_from(self, *source);
+        self.expand_u8x64(values, mask)
+    }
+    #[inline(always)]
+    fn load_expand_merge_u8x64(
+        self,
+        source: &[u8; 64],
+        mask: mask8x64<Self>,
+        merge: u8x64<Self>,
+    ) -> u8x64<Self> {
+        let values = u8x64::simd_from(self, *source);
+        self.expand_merge_u8x64(values, mask, merge)
     }
     #[inline(always)]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>) {
