@@ -641,7 +641,7 @@ impl Level for Fallback {
                 let bytes_ty = vec_ty.bytes_ty();
                 let bytes_rust = bytes_ty.rust();
                 let byte_count = bytes_ty.len;
-                // This formulation lowers into one cmov per element on SSE2/SSE4.2
+                // This formulation requests branchless selection on scalar targets
                 // and autovectorizes on RISC-V.
                 quote! {
                     #method_sig {
@@ -652,7 +652,11 @@ impl Level for Fallback {
                             // and select zero afterwards. This avoids a branch that could be mispredicted.
                             let index = indices[lane] as usize;
                             let value = bytes[index % #byte_count];
-                            output[lane] = if index < #byte_count { value } else { 0 };
+                            output[lane] = core::hint::select_unpredictable(
+                                index < #byte_count,
+                                value,
+                                0u8,
+                            );
                         }
                         let result: #bytes_rust<Self> = output.simd_into(self);
                         Bytes::from_bytes(result)

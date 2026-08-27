@@ -1558,7 +1558,7 @@ impl Simd for Fallback {
         for lane in 0..16usize {
             let index = indices[lane] as usize;
             let value = bytes[index % 16usize];
-            output[lane] = if index < 16usize { value } else { 0 };
+            output[lane] = core::hint::select_unpredictable(index < 16usize, value, 0u8);
         }
         let result: u8x16<Self> = output.simd_into(self);
         Bytes::from_bytes(result)
@@ -6091,7 +6091,7 @@ impl Simd for Fallback {
         for lane in 0..32usize {
             let index = indices[lane] as usize;
             let value = bytes[index % 32usize];
-            output[lane] = if index < 32usize { value } else { 0 };
+            output[lane] = core::hint::select_unpredictable(index < 32usize, value, 0u8);
         }
         let result: u8x32<Self> = output.simd_into(self);
         Bytes::from_bytes(result)
@@ -6468,7 +6468,7 @@ impl Simd for Fallback {
         for lane in 0..64usize {
             let index = indices[lane] as usize;
             let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
+            output[lane] = core::hint::select_unpredictable(index < 64usize, value, 0u8);
         }
         let result: u8x64<Self> = output.simd_into(self);
         Bytes::from_bytes(result)

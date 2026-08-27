@@ -6837,7 +6837,7 @@ impl Simd for Sse4_2 {
         for lane in 0..64usize {
             let index = indices[lane] as usize;
             let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
+            output[lane] = core::hint::select_unpredictable(index < 64usize, value, 0u8);
         }
         let result: u8x64<Self> = output.simd_into(self);
         Bytes::from_bytes(result)
