@@ -665,6 +665,75 @@ impl Level for Neon {
                     }
                 })
             }
+            OpSig::ConcatSwizzleDyn => {
+                let precise = generic_op_name("concat_swizzle_dyn_precise", vec_ty);
+                quote! {
+                    #method_sig {
+                        self.#precise(a, b, indices)
+                    }
+                }
+            }
+            OpSig::ConcatSwizzleDynPrecise => {
+                let bytes_ty = vec_ty.bytes_ty();
+                let bytes = bytes_ty.rust();
+                let wrapper = bytes_ty.aligned_wrapper();
+
+                self.kernel_method(op, vec_ty, |token| {
+                    let body = match vec_ty.n_bits() {
+                        128 => quote! {
+                            let table = uint8x16x2_t(
+                                Bytes::to_bytes(a).val.0,
+                                Bytes::to_bytes(b).val.0,
+                            );
+                            let result = vqtbl2q_u8(table, indices.into());
+                        },
+                        256 => quote! {
+                            let a = Bytes::to_bytes(a).val.0;
+                            let b = Bytes::to_bytes(b).val.0;
+                            let table = uint8x16x4_t(a.0, a.1, b.0, b.1);
+                            let indices: uint8x16x2_t = indices.into();
+                            let result = uint8x16x2_t(
+                                vqtbl4q_u8(table, indices.0),
+                                vqtbl4q_u8(table, indices.1),
+                            );
+                        },
+                        512 => quote! {
+                            let a = Bytes::to_bytes(a).val.0;
+                            let b = Bytes::to_bytes(b).val.0;
+                            let indices: uint8x16x4_t = indices.into();
+                            let b_offset = vdupq_n_u8(64);
+                            let result = uint8x16x4_t(
+                                vqtbx4q_u8(
+                                    vqtbl4q_u8(a, indices.0),
+                                    b,
+                                    vsubq_u8(indices.0, b_offset),
+                                ),
+                                vqtbx4q_u8(
+                                    vqtbl4q_u8(a, indices.1),
+                                    b,
+                                    vsubq_u8(indices.1, b_offset),
+                                ),
+                                vqtbx4q_u8(
+                                    vqtbl4q_u8(a, indices.2),
+                                    b,
+                                    vsubq_u8(indices.2, b_offset),
+                                ),
+                                vqtbx4q_u8(
+                                    vqtbl4q_u8(a, indices.3),
+                                    b,
+                                    vsubq_u8(indices.3, b_offset),
+                                ),
+                            );
+                        },
+                        _ => unreachable!(),
+                    };
+
+                    quote! {
+                        #body
+                        Bytes::from_bytes(#bytes { val: #wrapper(result), simd: #token })
+                    }
+                })
+            }
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,

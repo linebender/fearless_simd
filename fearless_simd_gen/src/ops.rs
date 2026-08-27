@@ -86,6 +86,13 @@ pub(crate) enum OpSig {
     /// Takes a vector and a same-width byte-index vector, and returns the original vector type with its bytes
     /// dynamically swizzled across the whole vector. Out-of-range indices produce zero.
     SwizzleDynPrecise,
+    /// Takes two vectors and a same-width byte-index vector, and returns the original vector type with its bytes
+    /// dynamically selected from the concatenation of both vectors. Out-of-range indices produce
+    /// implementation-defined bytes.
+    ConcatSwizzleDyn,
+    /// Takes two vectors and a same-width byte-index vector, and returns the original vector type with its bytes
+    /// dynamically selected from the concatenation of both vectors. Out-of-range indices produce zero.
+    ConcatSwizzleDynPrecise,
     /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
     /// same length.
     Cvt {
@@ -319,6 +326,13 @@ impl Op {
                 let bytes_ty = vec_ty.bytes_ty().rust();
                 (vec![vec.clone(), quote! { #bytes_ty<#simd_ty> }], vec)
             }
+            OpSig::ConcatSwizzleDyn | OpSig::ConcatSwizzleDynPrecise => {
+                let bytes_ty = vec_ty.bytes_ty().rust();
+                (
+                    vec![vec.clone(), vec.clone(), quote! { #bytes_ty<#simd_ty> }],
+                    vec,
+                )
+            }
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
@@ -411,6 +425,14 @@ impl Op {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
                 quote! { (#arg0, #arg1: impl SimdInto<Self::Bytes, S>) -> Self }
+            }
+            OpSig::ConcatSwizzleDyn | OpSig::ConcatSwizzleDynPrecise => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                let arg2 = &arg_names[2];
+                quote! {
+                    (#arg0, #arg1: impl SimdInto<Self, S>, #arg2: impl SimdInto<Self::Bytes, S>) -> Self
+                }
             }
             OpSig::Compare => {
                 let arg0 = &arg_names[0];
@@ -592,6 +614,21 @@ const BASE_OPS: &[Op] = &[
         OpSig::SwizzleDynPrecise,
         "Dynamically swizzle this vector's bytes across the whole vector.\n\n\
         The `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero.",
+    ),
+    Op::new(
+        "concat_swizzle_dyn",
+        OpKind::BaseTraitMethod,
+        OpSig::ConcatSwizzleDyn,
+        "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\n\
+        The `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\n\
+        Use [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero.",
+    ),
+    Op::new(
+        "concat_swizzle_dyn_precise",
+        OpKind::BaseTraitMethod,
+        OpSig::ConcatSwizzleDynPrecise,
+        "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\n\
+        The `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero.",
     ),
 ];
 
@@ -1647,7 +1684,11 @@ impl OpSig {
     pub(crate) fn should_route_swizzle_through_bytes(&self, vec_ty: &VecType) -> bool {
         matches!(
             self,
-            Self::SwizzleDynWithinBlocks | Self::SwizzleDyn | Self::SwizzleDynPrecise
+            Self::SwizzleDynWithinBlocks
+                | Self::SwizzleDyn
+                | Self::SwizzleDynPrecise
+                | Self::ConcatSwizzleDyn
+                | Self::ConcatSwizzleDynPrecise
         ) && *vec_ty != vec_ty.bytes_ty()
     }
 
@@ -1664,6 +1705,8 @@ impl OpSig {
                 | Self::MaskSet
                 | Self::SwizzleDyn
                 | Self::SwizzleDynPrecise
+                | Self::ConcatSwizzleDyn
+                | Self::ConcatSwizzleDynPrecise
                 | Self::Slide {
                     granularity: SlideGranularity::AcrossBlocks,
                     ..
@@ -1711,6 +1754,7 @@ impl OpSig {
             Self::SwizzleDynWithinBlocks | Self::SwizzleDyn | Self::SwizzleDynPrecise => {
                 &["a", "indices"]
             }
+            Self::ConcatSwizzleDyn | Self::ConcatSwizzleDynPrecise => &["a", "b", "indices"],
             Self::Binary
             | Self::Compare
             | Self::Combine { .. }
@@ -1743,6 +1787,7 @@ impl OpSig {
             Self::SwizzleDynWithinBlocks | Self::SwizzleDyn | Self::SwizzleDynPrecise => {
                 &["self", "indices"]
             }
+            Self::ConcatSwizzleDyn | Self::ConcatSwizzleDynPrecise => &["self", "rhs", "indices"],
             Self::Binary
             | Self::Compare
             | Self::Zip { .. }
@@ -1783,6 +1828,12 @@ impl OpSig {
                 quote! { #arg0, #arg1.simd_into(self.simd) }
             }
             Self::Ternary => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                let arg2 = &arg_names[2];
+                quote! { #arg0, #arg1.simd_into(self.simd), #arg2.simd_into(self.simd) }
+            }
+            Self::ConcatSwizzleDyn | Self::ConcatSwizzleDynPrecise => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
                 let arg2 = &arg_names[2];

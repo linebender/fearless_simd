@@ -7,9 +7,10 @@ use crate::arch::x86::{
     unpack_intrinsic,
 };
 use crate::generic::{
-    count_zeros_method, fallback_method, generic_block_combine, generic_block_split,
-    generic_mask_from_bitmask, generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
-    recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
+    concat_swizzle_dyn_precise_body, count_zeros_method, fallback_method, generic_block_combine,
+    generic_block_split, generic_mask_from_bitmask, generic_mask_set, generic_op_name,
+    integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body, reverse_method,
+    reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{NarrowingMode, Op, OpSig, Quantifier, SlideGranularity, relaxed_narrow_method};
@@ -339,6 +340,8 @@ impl Level for X86 {
             OpSig::SwizzleDynWithinBlocks => self.handle_swizzle_dyn_within_blocks(op, vec_ty),
             OpSig::SwizzleDyn => self.handle_swizzle_dyn(op, vec_ty),
             OpSig::SwizzleDynPrecise => self.handle_swizzle_dyn_precise(op, vec_ty),
+            OpSig::ConcatSwizzleDyn => self.handle_concat_swizzle_dyn(op, vec_ty),
+            OpSig::ConcatSwizzleDynPrecise => self.handle_concat_swizzle_dyn_precise(op, vec_ty),
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
@@ -1035,6 +1038,48 @@ fn avx512_permutexvar_intrinsic(vec_ty: &VecType) -> Ident {
 fn avx512_mask_blend_intrinsic(vec_ty: &VecType) -> Ident {
     let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
     intrinsic_ident("mask_blend", suffix, vec_ty.n_bits())
+}
+
+/// Three-blend AVX2 implementation for selecting from a concatenated pair of 256-bit tables.
+///
+/// This uses one fewer live YMM register than the zeroing-shuffle-and-OR formulation and has better
+/// throughput on anything but Haswell. It is slower on Haswell, which isn't relevant in 2026.
+/// Keeping fewer temporaries live also avoids spilling a YMM register
+/// after rustc inlines four copies into the 512-bit recursive expansion.
+fn avx2_concat_swizzle_256_precise(
+    a: TokenStream,
+    b: TokenStream,
+    indices: TokenStream,
+) -> TokenStream {
+    quote! {{
+        let a = #a;
+        let b = #b;
+        let indices = #indices;
+        let control = _mm256_adds_epu8(indices, _mm256_set1_epi8(0x40));
+        let a_swapped = _mm256_permute2x128_si256::<0x01>(a, a);
+        let b_swapped = _mm256_permute2x128_si256::<0x01>(b, b);
+
+        let flip_high_lane = _mm256_set_m128i(
+            _mm_set1_epi8(i8::MIN),
+            _mm_setzero_si128(),
+        );
+        let select_remote = _mm256_xor_si256(
+            _mm256_slli_epi16::<3>(control),
+            flip_high_lane,
+        );
+        let from_a = _mm256_blendv_epi8(
+            _mm256_shuffle_epi8(a, control),
+            _mm256_shuffle_epi8(a_swapped, control),
+            select_remote,
+        );
+        let from_b = _mm256_blendv_epi8(
+            _mm256_shuffle_epi8(b, control),
+            _mm256_shuffle_epi8(b_swapped, control),
+            select_remote,
+        );
+
+        _mm256_blendv_epi8(from_a, from_b, _mm256_slli_epi16::<2>(control))
+    }}
 }
 
 fn avx512_index_vector(vec_ty: &VecType, indices: impl IntoIterator<Item = usize>) -> TokenStream {
@@ -3982,10 +4027,11 @@ impl X86 {
             let body = match (*self, vec_ty.n_bits()) {
                 (Self::Sse4_2 | Self::Avx2, 128) => quote! {
                     let indices = indices.into();
-                    // Preserve the original high bit, and set it for indices 16..=127.
-                    // The added value only changes bits that PSHUFB ignores for valid indices.
-                    let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                    let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                    // Adding 0x70 preserves the selector nibble for indices 0..=15.
+                    // Every larger index gets its high bit set, so PSHUFB returns zero.
+                    // This is about equivalent for native sizes, but performs much better
+                    // when decomposing concat_swizzle_dyn into these ops.
+                    let zeroing_indices = _mm_adds_epu8(indices, _mm_set1_epi8(0x70));
                     let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
                     let result_bytes = #bytes { val: #wrapper(result), simd: #token };
                 },
@@ -4024,6 +4070,155 @@ impl X86 {
                         // second, all-zero table.
                         let indices = #min(indices, #set1(#byte_count));
                         let result = #permute(bytes, indices, #setzero());
+                        let result_bytes = #bytes { val: #wrapper(result), simd: #token };
+                    }
+                }
+                _ => unreachable!(),
+            };
+
+            quote! {
+                #body
+                Bytes::from_bytes(result_bytes)
+            }
+        })
+    }
+
+    pub(crate) fn handle_concat_swizzle_dyn(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        let bytes_ty = vec_ty.bytes_ty();
+        let bytes = bytes_ty.rust();
+        let wrapper = bytes_ty.aligned_wrapper();
+
+        if *self == Self::Sse2 || (*self == Self::Sse4_2 && vec_ty.n_bits() == 512) {
+            return fallback_method(op, vec_ty);
+        }
+
+        // These paths already have cheap precise building blocks. Using them here also keeps the
+        // concat implementation shared with wider recursive expansions. AVX2 deliberately uses
+        // the lower-register-pressure precise formulation for relaxed 256-bit swizzles.
+        if matches!(
+            (*self, vec_ty.n_bits()),
+            (Self::Sse4_2, 128 | 256) | (Self::Avx2, 128 | 256 | 512)
+        ) {
+            let method_sig = op.simd_trait_method_sig(vec_ty);
+            let precise = generic_op_name("concat_swizzle_dyn_precise", vec_ty);
+            return quote! {
+                #method_sig {
+                    self.#precise(a, b, indices)
+                }
+            };
+        }
+
+        self.kernel_method(op, vec_ty, |token| {
+            let body = match (*self, vec_ty.n_bits()) {
+                (Self::Avx512, 128 | 256 | 512) => {
+                    let permute = intrinsic_ident("permutex2var", "epi8", vec_ty.n_bits());
+                    quote! {
+                        let result = #permute(
+                            Bytes::to_bytes(a).val.0,
+                            indices.into(),
+                            Bytes::to_bytes(b).val.0,
+                        );
+                    }
+                }
+                _ => unreachable!(),
+            };
+
+            quote! {
+                #body
+                Bytes::from_bytes(#bytes {
+                    val: #wrapper(result),
+                    simd: #token,
+                })
+            }
+        })
+    }
+
+    pub(crate) fn handle_concat_swizzle_dyn_precise(
+        &self,
+        op: Op,
+        vec_ty: &VecType,
+    ) -> TokenStream {
+        let bytes_ty = vec_ty.bytes_ty();
+        let bytes = bytes_ty.rust();
+        let wrapper = bytes_ty.aligned_wrapper();
+
+        if *self == Self::Sse2 || (*self == Self::Sse4_2 && vec_ty.n_bits() == 512) {
+            return fallback_method(op, vec_ty);
+        }
+
+        if matches!(
+            (*self, vec_ty.n_bits()),
+            (Self::Sse4_2, 128 | 256) | (Self::Avx2, 128)
+        ) {
+            let method_sig = op.simd_trait_method_sig(vec_ty);
+            let body = concat_swizzle_dyn_precise_body(vec_ty, &quote! { self });
+            return quote! {
+                #method_sig {
+                    #body
+                    Bytes::from_bytes(result_bytes)
+                }
+            };
+        }
+
+        self.kernel_method(op, vec_ty, |token| {
+            let body = match (*self, vec_ty.n_bits()) {
+                (Self::Avx2, 256) => {
+                    let result = avx2_concat_swizzle_256_precise(
+                        quote! { Bytes::to_bytes(a).val.0 },
+                        quote! { Bytes::to_bytes(b).val.0 },
+                        quote! { indices.into() },
+                    );
+                    quote! {
+                        let result = #result;
+                        let result_bytes = #bytes { val: #wrapper(result), simd: #token };
+                    }
+                }
+                (Self::Avx2, 512) => {
+                    let low_from_a = avx2_concat_swizzle_256_precise(
+                        quote! { a_bytes[0] },
+                        quote! { a_bytes[1] },
+                        quote! { indices_bytes[0] },
+                    );
+                    let low_from_b = avx2_concat_swizzle_256_precise(
+                        quote! { b_bytes[0] },
+                        quote! { b_bytes[1] },
+                        quote! { _mm256_sub_epi8(indices_bytes[0], second_table_offset) },
+                    );
+                    let high_from_a = avx2_concat_swizzle_256_precise(
+                        quote! { a_bytes[0] },
+                        quote! { a_bytes[1] },
+                        quote! { indices_bytes[1] },
+                    );
+                    let high_from_b = avx2_concat_swizzle_256_precise(
+                        quote! { b_bytes[0] },
+                        quote! { b_bytes[1] },
+                        quote! { _mm256_sub_epi8(indices_bytes[1], second_table_offset) },
+                    );
+                    quote! {
+                        let a_bytes = Bytes::to_bytes(a).val.0;
+                        let b_bytes = Bytes::to_bytes(b).val.0;
+                        let indices_bytes = indices.val.0;
+                        let second_table_offset = _mm256_set1_epi8(64);
+                        let result_low = _mm256_or_si256(#low_from_a, #low_from_b);
+                        let result_high = _mm256_or_si256(#high_from_a, #high_from_b);
+                        let result_bytes = #bytes {
+                            val: #wrapper([result_low, result_high]),
+                            simd: #token,
+                        };
+                    }
+                }
+                (Self::Avx512, 128 | 256 | 512) => {
+                    let cmplt = intrinsic_ident("cmplt", "epu8_mask", vec_ty.n_bits());
+                    let maskz_permute =
+                        intrinsic_ident("maskz_permutex2var", "epi8", vec_ty.n_bits());
+                    let set1 = set1_intrinsic(&bytes_ty);
+                    let table_len = signed_literal((bytes_ty.len * 2) as u64, 8);
+                    quote! {
+                        let a_bytes = Bytes::to_bytes(a).val.0;
+                        let b_bytes = Bytes::to_bytes(b).val.0;
+                        let indices = indices.into();
+                        let in_range = #cmplt(indices, #set1(#table_len));
+                        let result = #maskz_permute(in_range, a_bytes, indices, b_bytes);
                         let result_bytes = #bytes { val: #wrapper(result), simd: #token };
                     }
                 }

@@ -942,6 +942,35 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
+    fn concat_swizzle_dyn_u8x16(
+        self,
+        a: u8x16<Self>,
+        b: u8x16<Self>,
+        indices: u8x16<Self>,
+    ) -> u8x16<Self> {
+        self.concat_swizzle_dyn_precise_u8x16(a, b, indices)
+    }
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u8x16(
+        self,
+        a: u8x16<Self>,
+        b: u8x16<Self>,
+        indices: u8x16<Self>,
+    ) -> u8x16<Self> {
+        let indices: v128 = indices.into();
+        let result = v128_or(
+            u8x16_swizzle(Bytes::to_bytes(a).val.0, indices),
+            u8x16_swizzle(
+                Bytes::to_bytes(b).val.0,
+                u8x16_sub(indices, u8x16_splat(16)),
+            ),
+        );
+        Bytes::from_bytes(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
     fn count_ones_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
         i8x16_popcnt(a.into()).simd_into(self)
     }
@@ -3666,6 +3695,58 @@ impl Simd for WasmSimd128 {
         Bytes::from_bytes(result_bytes)
     }
     #[inline(always)]
+    fn concat_swizzle_dyn_u8x32(
+        self,
+        a: u8x32<Self>,
+        b: u8x32<Self>,
+        indices: u8x32<Self>,
+    ) -> u8x32<Self> {
+        self.concat_swizzle_dyn_precise_u8x32(a, b, indices)
+    }
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u8x32(
+        self,
+        a: u8x32<Self>,
+        b: u8x32<Self>,
+        indices: u8x32<Self>,
+    ) -> u8x32<Self> {
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
+        let indices = indices.val.0;
+        let result = [
+            {
+                let indices = indices[0];
+                v128_or(
+                    v128_or(
+                        u8x16_swizzle(a[0], indices),
+                        u8x16_swizzle(a[1], u8x16_sub(indices, u8x16_splat(16))),
+                    ),
+                    v128_or(
+                        u8x16_swizzle(b[0], u8x16_sub(indices, u8x16_splat(32))),
+                        u8x16_swizzle(b[1], u8x16_sub(indices, u8x16_splat(48))),
+                    ),
+                )
+            },
+            {
+                let indices = indices[1];
+                v128_or(
+                    v128_or(
+                        u8x16_swizzle(a[0], indices),
+                        u8x16_swizzle(a[1], u8x16_sub(indices, u8x16_splat(16))),
+                    ),
+                    v128_or(
+                        u8x16_swizzle(b[0], u8x16_sub(indices, u8x16_splat(32))),
+                        u8x16_swizzle(b[1], u8x16_sub(indices, u8x16_splat(48))),
+                    ),
+                )
+            },
+        ];
+        Bytes::from_bytes(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self> {
         u8x64 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -4131,6 +4212,38 @@ impl Simd for WasmSimd128 {
             let index = indices[lane] as usize;
             let value = bytes[index % 64usize];
             output[lane] = if index < 64usize { value } else { 0 };
+        }
+        let result: u8x64<Self> = output.simd_into(self);
+        Bytes::from_bytes(result)
+    }
+    #[inline(always)]
+    fn concat_swizzle_dyn_u8x64(
+        self,
+        a: u8x64<Self>,
+        b: u8x64<Self>,
+        indices: u8x64<Self>,
+    ) -> u8x64<Self> {
+        self.concat_swizzle_dyn_precise_u8x64(a, b, indices)
+    }
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u8x64(
+        self,
+        a: u8x64<Self>,
+        b: u8x64<Self>,
+        indices: u8x64<Self>,
+    ) -> u8x64<Self> {
+        let first_table = Bytes::to_bytes(a);
+        let second_table = Bytes::to_bytes(b);
+        let mut output = [0u8; 64usize];
+        for lane in 0..64usize {
+            let index = indices[lane] as usize;
+            let table_index = index % 64usize;
+            let value = if index < 64usize {
+                first_table[table_index]
+            } else {
+                second_table[table_index]
+            };
+            output[lane] = if index < 128usize { value } else { 0 };
         }
         let result: u8x64<Self> = output.simd_into(self);
         Bytes::from_bytes(result)

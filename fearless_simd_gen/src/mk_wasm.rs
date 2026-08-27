@@ -873,6 +873,75 @@ impl Level for WasmSimd128 {
                 // and express it in terms of 256-bit or 512-bit vectors.
                 _ => crate::mk_fallback::Fallback.make_method(op, vec_ty),
             },
+            OpSig::ConcatSwizzleDyn => {
+                let precise = generic_op_name("concat_swizzle_dyn_precise", vec_ty);
+                quote! {
+                    #method_sig {
+                        self.#precise(a, b, indices)
+                    }
+                }
+            }
+            OpSig::ConcatSwizzleDynPrecise => match vec_ty.n_bits() {
+                128 => {
+                    let bytes_ty = vec_ty.bytes_ty();
+                    let bytes = bytes_ty.rust();
+                    let wrapper = bytes_ty.aligned_wrapper();
+
+                    quote! {
+                        #method_sig {
+                            let indices: v128 = indices.into();
+                            let result = v128_or(
+                                u8x16_swizzle(Bytes::to_bytes(a).val.0, indices),
+                                u8x16_swizzle(
+                                    Bytes::to_bytes(b).val.0,
+                                    u8x16_sub(indices, u8x16_splat(16)),
+                                ),
+                            );
+                            Bytes::from_bytes(#bytes { val: #wrapper(result), simd: self })
+                        }
+                    }
+                }
+                256 => {
+                    let bytes_ty = vec_ty.bytes_ty();
+                    let bytes = bytes_ty.rust();
+                    let wrapper = bytes_ty.aligned_wrapper();
+                    let blocks = (0..2).map(Literal::usize_unsuffixed);
+
+                    quote! {
+                        #method_sig {
+                            let a = Bytes::to_bytes(a).val.0;
+                            let b = Bytes::to_bytes(b).val.0;
+                            let indices = indices.val.0;
+                            let result = [#({
+                                let indices = indices[#blocks];
+                                v128_or(
+                                    v128_or(
+                                        u8x16_swizzle(a[0], indices),
+                                        u8x16_swizzle(
+                                            a[1],
+                                            u8x16_sub(indices, u8x16_splat(16)),
+                                        ),
+                                    ),
+                                    v128_or(
+                                        u8x16_swizzle(
+                                            b[0],
+                                            u8x16_sub(indices, u8x16_splat(32)),
+                                        ),
+                                        u8x16_swizzle(
+                                            b[1],
+                                            u8x16_sub(indices, u8x16_splat(48)),
+                                        ),
+                                    ),
+                                )
+                            }),*];
+                            Bytes::from_bytes(#bytes { val: #wrapper(result), simd: self })
+                        }
+                    }
+                }
+                // Register spills make a decomposed 512-bit implementation less attractive
+                // than leaving instruction selection to the scalar fallback.
+                _ => crate::mk_fallback::Fallback.make_method(op, vec_ty),
+            },
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,

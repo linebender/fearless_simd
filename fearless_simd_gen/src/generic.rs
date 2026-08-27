@@ -44,10 +44,26 @@ pub(crate) fn byte_swizzle_op(op: &Op, vec_ty: &VecType) -> TokenStream {
 
     let method_sig = op.simd_trait_method_sig(vec_ty);
     let byte_method = generic_op_name(op.method, &vec_ty.bytes_ty());
-    quote! {
-        #method_sig {
-            Bytes::from_bytes(self.#byte_method(Bytes::to_bytes(a), indices))
+    match op.sig {
+        OpSig::SwizzleDynWithinBlocks | OpSig::SwizzleDyn | OpSig::SwizzleDynPrecise => {
+            quote! {
+                #method_sig {
+                    Bytes::from_bytes(self.#byte_method(Bytes::to_bytes(a), indices))
+                }
+            }
         }
+        OpSig::ConcatSwizzleDyn | OpSig::ConcatSwizzleDynPrecise => {
+            quote! {
+                #method_sig {
+                    Bytes::from_bytes(self.#byte_method(
+                        Bytes::to_bytes(a),
+                        Bytes::to_bytes(b),
+                        indices,
+                    ))
+                }
+            }
+        }
+        _ => unreachable!("non-swizzle operation routed through bytes"),
     }
 }
 
@@ -177,6 +193,32 @@ pub(crate) fn recursive_swizzle_dyn_precise_body<T: ToTokens + ?Sized>(
     }
 }
 
+/// Implement a precise swizzle from a concatenated pair of vectors by combining two zeroing
+/// whole-vector swizzles with bitwise OR.
+pub(crate) fn concat_swizzle_dyn_precise_body<T: ToTokens + ?Sized>(
+    vec_ty: &VecType,
+    token: &T,
+) -> TokenStream {
+    let bytes_ty = vec_ty.bytes_ty();
+    let swizzle = generic_op_name("swizzle_dyn_precise", &bytes_ty);
+    let splat = generic_op_name("splat", &bytes_ty);
+    let sub = generic_op_name("sub", &bytes_ty);
+    let or = generic_op_name("or", &bytes_ty);
+    let second_table_offset = Literal::u8_unsuffixed(u8::try_from(bytes_ty.len).unwrap());
+
+    quote! {
+        let first_table = Bytes::to_bytes(a);
+        let second_table = Bytes::to_bytes(b);
+        let second_table_offset = #token.#splat(#second_table_offset);
+        let from_first = #token.#swizzle(first_table, indices);
+        let from_second = #token.#swizzle(
+            second_table,
+            #token.#sub(indices, second_table_offset),
+        );
+        let result_bytes = #token.#or(from_first, from_second);
+    }
+}
+
 /// For backends that store masks as all-zero/all-one integer lanes, convert the public
 /// `bool` mask splat argument into the backend's lane representation.
 pub(crate) fn integer_lane_mask_splat_arg(vec_ty: &VecType) -> TokenStream {
@@ -264,7 +306,10 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::SwizzleDyn | OpSig::SwizzleDynPrecise => {
+        OpSig::SwizzleDyn
+        | OpSig::SwizzleDynPrecise
+        | OpSig::ConcatSwizzleDyn
+        | OpSig::ConcatSwizzleDynPrecise => {
             panic!("whole-vector swizzles cannot be done via split/combine");
         }
         OpSig::Ternary => {
