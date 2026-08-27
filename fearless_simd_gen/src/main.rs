@@ -5,6 +5,10 @@
     missing_docs,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
+#![expect(
+    clippy::missing_assert_message,
+    reason = "Asserts inside the generator are usually self-explanatory"
+)]
 
 use std::{fs::File, io::Write, path::Path};
 
