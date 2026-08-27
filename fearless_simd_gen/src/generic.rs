@@ -62,6 +62,34 @@ pub(crate) fn reversed_compare_op(op: &Op, vec_ty: &VecType) -> Option<TokenStre
     })
 }
 
+/// Implement a fixed lane reversal as a byte swizzle with compile-time-known indices.
+///
+/// Backends use this only at widths they handle natively. Emulated wider vectors recurse through
+/// [`generic_op`], which also reverses the order of their halves.
+pub(crate) fn reverse_method(op: Op, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(op.method, "reverse");
+    assert!(matches!(op.sig, OpSig::Unary));
+
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let bytes_ty = vec_ty.bytes_ty();
+    let bytes = bytes_ty.rust();
+    let swizzle = generic_op_name("swizzle_dyn", vec_ty);
+    let element_bytes = vec_ty.scalar_bits / 8;
+    let indices = (0..bytes_ty.len).map(|output_byte| {
+        let output_element = output_byte / element_bytes;
+        let byte_in_element = output_byte % element_bytes;
+        let input_byte = (vec_ty.len - 1 - output_element) * element_bytes + byte_in_element;
+        Literal::u8_unsuffixed(u8::try_from(input_byte).unwrap())
+    });
+
+    quote! {
+        #method_sig {
+            let indices: #bytes<Self> = [#(#indices),*].simd_into(self);
+            self.#swizzle(a, indices)
+        }
+    }
+}
+
 pub(crate) fn recursive_swizzle_dyn_precise_body<T: ToTokens + ?Sized>(
     vec_ty: &VecType,
     token: &T,
@@ -143,10 +171,15 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
             }
         }
         OpSig::Unary => {
+            let halves = if op.method == "reverse" {
+                quote! { self.#do_half(a1), self.#do_half(a0) }
+            } else {
+                quote! { self.#do_half(a0), self.#do_half(a1) }
+            };
             quote! {
                 #method_sig {
                     let (a0, a1) = self.#split(a);
-                    self.#combine(self.#do_half(a0), self.#do_half(a1))
+                    self.#combine(#halves)
                 }
             }
         }

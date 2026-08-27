@@ -200,6 +200,12 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
+    fn reverse_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
+        let indices: u8x16<Self> =
+            [12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3].simd_into(self);
+        self.swizzle_dyn_f32x4(a, indices)
+    }
+    #[inline(always)]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         if SHIFT >= 4usize {
             return b;
@@ -784,6 +790,12 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
+    fn reverse_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        let indices: u8x16<Self> =
+            [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0].simd_into(self);
+        self.swizzle_dyn_i8x16(a, indices)
+    }
+    #[inline(always)]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         if SHIFT >= 16usize {
             return b;
@@ -1243,6 +1255,12 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, val)
+    }
+    #[inline(always)]
+    fn reverse_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        let indices: u8x16<Self> =
+            [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0].simd_into(self);
+        self.swizzle_dyn_u8x16(a, indices)
     }
     #[inline(always)]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -1905,6 +1923,12 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
+    fn reverse_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        let indices: u8x16<Self> =
+            [14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1].simd_into(self);
+        self.swizzle_dyn_i16x8(a, indices)
+    }
+    #[inline(always)]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         if SHIFT >= 8usize {
             return b;
@@ -2356,6 +2380,12 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, val)
+    }
+    #[inline(always)]
+    fn reverse_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        let indices: u8x16<Self> =
+            [14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1].simd_into(self);
+        self.swizzle_dyn_u16x8(a, indices)
     }
     #[inline(always)]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -2973,6 +3003,12 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
+    fn reverse_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        let indices: u8x16<Self> =
+            [12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3].simd_into(self);
+        self.swizzle_dyn_i32x4(a, indices)
+    }
+    #[inline(always)]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         if SHIFT >= 4usize {
             return b;
@@ -3402,6 +3438,12 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, val)
+    }
+    #[inline(always)]
+    fn reverse_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        let indices: u8x16<Self> =
+            [12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3].simd_into(self);
+        self.swizzle_dyn_u32x4(a, indices)
     }
     #[inline(always)]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -4000,6 +4042,12 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
+    fn reverse_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
+        let indices: u8x16<Self> =
+            [8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7].simd_into(self);
+        self.swizzle_dyn_f64x2(a, indices)
+    }
+    #[inline(always)]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         if SHIFT >= 2usize {
             return b;
@@ -4545,6 +4593,12 @@ impl Simd for Sse4_2 {
         kernel(self, val)
     }
     #[inline(always)]
+    fn reverse_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        let indices: u8x16<Self> =
+            [8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7].simd_into(self);
+        self.swizzle_dyn_i64x2(a, indices)
+    }
+    #[inline(always)]
     fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         if SHIFT >= 2usize {
             return b;
@@ -4952,6 +5006,12 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, val)
+    }
+    #[inline(always)]
+    fn reverse_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        let indices: u8x16<Self> =
+            [8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7].simd_into(self);
+        self.swizzle_dyn_u64x2(a, indices)
     }
     #[inline(always)]
     fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {

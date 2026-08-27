@@ -155,6 +155,10 @@ impl<S: Simd> SimdBase<S> for f32x4<S> {
             .swizzle_dyn_precise_f32x4(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_f32x4(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_f32x4(self, rhs.simd_into(self.simd))
     }
@@ -481,6 +485,10 @@ impl<S: Simd> SimdBase<S> for i8x16<S> {
             .swizzle_dyn_precise_i8x16(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_i8x16(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i8x16(self, rhs.simd_into(self.simd))
     }
@@ -743,6 +751,10 @@ impl<S: Simd> SimdBase<S> for u8x16<S> {
     fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_precise_u8x16(self, indices.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_u8x16(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -1095,6 +1107,10 @@ impl<S: Simd> SimdBase<S> for i16x8<S> {
             .swizzle_dyn_precise_i16x8(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_i16x8(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i16x8(self, rhs.simd_into(self.simd))
     }
@@ -1364,6 +1380,10 @@ impl<S: Simd> SimdBase<S> for u16x8<S> {
     fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_precise_u16x8(self, indices.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_u16x8(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -1719,6 +1739,10 @@ impl<S: Simd> SimdBase<S> for i32x4<S> {
             .swizzle_dyn_precise_i32x4(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_i32x4(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i32x4(self, rhs.simd_into(self.simd))
     }
@@ -1988,6 +2012,10 @@ impl<S: Simd> SimdBase<S> for u32x4<S> {
     fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_precise_u32x4(self, indices.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_u32x4(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -2355,6 +2383,10 @@ impl<S: Simd> SimdBase<S> for f64x2<S> {
             .swizzle_dyn_precise_f64x2(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_f64x2(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_f64x2(self, rhs.simd_into(self.simd))
     }
@@ -2669,6 +2701,10 @@ impl<S: Simd> SimdBase<S> for i64x2<S> {
             .swizzle_dyn_precise_i64x2(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_i64x2(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i64x2(self, rhs.simd_into(self.simd))
     }
@@ -2931,6 +2967,10 @@ impl<S: Simd> SimdBase<S> for u64x2<S> {
     fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_precise_u64x2(self, indices.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_u64x2(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -3303,6 +3343,10 @@ impl<S: Simd> SimdBase<S> for f32x8<S> {
             .swizzle_dyn_precise_f32x8(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_f32x8(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_f32x8(self, rhs.simd_into(self.simd))
     }
@@ -3640,6 +3684,10 @@ impl<S: Simd> SimdBase<S> for i8x32<S> {
             .swizzle_dyn_precise_i8x32(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_i8x32(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i8x32(self, rhs.simd_into(self.simd))
     }
@@ -3913,6 +3961,10 @@ impl<S: Simd> SimdBase<S> for u8x32<S> {
     fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_precise_u8x32(self, indices.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_u8x32(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -4268,6 +4320,10 @@ impl<S: Simd> SimdBase<S> for i16x16<S> {
             .swizzle_dyn_precise_i16x16(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_i16x16(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i16x16(self, rhs.simd_into(self.simd))
     }
@@ -4541,6 +4597,10 @@ impl<S: Simd> SimdBase<S> for u16x16<S> {
     fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_precise_u16x16(self, indices.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_u16x16(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -4904,6 +4964,10 @@ impl<S: Simd> SimdBase<S> for i32x8<S> {
             .swizzle_dyn_precise_i32x8(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_i32x8(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i32x8(self, rhs.simd_into(self.simd))
     }
@@ -5180,6 +5244,10 @@ impl<S: Simd> SimdBase<S> for u32x8<S> {
     fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_precise_u32x8(self, indices.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_u32x8(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -5542,6 +5610,10 @@ impl<S: Simd> SimdBase<S> for f64x4<S> {
             .swizzle_dyn_precise_f64x4(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_f64x4(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_f64x4(self, rhs.simd_into(self.simd))
     }
@@ -5851,6 +5923,10 @@ impl<S: Simd> SimdBase<S> for i64x4<S> {
             .swizzle_dyn_precise_i64x4(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_i64x4(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i64x4(self, rhs.simd_into(self.simd))
     }
@@ -6108,6 +6184,10 @@ impl<S: Simd> SimdBase<S> for u64x4<S> {
     fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_precise_u64x4(self, indices.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_u64x4(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -6484,6 +6564,10 @@ impl<S: Simd> SimdBase<S> for f32x16<S> {
             .swizzle_dyn_precise_f32x16(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_f32x16(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_f32x16(self, rhs.simd_into(self.simd))
     }
@@ -6848,6 +6932,10 @@ impl<S: Simd> SimdBase<S> for i8x64<S> {
             .swizzle_dyn_precise_i8x64(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_i8x64(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i8x64(self, rhs.simd_into(self.simd))
     }
@@ -7147,6 +7235,10 @@ impl<S: Simd> SimdBase<S> for u8x64<S> {
     fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_precise_u8x64(self, indices.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_u8x64(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -7512,6 +7604,10 @@ impl<S: Simd> SimdBase<S> for i16x32<S> {
             .swizzle_dyn_precise_i16x32(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_i16x32(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i16x32(self, rhs.simd_into(self.simd))
     }
@@ -7795,6 +7891,10 @@ impl<S: Simd> SimdBase<S> for u16x32<S> {
     fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_precise_u16x32(self, indices.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_u16x32(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -8160,6 +8260,10 @@ impl<S: Simd> SimdBase<S> for i32x16<S> {
             .swizzle_dyn_precise_i32x16(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_i32x16(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i32x16(self, rhs.simd_into(self.simd))
     }
@@ -8439,6 +8543,10 @@ impl<S: Simd> SimdBase<S> for u32x16<S> {
     fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_precise_u32x16(self, indices.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_u32x16(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -8808,6 +8916,10 @@ impl<S: Simd> SimdBase<S> for f64x8<S> {
             .swizzle_dyn_precise_f64x8(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_f64x8(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_f64x8(self, rhs.simd_into(self.simd))
     }
@@ -9123,6 +9235,10 @@ impl<S: Simd> SimdBase<S> for i64x8<S> {
             .swizzle_dyn_precise_i64x8(self, indices.simd_into(self.simd))
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_i64x8(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i64x8(self, rhs.simd_into(self.simd))
     }
@@ -9386,6 +9502,10 @@ impl<S: Simd> SimdBase<S> for u64x8<S> {
     fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_precise_u64x8(self, indices.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_u64x8(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {

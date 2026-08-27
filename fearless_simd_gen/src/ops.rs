@@ -532,6 +532,12 @@ const BASE_OPS: &[Op] = &[
         "Create a SIMD vector with all elements set to the given value.",
     ),
     Op::new(
+        "reverse",
+        OpKind::BaseTraitMethod,
+        OpSig::Unary,
+        "Reverse the order of the vector's elements.",
+    ),
+    Op::new(
         "slide",
         OpKind::BaseTraitMethod,
         OpSig::Slide {
