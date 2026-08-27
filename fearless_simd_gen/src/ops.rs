@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use anyhow::{Context, anyhow};
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 use std::fmt::Write;
 
@@ -108,6 +108,10 @@ pub(crate) enum OpSig {
     /// Takes two vectors and a same-width byte-index vector, and returns the original vector type with its bytes
     /// dynamically selected from the concatenation of both vectors. Out-of-range indices produce zero.
     ConcatSwizzleDynPrecise,
+    /// Takes a byte vector, a same-width byte-lane mask, and optionally a merge vector.
+    Compress { merge: bool },
+    /// Takes a byte vector, a same-width byte-lane mask, and optionally a merge vector.
+    Expand { merge: bool },
     /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
     /// same length.
     Cvt {
@@ -280,6 +284,46 @@ impl Op {
         }
     }
 
+    /// Generate a SIMD trait method whose local kernel uses an explicit target-feature set rather
+    /// than all features associated with the method's backend. This allows a higher backend to
+    /// reuse a lower backend's instruction formulation when wider instructions do not improve it.
+    pub(crate) fn simd_trait_kernel_method_with_target_features(
+        &self,
+        method_level: Ident,
+        target_features: &str,
+        vec_ty: &VecType,
+        body: impl FnOnce(&Ident) -> TokenStream,
+    ) -> TokenStream {
+        assert!(
+            !matches!(self.sig, OpSig::Slide { .. }),
+            "kernel! does not support const-generic methods"
+        );
+
+        let method_sig = self.simd_trait_method_sig(vec_ty);
+        let token = Ident::new("token", Span::call_site());
+        let target_features = Literal::string(target_features);
+        let kernel_body = body(&token);
+        let sig = self.simd_trait_sig_parts(vec_ty, quote! { #method_level });
+        let arg_decls = sig.arg_decls();
+        let call_args = &sig.arg_names;
+        let ret = &sig.ret;
+
+        quote! {
+            #method_sig {
+                #[inline]
+                #[target_feature(enable = #target_features)]
+                unsafe fn kernel(
+                    #token: #method_level #(, #arg_decls)*
+                ) -> #ret {
+                    #kernel_body
+                }
+
+                // SAFETY: the backend token guarantees this kernel's feature subset.
+                unsafe { kernel(self #(, #call_args)*) }
+            }
+        }
+    }
+
     fn simd_trait_sig_parts(&self, vec_ty: &VecType, simd_ty: TokenStream) -> SimdTraitSigParts {
         let ty = vec_ty.rust();
         let arg_names = self
@@ -352,6 +396,17 @@ impl Op {
                     vec,
                 )
             }
+            OpSig::Compress { merge: false } | OpSig::Expand { merge: false } => {
+                let mask = vec_ty.mask_ty().rust();
+                (vec![vec.clone(), quote! { #mask<#simd_ty> }], vec)
+            }
+            OpSig::Compress { merge: true } | OpSig::Expand { merge: true } => {
+                let mask = vec_ty.mask_ty().rust();
+                (
+                    vec![vec.clone(), quote! { #mask<#simd_ty> }, vec.clone()],
+                    vec,
+                )
+            }
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
@@ -412,7 +467,10 @@ impl Op {
                 let arg1 = &arg_names[1];
                 quote! { (#arg0: S, #arg1: Self::Element) -> Self }
             }
-            OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } => {
+            OpSig::LoadInterleaved { .. }
+            | OpSig::StoreInterleaved { .. }
+            | OpSig::Compress { .. }
+            | OpSig::Expand { .. } => {
                 return None;
             }
             OpSig::MaskFromBitmask | OpSig::MaskToBitmask | OpSig::MaskSet => return None,
@@ -670,6 +728,37 @@ const BASE_OPS: &[Op] = &[
         OpSig::ConcatSwizzleDynPrecise,
         "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\n\
         The `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero.",
+    ),
+];
+
+const U8_ONLY_OPS: &[Op] = &[
+    Op::new(
+        "compress",
+        OpKind::AssociatedOnly,
+        OpSig::Compress { merge: false },
+        "Compact the bytes selected by `{arg1}` into consecutive low lanes.\n\n\
+         Lanes above the number of selected bytes are zero.",
+    ),
+    Op::new(
+        "compress_merge",
+        OpKind::AssociatedOnly,
+        OpSig::Compress { merge: true },
+        "Compact the bytes selected by `{arg1}` into consecutive low lanes.\n\n\
+         Lanes above the number of selected bytes retain the corresponding values from `{arg2}`.",
+    ),
+    Op::new(
+        "expand",
+        OpKind::AssociatedOnly,
+        OpSig::Expand { merge: false },
+        "Expand consecutive low bytes from `{arg0}` into the lanes selected by `{arg1}`.\n\n\
+         Unselected lanes are zero.",
+    ),
+    Op::new(
+        "expand_merge",
+        OpKind::AssociatedOnly,
+        OpSig::Expand { merge: true },
+        "Expand consecutive low bytes from `{arg0}` into the lanes selected by `{arg1}`.\n\n\
+         Unselected lanes retain the corresponding values from `{arg2}`.",
     ),
 ];
 
@@ -1541,6 +1630,10 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         }
     }
 
+    if ty.scalar == ScalarType::Unsigned && ty.scalar_bits == 8 {
+        ops.extend_from_slice(U8_ONLY_OPS);
+    }
+
     if let Some(combined_ty) = ty.combine_operand() {
         ops.push(Op::new(
             "combine",
@@ -1857,6 +1950,8 @@ impl OpSig {
                 | Self::SwizzleDynPrecise
                 | Self::ConcatSwizzleDyn
                 | Self::ConcatSwizzleDynPrecise
+                | Self::Compress { .. }
+                | Self::Expand { .. }
                 | Self::Slide {
                     granularity: SlideGranularity::AcrossBlocks,
                     ..
@@ -1907,6 +2002,10 @@ impl OpSig {
                 &["a", "indices"]
             }
             Self::ConcatSwizzleDyn | Self::ConcatSwizzleDynPrecise => &["a", "b", "indices"],
+            Self::Compress { merge: false } | Self::Expand { merge: false } => &["values", "mask"],
+            Self::Compress { merge: true } | Self::Expand { merge: true } => {
+                &["values", "mask", "merge"]
+            }
             Self::Binary
             | Self::Compare
             | Self::Combine { .. }
@@ -1930,7 +2029,9 @@ impl OpSig {
             | Self::StoreInterleaved { .. }
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
-            | Self::MaskSet => &[],
+            | Self::MaskSet
+            | Self::Compress { .. }
+            | Self::Expand { .. } => &[],
             Self::Unary
             | Self::Reduce { .. }
             | Self::RotateElements { .. }
@@ -2009,6 +2110,8 @@ impl OpSig {
             | Self::SwizzleDynWithinBlocks
             | Self::SwizzleDyn
             | Self::SwizzleDynPrecise
+            | Self::Compress { .. }
+            | Self::Expand { .. }
             | Self::Slide { .. } => return None,
         };
         Some(args)
