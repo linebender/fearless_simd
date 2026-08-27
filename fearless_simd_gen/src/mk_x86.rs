@@ -9,7 +9,7 @@ use crate::arch::x86::{
 use crate::generic::{
     count_zeros_method, fallback_method, generic_block_combine, generic_block_split,
     generic_mask_from_bitmask, generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
-    recursive_swizzle_dyn_precise_body, reverse_method,
+    recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{NarrowingMode, Op, OpSig, Quantifier, SlideGranularity, relaxed_narrow_method};
@@ -1477,6 +1477,19 @@ impl X86 {
         vec_ty: &VecType,
     ) -> TokenStream {
         if method == "reverse" {
+            if vec_ty.scalar == ScalarType::Mask {
+                if *self == Self::Avx512 {
+                    let shift = avx512_mask_register_bits(vec_ty) - vec_ty.len;
+                    let result =
+                        avx512_mask_value(vec_ty, quote! { a.val.reverse_bits() >> #shift });
+                    return quote! {
+                        #method_sig {
+                            #result
+                        }
+                    };
+                }
+                return reverse_vector_mask_method(op, vec_ty);
+            }
             return if *self == Self::Sse2 {
                 fallback_method(op, vec_ty)
             } else {

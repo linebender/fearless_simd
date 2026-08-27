@@ -13,7 +13,7 @@ You can find its changes [documented below](#070-2026-08-11).
 
 ### Added
 
-- Added `reverse` for all non-mask vector types.
+- Added `reverse` for all SIMD vector and mask types.
 - Added lane-wise `count_ones` and `count_zeros` operations for all integer vector types and backends.
 - Added `mul_add_precise` and `mul_sub_precise` for floating-point vectors. They guarantee the infinite-precision product-plus-add rounded once, including on SIMD levels without hardware fused multiply-add instructions. They are not susceptible to the [bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library, `std::simd` and musl libc that causes incorrect rounding for subnormal results. SSE4.2 gets SIMD emulation of these operations for better performance. ([#323][], [#324][] by [@Shnatsel][])
 - Documented the storage representation of the SIMD vector types. The documented representation will not change without a semver major version change.

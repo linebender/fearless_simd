@@ -556,6 +556,8 @@ pub trait Simd:
     fn xor_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    fn reverse_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self>;
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask8x16(
         self,
@@ -813,6 +815,8 @@ pub trait Simd:
     fn xor_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    fn reverse_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self>;
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask16x8(
         self,
@@ -1074,6 +1078,8 @@ pub trait Simd:
     fn xor_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    fn reverse_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self>;
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask32x4(
         self,
@@ -1461,6 +1467,8 @@ pub trait Simd:
     fn xor_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    fn reverse_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self>;
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask64x2(
         self,
@@ -2388,6 +2396,12 @@ pub trait Simd:
         let (a0, a1) = self.split_mask8x32(a);
         self.combine_mask8x16(self.not_mask8x16(a0), self.not_mask8x16(a1))
     }
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    #[inline(always)]
+    fn reverse_mask8x32(self, a: mask8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask8x32(a);
+        self.combine_mask8x16(self.reverse_mask8x16(a1), self.reverse_mask8x16(a0))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_mask8x32(
@@ -3056,6 +3070,12 @@ pub trait Simd:
     fn not_mask16x16(self, a: mask16x16<Self>) -> mask16x16<Self> {
         let (a0, a1) = self.split_mask16x16(a);
         self.combine_mask16x8(self.not_mask16x8(a0), self.not_mask16x8(a1))
+    }
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    #[inline(always)]
+    fn reverse_mask16x16(self, a: mask16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        self.combine_mask16x8(self.reverse_mask16x8(a1), self.reverse_mask16x8(a0))
     }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
@@ -3729,6 +3749,12 @@ pub trait Simd:
     fn not_mask32x8(self, a: mask32x8<Self>) -> mask32x8<Self> {
         let (a0, a1) = self.split_mask32x8(a);
         self.combine_mask32x4(self.not_mask32x4(a0), self.not_mask32x4(a1))
+    }
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    #[inline(always)]
+    fn reverse_mask32x8(self, a: mask32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        self.combine_mask32x4(self.reverse_mask32x4(a1), self.reverse_mask32x4(a0))
     }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
@@ -4759,6 +4785,12 @@ pub trait Simd:
         let (a0, a1) = self.split_mask64x4(a);
         self.combine_mask64x2(self.not_mask64x2(a0), self.not_mask64x2(a1))
     }
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    #[inline(always)]
+    fn reverse_mask64x4(self, a: mask64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        self.combine_mask64x2(self.reverse_mask64x2(a1), self.reverse_mask64x2(a0))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_mask64x4(
@@ -5726,6 +5758,12 @@ pub trait Simd:
         let (a0, a1) = self.split_mask8x64(a);
         self.combine_mask8x32(self.not_mask8x32(a0), self.not_mask8x32(a1))
     }
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    #[inline(always)]
+    fn reverse_mask8x64(self, a: mask8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask8x64(a);
+        self.combine_mask8x32(self.reverse_mask8x32(a1), self.reverse_mask8x32(a0))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_mask8x64(
@@ -6400,6 +6438,12 @@ pub trait Simd:
     fn not_mask16x32(self, a: mask16x32<Self>) -> mask16x32<Self> {
         let (a0, a1) = self.split_mask16x32(a);
         self.combine_mask16x16(self.not_mask16x16(a0), self.not_mask16x16(a1))
+    }
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    #[inline(always)]
+    fn reverse_mask16x32(self, a: mask16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        self.combine_mask16x16(self.reverse_mask16x16(a1), self.reverse_mask16x16(a0))
     }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
@@ -7078,6 +7122,12 @@ pub trait Simd:
     fn not_mask32x16(self, a: mask32x16<Self>) -> mask32x16<Self> {
         let (a0, a1) = self.split_mask32x16(a);
         self.combine_mask32x8(self.not_mask32x8(a0), self.not_mask32x8(a1))
+    }
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    #[inline(always)]
+    fn reverse_mask32x16(self, a: mask32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        self.combine_mask32x8(self.reverse_mask32x8(a1), self.reverse_mask32x8(a0))
     }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
@@ -8100,6 +8150,12 @@ pub trait Simd:
         let (a0, a1) = self.split_mask64x8(a);
         self.combine_mask64x4(self.not_mask64x4(a0), self.not_mask64x4(a1))
     }
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    #[inline(always)]
+    fn reverse_mask64x8(self, a: mask64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        self.combine_mask64x4(self.reverse_mask64x4(a1), self.reverse_mask64x4(a0))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_mask64x8(
@@ -8909,6 +8965,8 @@ pub trait SimdMask<S: Simd>:
     #[doc = r""]
     #[doc = r" The slice must be exactly the size of the SIMD mask."]
     fn store_slice(&self, slice: &mut [Self::Element]);
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    fn reverse(self) -> Self;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self;
     #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]

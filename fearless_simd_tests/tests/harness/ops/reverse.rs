@@ -321,3 +321,121 @@ fn reverse_f64x8<S: Simd>(simd: S) {
     let a = f64x8::from_slice(simd, &[1.0, -2.0, 3.0, -4.0, 5.0, -6.0, 7.0, -8.0]);
     assert_eq!(*a.reverse(), [-8.0, 7.0, -6.0, 5.0, -4.0, 3.0, -2.0, 1.0]);
 }
+
+#[simd_test]
+fn reverse_mask8x16<S: Simd>(simd: S) {
+    let lanes: [i8; 16] = [-1, 0, -1, 0, -1, -1, 0, 0, 0, -1, 0, 0, -1, 0, 0, 0];
+    let a = mask8x16::from_slice(simd, &lanes);
+    let mut expected = lanes;
+    expected.reverse();
+    assert_eq!(<[i8; 16]>::from(a.reverse()), expected);
+}
+
+#[simd_test]
+fn reverse_mask16x8<S: Simd>(simd: S) {
+    let lanes: [i16; 8] = [-1, 0, -1, 0, -1, -1, 0, 0];
+    let a = mask16x8::from_slice(simd, &lanes);
+    let mut expected = lanes;
+    expected.reverse();
+    assert_eq!(<[i16; 8]>::from(a.reverse()), expected);
+}
+
+#[simd_test]
+fn reverse_mask32x4<S: Simd>(simd: S) {
+    let lanes: [i32; 4] = [-1, 0, -1, 0];
+    let a = mask32x4::from_slice(simd, &lanes);
+    let mut expected = lanes;
+    expected.reverse();
+    assert_eq!(<[i32; 4]>::from(a.reverse()), expected);
+}
+
+#[simd_test]
+fn reverse_mask64x2<S: Simd>(simd: S) {
+    let lanes: [i64; 2] = [-1, 0];
+    let a = mask64x2::from_slice(simd, &lanes);
+    let mut expected = lanes;
+    expected.reverse();
+    assert_eq!(<[i64; 2]>::from(a.reverse()), expected);
+}
+
+#[simd_test]
+fn reverse_mask8x32<S: Simd>(simd: S) {
+    let lanes: [i8; 32] = [
+        -1, -1, -1, 0, 0, -1, -1, 0, -1, 0, -1, 0, 0, 0, -1, 0, -1, -1, 0, 0, 0, -1, 0, 0, -1, 0,
+        0, 0, 0, 0, 0, 0,
+    ];
+    let a = mask8x32::from_slice(simd, &lanes);
+    let mut expected = lanes;
+    expected.reverse();
+    assert_eq!(<[i8; 32]>::from(a.reverse()), expected);
+}
+
+#[simd_test]
+fn reverse_mask16x16<S: Simd>(simd: S) {
+    let lanes: [i16; 16] = [-1, 0, -1, 0, -1, -1, 0, 0, 0, -1, 0, 0, -1, 0, 0, 0];
+    let a = mask16x16::from_slice(simd, &lanes);
+    let mut expected = lanes;
+    expected.reverse();
+    assert_eq!(<[i16; 16]>::from(a.reverse()), expected);
+}
+
+#[simd_test]
+fn reverse_mask32x8<S: Simd>(simd: S) {
+    let lanes: [i32; 8] = [-1, 0, -1, 0, -1, -1, 0, 0];
+    let a = mask32x8::from_slice(simd, &lanes);
+    let mut expected = lanes;
+    expected.reverse();
+    assert_eq!(<[i32; 8]>::from(a.reverse()), expected);
+}
+
+#[simd_test]
+fn reverse_mask64x4<S: Simd>(simd: S) {
+    let lanes: [i64; 4] = [-1, 0, -1, 0];
+    let a = mask64x4::from_slice(simd, &lanes);
+    let mut expected = lanes;
+    expected.reverse();
+    assert_eq!(<[i64; 4]>::from(a.reverse()), expected);
+}
+
+#[simd_test]
+fn reverse_mask8x64<S: Simd>(simd: S) {
+    let lanes: [i8; 64] = [
+        -1, -1, -1, -1, 0, -1, -1, -1, -1, 0, -1, -1, 0, 0, -1, -1, -1, -1, 0, -1, 0, -1, 0, -1,
+        -1, 0, 0, -1, 0, 0, 0, -1, -1, -1, -1, 0, 0, -1, -1, 0, -1, 0, -1, 0, 0, 0, -1, 0, -1, -1,
+        0, 0, 0, -1, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0,
+    ];
+    let a = mask8x64::from_slice(simd, &lanes);
+    let mut expected = lanes;
+    expected.reverse();
+    assert_eq!(<[i8; 64]>::from(a.reverse()), expected);
+}
+
+#[simd_test]
+fn reverse_mask16x32<S: Simd>(simd: S) {
+    let lanes: [i16; 32] = [
+        -1, -1, -1, 0, 0, -1, -1, 0, -1, 0, -1, 0, 0, 0, -1, 0, -1, -1, 0, 0, 0, -1, 0, 0, -1, 0,
+        0, 0, 0, 0, 0, 0,
+    ];
+    let a = mask16x32::from_slice(simd, &lanes);
+    let mut expected = lanes;
+    expected.reverse();
+    assert_eq!(<[i16; 32]>::from(a.reverse()), expected);
+}
+
+#[simd_test]
+fn reverse_mask32x16<S: Simd>(simd: S) {
+    let lanes: [i32; 16] = [-1, 0, -1, 0, -1, -1, 0, 0, 0, -1, 0, 0, -1, 0, 0, 0];
+    let a = mask32x16::from_slice(simd, &lanes);
+    let mut expected = lanes;
+    expected.reverse();
+    assert_eq!(<[i32; 16]>::from(a.reverse()), expected);
+}
+
+#[simd_test]
+fn reverse_mask64x8<S: Simd>(simd: S) {
+    let lanes: [i64; 8] = [-1, 0, -1, 0, -1, -1, 0, 0];
+    let a = mask64x8::from_slice(simd, &lanes);
+    let mut expected = lanes;
+    expected.reverse();
+    assert_eq!(<[i64; 8]>::from(a.reverse()), expected);
+}

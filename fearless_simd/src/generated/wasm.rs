@@ -1112,6 +1112,18 @@ impl Simd for WasmSimd128 {
         v128_not(a.into()).simd_into(self)
     }
     #[inline(always)]
+    fn reverse_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self> {
+        let lanes = i8x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let reversed = self.reverse_i8x16(lanes);
+        mask8x16 {
+            val: crate::transmute::checked_transmute_copy(&reversed.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn select_mask8x16(
         self,
         a: mask8x16<Self>,
@@ -1675,6 +1687,18 @@ impl Simd for WasmSimd128 {
         v128_not(a.into()).simd_into(self)
     }
     #[inline(always)]
+    fn reverse_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self> {
+        let lanes = i16x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let reversed = self.reverse_i16x8(lanes);
+        mask16x8 {
+            val: crate::transmute::checked_transmute_copy(&reversed.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn select_mask16x8(
         self,
         a: mask16x8<Self>,
@@ -2230,6 +2254,18 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn not_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
         v128_not(a.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn reverse_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
+        let lanes = i32x4 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let reversed = self.reverse_i32x4(lanes);
+        mask32x4 {
+            val: crate::transmute::checked_transmute_copy(&reversed.val),
+            simd: self,
+        }
     }
     #[inline(always)]
     fn select_mask32x4(
@@ -3084,6 +3120,18 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
         v128_not(a.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn reverse_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
+        let lanes = i64x2 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let reversed = self.reverse_i64x2(lanes);
+        mask64x2 {
+            val: crate::transmute::checked_transmute_copy(&reversed.val),
+            simd: self,
+        }
     }
     #[inline(always)]
     fn select_mask64x2(

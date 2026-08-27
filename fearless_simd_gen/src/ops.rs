@@ -1023,6 +1023,12 @@ const MASK_OPS: &[Op] = &[
         "Compute the logical NOT of the mask.",
     ),
     Op::new(
+        "reverse",
+        OpKind::VecTraitMethod,
+        OpSig::Unary,
+        "Reverse the order of the mask's logical lanes.",
+    ),
+    Op::new(
         "select",
         OpKind::OwnTrait,
         OpSig::Select,

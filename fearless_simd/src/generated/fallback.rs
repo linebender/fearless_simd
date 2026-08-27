@@ -2299,6 +2299,28 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reverse_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self> {
+        [
+            a.val.0[15usize],
+            a.val.0[14usize],
+            a.val.0[13usize],
+            a.val.0[12usize],
+            a.val.0[11usize],
+            a.val.0[10usize],
+            a.val.0[9usize],
+            a.val.0[8usize],
+            a.val.0[7usize],
+            a.val.0[6usize],
+            a.val.0[5usize],
+            a.val.0[4usize],
+            a.val.0[3usize],
+            a.val.0[2usize],
+            a.val.0[1usize],
+            a.val.0[0usize],
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn select_mask8x16(
         self,
         a: mask8x16<Self>,
@@ -3654,6 +3676,20 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reverse_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self> {
+        [
+            a.val.0[7usize],
+            a.val.0[6usize],
+            a.val.0[5usize],
+            a.val.0[4usize],
+            a.val.0[3usize],
+            a.val.0[2usize],
+            a.val.0[1usize],
+            a.val.0[0usize],
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn select_mask16x8(
         self,
         a: mask16x8<Self>,
@@ -4539,6 +4575,16 @@ impl Simd for Fallback {
             i32::not(a.val.0[1usize]),
             i32::not(a.val.0[2usize]),
             i32::not(a.val.0[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn reverse_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
+        [
+            a.val.0[3usize],
+            a.val.0[2usize],
+            a.val.0[1usize],
+            a.val.0[0usize],
         ]
         .simd_into(self)
     }
@@ -5484,6 +5530,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
         [i64::not(a.val.0[0usize]), i64::not(a.val.0[1usize])].simd_into(self)
+    }
+    #[inline(always)]
+    fn reverse_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
+        [a.val.0[1usize], a.val.0[0usize]].simd_into(self)
     }
     #[inline(always)]
     fn select_mask64x2(

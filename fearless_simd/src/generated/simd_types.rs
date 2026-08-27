@@ -927,6 +927,10 @@ impl<S: Simd> SimdMask<S> for mask8x16<S> {
         *slice = (*self).into();
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_mask8x16(self)
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask8x16(self, rhs.simd_into(self.simd))
     }
@@ -1571,6 +1575,10 @@ impl<S: Simd> SimdMask<S> for mask16x8<S> {
         *slice = (*self).into();
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_mask16x8(self)
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask16x8(self, rhs.simd_into(self.simd))
     }
@@ -2213,6 +2221,10 @@ impl<S: Simd> SimdMask<S> for mask32x4<S> {
     fn store_slice(&self, slice: &mut [i32]) {
         let slice: &mut [i32; 4] = slice.try_into().unwrap();
         *slice = (*self).into();
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_mask32x4(self)
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -3161,6 +3173,10 @@ impl<S: Simd> SimdMask<S> for mask64x2<S> {
     fn store_slice(&self, slice: &mut [i64]) {
         let slice: &mut [i64; 2] = slice.try_into().unwrap();
         *slice = (*self).into();
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_mask64x2(self)
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -4132,6 +4148,10 @@ impl<S: Simd> SimdMask<S> for mask8x32<S> {
         *slice = (*self).into();
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_mask8x32(self)
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask8x32(self, rhs.simd_into(self.simd))
     }
@@ -4782,6 +4802,10 @@ impl<S: Simd> SimdMask<S> for mask16x16<S> {
     fn store_slice(&self, slice: &mut [i16]) {
         let slice: &mut [i16; 16] = slice.try_into().unwrap();
         *slice = (*self).into();
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_mask16x16(self)
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -5440,6 +5464,10 @@ impl<S: Simd> SimdMask<S> for mask32x8<S> {
     fn store_slice(&self, slice: &mut [i32]) {
         let slice: &mut [i32; 8] = slice.try_into().unwrap();
         *slice = (*self).into();
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_mask32x8(self)
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -6373,6 +6401,10 @@ impl<S: Simd> SimdMask<S> for mask64x4<S> {
     fn store_slice(&self, slice: &mut [i64]) {
         let slice: &mut [i64; 4] = slice.try_into().unwrap();
         *slice = (*self).into();
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_mask64x4(self)
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -7399,6 +7431,10 @@ impl<S: Simd> SimdMask<S> for mask8x64<S> {
         *slice = (*self).into();
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_mask8x64(self)
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask8x64(self, rhs.simd_into(self.simd))
     }
@@ -8071,6 +8107,10 @@ impl<S: Simd> SimdMask<S> for mask16x32<S> {
         *slice = (*self).into();
     }
     #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_mask16x32(self)
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask16x32(self, rhs.simd_into(self.simd))
     }
@@ -8733,6 +8773,10 @@ impl<S: Simd> SimdMask<S> for mask32x16<S> {
     fn store_slice(&self, slice: &mut [i32]) {
         let slice: &mut [i32; 16] = slice.try_into().unwrap();
         *slice = (*self).into();
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_mask32x16(self)
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -9684,6 +9728,10 @@ impl<S: Simd> SimdMask<S> for mask64x8<S> {
     fn store_slice(&self, slice: &mut [i64]) {
         let slice: &mut [i64; 8] = slice.try_into().unwrap();
         *slice = (*self).into();
+    }
+    #[inline(always)]
+    fn reverse(self) -> Self {
+        self.simd.reverse_mask64x8(self)
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {

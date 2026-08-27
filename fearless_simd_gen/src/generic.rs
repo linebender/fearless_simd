@@ -69,6 +69,11 @@ pub(crate) fn reversed_compare_op(op: &Op, vec_ty: &VecType) -> Option<TokenStre
 pub(crate) fn reverse_method(op: Op, vec_ty: &VecType) -> TokenStream {
     assert_eq!(op.method, "reverse");
     assert!(matches!(op.sig, OpSig::Unary));
+    assert_ne!(
+        vec_ty.scalar,
+        ScalarType::Mask,
+        "reverse_method requires byte-swizzlable non-mask vectors"
+    );
 
     let method_sig = op.simd_trait_method_sig(vec_ty);
     let bytes_ty = vec_ty.bytes_ty();
@@ -86,6 +91,40 @@ pub(crate) fn reverse_method(op: Op, vec_ty: &VecType) -> TokenStream {
         #method_sig {
             let indices: #bytes<Self> = [#(#indices),*].simd_into(self);
             self.#swizzle(a, indices)
+        }
+    }
+}
+
+/// Reverse a native vector-backed mask by reusing the corresponding signed-vector operation.
+///
+/// Compact predicate masks such as AVX-512 masks must use a representation-specific lowering
+/// instead.
+pub(crate) fn reverse_vector_mask_method(op: Op, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(op.method, "reverse");
+    assert!(matches!(op.sig, OpSig::Unary));
+    assert_eq!(
+        vec_ty.scalar,
+        ScalarType::Mask,
+        "reverse_vector_mask_method only implements masks"
+    );
+
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let int_ty = vec_ty.cast(ScalarType::Int);
+    let int = int_ty.rust();
+    let mask = vec_ty.rust();
+    let reverse_int = generic_op_name("reverse", &int_ty);
+
+    quote! {
+        #method_sig {
+            let lanes = #int {
+                val: crate::transmute::checked_transmute_copy(&a.val),
+                simd: self,
+            };
+            let reversed = self.#reverse_int(lanes);
+            #mask {
+                val: crate::transmute::checked_transmute_copy(&reversed.val),
+                simd: self,
+            }
         }
     }
 }
