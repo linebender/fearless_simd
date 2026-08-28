@@ -175,6 +175,10 @@ impl<S: Simd> SimdBase<S> for f32x4<S> {
         self.simd.reduce_min_precise_f32x4(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_f32x4(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_f32x4(self, rhs.simd_into(self.simd))
     }
@@ -521,6 +525,10 @@ impl<S: Simd> SimdBase<S> for i8x16<S> {
         self.simd.reduce_min_i8x16(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_i8x16(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i8x16(self, rhs.simd_into(self.simd))
     }
@@ -803,6 +811,10 @@ impl<S: Simd> SimdBase<S> for u8x16<S> {
     #[inline(always)]
     fn reduce_min_precise(self) -> Self::Element {
         self.simd.reduce_min_u8x16(self)
+    }
+    #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_u8x16(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -1179,6 +1191,10 @@ impl<S: Simd> SimdBase<S> for i16x8<S> {
         self.simd.reduce_min_i16x8(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_i16x8(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i16x8(self, rhs.simd_into(self.simd))
     }
@@ -1468,6 +1484,10 @@ impl<S: Simd> SimdBase<S> for u16x8<S> {
     #[inline(always)]
     fn reduce_min_precise(self) -> Self::Element {
         self.simd.reduce_min_u16x8(self)
+    }
+    #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_u16x8(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -1847,6 +1867,10 @@ impl<S: Simd> SimdBase<S> for i32x4<S> {
         self.simd.reduce_min_i32x4(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_i32x4(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i32x4(self, rhs.simd_into(self.simd))
     }
@@ -2136,6 +2160,10 @@ impl<S: Simd> SimdBase<S> for u32x4<S> {
     #[inline(always)]
     fn reduce_min_precise(self) -> Self::Element {
         self.simd.reduce_min_u32x4(self)
+    }
+    #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_u32x4(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -2527,6 +2555,10 @@ impl<S: Simd> SimdBase<S> for f64x2<S> {
         self.simd.reduce_min_precise_f64x2(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_f64x2(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_f64x2(self, rhs.simd_into(self.simd))
     }
@@ -2861,6 +2893,10 @@ impl<S: Simd> SimdBase<S> for i64x2<S> {
         self.simd.reduce_min_i64x2(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_i64x2(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i64x2(self, rhs.simd_into(self.simd))
     }
@@ -3143,6 +3179,10 @@ impl<S: Simd> SimdBase<S> for u64x2<S> {
     #[inline(always)]
     fn reduce_min_precise(self) -> Self::Element {
         self.simd.reduce_min_u64x2(self)
+    }
+    #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_u64x2(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -3539,6 +3579,10 @@ impl<S: Simd> SimdBase<S> for f32x8<S> {
         self.simd.reduce_min_precise_f32x8(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_f32x8(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_f32x8(self, rhs.simd_into(self.simd))
     }
@@ -3896,6 +3940,10 @@ impl<S: Simd> SimdBase<S> for i8x32<S> {
         self.simd.reduce_min_i8x32(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_i8x32(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i8x32(self, rhs.simd_into(self.simd))
     }
@@ -4189,6 +4237,10 @@ impl<S: Simd> SimdBase<S> for u8x32<S> {
     #[inline(always)]
     fn reduce_min_precise(self) -> Self::Element {
         self.simd.reduce_min_u8x32(self)
+    }
+    #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_u8x32(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -4568,6 +4620,10 @@ impl<S: Simd> SimdBase<S> for i16x16<S> {
         self.simd.reduce_min_i16x16(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_i16x16(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i16x16(self, rhs.simd_into(self.simd))
     }
@@ -4861,6 +4917,10 @@ impl<S: Simd> SimdBase<S> for u16x16<S> {
     #[inline(always)]
     fn reduce_min_precise(self) -> Self::Element {
         self.simd.reduce_min_u16x16(self)
+    }
+    #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_u16x16(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -5248,6 +5308,10 @@ impl<S: Simd> SimdBase<S> for i32x8<S> {
         self.simd.reduce_min_i32x8(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_i32x8(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i32x8(self, rhs.simd_into(self.simd))
     }
@@ -5544,6 +5608,10 @@ impl<S: Simd> SimdBase<S> for u32x8<S> {
     #[inline(always)]
     fn reduce_min_precise(self) -> Self::Element {
         self.simd.reduce_min_u32x8(self)
+    }
+    #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_u32x8(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -5930,6 +5998,10 @@ impl<S: Simd> SimdBase<S> for f64x4<S> {
         self.simd.reduce_min_precise_f64x4(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_f64x4(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_f64x4(self, rhs.simd_into(self.simd))
     }
@@ -6259,6 +6331,10 @@ impl<S: Simd> SimdBase<S> for i64x4<S> {
         self.simd.reduce_min_i64x4(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_i64x4(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i64x4(self, rhs.simd_into(self.simd))
     }
@@ -6536,6 +6612,10 @@ impl<S: Simd> SimdBase<S> for u64x4<S> {
     #[inline(always)]
     fn reduce_min_precise(self) -> Self::Element {
         self.simd.reduce_min_u64x4(self)
+    }
+    #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_u64x4(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -6936,6 +7016,10 @@ impl<S: Simd> SimdBase<S> for f32x16<S> {
         self.simd.reduce_min_precise_f32x16(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_f32x16(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_f32x16(self, rhs.simd_into(self.simd))
     }
@@ -7320,6 +7404,10 @@ impl<S: Simd> SimdBase<S> for i8x64<S> {
         self.simd.reduce_min_i8x64(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_i8x64(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i8x64(self, rhs.simd_into(self.simd))
     }
@@ -7639,6 +7727,10 @@ impl<S: Simd> SimdBase<S> for u8x64<S> {
     #[inline(always)]
     fn reduce_min_precise(self) -> Self::Element {
         self.simd.reduce_min_u8x64(self)
+    }
+    #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_u8x64(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -8028,6 +8120,10 @@ impl<S: Simd> SimdBase<S> for i16x32<S> {
         self.simd.reduce_min_i16x32(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_i16x32(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i16x32(self, rhs.simd_into(self.simd))
     }
@@ -8331,6 +8427,10 @@ impl<S: Simd> SimdBase<S> for u16x32<S> {
     #[inline(always)]
     fn reduce_min_precise(self) -> Self::Element {
         self.simd.reduce_min_u16x32(self)
+    }
+    #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_u16x32(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -8720,6 +8820,10 @@ impl<S: Simd> SimdBase<S> for i32x16<S> {
         self.simd.reduce_min_i32x16(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_i32x16(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i32x16(self, rhs.simd_into(self.simd))
     }
@@ -9019,6 +9123,10 @@ impl<S: Simd> SimdBase<S> for u32x16<S> {
     #[inline(always)]
     fn reduce_min_precise(self) -> Self::Element {
         self.simd.reduce_min_u32x16(self)
+    }
+    #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_u32x16(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -9412,6 +9520,10 @@ impl<S: Simd> SimdBase<S> for f64x8<S> {
         self.simd.reduce_min_precise_f64x8(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_f64x8(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_f64x8(self, rhs.simd_into(self.simd))
     }
@@ -9747,6 +9859,10 @@ impl<S: Simd> SimdBase<S> for i64x8<S> {
         self.simd.reduce_min_i64x8(self)
     }
     #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_i64x8(self)
+    }
+    #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.max_i64x8(self, rhs.simd_into(self.simd))
     }
@@ -10030,6 +10146,10 @@ impl<S: Simd> SimdBase<S> for u64x8<S> {
     #[inline(always)]
     fn reduce_min_precise(self) -> Self::Element {
         self.simd.reduce_min_u64x8(self)
+    }
+    #[inline(always)]
+    fn reduce_sum(self) -> Self::Element {
+        self.simd.reduce_sum_u64x8(self)
     }
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self {

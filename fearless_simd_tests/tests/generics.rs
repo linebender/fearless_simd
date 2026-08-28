@@ -80,6 +80,11 @@ fn generic_reduce_max_precise<S: Simd, V: SimdBase<S>>(vector: V) -> V::Element 
     vector.reduce_max_precise()
 }
 
+// Ensure that a generic numeric vector can be reduced to its element type.
+fn generic_reduce_sum<S: Simd, V: SimdBase<S>>(vector: V) -> V::Element {
+    vector.reduce_sum()
+}
+
 // Ensure that a generic vector's 128-bit block is its own block
 fn generic_block_splat<S: Simd, V: SimdBase<S>>(block: V::Block) -> V::Block {
     V::Block::block_splat(block)

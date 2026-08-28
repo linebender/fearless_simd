@@ -639,6 +639,17 @@ const COMMON_BASE_OPS: &[Op] = &[
         Signaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them.",
     ),
     Op::new(
+        "reduce_sum",
+        OpKind::BaseTraitMethod,
+        OpSig::Reduce { lane_op: "add" },
+        "Return the sum of all elements in the vector. Integer addition wraps.\n\n\
+        # Floating-point accuracy\n\n\
+        For an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\n\
+        For a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\n\
+        This fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\n\
+        Because floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different.",
+    ),
+    Op::new(
         "max",
         OpKind::BaseTraitMethod,
         OpSig::Binary,

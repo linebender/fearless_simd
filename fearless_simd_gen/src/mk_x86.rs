@@ -318,7 +318,13 @@ impl Level for X86 {
             OpSig::Splat => self.handle_splat(op, vec_ty),
             OpSig::Compare => self.handle_compare(op, method, vec_ty),
             OpSig::Unary => self.handle_unary(op, method_sig, method, vec_ty),
-            OpSig::Reduce { lane_op } => self.handle_reduce_min_max(op, vec_ty, lane_op),
+            OpSig::Reduce { lane_op } => {
+                if lane_op == "add" {
+                    self.handle_reduce_sum(op, vec_ty)
+                } else {
+                    self.handle_reduce_min_max(op, vec_ty, lane_op)
+                }
+            }
             OpSig::Widen { target_ty } => self.handle_widen(op, vec_ty, target_ty),
             OpSig::Narrow { target_ty, mode } => self.handle_narrow(op, vec_ty, target_ty, mode),
             OpSig::Binary => self.handle_binary(op, method, vec_ty),
@@ -1280,6 +1286,56 @@ impl X86 {
                 #result
             }
         })
+    }
+
+    pub(crate) fn handle_reduce_sum(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        assert_eq!(
+            vec_ty.n_bits(),
+            128,
+            "wide reductions must use the generic 128-bit-grained implementation"
+        );
+
+        match (vec_ty.scalar, vec_ty.scalar_bits) {
+            (ScalarType::Float, 32) => self.kernel_method(op, vec_ty, |_| {
+                quote! {
+                    // _mm_hadd_ps is slower than shuffle followed by add
+                    let a: __m128 = a.into();
+                    let adjacent = _mm_add_ps(a, _mm_shuffle_ps::<0b10_11_00_01>(a, a));
+                    _mm_cvtss_f32(_mm_add_ss(adjacent, _mm_movehl_ps(adjacent, adjacent)))
+                }
+            }),
+            (ScalarType::Float, 64) => self.kernel_method(op, vec_ty, |_| {
+                quote! {
+                    let a: __m128d = a.into();
+                    _mm_cvtsd_f64(_mm_add_sd(a, _mm_unpackhi_pd(a, a)))
+                }
+            }),
+            (ScalarType::Int | ScalarType::Unsigned, _) => {
+                let add = simple_sign_unaware_intrinsic("add", vec_ty);
+                let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                let len = vec_ty.len;
+                let mut stages = Vec::new();
+                let mut shift_bytes = 8;
+                let scalar_bytes = vec_ty.scalar_bits / 8;
+                while shift_bytes >= scalar_bytes {
+                    let shift = Literal::i32_unsuffixed(i32::try_from(shift_bytes).unwrap());
+                    stages.push(quote! {
+                        let sum = #add(sum, _mm_srli_si128::<#shift>(sum));
+                    });
+                    shift_bytes /= 2;
+                }
+                self.kernel_method(op, vec_ty, |_| {
+                    quote! {
+                        let sum: __m128i = a.into();
+                        #(#stages)*
+                        let lanes: [#scalar; #len] =
+                            crate::transmute::checked_transmute_copy(&sum);
+                        lanes[0]
+                    }
+                })
+            }
+            _ => unreachable!("reduce_sum only operates on numeric vectors"),
+        }
     }
 
     pub(crate) fn handle_splat(&self, op: Op, vec_ty: &VecType) -> TokenStream {
