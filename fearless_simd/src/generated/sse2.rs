@@ -334,6 +334,94 @@ impl Simd for Sse2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn reduce_max_f32x4(self, a: f32x4<Self>) -> f32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f32x4<Sse2>) -> f32 {
+                let reduced: __m128 = a.into();
+                let shifted = _mm_castsi128_ps(_mm_srli_si128::<8>(_mm_castps_si128(reduced)));
+                let reduced = { _mm_max_ps(reduced, shifted) };
+                let shifted = _mm_castsi128_ps(_mm_srli_si128::<4>(_mm_castps_si128(reduced)));
+                let reduced = { _mm_max_ps(reduced, shifted) };
+                _mm_cvtss_f32(reduced)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_f32x4(self, a: f32x4<Self>) -> f32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f32x4<Sse2>) -> f32 {
+                let reduced: __m128 = a.into();
+                let shifted = _mm_castsi128_ps(_mm_srli_si128::<8>(_mm_castps_si128(reduced)));
+                let reduced = { _mm_min_ps(reduced, shifted) };
+                let shifted = _mm_castsi128_ps(_mm_srli_si128::<4>(_mm_castps_si128(reduced)));
+                let reduced = { _mm_min_ps(reduced, shifted) };
+                _mm_cvtss_f32(reduced)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_max_precise_f32x4(self, a: f32x4<Self>) -> f32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f32x4<Sse2>) -> f32 {
+                let reduced: __m128 = a.into();
+                let shifted = _mm_castsi128_ps(_mm_srli_si128::<8>(_mm_castps_si128(reduced)));
+                let reduced = {
+                    let intermediate = _mm_max_ps(reduced, shifted);
+                    let shifted_is_nan = _mm_cmpunord_ps(shifted, shifted);
+                    _mm_or_ps(
+                        _mm_and_ps(shifted_is_nan, reduced),
+                        _mm_andnot_ps(shifted_is_nan, intermediate),
+                    )
+                };
+                let shifted = _mm_castsi128_ps(_mm_srli_si128::<4>(_mm_castps_si128(reduced)));
+                let reduced = {
+                    let intermediate = _mm_max_ps(reduced, shifted);
+                    let shifted_is_nan = _mm_cmpunord_ps(shifted, shifted);
+                    _mm_or_ps(
+                        _mm_and_ps(shifted_is_nan, reduced),
+                        _mm_andnot_ps(shifted_is_nan, intermediate),
+                    )
+                };
+                _mm_cvtss_f32(reduced)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_precise_f32x4(self, a: f32x4<Self>) -> f32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f32x4<Sse2>) -> f32 {
+                let reduced: __m128 = a.into();
+                let shifted = _mm_castsi128_ps(_mm_srli_si128::<8>(_mm_castps_si128(reduced)));
+                let reduced = {
+                    let intermediate = _mm_min_ps(reduced, shifted);
+                    let shifted_is_nan = _mm_cmpunord_ps(shifted, shifted);
+                    _mm_or_ps(
+                        _mm_and_ps(shifted_is_nan, reduced),
+                        _mm_andnot_ps(shifted_is_nan, intermediate),
+                    )
+                };
+                let shifted = _mm_castsi128_ps(_mm_srli_si128::<4>(_mm_castps_si128(reduced)));
+                let reduced = {
+                    let intermediate = _mm_min_ps(reduced, shifted);
+                    let shifted_is_nan = _mm_cmpunord_ps(shifted, shifted);
+                    _mm_or_ps(
+                        _mm_and_ps(shifted_is_nan, reduced),
+                        _mm_andnot_ps(shifted_is_nan, intermediate),
+                    )
+                };
+                _mm_cvtss_f32(reduced)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -925,6 +1013,122 @@ impl Simd for Sse2 {
             i8::wrapping_shr(a[15usize], b[15usize] as u32),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_max_i8x16(self, a: i8x16<Self>) -> i8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i8x16<Sse2>) -> i8 {
+                let reduced: __m128i = a.into();
+                let shifted = _mm_srli_si128::<8>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = _mm_cmpgt_epi8(a, b);
+                        _mm_or_si128(_mm_and_si128(gt, a), _mm_andnot_si128(gt, b))
+                    }
+                };
+                let shifted = _mm_srli_si128::<4>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = _mm_cmpgt_epi8(a, b);
+                        _mm_or_si128(_mm_and_si128(gt, a), _mm_andnot_si128(gt, b))
+                    }
+                };
+                let shifted = _mm_srli_si128::<2>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = _mm_cmpgt_epi8(a, b);
+                        _mm_or_si128(_mm_and_si128(gt, a), _mm_andnot_si128(gt, b))
+                    }
+                };
+                let shifted = _mm_srli_si128::<1>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = _mm_cmpgt_epi8(a, b);
+                        _mm_or_si128(_mm_and_si128(gt, a), _mm_andnot_si128(gt, b))
+                    }
+                };
+                {
+                    let lanes: [i8; 16usize] = crate::transmute::checked_transmute_copy(&reduced);
+                    lanes[0]
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_i8x16(self, a: i8x16<Self>) -> i8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i8x16<Sse2>) -> i8 {
+                let reduced: __m128i = a.into();
+                let shifted = _mm_srli_si128::<8>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = _mm_cmpgt_epi8(a, b);
+                        _mm_or_si128(_mm_and_si128(gt, b), _mm_andnot_si128(gt, a))
+                    }
+                };
+                let shifted = _mm_srli_si128::<4>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = _mm_cmpgt_epi8(a, b);
+                        _mm_or_si128(_mm_and_si128(gt, b), _mm_andnot_si128(gt, a))
+                    }
+                };
+                let shifted = _mm_srli_si128::<2>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = _mm_cmpgt_epi8(a, b);
+                        _mm_or_si128(_mm_and_si128(gt, b), _mm_andnot_si128(gt, a))
+                    }
+                };
+                let shifted = _mm_srli_si128::<1>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = _mm_cmpgt_epi8(a, b);
+                        _mm_or_si128(_mm_and_si128(gt, b), _mm_andnot_si128(gt, a))
+                    }
+                };
+                {
+                    let lanes: [i8; 16usize] = crate::transmute::checked_transmute_copy(&reduced);
+                    lanes[0]
+                }
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -1561,6 +1765,82 @@ impl Simd for Sse2 {
             u8::wrapping_shr(a[15usize], b[15usize] as u32),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_max_u8x16(self, a: u8x16<Self>) -> u8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u8x16<Sse2>) -> u8 {
+                let reduced: __m128i = a.into();
+                let shifted = _mm_srli_si128::<8>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    _mm_max_epu8(a.into(), b.into())
+                };
+                let shifted = _mm_srli_si128::<4>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    _mm_max_epu8(a.into(), b.into())
+                };
+                let shifted = _mm_srli_si128::<2>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    _mm_max_epu8(a.into(), b.into())
+                };
+                let shifted = _mm_srli_si128::<1>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    _mm_max_epu8(a.into(), b.into())
+                };
+                {
+                    let lanes: [u8; 16usize] = crate::transmute::checked_transmute_copy(&reduced);
+                    lanes[0]
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_u8x16(self, a: u8x16<Self>) -> u8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u8x16<Sse2>) -> u8 {
+                let reduced: __m128i = a.into();
+                let shifted = _mm_srli_si128::<8>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    _mm_min_epu8(a.into(), b.into())
+                };
+                let shifted = _mm_srli_si128::<4>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    _mm_min_epu8(a.into(), b.into())
+                };
+                let shifted = _mm_srli_si128::<2>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    _mm_min_epu8(a.into(), b.into())
+                };
+                let shifted = _mm_srli_si128::<1>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    _mm_min_epu8(a.into(), b.into())
+                };
+                {
+                    let lanes: [u8; 16usize] = crate::transmute::checked_transmute_copy(&reduced);
+                    lanes[0]
+                }
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -2226,6 +2506,70 @@ impl Simd for Sse2 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reduce_max_i16x8(self, a: i16x8<Self>) -> i16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i16x8<Sse2>) -> i16 {
+                let reduced: __m128i = a.into();
+                let shifted = _mm_srli_si128::<8>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    _mm_max_epi16(a.into(), b.into())
+                };
+                let shifted = _mm_srli_si128::<4>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    _mm_max_epi16(a.into(), b.into())
+                };
+                let shifted = _mm_srli_si128::<2>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    _mm_max_epi16(a.into(), b.into())
+                };
+                {
+                    let lanes: [i16; 8usize] = crate::transmute::checked_transmute_copy(&reduced);
+                    lanes[0]
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_i16x8(self, a: i16x8<Self>) -> i16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i16x8<Sse2>) -> i16 {
+                let reduced: __m128i = a.into();
+                let shifted = _mm_srli_si128::<8>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    _mm_min_epi16(a.into(), b.into())
+                };
+                let shifted = _mm_srli_si128::<4>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    _mm_min_epi16(a.into(), b.into())
+                };
+                let shifted = _mm_srli_si128::<2>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    _mm_min_epi16(a.into(), b.into())
+                };
+                {
+                    let lanes: [i16; 8usize] = crate::transmute::checked_transmute_copy(&reduced);
+                    lanes[0]
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2667,6 +3011,130 @@ impl Simd for Sse2 {
             u16::wrapping_shr(a[7usize], b[7usize] as u32),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_max_u16x8(self, a: u16x8<Self>) -> u16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u16x8<Sse2>) -> u16 {
+                let reduced: __m128i = a.into();
+                let shifted = _mm_srli_si128::<8>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = {
+                            let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
+                            let lhs_signed = _mm_xor_si128(a, sign_bit);
+                            let rhs_signed = _mm_xor_si128(b, sign_bit);
+                            _mm_cmpgt_epi16(lhs_signed, rhs_signed)
+                        };
+                        _mm_or_si128(_mm_and_si128(gt, a), _mm_andnot_si128(gt, b))
+                    }
+                };
+                let shifted = _mm_srli_si128::<4>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = {
+                            let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
+                            let lhs_signed = _mm_xor_si128(a, sign_bit);
+                            let rhs_signed = _mm_xor_si128(b, sign_bit);
+                            _mm_cmpgt_epi16(lhs_signed, rhs_signed)
+                        };
+                        _mm_or_si128(_mm_and_si128(gt, a), _mm_andnot_si128(gt, b))
+                    }
+                };
+                let shifted = _mm_srli_si128::<2>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = {
+                            let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
+                            let lhs_signed = _mm_xor_si128(a, sign_bit);
+                            let rhs_signed = _mm_xor_si128(b, sign_bit);
+                            _mm_cmpgt_epi16(lhs_signed, rhs_signed)
+                        };
+                        _mm_or_si128(_mm_and_si128(gt, a), _mm_andnot_si128(gt, b))
+                    }
+                };
+                {
+                    let lanes: [u16; 8usize] = crate::transmute::checked_transmute_copy(&reduced);
+                    lanes[0]
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_u16x8(self, a: u16x8<Self>) -> u16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u16x8<Sse2>) -> u16 {
+                let reduced: __m128i = a.into();
+                let shifted = _mm_srli_si128::<8>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = {
+                            let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
+                            let lhs_signed = _mm_xor_si128(a, sign_bit);
+                            let rhs_signed = _mm_xor_si128(b, sign_bit);
+                            _mm_cmpgt_epi16(lhs_signed, rhs_signed)
+                        };
+                        _mm_or_si128(_mm_and_si128(gt, b), _mm_andnot_si128(gt, a))
+                    }
+                };
+                let shifted = _mm_srli_si128::<4>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = {
+                            let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
+                            let lhs_signed = _mm_xor_si128(a, sign_bit);
+                            let rhs_signed = _mm_xor_si128(b, sign_bit);
+                            _mm_cmpgt_epi16(lhs_signed, rhs_signed)
+                        };
+                        _mm_or_si128(_mm_and_si128(gt, b), _mm_andnot_si128(gt, a))
+                    }
+                };
+                let shifted = _mm_srli_si128::<2>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = {
+                            let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
+                            let lhs_signed = _mm_xor_si128(a, sign_bit);
+                            let rhs_signed = _mm_xor_si128(b, sign_bit);
+                            _mm_cmpgt_epi16(lhs_signed, rhs_signed)
+                        };
+                        _mm_or_si128(_mm_and_si128(gt, b), _mm_andnot_si128(gt, a))
+                    }
+                };
+                {
+                    let lanes: [u16; 8usize] = crate::transmute::checked_transmute_copy(&reduced);
+                    lanes[0]
+                }
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -3301,6 +3769,78 @@ impl Simd for Sse2 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reduce_max_i32x4(self, a: i32x4<Self>) -> i32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i32x4<Sse2>) -> i32 {
+                let reduced: __m128i = a.into();
+                let shifted = _mm_srli_si128::<8>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = _mm_cmpgt_epi32(a, b);
+                        _mm_or_si128(_mm_and_si128(gt, a), _mm_andnot_si128(gt, b))
+                    }
+                };
+                let shifted = _mm_srli_si128::<4>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = _mm_cmpgt_epi32(a, b);
+                        _mm_or_si128(_mm_and_si128(gt, a), _mm_andnot_si128(gt, b))
+                    }
+                };
+                {
+                    let lanes: [i32; 4usize] = crate::transmute::checked_transmute_copy(&reduced);
+                    lanes[0]
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_i32x4(self, a: i32x4<Self>) -> i32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i32x4<Sse2>) -> i32 {
+                let reduced: __m128i = a.into();
+                let shifted = _mm_srli_si128::<8>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = _mm_cmpgt_epi32(a, b);
+                        _mm_or_si128(_mm_and_si128(gt, b), _mm_andnot_si128(gt, a))
+                    }
+                };
+                let shifted = _mm_srli_si128::<4>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = _mm_cmpgt_epi32(a, b);
+                        _mm_or_si128(_mm_and_si128(gt, b), _mm_andnot_si128(gt, a))
+                    }
+                };
+                {
+                    let lanes: [i32; 4usize] = crate::transmute::checked_transmute_copy(&reduced);
+                    lanes[0]
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3750,6 +4290,98 @@ impl Simd for Sse2 {
             u32::wrapping_shr(a[3usize], b[3usize] as u32),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_max_u32x4(self, a: u32x4<Self>) -> u32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u32x4<Sse2>) -> u32 {
+                let reduced: __m128i = a.into();
+                let shifted = _mm_srli_si128::<8>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = {
+                            let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
+                            let lhs_signed = _mm_xor_si128(a, sign_bit);
+                            let rhs_signed = _mm_xor_si128(b, sign_bit);
+                            _mm_cmpgt_epi32(lhs_signed, rhs_signed)
+                        };
+                        _mm_or_si128(_mm_and_si128(gt, a), _mm_andnot_si128(gt, b))
+                    }
+                };
+                let shifted = _mm_srli_si128::<4>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = {
+                            let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
+                            let lhs_signed = _mm_xor_si128(a, sign_bit);
+                            let rhs_signed = _mm_xor_si128(b, sign_bit);
+                            _mm_cmpgt_epi32(lhs_signed, rhs_signed)
+                        };
+                        _mm_or_si128(_mm_and_si128(gt, a), _mm_andnot_si128(gt, b))
+                    }
+                };
+                {
+                    let lanes: [u32; 4usize] = crate::transmute::checked_transmute_copy(&reduced);
+                    lanes[0]
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_u32x4(self, a: u32x4<Self>) -> u32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u32x4<Sse2>) -> u32 {
+                let reduced: __m128i = a.into();
+                let shifted = _mm_srli_si128::<8>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = {
+                            let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
+                            let lhs_signed = _mm_xor_si128(a, sign_bit);
+                            let rhs_signed = _mm_xor_si128(b, sign_bit);
+                            _mm_cmpgt_epi32(lhs_signed, rhs_signed)
+                        };
+                        _mm_or_si128(_mm_and_si128(gt, b), _mm_andnot_si128(gt, a))
+                    }
+                };
+                let shifted = _mm_srli_si128::<4>(reduced);
+                let reduced = {
+                    let a = reduced;
+                    let b = shifted;
+                    {
+                        let a = a.into();
+                        let b = b.into();
+                        let gt = {
+                            let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
+                            let lhs_signed = _mm_xor_si128(a, sign_bit);
+                            let rhs_signed = _mm_xor_si128(b, sign_bit);
+                            _mm_cmpgt_epi32(lhs_signed, rhs_signed)
+                        };
+                        _mm_or_si128(_mm_and_si128(gt, b), _mm_andnot_si128(gt, a))
+                    }
+                };
+                {
+                    let lanes: [u32; 4usize] = crate::transmute::checked_transmute_copy(&reduced);
+                    lanes[0]
+                }
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -4357,6 +4989,72 @@ impl Simd for Sse2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn reduce_max_f64x2(self, a: f64x2<Self>) -> f64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f64x2<Sse2>) -> f64 {
+                let reduced: __m128d = a.into();
+                let shifted = _mm_castsi128_pd(_mm_srli_si128::<8>(_mm_castpd_si128(reduced)));
+                let reduced = { _mm_max_pd(reduced, shifted) };
+                _mm_cvtsd_f64(reduced)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_f64x2(self, a: f64x2<Self>) -> f64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f64x2<Sse2>) -> f64 {
+                let reduced: __m128d = a.into();
+                let shifted = _mm_castsi128_pd(_mm_srli_si128::<8>(_mm_castpd_si128(reduced)));
+                let reduced = { _mm_min_pd(reduced, shifted) };
+                _mm_cvtsd_f64(reduced)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_max_precise_f64x2(self, a: f64x2<Self>) -> f64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f64x2<Sse2>) -> f64 {
+                let reduced: __m128d = a.into();
+                let shifted = _mm_castsi128_pd(_mm_srli_si128::<8>(_mm_castpd_si128(reduced)));
+                let reduced = {
+                    let intermediate = _mm_max_pd(reduced, shifted);
+                    let shifted_is_nan = _mm_cmpunord_pd(shifted, shifted);
+                    _mm_or_pd(
+                        _mm_and_pd(shifted_is_nan, reduced),
+                        _mm_andnot_pd(shifted_is_nan, intermediate),
+                    )
+                };
+                _mm_cvtsd_f64(reduced)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_precise_f64x2(self, a: f64x2<Self>) -> f64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f64x2<Sse2>) -> f64 {
+                let reduced: __m128d = a.into();
+                let shifted = _mm_castsi128_pd(_mm_srli_si128::<8>(_mm_castpd_si128(reduced)));
+                let reduced = {
+                    let intermediate = _mm_min_pd(reduced, shifted);
+                    let shifted_is_nan = _mm_cmpunord_pd(shifted, shifted);
+                    _mm_or_pd(
+                        _mm_and_pd(shifted_is_nan, reduced),
+                        _mm_andnot_pd(shifted_is_nan, intermediate),
+                    )
+                };
+                _mm_cvtsd_f64(reduced)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4824,6 +5522,28 @@ impl Simd for Sse2 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reduce_max_i64x2(self, a: i64x2<Self>) -> i64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i64x2<Sse2>) -> i64 {
+                let lanes: [i64; 2] = a.into();
+                lanes[0].max(lanes[1])
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_i64x2(self, a: i64x2<Self>) -> i64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i64x2<Sse2>) -> i64 {
+                let lanes: [i64; 2] = a.into();
+                lanes[0].min(lanes[1])
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         [
             i64::max(a[0usize], b[0usize]),
@@ -5207,6 +5927,28 @@ impl Simd for Sse2 {
             u64::wrapping_shr(a[1usize], b[1usize] as u32),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_max_u64x2(self, a: u64x2<Self>) -> u64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u64x2<Sse2>) -> u64 {
+                let lanes: [u64; 2] = a.into();
+                lanes[0].max(lanes[1])
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_u64x2(self, a: u64x2<Self>) -> u64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u64x2<Sse2>) -> u64 {
+                let lanes: [u64; 2] = a.into();
+                lanes[0].min(lanes[1])
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {

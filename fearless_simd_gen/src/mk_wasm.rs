@@ -126,6 +126,47 @@ fn count_ones_method(op: Op, vec_ty: &VecType) -> TokenStream {
     }
 }
 
+fn reduce_min_max(method_sig: TokenStream, vec_ty: &VecType, lane_op: &str) -> TokenStream {
+    assert_eq!(
+        vec_ty.n_bits(),
+        128,
+        "wide reductions must use the generic 128-bit-grained implementation"
+    );
+
+    let combine = generic_op_name(lane_op, vec_ty);
+    let shuffle = match (vec_ty.scalar, vec_ty.scalar_bits) {
+        (ScalarType::Float, 32) => quote! { i32x4_shuffle },
+        (ScalarType::Float, 64) => quote! { i64x2_shuffle },
+        (ScalarType::Int | ScalarType::Unsigned, _) => {
+            let shuffle = simple_intrinsic("shuffle", vec_ty);
+            quote! { #shuffle }
+        }
+        _ => unreachable!("min/max reductions only operate on numeric vectors"),
+    };
+    let extract = simple_intrinsic("extract_lane", vec_ty);
+
+    let mut stages = Vec::new();
+    let mut offset = vec_ty.len / 2;
+    while offset > 0 {
+        let indices =
+            (0..vec_ty.len).map(|index| Literal::usize_unsuffixed((index + offset) % vec_ty.len));
+        stages.push(quote! {
+            let shuffled = #shuffle::<#(#indices),*>(reduced.into(), reduced.into())
+                .simd_into(self);
+            let reduced = self.#combine(reduced, shuffled);
+        });
+        offset /= 2;
+    }
+
+    quote! {
+        #method_sig {
+            let reduced = a;
+            #(#stages)*
+            #extract::<0>(reduced.into())
+        }
+    }
+}
+
 impl Level for WasmSimd128 {
     fn name(&self) -> &'static str {
         "WasmSimd128"
@@ -246,6 +287,15 @@ impl Level for WasmSimd128 {
                     #method_sig {
                         #expr
                     }
+                }
+            }
+            OpSig::Reduce { lane_op } => {
+                if vec_ty.scalar_bits == 64
+                    && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
+                {
+                    fallback_method(op, vec_ty)
+                } else {
+                    reduce_min_max(method_sig, vec_ty, lane_op)
                 }
             }
             OpSig::Widen { target_ty } => {

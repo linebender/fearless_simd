@@ -264,6 +264,42 @@ impl Simd for WasmSimd128 {
         v128_or(magnitude, sign_bits).simd_into(self)
     }
     #[inline(always)]
+    fn reduce_max_f32x4(self, a: f32x4<Self>) -> f32 {
+        let reduced = a;
+        let shuffled = i32x4_shuffle::<2, 3, 0, 1>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.max_f32x4(reduced, shuffled);
+        let shuffled = i32x4_shuffle::<1, 2, 3, 0>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.max_f32x4(reduced, shuffled);
+        f32x4_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
+    fn reduce_min_f32x4(self, a: f32x4<Self>) -> f32 {
+        let reduced = a;
+        let shuffled = i32x4_shuffle::<2, 3, 0, 1>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.min_f32x4(reduced, shuffled);
+        let shuffled = i32x4_shuffle::<1, 2, 3, 0>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.min_f32x4(reduced, shuffled);
+        f32x4_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
+    fn reduce_max_precise_f32x4(self, a: f32x4<Self>) -> f32 {
+        let reduced = a;
+        let shuffled = i32x4_shuffle::<2, 3, 0, 1>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.max_precise_f32x4(reduced, shuffled);
+        let shuffled = i32x4_shuffle::<1, 2, 3, 0>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.max_precise_f32x4(reduced, shuffled);
+        f32x4_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
+    fn reduce_min_precise_f32x4(self, a: f32x4<Self>) -> f32 {
+        let reduced = a;
+        let shuffled = i32x4_shuffle::<2, 3, 0, 1>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.min_precise_f32x4(reduced, shuffled);
+        let shuffled = i32x4_shuffle::<1, 2, 3, 0>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.min_precise_f32x4(reduced, shuffled);
+        f32x4_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         #[cfg(target_feature = "relaxed-simd")]
         {
@@ -608,6 +644,64 @@ impl Simd for WasmSimd128 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reduce_max_i8x16(self, a: i8x16<Self>) -> i8 {
+        let reduced = a;
+        let shuffled = i8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7>(
+            reduced.into(),
+            reduced.into(),
+        )
+        .simd_into(self);
+        let reduced = self.max_i8x16(reduced, shuffled);
+        let shuffled = i8x16_shuffle::<4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3>(
+            reduced.into(),
+            reduced.into(),
+        )
+        .simd_into(self);
+        let reduced = self.max_i8x16(reduced, shuffled);
+        let shuffled = i8x16_shuffle::<2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1>(
+            reduced.into(),
+            reduced.into(),
+        )
+        .simd_into(self);
+        let reduced = self.max_i8x16(reduced, shuffled);
+        let shuffled = i8x16_shuffle::<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0>(
+            reduced.into(),
+            reduced.into(),
+        )
+        .simd_into(self);
+        let reduced = self.max_i8x16(reduced, shuffled);
+        i8x16_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
+    fn reduce_min_i8x16(self, a: i8x16<Self>) -> i8 {
+        let reduced = a;
+        let shuffled = i8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7>(
+            reduced.into(),
+            reduced.into(),
+        )
+        .simd_into(self);
+        let reduced = self.min_i8x16(reduced, shuffled);
+        let shuffled = i8x16_shuffle::<4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3>(
+            reduced.into(),
+            reduced.into(),
+        )
+        .simd_into(self);
+        let reduced = self.min_i8x16(reduced, shuffled);
+        let shuffled = i8x16_shuffle::<2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1>(
+            reduced.into(),
+            reduced.into(),
+        )
+        .simd_into(self);
+        let reduced = self.min_i8x16(reduced, shuffled);
+        let shuffled = i8x16_shuffle::<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0>(
+            reduced.into(),
+            reduced.into(),
+        )
+        .simd_into(self);
+        let reduced = self.min_i8x16(reduced, shuffled);
+        i8x16_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
     fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         i8x16_max(a.into(), b.into()).simd_into(self)
     }
@@ -909,6 +1003,64 @@ impl Simd for WasmSimd128 {
             u8::wrapping_shr(a[15usize], b[15usize] as u32),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_max_u8x16(self, a: u8x16<Self>) -> u8 {
+        let reduced = a;
+        let shuffled = u8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7>(
+            reduced.into(),
+            reduced.into(),
+        )
+        .simd_into(self);
+        let reduced = self.max_u8x16(reduced, shuffled);
+        let shuffled = u8x16_shuffle::<4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3>(
+            reduced.into(),
+            reduced.into(),
+        )
+        .simd_into(self);
+        let reduced = self.max_u8x16(reduced, shuffled);
+        let shuffled = u8x16_shuffle::<2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1>(
+            reduced.into(),
+            reduced.into(),
+        )
+        .simd_into(self);
+        let reduced = self.max_u8x16(reduced, shuffled);
+        let shuffled = u8x16_shuffle::<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0>(
+            reduced.into(),
+            reduced.into(),
+        )
+        .simd_into(self);
+        let reduced = self.max_u8x16(reduced, shuffled);
+        u8x16_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
+    fn reduce_min_u8x16(self, a: u8x16<Self>) -> u8 {
+        let reduced = a;
+        let shuffled = u8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7>(
+            reduced.into(),
+            reduced.into(),
+        )
+        .simd_into(self);
+        let reduced = self.min_u8x16(reduced, shuffled);
+        let shuffled = u8x16_shuffle::<4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3>(
+            reduced.into(),
+            reduced.into(),
+        )
+        .simd_into(self);
+        let reduced = self.min_u8x16(reduced, shuffled);
+        let shuffled = u8x16_shuffle::<2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1>(
+            reduced.into(),
+            reduced.into(),
+        )
+        .simd_into(self);
+        let reduced = self.min_u8x16(reduced, shuffled);
+        let shuffled = u8x16_shuffle::<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0>(
+            reduced.into(),
+            reduced.into(),
+        )
+        .simd_into(self);
+        let reduced = self.min_u8x16(reduced, shuffled);
+        u8x16_extract_lane::<0>(reduced.into())
     }
     #[inline(always)]
     fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -1264,6 +1416,34 @@ impl Simd for WasmSimd128 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reduce_max_i16x8(self, a: i16x8<Self>) -> i16 {
+        let reduced = a;
+        let shuffled =
+            i16x8_shuffle::<4, 5, 6, 7, 0, 1, 2, 3>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.max_i16x8(reduced, shuffled);
+        let shuffled =
+            i16x8_shuffle::<2, 3, 4, 5, 6, 7, 0, 1>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.max_i16x8(reduced, shuffled);
+        let shuffled =
+            i16x8_shuffle::<1, 2, 3, 4, 5, 6, 7, 0>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.max_i16x8(reduced, shuffled);
+        i16x8_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
+    fn reduce_min_i16x8(self, a: i16x8<Self>) -> i16 {
+        let reduced = a;
+        let shuffled =
+            i16x8_shuffle::<4, 5, 6, 7, 0, 1, 2, 3>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.min_i16x8(reduced, shuffled);
+        let shuffled =
+            i16x8_shuffle::<2, 3, 4, 5, 6, 7, 0, 1>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.min_i16x8(reduced, shuffled);
+        let shuffled =
+            i16x8_shuffle::<1, 2, 3, 4, 5, 6, 7, 0>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.min_i16x8(reduced, shuffled);
+        i16x8_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
     fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         i16x8_max(a.into(), b.into()).simd_into(self)
     }
@@ -1502,6 +1682,34 @@ impl Simd for WasmSimd128 {
             u16::wrapping_shr(a[7usize], b[7usize] as u32),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_max_u16x8(self, a: u16x8<Self>) -> u16 {
+        let reduced = a;
+        let shuffled =
+            u16x8_shuffle::<4, 5, 6, 7, 0, 1, 2, 3>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.max_u16x8(reduced, shuffled);
+        let shuffled =
+            u16x8_shuffle::<2, 3, 4, 5, 6, 7, 0, 1>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.max_u16x8(reduced, shuffled);
+        let shuffled =
+            u16x8_shuffle::<1, 2, 3, 4, 5, 6, 7, 0>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.max_u16x8(reduced, shuffled);
+        u16x8_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
+    fn reduce_min_u16x8(self, a: u16x8<Self>) -> u16 {
+        let reduced = a;
+        let shuffled =
+            u16x8_shuffle::<4, 5, 6, 7, 0, 1, 2, 3>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.min_u16x8(reduced, shuffled);
+        let shuffled =
+            u16x8_shuffle::<2, 3, 4, 5, 6, 7, 0, 1>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.min_u16x8(reduced, shuffled);
+        let shuffled =
+            u16x8_shuffle::<1, 2, 3, 4, 5, 6, 7, 0>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.min_u16x8(reduced, shuffled);
+        u16x8_extract_lane::<0>(reduced.into())
     }
     #[inline(always)]
     fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -1832,6 +2040,24 @@ impl Simd for WasmSimd128 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reduce_max_i32x4(self, a: i32x4<Self>) -> i32 {
+        let reduced = a;
+        let shuffled = i32x4_shuffle::<2, 3, 0, 1>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.max_i32x4(reduced, shuffled);
+        let shuffled = i32x4_shuffle::<1, 2, 3, 0>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.max_i32x4(reduced, shuffled);
+        i32x4_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
+    fn reduce_min_i32x4(self, a: i32x4<Self>) -> i32 {
+        let reduced = a;
+        let shuffled = i32x4_shuffle::<2, 3, 0, 1>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.min_i32x4(reduced, shuffled);
+        let shuffled = i32x4_shuffle::<1, 2, 3, 0>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.min_i32x4(reduced, shuffled);
+        i32x4_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
     fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         i32x4_max(a.into(), b.into()).simd_into(self)
     }
@@ -2067,6 +2293,24 @@ impl Simd for WasmSimd128 {
             u32::wrapping_shr(a[3usize], b[3usize] as u32),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_max_u32x4(self, a: u32x4<Self>) -> u32 {
+        let reduced = a;
+        let shuffled = u32x4_shuffle::<2, 3, 0, 1>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.max_u32x4(reduced, shuffled);
+        let shuffled = u32x4_shuffle::<1, 2, 3, 0>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.max_u32x4(reduced, shuffled);
+        u32x4_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
+    fn reduce_min_u32x4(self, a: u32x4<Self>) -> u32 {
+        let reduced = a;
+        let shuffled = u32x4_shuffle::<2, 3, 0, 1>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.min_u32x4(reduced, shuffled);
+        let shuffled = u32x4_shuffle::<1, 2, 3, 0>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.min_u32x4(reduced, shuffled);
+        u32x4_extract_lane::<0>(reduced.into())
     }
     #[inline(always)]
     fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -2375,6 +2619,34 @@ impl Simd for WasmSimd128 {
         v128_or(magnitude, sign_bits).simd_into(self)
     }
     #[inline(always)]
+    fn reduce_max_f64x2(self, a: f64x2<Self>) -> f64 {
+        let reduced = a;
+        let shuffled = i64x2_shuffle::<1, 0>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.max_f64x2(reduced, shuffled);
+        f64x2_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
+    fn reduce_min_f64x2(self, a: f64x2<Self>) -> f64 {
+        let reduced = a;
+        let shuffled = i64x2_shuffle::<1, 0>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.min_f64x2(reduced, shuffled);
+        f64x2_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
+    fn reduce_max_precise_f64x2(self, a: f64x2<Self>) -> f64 {
+        let reduced = a;
+        let shuffled = i64x2_shuffle::<1, 0>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.max_precise_f64x2(reduced, shuffled);
+        f64x2_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
+    fn reduce_min_precise_f64x2(self, a: f64x2<Self>) -> f64 {
+        let reduced = a;
+        let shuffled = i64x2_shuffle::<1, 0>(reduced.into(), reduced.into()).simd_into(self);
+        let reduced = self.min_precise_f64x2(reduced, shuffled);
+        f64x2_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         #[cfg(target_feature = "relaxed-simd")]
         {
@@ -2681,6 +2953,16 @@ impl Simd for WasmSimd128 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reduce_max_i64x2(self, a: i64x2<Self>) -> i64 {
+        let reduced: [i64; 1usize] = [i64::max(a[0usize], a[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_min_i64x2(self, a: i64x2<Self>) -> i64 {
+        let reduced: [i64; 1usize] = [i64::min(a[0usize], a[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
     fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         [
             i64::max(a[0usize], b[0usize]),
@@ -2920,6 +3202,16 @@ impl Simd for WasmSimd128 {
             u64::wrapping_shr(a[1usize], b[1usize] as u32),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_max_u64x2(self, a: u64x2<Self>) -> u64 {
+        let reduced: [u64; 1usize] = [u64::max(a[0usize], a[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_min_u64x2(self, a: u64x2<Self>) -> u64 {
+        let reduced: [u64; 1usize] = [u64::min(a[0usize], a[1usize])];
+        reduced[0]
     }
     #[inline(always)]
     fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {

@@ -318,6 +318,7 @@ impl Level for X86 {
             OpSig::Splat => self.handle_splat(op, vec_ty),
             OpSig::Compare => self.handle_compare(op, method, vec_ty),
             OpSig::Unary => self.handle_unary(op, method_sig, method, vec_ty),
+            OpSig::Reduce { lane_op } => self.handle_reduce_min_max(op, vec_ty, lane_op),
             OpSig::Widen { target_ty } => self.handle_widen(op, vec_ty, target_ty),
             OpSig::Narrow { target_ty, mode } => self.handle_narrow(op, vec_ty, target_ty, mode),
             OpSig::Binary => self.handle_binary(op, method, vec_ty),
@@ -849,6 +850,65 @@ fn sse2_min_max_expr(method: &str, vec_ty: &VecType) -> TokenStream {
     }
 }
 
+/// Build the native expression used to combine one stage of a min/max reduction.
+///
+/// Keeping this in terms of the same helpers as the vertical operations ensures
+/// that reductions inherit their NaN behavior. In particular, precise floating-
+/// point reductions retain the explicit SSE2 NaN correction, use RANGE on
+/// AVX-512, and use the regular x86 precise expression elsewhere.
+fn x86_reduce_min_max_expr(level: X86, lane_op: &str, vec_ty: &VecType) -> TokenStream {
+    if level == X86::Avx512
+        && vec_ty.scalar == ScalarType::Float
+        && matches!(lane_op, "min_precise" | "max_precise")
+    {
+        let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, true);
+        let range = intrinsic_ident("range", suffix, vec_ty.n_bits());
+        let imm = if lane_op == "max_precise" {
+            0b0101
+        } else {
+            0b0100
+        };
+        return quote! { #range::<#imm>(reduced, shifted) };
+    }
+
+    if level == X86::Sse2
+        && vec_ty.scalar == ScalarType::Float
+        && matches!(lane_op, "min_precise" | "max_precise")
+    {
+        let intrinsic = simple_intrinsic(
+            if lane_op == "max_precise" {
+                "max"
+            } else {
+                "min"
+            },
+            vec_ty,
+        );
+        let cmpunord = float_compare_method("unord", vec_ty);
+        let select = sse2_select_expr(
+            vec_ty,
+            quote! { shifted_is_nan },
+            quote! { reduced },
+            quote! { intermediate },
+        );
+        return quote! {
+            let intermediate = #intrinsic(reduced, shifted);
+            let shifted_is_nan = #cmpunord(shifted, shifted);
+            #select
+        };
+    }
+
+    if level == X86::Sse2 && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
+        let expr = sse2_min_max_expr(lane_op, vec_ty);
+        return quote! {
+            let a = reduced;
+            let b = shifted;
+            #expr
+        };
+    }
+
+    x86::expr(lane_op, vec_ty, &[quote! { reduced }, quote! { shifted }])
+}
+
 fn avx512_mask_register_bits(vec_ty: &VecType) -> usize {
     match vec_ty.len {
         0..=8 => 8,
@@ -1125,6 +1185,95 @@ impl X86 {
             Self::Sse2 => fallback_method(op, vec_ty), // slightly faster than going through the generic code
             Self::Sse4_2 | Self::Avx2 | Self::Avx512 => count_zeros_method(op, vec_ty),
         }
+    }
+
+    pub(crate) fn handle_reduce_min_max(
+        &self,
+        op: Op,
+        vec_ty: &VecType,
+        lane_op: &str,
+    ) -> TokenStream {
+        assert_eq!(
+            vec_ty.n_bits(),
+            128,
+            "wide reductions must use the generic 128-bit-grained implementation"
+        );
+        assert!(
+            matches!(lane_op, "min" | "max" | "min_precise" | "max_precise"),
+            "unexpected min/max reduction lane operation"
+        );
+        assert!(
+            vec_ty.scalar != ScalarType::Mask,
+            "min/max reductions only operate on numeric vectors"
+        );
+
+        // x86 has no packed i64/u64 min/max before AVX-512, and a scalar pair
+        // is also the shortest fixed-depth reduction when AVX-512VL is present.
+        if matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
+            && vec_ty.scalar_bits == 64
+        {
+            assert!(
+                matches!(lane_op, "min" | "max"),
+                "precise integer reductions are forwarded to ordinary reductions"
+            );
+            let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+            let scalar_op = Ident::new(lane_op, Span::call_site());
+            return self.kernel_method(op, vec_ty, |_| {
+                quote! {
+                    let lanes: [#scalar; 2] = a.into();
+                    lanes[0].#scalar_op(lanes[1])
+                }
+            });
+        }
+
+        let mut stages = Vec::new();
+        let mut shift_bytes = 8;
+        let scalar_bytes = vec_ty.scalar_bits / 8;
+        while shift_bytes >= scalar_bytes {
+            let shift = Literal::i32_unsuffixed(i32::try_from(shift_bytes).unwrap());
+            let shifted = match (vec_ty.scalar, vec_ty.scalar_bits) {
+                (ScalarType::Float, 32) => quote! {
+                    _mm_castsi128_ps(_mm_srli_si128::<#shift>(_mm_castps_si128(reduced)))
+                },
+                (ScalarType::Float, 64) => quote! {
+                    _mm_castsi128_pd(_mm_srli_si128::<#shift>(_mm_castpd_si128(reduced)))
+                },
+                (ScalarType::Int | ScalarType::Unsigned, _) => {
+                    quote! { _mm_srli_si128::<#shift>(reduced) }
+                }
+                _ => unreachable!("min/max reductions only operate on numeric vectors"),
+            };
+            let combine = x86_reduce_min_max_expr(*self, lane_op, vec_ty);
+            stages.push(quote! {
+                let shifted = #shifted;
+                let reduced = { #combine };
+            });
+            shift_bytes /= 2;
+        }
+
+        let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+        let len = vec_ty.len;
+        let arch_ty = self.arch_ty(vec_ty);
+        let result = match (vec_ty.scalar, vec_ty.scalar_bits) {
+            (ScalarType::Float, 32) => quote! { _mm_cvtss_f32(reduced) },
+            (ScalarType::Float, 64) => quote! { _mm_cvtsd_f64(reduced) },
+            (ScalarType::Int | ScalarType::Unsigned, _) => quote! {
+                {
+                    let lanes: [#scalar; #len] =
+                        crate::transmute::checked_transmute_copy(&reduced);
+                    lanes[0]
+                }
+            },
+            _ => unreachable!("min/max reductions only operate on numeric vectors"),
+        };
+
+        self.kernel_method(op, vec_ty, |_| {
+            quote! {
+                let reduced: #arch_ty = a.into();
+                #(#stages)*
+                #result
+            }
+        })
     }
 
     pub(crate) fn handle_splat(&self, op: Op, vec_ty: &VecType) -> TokenStream {

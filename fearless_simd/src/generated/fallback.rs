@@ -297,6 +297,42 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reduce_max_f32x4(self, a: f32x4<Self>) -> f32 {
+        let reduced: [f32; 2usize] = [
+            f32::max(a[0usize], a[1usize]),
+            f32::max(a[2usize], a[3usize]),
+        ];
+        let reduced: [f32; 1usize] = [f32::max(reduced[0usize], reduced[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_min_f32x4(self, a: f32x4<Self>) -> f32 {
+        let reduced: [f32; 2usize] = [
+            f32::min(a[0usize], a[1usize]),
+            f32::min(a[2usize], a[3usize]),
+        ];
+        let reduced: [f32; 1usize] = [f32::min(reduced[0usize], reduced[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_max_precise_f32x4(self, a: f32x4<Self>) -> f32 {
+        let reduced: [f32; 2usize] = [
+            f32::max(a[0usize], a[1usize]),
+            f32::max(a[2usize], a[3usize]),
+        ];
+        let reduced: [f32; 1usize] = [f32::max(reduced[0usize], reduced[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_min_precise_f32x4(self, a: f32x4<Self>) -> f32 {
+        let reduced: [f32; 2usize] = [
+            f32::min(a[0usize], a[1usize]),
+            f32::min(a[2usize], a[3usize]),
+        ];
+        let reduced: [f32; 1usize] = [f32::min(reduced[0usize], reduced[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         [
             f32::max(a[0usize], b[0usize]),
@@ -881,6 +917,56 @@ impl Simd for Fallback {
             i8::wrapping_shr(a[15usize], b[15usize] as u32),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_max_i8x16(self, a: i8x16<Self>) -> i8 {
+        let reduced: [i8; 8usize] = [
+            i8::max(a[0usize], a[1usize]),
+            i8::max(a[2usize], a[3usize]),
+            i8::max(a[4usize], a[5usize]),
+            i8::max(a[6usize], a[7usize]),
+            i8::max(a[8usize], a[9usize]),
+            i8::max(a[10usize], a[11usize]),
+            i8::max(a[12usize], a[13usize]),
+            i8::max(a[14usize], a[15usize]),
+        ];
+        let reduced: [i8; 4usize] = [
+            i8::max(reduced[0usize], reduced[1usize]),
+            i8::max(reduced[2usize], reduced[3usize]),
+            i8::max(reduced[4usize], reduced[5usize]),
+            i8::max(reduced[6usize], reduced[7usize]),
+        ];
+        let reduced: [i8; 2usize] = [
+            i8::max(reduced[0usize], reduced[1usize]),
+            i8::max(reduced[2usize], reduced[3usize]),
+        ];
+        let reduced: [i8; 1usize] = [i8::max(reduced[0usize], reduced[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_min_i8x16(self, a: i8x16<Self>) -> i8 {
+        let reduced: [i8; 8usize] = [
+            i8::min(a[0usize], a[1usize]),
+            i8::min(a[2usize], a[3usize]),
+            i8::min(a[4usize], a[5usize]),
+            i8::min(a[6usize], a[7usize]),
+            i8::min(a[8usize], a[9usize]),
+            i8::min(a[10usize], a[11usize]),
+            i8::min(a[12usize], a[13usize]),
+            i8::min(a[14usize], a[15usize]),
+        ];
+        let reduced: [i8; 4usize] = [
+            i8::min(reduced[0usize], reduced[1usize]),
+            i8::min(reduced[2usize], reduced[3usize]),
+            i8::min(reduced[4usize], reduced[5usize]),
+            i8::min(reduced[6usize], reduced[7usize]),
+        ];
+        let reduced: [i8; 2usize] = [
+            i8::min(reduced[0usize], reduced[1usize]),
+            i8::min(reduced[2usize], reduced[3usize]),
+        ];
+        let reduced: [i8; 1usize] = [i8::min(reduced[0usize], reduced[1usize])];
+        reduced[0]
     }
     #[inline(always)]
     fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -1731,6 +1817,56 @@ impl Simd for Fallback {
             u8::wrapping_shr(a[15usize], b[15usize] as u32),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_max_u8x16(self, a: u8x16<Self>) -> u8 {
+        let reduced: [u8; 8usize] = [
+            u8::max(a[0usize], a[1usize]),
+            u8::max(a[2usize], a[3usize]),
+            u8::max(a[4usize], a[5usize]),
+            u8::max(a[6usize], a[7usize]),
+            u8::max(a[8usize], a[9usize]),
+            u8::max(a[10usize], a[11usize]),
+            u8::max(a[12usize], a[13usize]),
+            u8::max(a[14usize], a[15usize]),
+        ];
+        let reduced: [u8; 4usize] = [
+            u8::max(reduced[0usize], reduced[1usize]),
+            u8::max(reduced[2usize], reduced[3usize]),
+            u8::max(reduced[4usize], reduced[5usize]),
+            u8::max(reduced[6usize], reduced[7usize]),
+        ];
+        let reduced: [u8; 2usize] = [
+            u8::max(reduced[0usize], reduced[1usize]),
+            u8::max(reduced[2usize], reduced[3usize]),
+        ];
+        let reduced: [u8; 1usize] = [u8::max(reduced[0usize], reduced[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_min_u8x16(self, a: u8x16<Self>) -> u8 {
+        let reduced: [u8; 8usize] = [
+            u8::min(a[0usize], a[1usize]),
+            u8::min(a[2usize], a[3usize]),
+            u8::min(a[4usize], a[5usize]),
+            u8::min(a[6usize], a[7usize]),
+            u8::min(a[8usize], a[9usize]),
+            u8::min(a[10usize], a[11usize]),
+            u8::min(a[12usize], a[13usize]),
+            u8::min(a[14usize], a[15usize]),
+        ];
+        let reduced: [u8; 4usize] = [
+            u8::min(reduced[0usize], reduced[1usize]),
+            u8::min(reduced[2usize], reduced[3usize]),
+            u8::min(reduced[4usize], reduced[5usize]),
+            u8::min(reduced[6usize], reduced[7usize]),
+        ];
+        let reduced: [u8; 2usize] = [
+            u8::min(reduced[0usize], reduced[1usize]),
+            u8::min(reduced[2usize], reduced[3usize]),
+        ];
+        let reduced: [u8; 1usize] = [u8::min(reduced[0usize], reduced[1usize])];
+        reduced[0]
     }
     #[inline(always)]
     fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -2717,6 +2853,36 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reduce_max_i16x8(self, a: i16x8<Self>) -> i16 {
+        let reduced: [i16; 4usize] = [
+            i16::max(a[0usize], a[1usize]),
+            i16::max(a[2usize], a[3usize]),
+            i16::max(a[4usize], a[5usize]),
+            i16::max(a[6usize], a[7usize]),
+        ];
+        let reduced: [i16; 2usize] = [
+            i16::max(reduced[0usize], reduced[1usize]),
+            i16::max(reduced[2usize], reduced[3usize]),
+        ];
+        let reduced: [i16; 1usize] = [i16::max(reduced[0usize], reduced[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_min_i16x8(self, a: i16x8<Self>) -> i16 {
+        let reduced: [i16; 4usize] = [
+            i16::min(a[0usize], a[1usize]),
+            i16::min(a[2usize], a[3usize]),
+            i16::min(a[4usize], a[5usize]),
+            i16::min(a[6usize], a[7usize]),
+        ];
+        let reduced: [i16; 2usize] = [
+            i16::min(reduced[0usize], reduced[1usize]),
+            i16::min(reduced[2usize], reduced[3usize]),
+        ];
+        let reduced: [i16; 1usize] = [i16::min(reduced[0usize], reduced[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
     fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         [
             i16::max(a[0usize], b[0usize]),
@@ -3252,6 +3418,36 @@ impl Simd for Fallback {
             u16::wrapping_shr(a[7usize], b[7usize] as u32),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_max_u16x8(self, a: u16x8<Self>) -> u16 {
+        let reduced: [u16; 4usize] = [
+            u16::max(a[0usize], a[1usize]),
+            u16::max(a[2usize], a[3usize]),
+            u16::max(a[4usize], a[5usize]),
+            u16::max(a[6usize], a[7usize]),
+        ];
+        let reduced: [u16; 2usize] = [
+            u16::max(reduced[0usize], reduced[1usize]),
+            u16::max(reduced[2usize], reduced[3usize]),
+        ];
+        let reduced: [u16; 1usize] = [u16::max(reduced[0usize], reduced[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_min_u16x8(self, a: u16x8<Self>) -> u16 {
+        let reduced: [u16; 4usize] = [
+            u16::min(a[0usize], a[1usize]),
+            u16::min(a[2usize], a[3usize]),
+            u16::min(a[4usize], a[5usize]),
+            u16::min(a[6usize], a[7usize]),
+        ];
+        let reduced: [u16; 2usize] = [
+            u16::min(reduced[0usize], reduced[1usize]),
+            u16::min(reduced[2usize], reduced[3usize]),
+        ];
+        let reduced: [u16; 1usize] = [u16::min(reduced[0usize], reduced[1usize])];
+        reduced[0]
     }
     #[inline(always)]
     fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -3951,6 +4147,24 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reduce_max_i32x4(self, a: i32x4<Self>) -> i32 {
+        let reduced: [i32; 2usize] = [
+            i32::max(a[0usize], a[1usize]),
+            i32::max(a[2usize], a[3usize]),
+        ];
+        let reduced: [i32; 1usize] = [i32::max(reduced[0usize], reduced[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_min_i32x4(self, a: i32x4<Self>) -> i32 {
+        let reduced: [i32; 2usize] = [
+            i32::min(a[0usize], a[1usize]),
+            i32::min(a[2usize], a[3usize]),
+        ];
+        let reduced: [i32; 1usize] = [i32::min(reduced[0usize], reduced[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
     fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         [
             i32::max(a[0usize], b[0usize]),
@@ -4301,6 +4515,24 @@ impl Simd for Fallback {
             u32::wrapping_shr(a[3usize], b[3usize] as u32),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_max_u32x4(self, a: u32x4<Self>) -> u32 {
+        let reduced: [u32; 2usize] = [
+            u32::max(a[0usize], a[1usize]),
+            u32::max(a[2usize], a[3usize]),
+        ];
+        let reduced: [u32; 1usize] = [u32::max(reduced[0usize], reduced[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_min_u32x4(self, a: u32x4<Self>) -> u32 {
+        let reduced: [u32; 2usize] = [
+            u32::min(a[0usize], a[1usize]),
+            u32::min(a[2usize], a[3usize]),
+        ];
+        let reduced: [u32; 1usize] = [u32::min(reduced[0usize], reduced[1usize])];
+        reduced[0]
     }
     #[inline(always)]
     fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -4724,6 +4956,26 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reduce_max_f64x2(self, a: f64x2<Self>) -> f64 {
+        let reduced: [f64; 1usize] = [f64::max(a[0usize], a[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_min_f64x2(self, a: f64x2<Self>) -> f64 {
+        let reduced: [f64; 1usize] = [f64::min(a[0usize], a[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_max_precise_f64x2(self, a: f64x2<Self>) -> f64 {
+        let reduced: [f64; 1usize] = [f64::max(a[0usize], a[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_min_precise_f64x2(self, a: f64x2<Self>) -> f64 {
+        let reduced: [f64; 1usize] = [f64::min(a[0usize], a[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         [
             f64::max(a[0usize], b[0usize]),
@@ -5052,6 +5304,16 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reduce_max_i64x2(self, a: i64x2<Self>) -> i64 {
+        let reduced: [i64; 1usize] = [i64::max(a[0usize], a[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_min_i64x2(self, a: i64x2<Self>) -> i64 {
+        let reduced: [i64; 1usize] = [i64::min(a[0usize], a[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
     fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         [
             i64::max(a[0usize], b[0usize]),
@@ -5317,6 +5579,16 @@ impl Simd for Fallback {
             u64::wrapping_shr(a[1usize], b[1usize] as u32),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn reduce_max_u64x2(self, a: u64x2<Self>) -> u64 {
+        let reduced: [u64; 1usize] = [u64::max(a[0usize], a[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_min_u64x2(self, a: u64x2<Self>) -> u64 {
+        let reduced: [u64; 1usize] = [u64::min(a[0usize], a[1usize])];
+        reduced[0]
     }
     #[inline(always)]
     fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {

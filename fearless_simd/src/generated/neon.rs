@@ -232,6 +232,46 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn reduce_max_f32x4(self, a: f32x4<Self>) -> f32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> f32 {
+                vmaxvq_f32(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_f32x4(self, a: f32x4<Self>) -> f32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> f32 {
+                vminvq_f32(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_max_precise_f32x4(self, a: f32x4<Self>) -> f32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> f32 {
+                vmaxnmvq_f32(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_precise_f32x4(self, a: f32x4<Self>) -> f32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> f32 {
+                vminnmvq_f32(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -675,6 +715,26 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn reduce_max_i8x16(self, a: i8x16<Self>) -> i8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>) -> i8 {
+                vmaxvq_s8(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_i8x16(self, a: i8x16<Self>) -> i8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>) -> i8 {
+                vminvq_s8(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1036,6 +1096,26 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn reduce_max_u8x16(self, a: u8x16<Self>) -> u8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>) -> u8 {
+                vmaxvq_u8(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_u8x16(self, a: u8x16<Self>) -> u8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>) -> u8 {
+                vminvq_u8(a.into())
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -1548,6 +1628,26 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn reduce_max_i16x8(self, a: i16x8<Self>) -> i16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>) -> i16 {
+                vmaxvq_s16(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_i16x8(self, a: i16x8<Self>) -> i16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>) -> i16 {
+                vminvq_s16(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1908,6 +2008,26 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn reduce_max_u16x8(self, a: u16x8<Self>) -> u16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>) -> u16 {
+                vmaxvq_u16(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_u16x8(self, a: u16x8<Self>) -> u16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>) -> u16 {
+                vminvq_u16(a.into())
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -2445,6 +2565,26 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn reduce_max_i32x4(self, a: i32x4<Self>) -> i32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>) -> i32 {
+                vmaxvq_s32(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_i32x4(self, a: i32x4<Self>) -> i32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>) -> i32 {
+                vminvq_s32(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2815,6 +2955,26 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn reduce_max_u32x4(self, a: u32x4<Self>) -> u32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>) -> u32 {
+                vmaxvq_u32(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_u32x4(self, a: u32x4<Self>) -> u32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>) -> u32 {
+                vminvq_u32(a.into())
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -3325,6 +3485,46 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn reduce_max_f64x2(self, a: f64x2<Self>) -> f64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> f64 {
+                vmaxvq_f64(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_f64x2(self, a: f64x2<Self>) -> f64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> f64 {
+                vminvq_f64(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_max_precise_f64x2(self, a: f64x2<Self>) -> f64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> f64 {
+                vmaxnmvq_f64(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_precise_f64x2(self, a: f64x2<Self>) -> f64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> f64 {
+                vminnmvq_f64(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3774,6 +3974,16 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn reduce_max_i64x2(self, a: i64x2<Self>) -> i64 {
+        let reduced: [i64; 1usize] = [i64::max(a[0usize], a[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_min_i64x2(self, a: i64x2<Self>) -> i64 {
+        let reduced: [i64; 1usize] = [i64::min(a[0usize], a[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
     fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         [
             i64::max(a[0usize], b[0usize]),
@@ -4128,6 +4338,16 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn reduce_max_u64x2(self, a: u64x2<Self>) -> u64 {
+        let reduced: [u64; 1usize] = [u64::max(a[0usize], a[1usize])];
+        reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_min_u64x2(self, a: u64x2<Self>) -> u64 {
+        let reduced: [u64; 1usize] = [u64::min(a[0usize], a[1usize])];
+        reduced[0]
     }
     #[inline(always)]
     fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {

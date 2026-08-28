@@ -63,6 +63,23 @@ fn generic_first<S: Simd, V: SimdBase<S>>(vector: V) -> V::Element {
     vector[0]
 }
 
+// Ensure that horizontal extrema can be obtained from a generic numeric vector.
+fn generic_reduce_min<S: Simd, V: SimdBase<S>>(vector: V) -> V::Element {
+    vector.reduce_min()
+}
+
+fn generic_reduce_max<S: Simd, V: SimdBase<S>>(vector: V) -> V::Element {
+    vector.reduce_max()
+}
+
+fn generic_reduce_min_precise<S: Simd, V: SimdBase<S>>(vector: V) -> V::Element {
+    vector.reduce_min_precise()
+}
+
+fn generic_reduce_max_precise<S: Simd, V: SimdBase<S>>(vector: V) -> V::Element {
+    vector.reduce_max_precise()
+}
+
 // Ensure that a generic vector's 128-bit block is its own block
 fn generic_block_splat<S: Simd, V: SimdBase<S>>(block: V::Block) -> V::Block {
     V::Block::block_splat(block)
