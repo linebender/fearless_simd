@@ -1022,44 +1022,36 @@ impl Simd for Sse2 {
                 let reduced: __m128i = a.into();
                 let shifted = _mm_srli_si128::<8>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = _mm_cmpgt_epi8(a, b);
                         _mm_or_si128(_mm_and_si128(gt, a), _mm_andnot_si128(gt, b))
                     }
                 };
                 let shifted = _mm_srli_si128::<4>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = _mm_cmpgt_epi8(a, b);
                         _mm_or_si128(_mm_and_si128(gt, a), _mm_andnot_si128(gt, b))
                     }
                 };
                 let shifted = _mm_srli_si128::<2>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = _mm_cmpgt_epi8(a, b);
                         _mm_or_si128(_mm_and_si128(gt, a), _mm_andnot_si128(gt, b))
                     }
                 };
                 let shifted = _mm_srli_si128::<1>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = _mm_cmpgt_epi8(a, b);
                         _mm_or_si128(_mm_and_si128(gt, a), _mm_andnot_si128(gt, b))
                     }
@@ -1080,44 +1072,36 @@ impl Simd for Sse2 {
                 let reduced: __m128i = a.into();
                 let shifted = _mm_srli_si128::<8>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = _mm_cmpgt_epi8(a, b);
                         _mm_or_si128(_mm_and_si128(gt, b), _mm_andnot_si128(gt, a))
                     }
                 };
                 let shifted = _mm_srli_si128::<4>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = _mm_cmpgt_epi8(a, b);
                         _mm_or_si128(_mm_and_si128(gt, b), _mm_andnot_si128(gt, a))
                     }
                 };
                 let shifted = _mm_srli_si128::<2>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = _mm_cmpgt_epi8(a, b);
                         _mm_or_si128(_mm_and_si128(gt, b), _mm_andnot_si128(gt, a))
                     }
                 };
                 let shifted = _mm_srli_si128::<1>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = _mm_cmpgt_epi8(a, b);
                         _mm_or_si128(_mm_and_si128(gt, b), _mm_andnot_si128(gt, a))
                     }
@@ -1773,29 +1757,13 @@ impl Simd for Sse2 {
             fn kernel(token: Sse2, a: u8x16<Sse2>) -> u8 {
                 let reduced: __m128i = a.into();
                 let shifted = _mm_srli_si128::<8>(reduced);
-                let reduced = {
-                    let a = reduced;
-                    let b = shifted;
-                    _mm_max_epu8(a.into(), b.into())
-                };
+                let reduced = { _mm_max_epu8(reduced, shifted) };
                 let shifted = _mm_srli_si128::<4>(reduced);
-                let reduced = {
-                    let a = reduced;
-                    let b = shifted;
-                    _mm_max_epu8(a.into(), b.into())
-                };
+                let reduced = { _mm_max_epu8(reduced, shifted) };
                 let shifted = _mm_srli_si128::<2>(reduced);
-                let reduced = {
-                    let a = reduced;
-                    let b = shifted;
-                    _mm_max_epu8(a.into(), b.into())
-                };
+                let reduced = { _mm_max_epu8(reduced, shifted) };
                 let shifted = _mm_srli_si128::<1>(reduced);
-                let reduced = {
-                    let a = reduced;
-                    let b = shifted;
-                    _mm_max_epu8(a.into(), b.into())
-                };
+                let reduced = { _mm_max_epu8(reduced, shifted) };
                 {
                     let lanes: [u8; 16usize] = crate::transmute::checked_transmute_copy(&reduced);
                     lanes[0]
@@ -1811,29 +1779,13 @@ impl Simd for Sse2 {
             fn kernel(token: Sse2, a: u8x16<Sse2>) -> u8 {
                 let reduced: __m128i = a.into();
                 let shifted = _mm_srli_si128::<8>(reduced);
-                let reduced = {
-                    let a = reduced;
-                    let b = shifted;
-                    _mm_min_epu8(a.into(), b.into())
-                };
+                let reduced = { _mm_min_epu8(reduced, shifted) };
                 let shifted = _mm_srli_si128::<4>(reduced);
-                let reduced = {
-                    let a = reduced;
-                    let b = shifted;
-                    _mm_min_epu8(a.into(), b.into())
-                };
+                let reduced = { _mm_min_epu8(reduced, shifted) };
                 let shifted = _mm_srli_si128::<2>(reduced);
-                let reduced = {
-                    let a = reduced;
-                    let b = shifted;
-                    _mm_min_epu8(a.into(), b.into())
-                };
+                let reduced = { _mm_min_epu8(reduced, shifted) };
                 let shifted = _mm_srli_si128::<1>(reduced);
-                let reduced = {
-                    let a = reduced;
-                    let b = shifted;
-                    _mm_min_epu8(a.into(), b.into())
-                };
+                let reduced = { _mm_min_epu8(reduced, shifted) };
                 {
                     let lanes: [u8; 16usize] = crate::transmute::checked_transmute_copy(&reduced);
                     lanes[0]
@@ -2512,23 +2464,11 @@ impl Simd for Sse2 {
             fn kernel(token: Sse2, a: i16x8<Sse2>) -> i16 {
                 let reduced: __m128i = a.into();
                 let shifted = _mm_srli_si128::<8>(reduced);
-                let reduced = {
-                    let a = reduced;
-                    let b = shifted;
-                    _mm_max_epi16(a.into(), b.into())
-                };
+                let reduced = { _mm_max_epi16(reduced, shifted) };
                 let shifted = _mm_srli_si128::<4>(reduced);
-                let reduced = {
-                    let a = reduced;
-                    let b = shifted;
-                    _mm_max_epi16(a.into(), b.into())
-                };
+                let reduced = { _mm_max_epi16(reduced, shifted) };
                 let shifted = _mm_srli_si128::<2>(reduced);
-                let reduced = {
-                    let a = reduced;
-                    let b = shifted;
-                    _mm_max_epi16(a.into(), b.into())
-                };
+                let reduced = { _mm_max_epi16(reduced, shifted) };
                 {
                     let lanes: [i16; 8usize] = crate::transmute::checked_transmute_copy(&reduced);
                     lanes[0]
@@ -2544,23 +2484,11 @@ impl Simd for Sse2 {
             fn kernel(token: Sse2, a: i16x8<Sse2>) -> i16 {
                 let reduced: __m128i = a.into();
                 let shifted = _mm_srli_si128::<8>(reduced);
-                let reduced = {
-                    let a = reduced;
-                    let b = shifted;
-                    _mm_min_epi16(a.into(), b.into())
-                };
+                let reduced = { _mm_min_epi16(reduced, shifted) };
                 let shifted = _mm_srli_si128::<4>(reduced);
-                let reduced = {
-                    let a = reduced;
-                    let b = shifted;
-                    _mm_min_epi16(a.into(), b.into())
-                };
+                let reduced = { _mm_min_epi16(reduced, shifted) };
                 let shifted = _mm_srli_si128::<2>(reduced);
-                let reduced = {
-                    let a = reduced;
-                    let b = shifted;
-                    _mm_min_epi16(a.into(), b.into())
-                };
+                let reduced = { _mm_min_epi16(reduced, shifted) };
                 {
                     let lanes: [i16; 8usize] = crate::transmute::checked_transmute_copy(&reduced);
                     lanes[0]
@@ -3020,11 +2948,9 @@ impl Simd for Sse2 {
                 let reduced: __m128i = a.into();
                 let shifted = _mm_srli_si128::<8>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = {
                             let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
                             let lhs_signed = _mm_xor_si128(a, sign_bit);
@@ -3036,11 +2962,9 @@ impl Simd for Sse2 {
                 };
                 let shifted = _mm_srli_si128::<4>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = {
                             let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
                             let lhs_signed = _mm_xor_si128(a, sign_bit);
@@ -3052,11 +2976,9 @@ impl Simd for Sse2 {
                 };
                 let shifted = _mm_srli_si128::<2>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = {
                             let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
                             let lhs_signed = _mm_xor_si128(a, sign_bit);
@@ -3082,11 +3004,9 @@ impl Simd for Sse2 {
                 let reduced: __m128i = a.into();
                 let shifted = _mm_srli_si128::<8>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = {
                             let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
                             let lhs_signed = _mm_xor_si128(a, sign_bit);
@@ -3098,11 +3018,9 @@ impl Simd for Sse2 {
                 };
                 let shifted = _mm_srli_si128::<4>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = {
                             let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
                             let lhs_signed = _mm_xor_si128(a, sign_bit);
@@ -3114,11 +3032,9 @@ impl Simd for Sse2 {
                 };
                 let shifted = _mm_srli_si128::<2>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = {
                             let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
                             let lhs_signed = _mm_xor_si128(a, sign_bit);
@@ -3776,22 +3692,18 @@ impl Simd for Sse2 {
                 let reduced: __m128i = a.into();
                 let shifted = _mm_srli_si128::<8>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = _mm_cmpgt_epi32(a, b);
                         _mm_or_si128(_mm_and_si128(gt, a), _mm_andnot_si128(gt, b))
                     }
                 };
                 let shifted = _mm_srli_si128::<4>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = _mm_cmpgt_epi32(a, b);
                         _mm_or_si128(_mm_and_si128(gt, a), _mm_andnot_si128(gt, b))
                     }
@@ -3812,22 +3724,18 @@ impl Simd for Sse2 {
                 let reduced: __m128i = a.into();
                 let shifted = _mm_srli_si128::<8>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = _mm_cmpgt_epi32(a, b);
                         _mm_or_si128(_mm_and_si128(gt, b), _mm_andnot_si128(gt, a))
                     }
                 };
                 let shifted = _mm_srli_si128::<4>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = _mm_cmpgt_epi32(a, b);
                         _mm_or_si128(_mm_and_si128(gt, b), _mm_andnot_si128(gt, a))
                     }
@@ -4299,11 +4207,9 @@ impl Simd for Sse2 {
                 let reduced: __m128i = a.into();
                 let shifted = _mm_srli_si128::<8>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = {
                             let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
                             let lhs_signed = _mm_xor_si128(a, sign_bit);
@@ -4315,11 +4221,9 @@ impl Simd for Sse2 {
                 };
                 let shifted = _mm_srli_si128::<4>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = {
                             let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
                             let lhs_signed = _mm_xor_si128(a, sign_bit);
@@ -4345,11 +4249,9 @@ impl Simd for Sse2 {
                 let reduced: __m128i = a.into();
                 let shifted = _mm_srli_si128::<8>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = {
                             let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
                             let lhs_signed = _mm_xor_si128(a, sign_bit);
@@ -4361,11 +4263,9 @@ impl Simd for Sse2 {
                 };
                 let shifted = _mm_srli_si128::<4>(reduced);
                 let reduced = {
-                    let a = reduced;
-                    let b = shifted;
                     {
-                        let a = a.into();
-                        let b = b.into();
+                        let a = reduced;
+                        let b = shifted;
                         let gt = {
                             let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
                             let lhs_signed = _mm_xor_si128(a, sign_bit);

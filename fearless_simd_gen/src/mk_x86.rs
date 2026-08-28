@@ -821,14 +821,25 @@ fn sse2_select_expr(
 /// Other 8/16/32-bit integer min/max operations are synthesized with an SSE2
 /// comparison and the bitwise select helper above.
 fn sse2_min_max_expr(method: &str, vec_ty: &VecType) -> TokenStream {
+    sse2_min_max_native_expr(method, vec_ty, quote! { a.into() }, quote! { b.into() })
+}
+
+/// Build an SSE2 integer min/max expression from operands that already evaluate
+/// to native `__m128i` values.
+fn sse2_min_max_native_expr(
+    method: &str,
+    vec_ty: &VecType,
+    a: TokenStream,
+    b: TokenStream,
+) -> TokenStream {
     match (method, vec_ty.scalar, vec_ty.scalar_bits) {
         ("min", ScalarType::Unsigned, 8) | ("max", ScalarType::Unsigned, 8) => {
             let intrinsic = simple_intrinsic(method, vec_ty);
-            quote! { #intrinsic(a.into(), b.into()) }
+            quote! { #intrinsic(#a, #b) }
         }
         ("min", ScalarType::Int, 16) | ("max", ScalarType::Int, 16) => {
             let intrinsic = simple_intrinsic(method, vec_ty);
-            quote! { #intrinsic(a.into(), b.into()) }
+            quote! { #intrinsic(#a, #b) }
         }
         ("min" | "max", ScalarType::Int | ScalarType::Unsigned, 8 | 16 | 32) => {
             let gt = sse2_cmpgt_expr(vec_ty, quote! { a }, quote! { b });
@@ -839,8 +850,8 @@ fn sse2_min_max_expr(method: &str, vec_ty: &VecType) -> TokenStream {
             };
             quote! {
                 {
-                    let a = a.into();
-                    let b = b.into();
+                    let a = #a;
+                    let b = #b;
                     let gt = #gt;
                     #select
                 }
@@ -898,12 +909,7 @@ fn x86_reduce_min_max_expr(level: X86, lane_op: &str, vec_ty: &VecType) -> Token
     }
 
     if level == X86::Sse2 && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
-        let expr = sse2_min_max_expr(lane_op, vec_ty);
-        return quote! {
-            let a = reduced;
-            let b = shifted;
-            #expr
-        };
+        return sse2_min_max_native_expr(lane_op, vec_ty, quote! { reduced }, quote! { shifted });
     }
 
     x86::expr(lane_op, vec_ty, &[quote! { reduced }, quote! { shifted }])
