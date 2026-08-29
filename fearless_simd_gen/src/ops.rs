@@ -952,7 +952,10 @@ const INT_OPS: &[Op] = &[
         "Shift each element left by the given number of bits.\n\n\
         Bits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\n\
         When shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n\
-        This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation.",
+        # Performance\n\
+        This per-lane shift is slower than shifting the entire vector by a scalar. \
+        It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. \
+        Prefer shifting by a single scalar value instead of by a vector whenever possible.",
     ),
     Op::new(
         "shr",
@@ -969,7 +972,10 @@ const INT_OPS: &[Op] = &[
         "Shift each element right by the corresponding element in another vector.\n\n\
         For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\n\
         When shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n\
-        This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation.",
+        # Performance\n\
+        This per-lane shift is slower than shifting the entire vector by a scalar. \
+        It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. \
+        Prefer shifting by a single scalar value instead of by a vector whenever possible.",
     ),
     Op::new(
         "select",

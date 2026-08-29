@@ -400,14 +400,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i8x16<S> {
 }
 impl<S: Simd> core::ops::Shl for i8x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i8x16<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i8x16(*self, rhs);
@@ -429,14 +429,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i8x16<S> {
 }
 impl<S: Simd> core::ops::Shr for i8x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i8x16<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i8x16(*self, rhs);
@@ -676,14 +676,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u8x16<S> {
 }
 impl<S: Simd> core::ops::Shl for u8x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u8x16<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u8x16(*self, rhs);
@@ -705,14 +705,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u8x16<S> {
 }
 impl<S: Simd> core::ops::Shr for u8x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u8x16<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u8x16(*self, rhs);
@@ -1013,14 +1013,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i16x8<S> {
 }
 impl<S: Simd> core::ops::Shl for i16x8<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i16x8<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i16x8(*self, rhs);
@@ -1042,14 +1042,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i16x8<S> {
 }
 impl<S: Simd> core::ops::Shr for i16x8<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i16x8<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i16x8(*self, rhs);
@@ -1289,14 +1289,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u16x8<S> {
 }
 impl<S: Simd> core::ops::Shl for u16x8<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u16x8<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u16x8(*self, rhs);
@@ -1318,14 +1318,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u16x8<S> {
 }
 impl<S: Simd> core::ops::Shr for u16x8<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u16x8<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u16x8(*self, rhs);
@@ -1626,14 +1626,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i32x4<S> {
 }
 impl<S: Simd> core::ops::Shl for i32x4<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i32x4<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i32x4(*self, rhs);
@@ -1655,14 +1655,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i32x4<S> {
 }
 impl<S: Simd> core::ops::Shr for i32x4<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i32x4<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i32x4(*self, rhs);
@@ -1902,14 +1902,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u32x4<S> {
 }
 impl<S: Simd> core::ops::Shl for u32x4<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u32x4<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u32x4(*self, rhs);
@@ -1931,14 +1931,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u32x4<S> {
 }
 impl<S: Simd> core::ops::Shr for u32x4<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u32x4<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u32x4(*self, rhs);
@@ -2387,14 +2387,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i64x2<S> {
 }
 impl<S: Simd> core::ops::Shl for i64x2<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i64x2(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i64x2<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i64x2(*self, rhs);
@@ -2416,14 +2416,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i64x2<S> {
 }
 impl<S: Simd> core::ops::Shr for i64x2<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i64x2(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i64x2<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i64x2(*self, rhs);
@@ -2663,14 +2663,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u64x2<S> {
 }
 impl<S: Simd> core::ops::Shl for u64x2<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u64x2(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u64x2<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u64x2(*self, rhs);
@@ -2692,14 +2692,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u64x2<S> {
 }
 impl<S: Simd> core::ops::Shr for u64x2<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u64x2(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u64x2<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u64x2(*self, rhs);
@@ -3148,14 +3148,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i8x32<S> {
 }
 impl<S: Simd> core::ops::Shl for i8x32<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i8x32<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i8x32(*self, rhs);
@@ -3177,14 +3177,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i8x32<S> {
 }
 impl<S: Simd> core::ops::Shr for i8x32<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i8x32<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i8x32(*self, rhs);
@@ -3424,14 +3424,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u8x32<S> {
 }
 impl<S: Simd> core::ops::Shl for u8x32<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u8x32<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u8x32(*self, rhs);
@@ -3453,14 +3453,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u8x32<S> {
 }
 impl<S: Simd> core::ops::Shr for u8x32<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u8x32<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u8x32(*self, rhs);
@@ -3761,14 +3761,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i16x16<S> {
 }
 impl<S: Simd> core::ops::Shl for i16x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i16x16<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i16x16(*self, rhs);
@@ -3790,14 +3790,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i16x16<S> {
 }
 impl<S: Simd> core::ops::Shr for i16x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i16x16<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i16x16(*self, rhs);
@@ -4037,14 +4037,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u16x16<S> {
 }
 impl<S: Simd> core::ops::Shl for u16x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u16x16<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u16x16(*self, rhs);
@@ -4066,14 +4066,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u16x16<S> {
 }
 impl<S: Simd> core::ops::Shr for u16x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u16x16<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u16x16(*self, rhs);
@@ -4374,14 +4374,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i32x8<S> {
 }
 impl<S: Simd> core::ops::Shl for i32x8<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i32x8<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i32x8(*self, rhs);
@@ -4403,14 +4403,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i32x8<S> {
 }
 impl<S: Simd> core::ops::Shr for i32x8<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i32x8<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i32x8(*self, rhs);
@@ -4650,14 +4650,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u32x8<S> {
 }
 impl<S: Simd> core::ops::Shl for u32x8<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u32x8<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u32x8(*self, rhs);
@@ -4679,14 +4679,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u32x8<S> {
 }
 impl<S: Simd> core::ops::Shr for u32x8<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u32x8<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u32x8(*self, rhs);
@@ -5135,14 +5135,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i64x4<S> {
 }
 impl<S: Simd> core::ops::Shl for i64x4<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i64x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i64x4<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i64x4(*self, rhs);
@@ -5164,14 +5164,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i64x4<S> {
 }
 impl<S: Simd> core::ops::Shr for i64x4<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i64x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i64x4<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i64x4(*self, rhs);
@@ -5411,14 +5411,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u64x4<S> {
 }
 impl<S: Simd> core::ops::Shl for u64x4<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u64x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u64x4<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u64x4(*self, rhs);
@@ -5440,14 +5440,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u64x4<S> {
 }
 impl<S: Simd> core::ops::Shr for u64x4<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u64x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u64x4<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u64x4(*self, rhs);
@@ -5896,14 +5896,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i8x64<S> {
 }
 impl<S: Simd> core::ops::Shl for i8x64<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i8x64<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i8x64(*self, rhs);
@@ -5925,14 +5925,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i8x64<S> {
 }
 impl<S: Simd> core::ops::Shr for i8x64<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i8x64<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i8x64(*self, rhs);
@@ -6172,14 +6172,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u8x64<S> {
 }
 impl<S: Simd> core::ops::Shl for u8x64<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u8x64<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u8x64(*self, rhs);
@@ -6201,14 +6201,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u8x64<S> {
 }
 impl<S: Simd> core::ops::Shr for u8x64<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u8x64<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u8x64(*self, rhs);
@@ -6509,14 +6509,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i16x32<S> {
 }
 impl<S: Simd> core::ops::Shl for i16x32<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i16x32<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i16x32(*self, rhs);
@@ -6538,14 +6538,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i16x32<S> {
 }
 impl<S: Simd> core::ops::Shr for i16x32<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i16x32<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i16x32(*self, rhs);
@@ -6785,14 +6785,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u16x32<S> {
 }
 impl<S: Simd> core::ops::Shl for u16x32<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u16x32<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u16x32(*self, rhs);
@@ -6814,14 +6814,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u16x32<S> {
 }
 impl<S: Simd> core::ops::Shr for u16x32<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u16x32<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u16x32(*self, rhs);
@@ -7122,14 +7122,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i32x16<S> {
 }
 impl<S: Simd> core::ops::Shl for i32x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i32x16<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i32x16(*self, rhs);
@@ -7151,14 +7151,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i32x16<S> {
 }
 impl<S: Simd> core::ops::Shr for i32x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i32x16<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i32x16(*self, rhs);
@@ -7398,14 +7398,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u32x16<S> {
 }
 impl<S: Simd> core::ops::Shl for u32x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u32x16<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u32x16(*self, rhs);
@@ -7427,14 +7427,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u32x16<S> {
 }
 impl<S: Simd> core::ops::Shr for u32x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u32x16<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u32x16(*self, rhs);
@@ -7883,14 +7883,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i64x8<S> {
 }
 impl<S: Simd> core::ops::Shl for i64x8<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i64x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i64x8<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i64x8(*self, rhs);
@@ -7912,14 +7912,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i64x8<S> {
 }
 impl<S: Simd> core::ops::Shr for i64x8<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i64x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i64x8<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i64x8(*self, rhs);
@@ -8159,14 +8159,14 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u64x8<S> {
 }
 impl<S: Simd> core::ops::Shl for u64x8<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u64x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u64x8<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u64x8(*self, rhs);
@@ -8188,14 +8188,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u64x8<S> {
 }
 impl<S: Simd> core::ops::Shr for u64x8<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u64x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u64x8<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u64x8(*self, rhs);
