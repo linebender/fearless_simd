@@ -420,3 +420,95 @@ fn rotate_elements_left_u64x8<S: Simd>(simd: S) {
     let result = a.rotate_elements_left::<1>();
     assert_eq!(result.as_slice(), expected.as_slice());
 }
+
+// Mask coverage rows.
+
+#[simd_test]
+fn rotate_elements_left_mask8x16<S: Simd>(simd: S) {
+    let a = mask8x16::from_bitmask(simd, 0x0001);
+    assert_eq!(a.rotate_elements_left::<1>().to_bitmask(), 0x8000);
+}
+
+#[simd_test]
+fn rotate_elements_left_mask16x8<S: Simd>(simd: S) {
+    let a = mask16x8::from_bitmask(simd, 0x01);
+    assert_eq!(a.rotate_elements_left::<1>().to_bitmask(), 0x80);
+}
+
+#[simd_test]
+fn rotate_elements_left_mask32x4<S: Simd>(simd: S) {
+    let a = mask32x4::from_bitmask(simd, 0b0001);
+    assert_eq!(a.rotate_elements_left::<1>().to_bitmask(), 0b1000);
+    assert_eq!(a.rotate_elements_left::<0>().to_bitmask(), 0b0001);
+    assert_eq!(a.rotate_elements_left::<4>().to_bitmask(), 0b0001);
+    assert_eq!(a.rotate_elements_left::<5>().to_bitmask(), 0b1000);
+    assert_eq!(
+        a.rotate_elements_left::<{ usize::MAX }>().to_bitmask(),
+        0b0010
+    );
+}
+
+#[simd_test]
+fn rotate_elements_left_mask64x2<S: Simd>(simd: S) {
+    let a = mask64x2::from_bitmask(simd, 0b01);
+    assert_eq!(a.rotate_elements_left::<1>().to_bitmask(), 0b10);
+}
+
+#[simd_test]
+fn rotate_elements_left_mask8x32<S: Simd>(simd: S) {
+    let a = mask8x32::from_bitmask(simd, 0x0000_0001);
+    assert_eq!(a.rotate_elements_left::<1>().to_bitmask(), 0x8000_0000);
+}
+
+#[simd_test]
+fn rotate_elements_left_mask16x16<S: Simd>(simd: S) {
+    let a = mask16x16::from_bitmask(simd, 0x0001);
+    assert_eq!(a.rotate_elements_left::<1>().to_bitmask(), 0x8000);
+}
+
+#[simd_test]
+fn rotate_elements_left_mask32x8<S: Simd>(simd: S) {
+    let a = mask32x8::from_bitmask(simd, 0x01);
+    assert_eq!(a.rotate_elements_left::<1>().to_bitmask(), 0x80);
+}
+
+#[simd_test]
+fn rotate_elements_left_mask64x4<S: Simd>(simd: S) {
+    let a = mask64x4::from_bitmask(simd, 0b0001);
+    assert_eq!(a.rotate_elements_left::<1>().to_bitmask(), 0b1000);
+}
+
+#[simd_test]
+fn rotate_elements_left_mask8x64<S: Simd>(simd: S) {
+    let a = mask8x64::from_bitmask(simd, 0x0000_0000_0000_0001);
+    assert_eq!(
+        a.rotate_elements_left::<1>().to_bitmask(),
+        0x8000_0000_0000_0000
+    );
+    assert_eq!(
+        a.rotate_elements_left::<0>().to_bitmask(),
+        0x0000_0000_0000_0001
+    );
+    assert_eq!(
+        a.rotate_elements_left::<64>().to_bitmask(),
+        0x0000_0000_0000_0001
+    );
+}
+
+#[simd_test]
+fn rotate_elements_left_mask16x32<S: Simd>(simd: S) {
+    let a = mask16x32::from_bitmask(simd, 0x0000_0001);
+    assert_eq!(a.rotate_elements_left::<1>().to_bitmask(), 0x8000_0000);
+}
+
+#[simd_test]
+fn rotate_elements_left_mask32x16<S: Simd>(simd: S) {
+    let a = mask32x16::from_bitmask(simd, 0x0001);
+    assert_eq!(a.rotate_elements_left::<1>().to_bitmask(), 0x8000);
+}
+
+#[simd_test]
+fn rotate_elements_left_mask64x8<S: Simd>(simd: S) {
+    let a = mask64x8::from_bitmask(simd, 0x01);
+    assert_eq!(a.rotate_elements_left::<1>().to_bitmask(), 0x80);
+}

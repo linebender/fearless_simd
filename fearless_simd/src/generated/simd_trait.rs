@@ -570,6 +570,16 @@ pub trait Simd:
     fn to_bitmask_mask8x16(self, a: mask8x16<Self>) -> u64;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask8x16(self, a: &mut mask8x16<Self>, index: usize, value: bool) -> ();
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_mask8x16<const OFFSET: usize>(
+        self,
+        a: mask8x16<Self>,
+    ) -> mask8x16<Self>;
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_mask8x16<const OFFSET: usize>(
+        self,
+        a: mask8x16<Self>,
+    ) -> mask8x16<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -841,6 +851,16 @@ pub trait Simd:
     fn to_bitmask_mask16x8(self, a: mask16x8<Self>) -> u64;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask16x8(self, a: &mut mask16x8<Self>, index: usize, value: bool) -> ();
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_mask16x8<const OFFSET: usize>(
+        self,
+        a: mask16x8<Self>,
+    ) -> mask16x8<Self>;
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_mask16x8<const OFFSET: usize>(
+        self,
+        a: mask16x8<Self>,
+    ) -> mask16x8<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1116,6 +1136,16 @@ pub trait Simd:
     fn to_bitmask_mask32x4(self, a: mask32x4<Self>) -> u64;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask32x4(self, a: &mut mask32x4<Self>, index: usize, value: bool) -> ();
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_mask32x4<const OFFSET: usize>(
+        self,
+        a: mask32x4<Self>,
+    ) -> mask32x4<Self>;
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_mask32x4<const OFFSET: usize>(
+        self,
+        a: mask32x4<Self>,
+    ) -> mask32x4<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1527,6 +1557,16 @@ pub trait Simd:
     fn to_bitmask_mask64x2(self, a: mask64x2<Self>) -> u64;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask64x2(self, a: &mut mask64x2<Self>, index: usize, value: bool) -> ();
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_mask64x2<const OFFSET: usize>(
+        self,
+        a: mask64x2<Self>,
+    ) -> mask64x2<Self>;
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_mask64x2<const OFFSET: usize>(
+        self,
+        a: mask64x2<Self>,
+    ) -> mask64x2<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -2503,6 +2543,16 @@ pub trait Simd:
     }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask8x32(self, a: &mut mask8x32<Self>, index: usize, value: bool) -> ();
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_mask8x32<const OFFSET: usize>(
+        self,
+        a: mask8x32<Self>,
+    ) -> mask8x32<Self>;
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_mask8x32<const OFFSET: usize>(
+        self,
+        a: mask8x32<Self>,
+    ) -> mask8x32<Self>;
     #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
@@ -3214,6 +3264,16 @@ pub trait Simd:
     }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask16x16(self, a: &mut mask16x16<Self>, index: usize, value: bool) -> ();
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_mask16x16<const OFFSET: usize>(
+        self,
+        a: mask16x16<Self>,
+    ) -> mask16x16<Self>;
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_mask16x16<const OFFSET: usize>(
+        self,
+        a: mask16x16<Self>,
+    ) -> mask16x16<Self>;
     #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
@@ -3929,6 +3989,16 @@ pub trait Simd:
     }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask32x8(self, a: &mut mask32x8<Self>, index: usize, value: bool) -> ();
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_mask32x8<const OFFSET: usize>(
+        self,
+        a: mask32x8<Self>,
+    ) -> mask32x8<Self>;
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_mask32x8<const OFFSET: usize>(
+        self,
+        a: mask32x8<Self>,
+    ) -> mask32x8<Self>;
     #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
@@ -5030,6 +5100,16 @@ pub trait Simd:
     }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask64x4(self, a: &mut mask64x4<Self>, index: usize, value: bool) -> ();
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_mask64x4<const OFFSET: usize>(
+        self,
+        a: mask64x4<Self>,
+    ) -> mask64x4<Self>;
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_mask64x4<const OFFSET: usize>(
+        self,
+        a: mask64x4<Self>,
+    ) -> mask64x4<Self>;
     #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
@@ -6069,6 +6149,16 @@ pub trait Simd:
     }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask8x64(self, a: &mut mask8x64<Self>, index: usize, value: bool) -> ();
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_mask8x64<const OFFSET: usize>(
+        self,
+        a: mask8x64<Self>,
+    ) -> mask8x64<Self>;
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_mask8x64<const OFFSET: usize>(
+        self,
+        a: mask8x64<Self>,
+    ) -> mask8x64<Self>;
     #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
@@ -6786,6 +6876,16 @@ pub trait Simd:
     }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask16x32(self, a: &mut mask16x32<Self>, index: usize, value: bool) -> ();
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_mask16x32<const OFFSET: usize>(
+        self,
+        a: mask16x32<Self>,
+    ) -> mask16x32<Self>;
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_mask16x32<const OFFSET: usize>(
+        self,
+        a: mask16x32<Self>,
+    ) -> mask16x32<Self>;
     #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
@@ -7506,6 +7606,16 @@ pub trait Simd:
     }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask32x16(self, a: &mut mask32x16<Self>, index: usize, value: bool) -> ();
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_mask32x16<const OFFSET: usize>(
+        self,
+        a: mask32x16<Self>,
+    ) -> mask32x16<Self>;
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_mask32x16<const OFFSET: usize>(
+        self,
+        a: mask32x16<Self>,
+    ) -> mask32x16<Self>;
     #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
@@ -8599,6 +8709,16 @@ pub trait Simd:
     }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask64x8(self, a: &mut mask64x8<Self>, index: usize, value: bool) -> ();
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_mask64x8<const OFFSET: usize>(
+        self,
+        a: mask64x8<Self>,
+    ) -> mask64x8<Self>;
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_mask64x8<const OFFSET: usize>(
+        self,
+        a: mask64x8<Self>,
+    ) -> mask64x8<Self>;
     #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
@@ -9451,6 +9571,10 @@ pub trait SimdMask<S: Simd>:
     #[doc = r""]
     #[doc = r" The slice must be exactly the size of the SIMD mask."]
     fn store_slice(&self, slice: &mut [Self::Element]);
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left<const OFFSET: usize>(self) -> Self;
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right<const OFFSET: usize>(self) -> Self;
     #[doc = "Reverse the order of the mask's logical lanes."]
     fn reverse(self) -> Self;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
