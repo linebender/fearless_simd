@@ -390,8 +390,6 @@ fn mk_simd_base() -> TokenStream {
             /// Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.
             ///
             /// If `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`.
-            ///
-            /// If you don't need to configure the padding, prefer the `<<` operator instead.
             #[inline(always)]
             fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
                 match OFFSET.min(Self::N) {
@@ -403,8 +401,6 @@ fn mk_simd_base() -> TokenStream {
             /// Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.
             ///
             /// If `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`.
-            ///
-            /// If you don't need to configure the padding, prefer the `>>` operator instead.
             #[inline(always)]
             fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
                 let padding = Self::splat(self.witness(), padding);
