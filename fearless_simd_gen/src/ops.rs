@@ -954,7 +954,7 @@ const INT_OPS: &[Op] = &[
         When shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n\
         # Performance\n\
         This per-lane shift is slower than shifting the entire vector by a scalar. \
-        It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. \
+        It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` and `i8` elements on AVX2. \
         Prefer shifting by a single scalar value instead of by a vector whenever possible.",
     ),
     Op::new(
@@ -974,7 +974,7 @@ const INT_OPS: &[Op] = &[
         When shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n\
         # Performance\n\
         This per-lane shift is slower than shifting the entire vector by a scalar. \
-        It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` elements on AVX2. \
+        It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` and `i8` elements on AVX2. \
         Prefer shifting by a single scalar value instead of by a vector whenever possible.",
     ),
     Op::new(
