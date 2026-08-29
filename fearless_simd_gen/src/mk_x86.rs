@@ -3762,20 +3762,28 @@ impl X86 {
                 }
                 (Self::Avx2, 256) => quote! {
                     let bytes = Bytes::to_bytes(a);
-                    let idxs = indices;
-                    let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                    let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
+                    let indices = indices.into();
+                    let swapped = _mm256_permute2x128_si256::<0x01>(bytes.val.0, bytes.val.0);
 
                     // Adding 0x60 preserves the low nibble and bit 4 for valid
                     // indices 0..=31. Larger indices get their high bit set, so
                     // VPSHUFB supplies the required out-of-bounds zeroing.
-                    let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
+                    let control = _mm256_adds_epu8(indices, _mm256_set1_epi8(0x60));
 
-                    // Move index bit 4 into each byte's sign bit for VPBLENDVB.
-                    let select_high = _mm256_slli_epi16::<3>(control);
-                    let from_low = _mm256_shuffle_epi8(lolo, control);
-                    let from_high = _mm256_shuffle_epi8(hihi, control);
-                    let result = _mm256_blendv_epi8(from_low, from_high, select_high);
+                    let local = _mm256_shuffle_epi8(bytes.val.0, control);
+                    let remote = _mm256_shuffle_epi8(swapped, control);
+
+                    // In the low lane, adding 0x10 moves the valid index's bit 4
+                    // into the sign bit. The high lane has the opposite
+                    // local/remote mapping, so adding 0x90 flips the selection.
+                    // Out-of-range indices already zeroed both shuffle results,
+                    // making the blend selection irrelevant for them.
+                    let select_bias = _mm256_set_m128i(
+                        _mm_set1_epi8(-112),
+                        _mm_set1_epi8(16),
+                    );
+                    let select_remote = _mm256_add_epi8(control, select_bias);
+                    let result = _mm256_blendv_epi8(local, remote, select_remote);
                     let result_bytes = #bytes { val: #wrapper(result), simd: #token };
                 },
                 (Self::Avx512, 128 | 256 | 512) => {
