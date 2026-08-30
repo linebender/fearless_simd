@@ -63,7 +63,7 @@ fn generic_first<S: Simd, V: SimdBase<S>>(vector: V) -> V::Element {
     vector[0]
 }
 
-// Ensure that horizontal extrema can be obtained from a generic numeric vector.
+// Ensure that horizontal min/max works generically
 fn generic_reduce_min<S: Simd, V: SimdBase<S>>(vector: V) -> V::Element {
     vector.reduce_min()
 }
