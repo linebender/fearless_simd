@@ -434,6 +434,18 @@ impl Simd for Sse2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_product_f32x4(self, a: f32x4<Self>) -> f32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f32x4<Sse2>) -> f32 {
+                let a: __m128 = a.into();
+                let adjacent = _mm_mul_ps(a, _mm_shuffle_ps::<0b10_11_00_01>(a, a));
+                _mm_cvtss_f32(_mm_mul_ss(adjacent, _mm_movehl_ps(adjacent, adjacent)))
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1143,6 +1155,23 @@ impl Simd for Sse2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_product_i8x16(self, a: i8x16<Self>) -> i8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i8x16<Sse2>) -> i8 {
+                let value: __m128i = a.into();
+                let high = _mm_srli_epi16::<8>(value);
+                let product = _mm_mullo_epi16(value, high);
+                let product = _mm_mullo_epi16(product, _mm_srli_si128::<8>(product));
+                let product = _mm_mullo_epi16(product, _mm_srli_si128::<4>(product));
+                let product = _mm_mullo_epi16(product, _mm_srli_si128::<2>(product));
+                let lanes: [i8; 16usize] = crate::transmute::checked_transmute_copy(&product);
+                lanes[0]
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1833,6 +1862,23 @@ impl Simd for Sse2 {
                 let sum = _mm_add_epi8(sum, _mm_srli_si128::<2>(sum));
                 let sum = _mm_add_epi8(sum, _mm_srli_si128::<1>(sum));
                 let lanes: [u8; 16usize] = crate::transmute::checked_transmute_copy(&sum);
+                lanes[0]
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_product_u8x16(self, a: u8x16<Self>) -> u8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u8x16<Sse2>) -> u8 {
+                let value: __m128i = a.into();
+                let high = _mm_srli_epi16::<8>(value);
+                let product = _mm_mullo_epi16(value, high);
+                let product = _mm_mullo_epi16(product, _mm_srli_si128::<8>(product));
+                let product = _mm_mullo_epi16(product, _mm_srli_si128::<4>(product));
+                let product = _mm_mullo_epi16(product, _mm_srli_si128::<2>(product));
+                let lanes: [u8; 16usize] = crate::transmute::checked_transmute_copy(&product);
                 lanes[0]
             }
         );
@@ -2557,6 +2603,21 @@ impl Simd for Sse2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_product_i16x8(self, a: i16x8<Self>) -> i16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i16x8<Sse2>) -> i16 {
+                let product: __m128i = a.into();
+                let product = _mm_mullo_epi16(product, _mm_srli_si128::<8>(product));
+                let product = _mm_mullo_epi16(product, _mm_srli_si128::<4>(product));
+                let product = _mm_mullo_epi16(product, _mm_srli_si128::<2>(product));
+                let lanes: [i16; 8usize] = crate::transmute::checked_transmute_copy(&product);
+                lanes[0]
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3121,6 +3182,21 @@ impl Simd for Sse2 {
                 let sum = _mm_add_epi16(sum, _mm_srli_si128::<4>(sum));
                 let sum = _mm_add_epi16(sum, _mm_srli_si128::<2>(sum));
                 let lanes: [u16; 8usize] = crate::transmute::checked_transmute_copy(&sum);
+                lanes[0]
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_product_u16x8(self, a: u16x8<Self>) -> u16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u16x8<Sse2>) -> u16 {
+                let product: __m128i = a.into();
+                let product = _mm_mullo_epi16(product, _mm_srli_si128::<8>(product));
+                let product = _mm_mullo_epi16(product, _mm_srli_si128::<4>(product));
+                let product = _mm_mullo_epi16(product, _mm_srli_si128::<2>(product));
+                let lanes: [u16; 8usize] = crate::transmute::checked_transmute_copy(&product);
                 lanes[0]
             }
         );
@@ -3837,6 +3913,15 @@ impl Simd for Sse2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_product_i32x4(self, a: i32x4<Self>) -> i32 {
+        let mul_level_0: [i32; 2usize] = [
+            a[0usize].wrapping_mul(a[1usize]),
+            a[2usize].wrapping_mul(a[3usize]),
+        ];
+        let mul_level_1: [i32; 1usize] = [mul_level_0[0usize].wrapping_mul(mul_level_0[1usize])];
+        mul_level_1[0]
+    }
+    #[inline(always)]
     fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4384,6 +4469,15 @@ impl Simd for Sse2 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_product_u32x4(self, a: u32x4<Self>) -> u32 {
+        let mul_level_0: [u32; 2usize] = [
+            a[0usize].wrapping_mul(a[1usize]),
+            a[2usize].wrapping_mul(a[3usize]),
+        ];
+        let mul_level_1: [u32; 1usize] = [mul_level_0[0usize].wrapping_mul(mul_level_0[1usize])];
+        mul_level_1[0]
     }
     #[inline(always)]
     fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -5068,6 +5162,17 @@ impl Simd for Sse2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_product_f64x2(self, a: f64x2<Self>) -> f64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f64x2<Sse2>) -> f64 {
+                let a: __m128d = a.into();
+                _mm_cvtsd_f64(_mm_mul_sd(a, _mm_unpackhi_pd(a, a)))
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5570,6 +5675,11 @@ impl Simd for Sse2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_product_i64x2(self, a: i64x2<Self>) -> i64 {
+        let mul_level_0: [i64; 1usize] = [a[0usize].wrapping_mul(a[1usize])];
+        mul_level_0[0]
+    }
+    #[inline(always)]
     fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         [
             i64::max(a[0usize], b[0usize]),
@@ -5988,6 +6098,11 @@ impl Simd for Sse2 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_product_u64x2(self, a: u64x2<Self>) -> u64 {
+        let mul_level_0: [u64; 1usize] = [a[0usize].wrapping_mul(a[1usize])];
+        mul_level_0[0]
     }
     #[inline(always)]
     fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {

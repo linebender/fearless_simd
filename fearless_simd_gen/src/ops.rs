@@ -650,6 +650,18 @@ const COMMON_BASE_OPS: &[Op] = &[
         Because floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different.",
     ),
     Op::new(
+        "reduce_product",
+        OpKind::BaseTraitMethod,
+        OpSig::Reduce { lane_op: "mul" },
+        "Return the product of all elements in the vector. Integer multiplication wraps.\n\n\
+        # Floating-point behavior\n\n\
+        Floating-point multiplication uses a fixed balanced tree with `log2(N)` dependency depth for an input vector with N lanes. This improves latency, but not the general relative-error bound: every multiplication in the tree can round.\n\n\
+        Intermediate operations can overflow, underflow, or multiply infinity by zero to produce NaN even when the exact real-number product is representable.\n\n\
+        For a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except that when the result is NaN, its exact bit pattern is unspecified.\n\n\
+        This fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\n\
+        Because floating-point multiplication is not associative, separately reducing smaller vectors and then multiplying their results can differ from reducing their combined wider vector.",
+    ),
+    Op::new(
         "max",
         OpKind::BaseTraitMethod,
         OpSig::Binary,

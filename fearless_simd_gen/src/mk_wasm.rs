@@ -219,6 +219,113 @@ fn reduce_sum(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
     }
 }
 
+fn reduce_product(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(
+        vec_ty.n_bits(),
+        128,
+        "wide reductions must use the generic 128-bit-grained implementation"
+    );
+
+    let body = match (vec_ty.scalar, vec_ty.scalar_bits) {
+        (ScalarType::Float, 32) => quote! {
+            let a: v128 = a.into();
+            let adjacent = f32x4_mul(a, i32x4_shuffle::<1, 0, 3, 2>(a, a));
+            let result = f32x4_mul(
+                adjacent,
+                i32x4_shuffle::<2, 3, 2, 3>(adjacent, adjacent),
+            );
+            f32x4_extract_lane::<0>(result)
+        },
+        (ScalarType::Float, 64) => quote! {
+            let a: v128 = a.into();
+            let result = f64x2_mul(a, i64x2_shuffle::<1, 1>(a, a));
+            f64x2_extract_lane::<0>(result)
+        },
+        (ScalarType::Int | ScalarType::Unsigned, 8) => {
+            // WASM has no packed 8-bit multiply. Form all eight adjacent pair products
+            // directly in 16-bit lanes, then finish the reduction with native i16x8
+            // multiplies. Keeping the intermediate low 16 bits is sufficient because the
+            // final result is reduced modulo 2^8.
+            let widened_ty = VecType::new(vec_ty.scalar, 16, 8);
+            let extmul = match vec_ty.scalar {
+                ScalarType::Int => quote! { i16x8_extmul_low_i8x16 },
+                ScalarType::Unsigned => quote! { u16x8_extmul_low_u8x16 },
+                _ => unreachable!(),
+            };
+            let mul = simple_intrinsic("mul", &widened_ty);
+            let shuffle = simple_intrinsic("shuffle", &widened_ty);
+            let extract = simple_intrinsic("extract_lane", &widened_ty);
+            let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+            let mut stages = Vec::new();
+            let mut offset = widened_ty.len / 2;
+            while offset > 0 {
+                let indices = (0..widened_ty.len)
+                    .map(|index| Literal::usize_unsuffixed((index + offset) % widened_ty.len));
+                stages.push(quote! {
+                    let product = #mul(
+                        product,
+                        #shuffle::<#(#indices),*>(product, product),
+                    );
+                });
+                offset /= 2;
+            }
+
+            quote! {
+                let a: v128 = a.into();
+                let even = i8x16_shuffle::<
+                    0, 2, 4, 6, 8, 10, 12, 14,
+                    0, 2, 4, 6, 8, 10, 12, 14,
+                >(a, a);
+                let odd = i8x16_shuffle::<
+                    1, 3, 5, 7, 9, 11, 13, 15,
+                    1, 3, 5, 7, 9, 11, 13, 15,
+                >(a, a);
+                let product = #extmul(even, odd);
+                #(#stages)*
+                #extract::<0>(product) as #scalar
+            }
+        }
+        (ScalarType::Int | ScalarType::Unsigned, 16 | 32) => {
+            let mul = simple_intrinsic("mul", vec_ty);
+            let shuffle = simple_intrinsic("shuffle", vec_ty);
+            let extract = simple_intrinsic("extract_lane", vec_ty);
+            let mut stages = Vec::new();
+            let mut offset = vec_ty.len / 2;
+            while offset > 0 {
+                let indices = (0..vec_ty.len)
+                    .map(|index| Literal::usize_unsuffixed((index + offset) % vec_ty.len));
+                stages.push(quote! {
+                    let product = #mul(
+                        product,
+                        #shuffle::<#(#indices),*>(product, product),
+                    );
+                });
+                offset /= 2;
+            }
+
+            quote! {
+                let product: v128 = a.into();
+                #(#stages)*
+                #extract::<0>(product)
+            }
+        }
+        (ScalarType::Int | ScalarType::Unsigned, 64) => {
+            let extract = simple_intrinsic("extract_lane", vec_ty);
+            quote! {
+                let a: v128 = a.into();
+                #extract::<0>(a).wrapping_mul(#extract::<1>(a))
+            }
+        }
+        _ => unreachable!("reduce_product only operates on numeric vectors"),
+    };
+
+    quote! {
+        #method_sig {
+            #body
+        }
+    }
+}
+
 impl Level for WasmSimd128 {
     fn name(&self) -> &'static str {
         "WasmSimd128"
@@ -344,6 +451,8 @@ impl Level for WasmSimd128 {
             OpSig::Reduce { lane_op } => {
                 if lane_op == "add" {
                     reduce_sum(method_sig, vec_ty)
+                } else if lane_op == "mul" {
+                    reduce_product(method_sig, vec_ty)
                 } else if vec_ty.scalar_bits == 64
                     && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
                 {

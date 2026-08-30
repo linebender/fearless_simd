@@ -318,13 +318,11 @@ impl Level for X86 {
             OpSig::Splat => self.handle_splat(op, vec_ty),
             OpSig::Compare => self.handle_compare(op, method, vec_ty),
             OpSig::Unary => self.handle_unary(op, method_sig, method, vec_ty),
-            OpSig::Reduce { lane_op } => {
-                if lane_op == "add" {
-                    self.handle_reduce_sum(op, vec_ty)
-                } else {
-                    self.handle_reduce_min_max(op, vec_ty, lane_op)
-                }
-            }
+            OpSig::Reduce { lane_op } => match lane_op {
+                "add" => self.handle_reduce_sum(op, vec_ty),
+                "mul" => self.handle_reduce_product(op, vec_ty),
+                _ => self.handle_reduce_min_max(op, vec_ty, lane_op),
+            },
             OpSig::Widen { target_ty } => self.handle_widen(op, vec_ty, target_ty),
             OpSig::Narrow { target_ty, mode } => self.handle_narrow(op, vec_ty, target_ty, mode),
             OpSig::Binary => self.handle_binary(op, method, vec_ty),
@@ -1335,6 +1333,78 @@ impl X86 {
                 })
             }
             _ => unreachable!("reduce_sum only operates on numeric vectors"),
+        }
+    }
+
+    pub(crate) fn handle_reduce_product(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        assert_eq!(
+            vec_ty.n_bits(),
+            128,
+            "wide reductions must use the generic 128-bit-grained implementation"
+        );
+
+        match (vec_ty.scalar, vec_ty.scalar_bits) {
+            (ScalarType::Float, 32) => self.kernel_method(op, vec_ty, |_| {
+                quote! {
+                    // _mm_hadd_ps has no multiplication equivalent, so explicitly multiply
+                    // adjacent lanes before combining the two pair products.
+                    let a: __m128 = a.into();
+                    let adjacent = _mm_mul_ps(a, _mm_shuffle_ps::<0b10_11_00_01>(a, a));
+                    _mm_cvtss_f32(_mm_mul_ss(adjacent, _mm_movehl_ps(adjacent, adjacent)))
+                }
+            }),
+            (ScalarType::Float, 64) => self.kernel_method(op, vec_ty, |_| {
+                quote! {
+                    let a: __m128d = a.into();
+                    _mm_cvtsd_f64(_mm_mul_sd(a, _mm_unpackhi_pd(a, a)))
+                }
+            }),
+            (ScalarType::Int | ScalarType::Unsigned, 8) => {
+                let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                let len = vec_ty.len;
+                self.kernel_method(op, vec_ty, |_| {
+                    quote! {
+                        let value: __m128i = a.into();
+                        // Multiplication modulo 2^8 is sign-independent. Multiplying each
+                        // packed i16 lane by its high byte puts the adjacent byte product in
+                        // the low byte. Any high-byte terms cannot affect the final low byte
+                        // through the remaining i16 multiplications.
+                        let high = _mm_srli_epi16::<8>(value);
+                        let product = _mm_mullo_epi16(value, high);
+                        let product =
+                            _mm_mullo_epi16(product, _mm_srli_si128::<8>(product));
+                        let product =
+                            _mm_mullo_epi16(product, _mm_srli_si128::<4>(product));
+                        let product =
+                            _mm_mullo_epi16(product, _mm_srli_si128::<2>(product));
+                        let lanes: [#scalar; #len] =
+                            crate::transmute::checked_transmute_copy(&product);
+                        lanes[0]
+                    }
+                })
+            }
+            (ScalarType::Int | ScalarType::Unsigned, 16) => {
+                let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                let len = vec_ty.len;
+                self.kernel_method(op, vec_ty, |_| {
+                    quote! {
+                        let product: __m128i = a.into();
+                        let product =
+                            _mm_mullo_epi16(product, _mm_srli_si128::<8>(product));
+                        let product =
+                            _mm_mullo_epi16(product, _mm_srli_si128::<4>(product));
+                        let product =
+                            _mm_mullo_epi16(product, _mm_srli_si128::<2>(product));
+                        let lanes: [#scalar; #len] =
+                            crate::transmute::checked_transmute_copy(&product);
+                        lanes[0]
+                    }
+                })
+            }
+            // A scalar balanced leaf is both shorter and avoids depending on packed i32/i64
+            // multiplication support that is absent from the lower x86 feature levels.
+            (ScalarType::Int | ScalarType::Unsigned, 32 | 64) => fallback_method(op, vec_ty),
+            _ => unreachable!("reduce_product only operates on numeric vectors"),
         }
     }
 
