@@ -222,6 +222,17 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 }
             }
         }
+        OpSig::Reduce { lane_op } => {
+            let combine_halves = generic_op_name(lane_op, &half);
+            // Combine corresponding lanes before reducing so vectors wider than 128 bits
+            // retain a fixed-depth tree while needing only one horizontal 128-bit leaf.
+            quote! {
+                #method_sig {
+                    let (a0, a1) = self.#split(a);
+                    self.#do_half(self.#combine_halves(a0, a1))
+                }
+            }
+        }
         OpSig::Binary => {
             quote! {
                 #method_sig {

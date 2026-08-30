@@ -50,6 +50,9 @@ pub(crate) enum OpSig {
     Unary,
     /// Takes two argument of the vector type, and returns that same vector type.
     Binary,
+    /// Takes one numeric vector and reduces its elements to a scalar using the named
+    /// element-wise operation.
+    Reduce { lane_op: &'static str },
     /// Takes three argument of the vector type, and returns that same vector type.
     Ternary,
     /// Takes two argument of the vector type, and returns the corresponding mask type.
@@ -301,6 +304,10 @@ impl Op {
                 (vec![vec.clone(), vec], quote! { #result<#simd_ty> })
             }
             OpSig::Unary => (vec![vec.clone()], vec),
+            OpSig::Reduce { .. } => {
+                let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                (vec![vec], scalar)
+            }
             OpSig::Binary | OpSig::Zip { .. } | OpSig::Unzip { .. } => {
                 (vec![vec.clone(), vec.clone()], vec)
             }
@@ -375,6 +382,10 @@ impl Op {
             OpSig::Unary | OpSig::Cvt { .. } => {
                 let arg0 = &arg_names[0];
                 quote! { (#arg0) -> Self }
+            }
+            OpSig::Reduce { .. } => {
+                let arg0 = &arg_names[0];
+                quote! { (#arg0) -> Self::Element }
             }
             OpSig::MaskReduce { .. } => {
                 let arg0 = &arg_names[0];
@@ -585,6 +596,48 @@ const BASE_OPS: &[Op] = &[
 ];
 
 const COMMON_BASE_OPS: &[Op] = &[
+    Op::new(
+        "reduce_max",
+        OpKind::BaseTraitMethod,
+        OpSig::Reduce { lane_op: "max" },
+        "Return the maximum element in the vector. Integer vectors always return the exact maximum.\n\n\
+        For floating-point vectors with no NaNs, this returns the true maximum. If any lane is NaN, the entire result is implementation-defined: it may be NaN or a numeric lane that is not the true maximum. See `reduce_max_precise` for a version that ignores quiet NaNs.\n\n\
+        If the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned.",
+    ),
+    Op::new(
+        "reduce_min",
+        OpKind::BaseTraitMethod,
+        OpSig::Reduce { lane_op: "min" },
+        "Return the minimum element in the vector. Integer vectors always return the exact minimum.\n\n\
+        For floating-point vectors with no NaNs, this returns the true minimum. If any lane is NaN, the entire result is implementation-defined: it may be NaN or a numeric lane that is not the true minimum. See `reduce_min_precise` for a version that ignores quiet NaNs.\n\n\
+        If the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned.",
+    ),
+    Op::new(
+        "reduce_max_precise",
+        OpKind::BaseTraitMethod,
+        OpSig::Reduce {
+            lane_op: "max_precise",
+        },
+        "Return the maximum element in the vector, ignoring quiet NaNs.\n\n\
+        For integer vectors, this operation is the same as `reduce_max`.\n\n\
+        For floating-point vectors, quiet NaNs are ignored. If there is at least one numeric lane, this returns the true maximum of the numeric lanes. If all lanes are quiet NaNs, this returns NaN, with an unspecified payload and sign.\n\n\
+        If the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned.\n\n\
+        If any lane is a *signaling* NaN, the result is fully non-deterministic: it may be NaN or a numeric lane and is not guaranteed to be the true maximum.\n\
+        Signaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them.",
+    ),
+    Op::new(
+        "reduce_min_precise",
+        OpKind::BaseTraitMethod,
+        OpSig::Reduce {
+            lane_op: "min_precise",
+        },
+        "Return the minimum element in the vector, ignoring quiet NaNs.\n\n\
+        For integer vectors, this operation is the same as `reduce_min`.\n\n\
+        For floating-point vectors, quiet NaNs are ignored. If there is at least one numeric lane, this returns the true minimum of the numeric lanes. If all lanes are quiet NaNs, this returns NaN, with an unspecified payload and sign.\n\n\
+        If the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned.\n\n\
+        If any lane is a *signaling* NaN, the result is fully non-deterministic: it may be NaN or a numeric lane and is not guaranteed to be the true minimum.\n\
+        Signaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them.",
+    ),
     Op::new(
         "max",
         OpKind::BaseTraitMethod,
@@ -1299,11 +1352,14 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
             ScalarType::Mask => false,
         };
         if common_ops_follow {
-            // Integer precise min/max are exposed by `SimdBase`, but forward to
-            // the ordinary integer backend operations in `simd_vec_impl`.
+            // Integer precise min/max operations are exposed by `SimdBase`, but
+            // forward to the ordinary integer backend operations in `simd_vec_impl`.
             ops.extend(COMMON_BASE_OPS.iter().copied().filter(|op| {
                 ty.scalar == ScalarType::Float
-                    || !matches!(op.method, "min_precise" | "max_precise")
+                    || !matches!(
+                        op.method,
+                        "min_precise" | "max_precise" | "reduce_min_precise" | "reduce_max_precise"
+                    )
             }));
         }
     }
@@ -1605,6 +1661,13 @@ impl OpSig {
             return false;
         }
 
+        // Keep horizontal backend-specific implementations confined to 128-bit leaves.
+        // Wider vectors first combine corresponding lanes of their halves, then recursively
+        // reduce the result. This provides a bounded, balanced tree on every backend.
+        if matches!(self, Self::Reduce { .. }) && vec_ty.n_bits() > 128 {
+            return true;
+        }
+
         // For a block-wise item slide/shift, defer to the non-block-wise version if the operand is 1 block wide anyway
         if let Self::Slide {
             granularity: SlideGranularity::WithinBlocks,
@@ -1628,6 +1691,7 @@ impl OpSig {
             Self::MaskFromBitmask => &["bits"],
             Self::MaskSet => &["a", "index", "value"],
             Self::Unary
+            | Self::Reduce { .. }
             | Self::Split { .. }
             | Self::Cvt { .. }
             | Self::Widen { .. }
@@ -1660,7 +1724,9 @@ impl OpSig {
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
             | Self::MaskSet => &[],
-            Self::Unary | Self::Cvt { .. } | Self::MaskReduce { .. } => &["self"],
+            Self::Unary | Self::Reduce { .. } | Self::Cvt { .. } | Self::MaskReduce { .. } => {
+                &["self"]
+            }
             Self::Widen { .. } => &[],
             Self::Narrow { .. } => &[],
             Self::SwizzleDynWithinBlocks | Self::SwizzleDyn | Self::SwizzleDynPrecise => {
@@ -1690,7 +1756,7 @@ impl OpSig {
                 let arg1 = &arg_names[1];
                 quote! { #arg1 }
             }
-            Self::Unary | Self::MaskReduce { .. } => {
+            Self::Unary | Self::Reduce { .. } | Self::MaskReduce { .. } => {
                 let arg0 = &arg_names[0];
                 quote! { #arg0 }
             }

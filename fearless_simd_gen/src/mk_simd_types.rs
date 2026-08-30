@@ -483,6 +483,8 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
             match method {
                 "min_precise" => "min",
                 "max_precise" => "max",
+                "reduce_min_precise" => "reduce_min",
+                "reduce_max_precise" => "reduce_max",
                 _ => method,
             }
         } else {

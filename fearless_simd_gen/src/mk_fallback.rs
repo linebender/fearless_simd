@@ -290,6 +290,7 @@ impl Level for Fallback {
                     }
                 }
             }
+            OpSig::Reduce { lane_op } => fallback_reduce_min_max(method_sig, vec_ty, lane_op),
             OpSig::Widen { target_ty } => {
                 let scalar = target_ty.scalar.rust(target_ty.scalar_bits);
                 let half_len = vec_ty.len / 2;
@@ -780,6 +781,49 @@ fn lane(value: TokenStream, vec_ty: &VecType, idx: usize) -> TokenStream {
         quote! { #value.val.0[#idx] }
     } else {
         quote! { #value[#idx] }
+    }
+}
+
+/// Build an adjacent balanced min/max reduction one horizontal level at a time.
+fn fallback_reduce_min_max(
+    method_sig: TokenStream,
+    vec_ty: &VecType,
+    lane_op: &str,
+) -> TokenStream {
+    assert_eq!(
+        vec_ty.n_bits(),
+        128,
+        "wide reductions must use the generic 128-bit-grained implementation"
+    );
+
+    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+    let mut statements = Vec::new();
+    let mut previous = quote! { a };
+    let mut previous_len = vec_ty.len;
+
+    while previous_len > 1 {
+        let next_len = previous_len / 2;
+        let results = (0..next_len).map(|index| {
+            let left_index = index * 2;
+            let right_index = left_index + 1;
+            let args = [
+                quote! { #previous[#left_index] },
+                quote! { #previous[#right_index] },
+            ];
+            fallback::expr(lane_op, vec_ty, &args)
+        });
+        statements.push(quote! {
+            let reduced: [#scalar; #next_len] = [#(#results),*];
+        });
+        previous = quote! { reduced };
+        previous_len = next_len;
+    }
+
+    quote! {
+        #method_sig {
+            #(#statements)*
+            #previous[0]
+        }
     }
 }
 
