@@ -57,6 +57,7 @@ mod native_width;
 mod neg;
 mod not;
 mod or;
+mod reverse;
 mod rotate_elements_left;
 mod rotate_elements_right;
 mod round_ties_even;

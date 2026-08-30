@@ -248,6 +248,20 @@ impl Level for Fallback {
                 }
             }
             OpSig::Unary => {
+                if method == "reverse" {
+                    let items = make_list(
+                        (0..vec_ty.len)
+                            .rev()
+                            .map(|idx| lane(quote! { a }, vec_ty, idx))
+                            .collect::<Vec<_>>(),
+                    );
+                    return quote! {
+                        #method_sig {
+                            #items.simd_into(self)
+                        }
+                    };
+                }
+
                 if matches!(method, "count_ones" | "count_zeros") {
                     return count_bits_method(op, vec_ty);
                 }

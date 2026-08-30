@@ -6,7 +6,7 @@ use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
     count_zeros_method, fallback_method, generic_mask_set, generic_op_name,
-    integer_lane_mask_splat_arg,
+    integer_lane_mask_splat_arg, reverse_method, reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{NarrowingMode, Op, SlideGranularity, relaxed_narrow_method};
@@ -184,6 +184,13 @@ impl Level for Neon {
                 })
             }
             OpSig::Unary => {
+                if method == "reverse" {
+                    if vec_ty.scalar == ScalarType::Mask {
+                        return reverse_vector_mask_method(op, vec_ty);
+                    }
+                    return reverse_method(op, vec_ty);
+                }
+
                 if method == "count_zeros" {
                     return count_zeros_method(op, vec_ty);
                 }

@@ -202,6 +202,10 @@ impl Simd for Fallback {
         [val; 4usize].simd_into(self)
     }
     #[inline(always)]
+    fn reverse_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
+        [a[3usize], a[2usize], a[1usize], a[0usize]].simd_into(self)
+    }
+    #[inline(always)]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         let mut dest = [Default::default(); 4usize];
         dest[..4usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
@@ -575,6 +579,15 @@ impl Simd for Fallback {
     #[inline(always)]
     fn splat_i8x16(self, val: i8) -> i8x16<Self> {
         [val; 16usize].simd_into(self)
+    }
+    #[inline(always)]
+    fn reverse_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        [
+            a[15usize], a[14usize], a[13usize], a[12usize], a[11usize], a[10usize], a[9usize],
+            a[8usize], a[7usize], a[6usize], a[5usize], a[4usize], a[3usize], a[2usize], a[1usize],
+            a[0usize],
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -1321,6 +1334,15 @@ impl Simd for Fallback {
     #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
         [val; 16usize].simd_into(self)
+    }
+    #[inline(always)]
+    fn reverse_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        [
+            a[15usize], a[14usize], a[13usize], a[12usize], a[11usize], a[10usize], a[9usize],
+            a[8usize], a[7usize], a[6usize], a[5usize], a[4usize], a[3usize], a[2usize], a[1usize],
+            a[0usize],
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -2277,6 +2299,28 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reverse_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self> {
+        [
+            a.val.0[15usize],
+            a.val.0[14usize],
+            a.val.0[13usize],
+            a.val.0[12usize],
+            a.val.0[11usize],
+            a.val.0[10usize],
+            a.val.0[9usize],
+            a.val.0[8usize],
+            a.val.0[7usize],
+            a.val.0[6usize],
+            a.val.0[5usize],
+            a.val.0[4usize],
+            a.val.0[3usize],
+            a.val.0[2usize],
+            a.val.0[1usize],
+            a.val.0[0usize],
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn select_mask8x16(
         self,
         a: mask8x16<Self>,
@@ -2475,6 +2519,13 @@ impl Simd for Fallback {
     #[inline(always)]
     fn splat_i16x8(self, val: i16) -> i16x8<Self> {
         [val; 8usize].simd_into(self)
+    }
+    #[inline(always)]
+    fn reverse_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        [
+            a[7usize], a[6usize], a[5usize], a[4usize], a[3usize], a[2usize], a[1usize], a[0usize],
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -3005,6 +3056,13 @@ impl Simd for Fallback {
     #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
         [val; 8usize].simd_into(self)
+    }
+    #[inline(always)]
+    fn reverse_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        [
+            a[7usize], a[6usize], a[5usize], a[4usize], a[3usize], a[2usize], a[1usize], a[0usize],
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -3618,6 +3676,20 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reverse_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self> {
+        [
+            a.val.0[7usize],
+            a.val.0[6usize],
+            a.val.0[5usize],
+            a.val.0[4usize],
+            a.val.0[3usize],
+            a.val.0[2usize],
+            a.val.0[1usize],
+            a.val.0[0usize],
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn select_mask16x8(
         self,
         a: mask16x8<Self>,
@@ -3736,6 +3808,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn splat_i32x4(self, val: i32) -> i32x4<Self> {
         [val; 4usize].simd_into(self)
+    }
+    #[inline(always)]
+    fn reverse_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        [a[3usize], a[2usize], a[1usize], a[0usize]].simd_into(self)
     }
     #[inline(always)]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -4084,6 +4160,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn splat_u32x4(self, val: u32) -> u32x4<Self> {
         [val; 4usize].simd_into(self)
+    }
+    #[inline(always)]
+    fn reverse_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        [a[3usize], a[2usize], a[1usize], a[0usize]].simd_into(self)
     }
     #[inline(always)]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -4499,6 +4579,16 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn reverse_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
+        [
+            a.val.0[3usize],
+            a.val.0[2usize],
+            a.val.0[1usize],
+            a.val.0[0usize],
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn select_mask32x4(
         self,
         a: mask32x4<Self>,
@@ -4565,6 +4655,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn splat_f64x2(self, val: f64) -> f64x2<Self> {
         [val; 2usize].simd_into(self)
+    }
+    #[inline(always)]
+    fn reverse_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
+        [a[1usize], a[0usize]].simd_into(self)
     }
     #[inline(always)]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
@@ -4847,6 +4941,10 @@ impl Simd for Fallback {
         [val; 2usize].simd_into(self)
     }
     #[inline(always)]
+    fn reverse_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        [a[1usize], a[0usize]].simd_into(self)
+    }
+    #[inline(always)]
     fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         let mut dest = [Default::default(); 2usize];
         dest[..2usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
@@ -5108,6 +5206,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
         [val; 2usize].simd_into(self)
+    }
+    #[inline(always)]
+    fn reverse_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        [a[1usize], a[0usize]].simd_into(self)
     }
     #[inline(always)]
     fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -5428,6 +5530,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
         [i64::not(a.val.0[0usize]), i64::not(a.val.0[1usize])].simd_into(self)
+    }
+    #[inline(always)]
+    fn reverse_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
+        [a.val.0[1usize], a.val.0[0usize]].simd_into(self)
     }
     #[inline(always)]
     fn select_mask64x2(

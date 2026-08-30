@@ -215,6 +215,8 @@ pub trait Simd:
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_f32x4(self, val: f32) -> f32x4<Self>;
+    #[doc = "Reverse the order of the vector's elements."]
+    fn reverse_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -339,6 +341,8 @@ pub trait Simd:
     fn cvt_i32_precise_f32x4(self, a: f32x4<Self>) -> i32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i8x16(self, val: i8) -> i8x16<Self>;
+    #[doc = "Reverse the order of the vector's elements."]
+    fn reverse_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -443,6 +447,8 @@ pub trait Simd:
     fn widen_i8x16(self, a: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u8x16(self, val: u8) -> u8x16<Self>;
+    #[doc = "Reverse the order of the vector's elements."]
+    fn reverse_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -550,6 +556,8 @@ pub trait Simd:
     fn xor_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    fn reverse_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self>;
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask8x16(
         self,
@@ -571,6 +579,8 @@ pub trait Simd:
     fn combine_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x32<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i16x8(self, val: i16) -> i16x8<Self>;
+    #[doc = "Reverse the order of the vector's elements."]
+    fn reverse_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -681,6 +691,8 @@ pub trait Simd:
     fn relaxed_narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u16x8(self, val: u16) -> u16x8<Self>;
+    #[doc = "Reverse the order of the vector's elements."]
+    fn reverse_u16x8(self, a: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -803,6 +815,8 @@ pub trait Simd:
     fn xor_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    fn reverse_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self>;
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask16x8(
         self,
@@ -824,6 +838,8 @@ pub trait Simd:
     fn combine_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i32x4(self, val: i32) -> i32x4<Self>;
+    #[doc = "Reverse the order of the vector's elements."]
+    fn reverse_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -936,6 +952,8 @@ pub trait Simd:
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u32x4(self, val: u32) -> u32x4<Self>;
+    #[doc = "Reverse the order of the vector's elements."]
+    fn reverse_u32x4(self, a: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1060,6 +1078,8 @@ pub trait Simd:
     fn xor_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    fn reverse_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self>;
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask32x4(
         self,
@@ -1081,6 +1101,8 @@ pub trait Simd:
     fn combine_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_f64x2(self, val: f64) -> f64x2<Self>;
+    #[doc = "Reverse the order of the vector's elements."]
+    fn reverse_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1209,6 +1231,8 @@ pub trait Simd:
     fn cvt_i64_precise_f64x2(self, a: f64x2<Self>) -> i64x2<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i64x2(self, val: i64) -> i64x2<Self>;
+    #[doc = "Reverse the order of the vector's elements."]
+    fn reverse_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1319,6 +1343,8 @@ pub trait Simd:
     fn cvt_f64_i64x2(self, a: i64x2<Self>) -> f64x2<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u64x2(self, val: u64) -> u64x2<Self>;
+    #[doc = "Reverse the order of the vector's elements."]
+    fn reverse_u64x2(self, a: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1441,6 +1467,8 @@ pub trait Simd:
     fn xor_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    fn reverse_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self>;
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask64x2(
         self,
@@ -1465,6 +1493,12 @@ pub trait Simd:
     fn splat_f32x8(self, val: f32) -> f32x8<Self> {
         let half = self.splat_f32x4(val);
         self.combine_f32x4(half, half)
+    }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f32x4(self.reverse_f32x4(a1), self.reverse_f32x4(a0))
     }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
@@ -1813,6 +1847,12 @@ pub trait Simd:
         let half = self.splat_i8x16(val);
         self.combine_i8x16(half, half)
     }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        self.combine_i8x16(self.reverse_i8x16(a1), self.reverse_i8x16(a0))
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -2062,6 +2102,12 @@ pub trait Simd:
     fn splat_u8x32(self, val: u8) -> u8x32<Self> {
         let half = self.splat_u8x16(val);
         self.combine_u8x16(half, half)
+    }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        self.combine_u8x16(self.reverse_u8x16(a1), self.reverse_u8x16(a0))
     }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
@@ -2350,6 +2396,12 @@ pub trait Simd:
         let (a0, a1) = self.split_mask8x32(a);
         self.combine_mask8x16(self.not_mask8x16(a0), self.not_mask8x16(a1))
     }
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    #[inline(always)]
+    fn reverse_mask8x32(self, a: mask8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask8x32(a);
+        self.combine_mask8x16(self.reverse_mask8x16(a1), self.reverse_mask8x16(a0))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_mask8x32(
@@ -2406,6 +2458,12 @@ pub trait Simd:
     fn splat_i16x16(self, val: i16) -> i16x16<Self> {
         let half = self.splat_i16x8(val);
         self.combine_i16x8(half, half)
+    }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        self.combine_i16x8(self.reverse_i16x8(a1), self.reverse_i16x8(a0))
     }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
@@ -2687,6 +2745,12 @@ pub trait Simd:
     fn splat_u16x16(self, val: u16) -> u16x16<Self> {
         let half = self.splat_u16x8(val);
         self.combine_u16x8(half, half)
+    }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        self.combine_u16x8(self.reverse_u16x8(a1), self.reverse_u16x8(a0))
     }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
@@ -3007,6 +3071,12 @@ pub trait Simd:
         let (a0, a1) = self.split_mask16x16(a);
         self.combine_mask16x8(self.not_mask16x8(a0), self.not_mask16x8(a1))
     }
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    #[inline(always)]
+    fn reverse_mask16x16(self, a: mask16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        self.combine_mask16x8(self.reverse_mask16x8(a1), self.reverse_mask16x8(a0))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_mask16x16(
@@ -3063,6 +3133,12 @@ pub trait Simd:
     fn splat_i32x8(self, val: i32) -> i32x8<Self> {
         let half = self.splat_i32x4(val);
         self.combine_i32x4(half, half)
+    }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        self.combine_i32x4(self.reverse_i32x4(a1), self.reverse_i32x4(a0))
     }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
@@ -3346,6 +3422,12 @@ pub trait Simd:
     fn splat_u32x8(self, val: u32) -> u32x8<Self> {
         let half = self.splat_u32x4(val);
         self.combine_u32x4(half, half)
+    }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        self.combine_u32x4(self.reverse_u32x4(a1), self.reverse_u32x4(a0))
     }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
@@ -3668,6 +3750,12 @@ pub trait Simd:
         let (a0, a1) = self.split_mask32x8(a);
         self.combine_mask32x4(self.not_mask32x4(a0), self.not_mask32x4(a1))
     }
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    #[inline(always)]
+    fn reverse_mask32x8(self, a: mask32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        self.combine_mask32x4(self.reverse_mask32x4(a1), self.reverse_mask32x4(a0))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_mask32x8(
@@ -3724,6 +3812,12 @@ pub trait Simd:
     fn splat_f64x4(self, val: f64) -> f64x4<Self> {
         let half = self.splat_f64x2(val);
         self.combine_f64x2(half, half)
+    }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_f64x2(self.reverse_f64x2(a1), self.reverse_f64x2(a0))
     }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
@@ -4091,6 +4185,12 @@ pub trait Simd:
         let half = self.splat_i64x2(val);
         self.combine_i64x2(half, half)
     }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        self.combine_i64x2(self.reverse_i64x2(a1), self.reverse_i64x2(a0))
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i64x4<const SHIFT: usize>(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -4365,6 +4465,12 @@ pub trait Simd:
     fn splat_u64x4(self, val: u64) -> u64x4<Self> {
         let half = self.splat_u64x2(val);
         self.combine_u64x2(half, half)
+    }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_u64x4(self, a: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        self.combine_u64x2(self.reverse_u64x2(a1), self.reverse_u64x2(a0))
     }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u64x4<const SHIFT: usize>(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
@@ -4679,6 +4785,12 @@ pub trait Simd:
         let (a0, a1) = self.split_mask64x4(a);
         self.combine_mask64x2(self.not_mask64x2(a0), self.not_mask64x2(a1))
     }
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    #[inline(always)]
+    fn reverse_mask64x4(self, a: mask64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        self.combine_mask64x2(self.reverse_mask64x2(a1), self.reverse_mask64x2(a0))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_mask64x4(
@@ -4735,6 +4847,12 @@ pub trait Simd:
     fn splat_f32x16(self, val: f32) -> f32x16<Self> {
         let half = self.splat_f32x8(val);
         self.combine_f32x8(half, half)
+    }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f32x8(self.reverse_f32x8(a1), self.reverse_f32x8(a0))
     }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
@@ -5095,6 +5213,12 @@ pub trait Simd:
         let half = self.splat_i8x32(val);
         self.combine_i8x32(half, half)
     }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        self.combine_i8x32(self.reverse_i8x32(a1), self.reverse_i8x32(a0))
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -5342,6 +5466,12 @@ pub trait Simd:
     fn splat_u8x64(self, val: u8) -> u8x64<Self> {
         let half = self.splat_u8x32(val);
         self.combine_u8x32(half, half)
+    }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        self.combine_u8x32(self.reverse_u8x32(a1), self.reverse_u8x32(a0))
     }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
@@ -5628,6 +5758,12 @@ pub trait Simd:
         let (a0, a1) = self.split_mask8x64(a);
         self.combine_mask8x32(self.not_mask8x32(a0), self.not_mask8x32(a1))
     }
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    #[inline(always)]
+    fn reverse_mask8x64(self, a: mask8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask8x64(a);
+        self.combine_mask8x32(self.reverse_mask8x32(a1), self.reverse_mask8x32(a0))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_mask8x64(
@@ -5682,6 +5818,12 @@ pub trait Simd:
     fn splat_i16x32(self, val: i16) -> i16x32<Self> {
         let half = self.splat_i16x16(val);
         self.combine_i16x16(half, half)
+    }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        self.combine_i16x16(self.reverse_i16x16(a1), self.reverse_i16x16(a0))
     }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
@@ -5967,6 +6109,12 @@ pub trait Simd:
     fn splat_u16x32(self, val: u16) -> u16x32<Self> {
         let half = self.splat_u16x16(val);
         self.combine_u16x16(half, half)
+    }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        self.combine_u16x16(self.reverse_u16x16(a1), self.reverse_u16x16(a0))
     }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
@@ -6291,6 +6439,12 @@ pub trait Simd:
         let (a0, a1) = self.split_mask16x32(a);
         self.combine_mask16x16(self.not_mask16x16(a0), self.not_mask16x16(a1))
     }
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    #[inline(always)]
+    fn reverse_mask16x32(self, a: mask16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        self.combine_mask16x16(self.reverse_mask16x16(a1), self.reverse_mask16x16(a0))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_mask16x32(
@@ -6348,6 +6502,12 @@ pub trait Simd:
     fn splat_i32x16(self, val: i32) -> i32x16<Self> {
         let half = self.splat_i32x8(val);
         self.combine_i32x8(half, half)
+    }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        self.combine_i32x8(self.reverse_i32x8(a1), self.reverse_i32x8(a0))
     }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
@@ -6633,6 +6793,12 @@ pub trait Simd:
     fn splat_u32x16(self, val: u32) -> u32x16<Self> {
         let half = self.splat_u32x8(val);
         self.combine_u32x8(half, half)
+    }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        self.combine_u32x8(self.reverse_u32x8(a1), self.reverse_u32x8(a0))
     }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
@@ -6957,6 +7123,12 @@ pub trait Simd:
         let (a0, a1) = self.split_mask32x16(a);
         self.combine_mask32x8(self.not_mask32x8(a0), self.not_mask32x8(a1))
     }
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    #[inline(always)]
+    fn reverse_mask32x16(self, a: mask32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        self.combine_mask32x8(self.reverse_mask32x8(a1), self.reverse_mask32x8(a0))
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_mask32x16(
@@ -7011,6 +7183,12 @@ pub trait Simd:
     fn splat_f64x8(self, val: f64) -> f64x8<Self> {
         let half = self.splat_f64x4(val);
         self.combine_f64x4(half, half)
+    }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f64x4(self.reverse_f64x4(a1), self.reverse_f64x4(a0))
     }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
@@ -7376,6 +7554,12 @@ pub trait Simd:
         let half = self.splat_i64x4(val);
         self.combine_i64x4(half, half)
     }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        self.combine_i64x4(self.reverse_i64x4(a1), self.reverse_i64x4(a0))
+    }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i64x8<const SHIFT: usize>(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -7648,6 +7832,12 @@ pub trait Simd:
     fn splat_u64x8(self, val: u64) -> u64x8<Self> {
         let half = self.splat_u64x4(val);
         self.combine_u64x4(half, half)
+    }
+    #[doc = "Reverse the order of the vector's elements."]
+    #[inline(always)]
+    fn reverse_u64x8(self, a: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        self.combine_u64x4(self.reverse_u64x4(a1), self.reverse_u64x4(a0))
     }
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u64x8<const SHIFT: usize>(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
@@ -7959,6 +8149,12 @@ pub trait Simd:
     fn not_mask64x8(self, a: mask64x8<Self>) -> mask64x8<Self> {
         let (a0, a1) = self.split_mask64x8(a);
         self.combine_mask64x4(self.not_mask64x4(a0), self.not_mask64x4(a1))
+    }
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    #[inline(always)]
+    fn reverse_mask64x8(self, a: mask64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        self.combine_mask64x4(self.reverse_mask64x4(a1), self.reverse_mask64x4(a0))
     }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
@@ -8563,6 +8759,8 @@ pub trait SimdBase<S: Simd>:
     }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat(simd: S, val: Self::Element) -> Self;
+    #[doc = "Reverse the order of the vector's elements."]
+    fn reverse(self) -> Self;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -8767,6 +8965,8 @@ pub trait SimdMask<S: Simd>:
     #[doc = r""]
     #[doc = r" The slice must be exactly the size of the SIMD mask."]
     fn store_slice(&self, slice: &mut [Self::Element]);
+    #[doc = "Reverse the order of the mask's logical lanes."]
+    fn reverse(self) -> Self;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self;
     #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]

@@ -8,7 +8,7 @@ use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
     count_zeros_method, fallback_method, generic_block_combine, generic_block_split,
     generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
-    recursive_swizzle_dyn_precise_body,
+    recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{NarrowingMode, Op, Quantifier, SlideGranularity, relaxed_narrow_method};
@@ -200,6 +200,13 @@ impl Level for WasmSimd128 {
                 }
             }
             OpSig::Unary => {
+                if method == "reverse" {
+                    if vec_ty.scalar == ScalarType::Mask {
+                        return reverse_vector_mask_method(op, vec_ty);
+                    }
+                    return reverse_method(op, vec_ty);
+                }
+
                 if method == "count_zeros" {
                     return count_zeros_method(op, vec_ty);
                 }
