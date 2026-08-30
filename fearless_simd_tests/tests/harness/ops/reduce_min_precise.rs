@@ -209,12 +209,44 @@ fn reduce_min_precise_f64x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn reduce_min_precise_i8x16_alias<S: Simd>(simd: S) {
-    let value = i8x16::from_fn(simd, |i| if i == 13 { i8::MIN } else { i8::MAX });
+    let value = i8x16::from_slice(
+        simd,
+        &[
+            12,
+            -7,
+            44,
+            i8::MAX,
+            -99,
+            0,
+            63,
+            -42,
+            8,
+            91,
+            -1,
+            37,
+            -64,
+            i8::MIN,
+            5,
+            72,
+        ],
+    );
     assert_eq!(value.reduce_min_precise(), i8::MIN);
 }
 
 #[simd_test]
 fn reduce_min_precise_u64x8_alias<S: Simd>(simd: S) {
-    let value = u64x8::from_fn(simd, |i| if i == 5 { u64::MIN } else { u64::MAX });
+    let value = u64x8::from_slice(
+        simd,
+        &[
+            42,
+            u64::MAX,
+            7_000_000_000,
+            81,
+            19_000_000,
+            u64::MIN,
+            5_400_000_000,
+            12_345,
+        ],
+    );
     assert_eq!(value.reduce_min_precise(), u64::MIN);
 }
