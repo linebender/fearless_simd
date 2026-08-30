@@ -422,6 +422,18 @@ impl Simd for Sse2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_sum_f32x4(self, a: f32x4<Self>) -> f32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f32x4<Sse2>) -> f32 {
+                let a: __m128 = a.into();
+                let adjacent = _mm_add_ps(a, _mm_shuffle_ps::<0b10_11_00_01>(a, a));
+                _mm_cvtss_f32(_mm_add_ss(adjacent, _mm_movehl_ps(adjacent, adjacent)))
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1115,6 +1127,22 @@ impl Simd for Sse2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_sum_i8x16(self, a: i8x16<Self>) -> i8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i8x16<Sse2>) -> i8 {
+                let sum: __m128i = a.into();
+                let sum = _mm_add_epi8(sum, _mm_srli_si128::<8>(sum));
+                let sum = _mm_add_epi8(sum, _mm_srli_si128::<4>(sum));
+                let sum = _mm_add_epi8(sum, _mm_srli_si128::<2>(sum));
+                let sum = _mm_add_epi8(sum, _mm_srli_si128::<1>(sum));
+                let lanes: [i8; 16usize] = crate::transmute::checked_transmute_copy(&sum);
+                lanes[0]
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1790,6 +1818,22 @@ impl Simd for Sse2 {
                     let lanes: [u8; 16usize] = crate::transmute::checked_transmute_copy(&reduced);
                     lanes[0]
                 }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_sum_u8x16(self, a: u8x16<Self>) -> u8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u8x16<Sse2>) -> u8 {
+                let sum: __m128i = a.into();
+                let sum = _mm_add_epi8(sum, _mm_srli_si128::<8>(sum));
+                let sum = _mm_add_epi8(sum, _mm_srli_si128::<4>(sum));
+                let sum = _mm_add_epi8(sum, _mm_srli_si128::<2>(sum));
+                let sum = _mm_add_epi8(sum, _mm_srli_si128::<1>(sum));
+                let lanes: [u8; 16usize] = crate::transmute::checked_transmute_copy(&sum);
+                lanes[0]
             }
         );
         kernel(self, a)
@@ -2498,6 +2542,21 @@ impl Simd for Sse2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_sum_i16x8(self, a: i16x8<Self>) -> i16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i16x8<Sse2>) -> i16 {
+                let sum: __m128i = a.into();
+                let sum = _mm_add_epi16(sum, _mm_srli_si128::<8>(sum));
+                let sum = _mm_add_epi16(sum, _mm_srli_si128::<4>(sum));
+                let sum = _mm_add_epi16(sum, _mm_srli_si128::<2>(sum));
+                let lanes: [i16; 8usize] = crate::transmute::checked_transmute_copy(&sum);
+                lanes[0]
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3048,6 +3107,21 @@ impl Simd for Sse2 {
                     let lanes: [u16; 8usize] = crate::transmute::checked_transmute_copy(&reduced);
                     lanes[0]
                 }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_sum_u16x8(self, a: u16x8<Self>) -> u16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u16x8<Sse2>) -> u16 {
+                let sum: __m128i = a.into();
+                let sum = _mm_add_epi16(sum, _mm_srli_si128::<8>(sum));
+                let sum = _mm_add_epi16(sum, _mm_srli_si128::<4>(sum));
+                let sum = _mm_add_epi16(sum, _mm_srli_si128::<2>(sum));
+                let lanes: [u16; 8usize] = crate::transmute::checked_transmute_copy(&sum);
+                lanes[0]
             }
         );
         kernel(self, a)
@@ -3749,6 +3823,20 @@ impl Simd for Sse2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_sum_i32x4(self, a: i32x4<Self>) -> i32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i32x4<Sse2>) -> i32 {
+                let sum: __m128i = a.into();
+                let sum = _mm_add_epi32(sum, _mm_srli_si128::<8>(sum));
+                let sum = _mm_add_epi32(sum, _mm_srli_si128::<4>(sum));
+                let lanes: [i32; 4usize] = crate::transmute::checked_transmute_copy(&sum);
+                lanes[0]
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4279,6 +4367,20 @@ impl Simd for Sse2 {
                     let lanes: [u32; 4usize] = crate::transmute::checked_transmute_copy(&reduced);
                     lanes[0]
                 }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_sum_u32x4(self, a: u32x4<Self>) -> u32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u32x4<Sse2>) -> u32 {
+                let sum: __m128i = a.into();
+                let sum = _mm_add_epi32(sum, _mm_srli_si128::<8>(sum));
+                let sum = _mm_add_epi32(sum, _mm_srli_si128::<4>(sum));
+                let lanes: [u32; 4usize] = crate::transmute::checked_transmute_copy(&sum);
+                lanes[0]
             }
         );
         kernel(self, a)
@@ -4955,6 +5057,17 @@ impl Simd for Sse2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_sum_f64x2(self, a: f64x2<Self>) -> f64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f64x2<Sse2>) -> f64 {
+                let a: __m128d = a.into();
+                _mm_cvtsd_f64(_mm_add_sd(a, _mm_unpackhi_pd(a, a)))
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5444,6 +5557,19 @@ impl Simd for Sse2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_sum_i64x2(self, a: i64x2<Self>) -> i64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i64x2<Sse2>) -> i64 {
+                let sum: __m128i = a.into();
+                let sum = _mm_add_epi64(sum, _mm_srli_si128::<8>(sum));
+                let lanes: [i64; 2usize] = crate::transmute::checked_transmute_copy(&sum);
+                lanes[0]
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         [
             i64::max(a[0usize], b[0usize]),
@@ -5846,6 +5972,19 @@ impl Simd for Sse2 {
             fn kernel(token: Sse2, a: u64x2<Sse2>) -> u64 {
                 let lanes: [u64; 2] = a.into();
                 lanes[0].min(lanes[1])
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_sum_u64x2(self, a: u64x2<Self>) -> u64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u64x2<Sse2>) -> u64 {
+                let sum: __m128i = a.into();
+                let sum = _mm_add_epi64(sum, _mm_srli_si128::<8>(sum));
+                let lanes: [u64; 2usize] = crate::transmute::checked_transmute_copy(&sum);
+                lanes[0]
             }
         );
         kernel(self, a)

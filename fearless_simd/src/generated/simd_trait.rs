@@ -269,6 +269,8 @@ pub trait Simd:
     fn reduce_max_precise_f32x4(self, a: f32x4<Self>) -> f32;
     #[doc = "Return the minimum element in the vector, ignoring quiet NaNs.\n\nFor integer vectors, this operation is the same as `reduce_min`.\n\nFor floating-point vectors, quiet NaNs are ignored. If there is at least one numeric lane, this returns the true minimum of the numeric lanes. If all lanes are quiet NaNs, this returns NaN, with an unspecified payload and sign.\n\nIf the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned.\n\nIf any lane is a *signaling* NaN, the result is fully non-deterministic: it may be NaN or a numeric lane and is not guaranteed to be the true minimum.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn reduce_min_precise_f32x4(self, a: f32x4<Self>) -> f32;
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    fn reduce_sum_f32x4(self, a: f32x4<Self>) -> f32;
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
@@ -407,6 +409,8 @@ pub trait Simd:
     fn reduce_max_i8x16(self, a: i8x16<Self>) -> i8;
     #[doc = "Return the minimum element in the vector. Integer vectors always return the exact minimum.\n\nFor floating-point vectors with no NaNs, this returns the true minimum. If any lane is NaN, the entire result is implementation-defined: it may be NaN or a numeric lane that is not the true minimum. See `reduce_min_precise` for a version that ignores quiet NaNs.\n\nIf the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned."]
     fn reduce_min_i8x16(self, a: i8x16<Self>) -> i8;
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    fn reduce_sum_i8x16(self, a: i8x16<Self>) -> i8;
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
@@ -508,6 +512,8 @@ pub trait Simd:
     fn reduce_max_u8x16(self, a: u8x16<Self>) -> u8;
     #[doc = "Return the minimum element in the vector. Integer vectors always return the exact minimum.\n\nFor floating-point vectors with no NaNs, this returns the true minimum. If any lane is NaN, the entire result is implementation-defined: it may be NaN or a numeric lane that is not the true minimum. See `reduce_min_precise` for a version that ignores quiet NaNs.\n\nIf the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned."]
     fn reduce_min_u8x16(self, a: u8x16<Self>) -> u8;
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    fn reduce_sum_u8x16(self, a: u8x16<Self>) -> u8;
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
@@ -653,6 +659,8 @@ pub trait Simd:
     fn reduce_max_i16x8(self, a: i16x8<Self>) -> i16;
     #[doc = "Return the minimum element in the vector. Integer vectors always return the exact minimum.\n\nFor floating-point vectors with no NaNs, this returns the true minimum. If any lane is NaN, the entire result is implementation-defined: it may be NaN or a numeric lane that is not the true minimum. See `reduce_min_precise` for a version that ignores quiet NaNs.\n\nIf the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned."]
     fn reduce_min_i16x8(self, a: i16x8<Self>) -> i16;
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    fn reduce_sum_i16x8(self, a: i16x8<Self>) -> i16;
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
@@ -769,6 +777,8 @@ pub trait Simd:
     fn reduce_max_u16x8(self, a: u16x8<Self>) -> u16;
     #[doc = "Return the minimum element in the vector. Integer vectors always return the exact minimum.\n\nFor floating-point vectors with no NaNs, this returns the true minimum. If any lane is NaN, the entire result is implementation-defined: it may be NaN or a numeric lane that is not the true minimum. See `reduce_min_precise` for a version that ignores quiet NaNs.\n\nIf the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned."]
     fn reduce_min_u16x8(self, a: u16x8<Self>) -> u16;
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    fn reduce_sum_u16x8(self, a: u16x8<Self>) -> u16;
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
@@ -920,6 +930,8 @@ pub trait Simd:
     fn reduce_max_i32x4(self, a: i32x4<Self>) -> i32;
     #[doc = "Return the minimum element in the vector. Integer vectors always return the exact minimum.\n\nFor floating-point vectors with no NaNs, this returns the true minimum. If any lane is NaN, the entire result is implementation-defined: it may be NaN or a numeric lane that is not the true minimum. See `reduce_min_precise` for a version that ignores quiet NaNs.\n\nIf the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned."]
     fn reduce_min_i32x4(self, a: i32x4<Self>) -> i32;
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    fn reduce_sum_i32x4(self, a: i32x4<Self>) -> i32;
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
@@ -1038,6 +1050,8 @@ pub trait Simd:
     fn reduce_max_u32x4(self, a: u32x4<Self>) -> u32;
     #[doc = "Return the minimum element in the vector. Integer vectors always return the exact minimum.\n\nFor floating-point vectors with no NaNs, this returns the true minimum. If any lane is NaN, the entire result is implementation-defined: it may be NaN or a numeric lane that is not the true minimum. See `reduce_min_precise` for a version that ignores quiet NaNs.\n\nIf the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned."]
     fn reduce_min_u32x4(self, a: u32x4<Self>) -> u32;
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    fn reduce_sum_u32x4(self, a: u32x4<Self>) -> u32;
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
@@ -1187,6 +1201,8 @@ pub trait Simd:
     fn reduce_max_precise_f64x2(self, a: f64x2<Self>) -> f64;
     #[doc = "Return the minimum element in the vector, ignoring quiet NaNs.\n\nFor integer vectors, this operation is the same as `reduce_min`.\n\nFor floating-point vectors, quiet NaNs are ignored. If there is at least one numeric lane, this returns the true minimum of the numeric lanes. If all lanes are quiet NaNs, this returns NaN, with an unspecified payload and sign.\n\nIf the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned.\n\nIf any lane is a *signaling* NaN, the result is fully non-deterministic: it may be NaN or a numeric lane and is not guaranteed to be the true minimum.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn reduce_min_precise_f64x2(self, a: f64x2<Self>) -> f64;
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    fn reduce_sum_f64x2(self, a: f64x2<Self>) -> f64;
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
@@ -1329,6 +1345,8 @@ pub trait Simd:
     fn reduce_max_i64x2(self, a: i64x2<Self>) -> i64;
     #[doc = "Return the minimum element in the vector. Integer vectors always return the exact minimum.\n\nFor floating-point vectors with no NaNs, this returns the true minimum. If any lane is NaN, the entire result is implementation-defined: it may be NaN or a numeric lane that is not the true minimum. See `reduce_min_precise` for a version that ignores quiet NaNs.\n\nIf the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned."]
     fn reduce_min_i64x2(self, a: i64x2<Self>) -> i64;
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    fn reduce_sum_i64x2(self, a: i64x2<Self>) -> i64;
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
@@ -1445,6 +1463,8 @@ pub trait Simd:
     fn reduce_max_u64x2(self, a: u64x2<Self>) -> u64;
     #[doc = "Return the minimum element in the vector. Integer vectors always return the exact minimum.\n\nFor floating-point vectors with no NaNs, this returns the true minimum. If any lane is NaN, the entire result is implementation-defined: it may be NaN or a numeric lane that is not the true minimum. See `reduce_min_precise` for a version that ignores quiet NaNs.\n\nIf the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned."]
     fn reduce_min_u64x2(self, a: u64x2<Self>) -> u64;
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    fn reduce_sum_u64x2(self, a: u64x2<Self>) -> u64;
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
@@ -1664,6 +1684,12 @@ pub trait Simd:
     fn reduce_min_precise_f32x8(self, a: f32x8<Self>) -> f32 {
         let (a0, a1) = self.split_f32x8(a);
         self.reduce_min_precise_f32x4(self.min_precise_f32x4(a0, a1))
+    }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_f32x8(self, a: f32x8<Self>) -> f32 {
+        let (a0, a1) = self.split_f32x8(a);
+        self.reduce_sum_f32x4(self.add_f32x4(a0, a1))
     }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
@@ -2054,6 +2080,12 @@ pub trait Simd:
         let (a0, a1) = self.split_i8x32(a);
         self.reduce_min_i8x16(self.min_i8x16(a0, a1))
     }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_i8x32(self, a: i8x32<Self>) -> i8 {
+        let (a0, a1) = self.split_i8x32(a);
+        self.reduce_sum_i8x16(self.add_i8x16(a0, a1))
+    }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
     fn max_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
@@ -2320,6 +2352,12 @@ pub trait Simd:
     fn reduce_min_u8x32(self, a: u8x32<Self>) -> u8 {
         let (a0, a1) = self.split_u8x32(a);
         self.reduce_min_u8x16(self.min_u8x16(a0, a1))
+    }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_u8x32(self, a: u8x32<Self>) -> u8 {
+        let (a0, a1) = self.split_u8x32(a);
+        self.reduce_sum_u8x16(self.add_u8x16(a0, a1))
     }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
@@ -2694,6 +2732,12 @@ pub trait Simd:
         let (a0, a1) = self.split_i16x16(a);
         self.reduce_min_i16x8(self.min_i16x8(a0, a1))
     }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_i16x16(self, a: i16x16<Self>) -> i16 {
+        let (a0, a1) = self.split_i16x16(a);
+        self.reduce_sum_i16x8(self.add_i16x8(a0, a1))
+    }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
     fn max_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
@@ -2992,6 +3036,12 @@ pub trait Simd:
     fn reduce_min_u16x16(self, a: u16x16<Self>) -> u16 {
         let (a0, a1) = self.split_u16x16(a);
         self.reduce_min_u16x8(self.min_u16x8(a0, a1))
+    }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_u16x16(self, a: u16x16<Self>) -> u16 {
+        let (a0, a1) = self.split_u16x16(a);
+        self.reduce_sum_u16x8(self.add_u16x8(a0, a1))
     }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
@@ -3389,6 +3439,12 @@ pub trait Simd:
         let (a0, a1) = self.split_i32x8(a);
         self.reduce_min_i32x4(self.min_i32x4(a0, a1))
     }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_i32x8(self, a: i32x8<Self>) -> i32 {
+        let (a0, a1) = self.split_i32x8(a);
+        self.reduce_sum_i32x4(self.add_i32x4(a0, a1))
+    }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
     fn max_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
@@ -3689,6 +3745,12 @@ pub trait Simd:
     fn reduce_min_u32x8(self, a: u32x8<Self>) -> u32 {
         let (a0, a1) = self.split_u32x8(a);
         self.reduce_min_u32x4(self.min_u32x4(a0, a1))
+    }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_u32x8(self, a: u32x8<Self>) -> u32 {
+        let (a0, a1) = self.split_u32x8(a);
+        self.reduce_sum_u32x4(self.add_u32x4(a0, a1))
     }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
@@ -4079,6 +4141,12 @@ pub trait Simd:
     fn reduce_min_precise_f64x4(self, a: f64x4<Self>) -> f64 {
         let (a0, a1) = self.split_f64x4(a);
         self.reduce_min_precise_f64x2(self.min_precise_f64x2(a0, a1))
+    }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_f64x4(self, a: f64x4<Self>) -> f64 {
+        let (a0, a1) = self.split_f64x4(a);
+        self.reduce_sum_f64x2(self.add_f64x2(a0, a1))
     }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
@@ -4488,6 +4556,12 @@ pub trait Simd:
         let (a0, a1) = self.split_i64x4(a);
         self.reduce_min_i64x2(self.min_i64x2(a0, a1))
     }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_i64x4(self, a: i64x4<Self>) -> i64 {
+        let (a0, a1) = self.split_i64x4(a);
+        self.reduce_sum_i64x2(self.add_i64x2(a0, a1))
+    }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
     fn max_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
@@ -4780,6 +4854,12 @@ pub trait Simd:
     fn reduce_min_u64x4(self, a: u64x4<Self>) -> u64 {
         let (a0, a1) = self.split_u64x4(a);
         self.reduce_min_u64x2(self.min_u64x2(a0, a1))
+    }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_u64x4(self, a: u64x4<Self>) -> u64 {
+        let (a0, a1) = self.split_u64x4(a);
+        self.reduce_sum_u64x2(self.add_u64x2(a0, a1))
     }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
@@ -5166,6 +5246,12 @@ pub trait Simd:
     fn reduce_min_precise_f32x16(self, a: f32x16<Self>) -> f32 {
         let (a0, a1) = self.split_f32x16(a);
         self.reduce_min_precise_f32x8(self.min_precise_f32x8(a0, a1))
+    }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_f32x16(self, a: f32x16<Self>) -> f32 {
+        let (a0, a1) = self.split_f32x16(a);
+        self.reduce_sum_f32x8(self.add_f32x8(a0, a1))
     }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
@@ -5564,6 +5650,12 @@ pub trait Simd:
         let (a0, a1) = self.split_i8x64(a);
         self.reduce_min_i8x32(self.min_i8x32(a0, a1))
     }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_i8x64(self, a: i8x64<Self>) -> i8 {
+        let (a0, a1) = self.split_i8x64(a);
+        self.reduce_sum_i8x32(self.add_i8x32(a0, a1))
+    }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
     fn max_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -5828,6 +5920,12 @@ pub trait Simd:
     fn reduce_min_u8x64(self, a: u8x64<Self>) -> u8 {
         let (a0, a1) = self.split_u8x64(a);
         self.reduce_min_u8x32(self.min_u8x32(a0, a1))
+    }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_u8x64(self, a: u8x64<Self>) -> u8 {
+        let (a0, a1) = self.split_u8x64(a);
+        self.reduce_sum_u8x32(self.add_u8x32(a0, a1))
     }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
@@ -6198,6 +6296,12 @@ pub trait Simd:
         let (a0, a1) = self.split_i16x32(a);
         self.reduce_min_i16x16(self.min_i16x16(a0, a1))
     }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_i16x32(self, a: i16x32<Self>) -> i16 {
+        let (a0, a1) = self.split_i16x32(a);
+        self.reduce_sum_i16x16(self.add_i16x16(a0, a1))
+    }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
     fn max_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -6500,6 +6604,12 @@ pub trait Simd:
     fn reduce_min_u16x32(self, a: u16x32<Self>) -> u16 {
         let (a0, a1) = self.split_u16x32(a);
         self.reduce_min_u16x16(self.min_u16x16(a0, a1))
+    }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_u16x32(self, a: u16x32<Self>) -> u16 {
+        let (a0, a1) = self.split_u16x32(a);
+        self.reduce_sum_u16x16(self.add_u16x16(a0, a1))
     }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
@@ -6906,6 +7016,12 @@ pub trait Simd:
         let (a0, a1) = self.split_i32x16(a);
         self.reduce_min_i32x8(self.min_i32x8(a0, a1))
     }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_i32x16(self, a: i32x16<Self>) -> i32 {
+        let (a0, a1) = self.split_i32x16(a);
+        self.reduce_sum_i32x8(self.add_i32x8(a0, a1))
+    }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
     fn max_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -7208,6 +7324,12 @@ pub trait Simd:
     fn reduce_min_u32x16(self, a: u32x16<Self>) -> u32 {
         let (a0, a1) = self.split_u32x16(a);
         self.reduce_min_u32x8(self.min_u32x8(a0, a1))
+    }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_u32x16(self, a: u32x16<Self>) -> u32 {
+        let (a0, a1) = self.split_u32x16(a);
+        self.reduce_sum_u32x8(self.add_u32x8(a0, a1))
     }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
@@ -7594,6 +7716,12 @@ pub trait Simd:
     fn reduce_min_precise_f64x8(self, a: f64x8<Self>) -> f64 {
         let (a0, a1) = self.split_f64x8(a);
         self.reduce_min_precise_f64x4(self.min_precise_f64x4(a0, a1))
+    }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_f64x8(self, a: f64x8<Self>) -> f64 {
+        let (a0, a1) = self.split_f64x8(a);
+        self.reduce_sum_f64x4(self.add_f64x4(a0, a1))
     }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
@@ -8001,6 +8129,12 @@ pub trait Simd:
         let (a0, a1) = self.split_i64x8(a);
         self.reduce_min_i64x4(self.min_i64x4(a0, a1))
     }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_i64x8(self, a: i64x8<Self>) -> i64 {
+        let (a0, a1) = self.split_i64x8(a);
+        self.reduce_sum_i64x4(self.add_i64x4(a0, a1))
+    }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
     fn max_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
@@ -8291,6 +8425,12 @@ pub trait Simd:
     fn reduce_min_u64x8(self, a: u64x8<Self>) -> u64 {
         let (a0, a1) = self.split_u64x8(a);
         self.reduce_min_u64x4(self.min_u64x4(a0, a1))
+    }
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    #[inline(always)]
+    fn reduce_sum_u64x8(self, a: u64x8<Self>) -> u64 {
+        let (a0, a1) = self.split_u64x8(a);
+        self.reduce_sum_u64x4(self.add_u64x4(a0, a1))
     }
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     #[inline(always)]
@@ -9115,6 +9255,8 @@ pub trait SimdBase<S: Simd>:
     fn reduce_max_precise(self) -> Self::Element;
     #[doc = "Return the minimum element in the vector, ignoring quiet NaNs.\n\nFor integer vectors, this operation is the same as `reduce_min`.\n\nFor floating-point vectors, quiet NaNs are ignored. If there is at least one numeric lane, this returns the true minimum of the numeric lanes. If all lanes are quiet NaNs, this returns NaN, with an unspecified payload and sign.\n\nIf the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned.\n\nIf any lane is a *signaling* NaN, the result is fully non-deterministic: it may be NaN or a numeric lane and is not guaranteed to be the true minimum.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn reduce_min_precise(self) -> Self::Element;
+    #[doc = "Return the sum of all elements in the vector. Integer addition wraps.\n\n# Floating-point accuracy\n\nFor an input vector with N lanes, any lane's contribution may be rounded at most `log2(N)` times.\n\nFor a fixed vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except for NaNs, the exact bit patterns are unspecified.\n\nThis fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\nBecause floating-point addition is not associative, separately reducing two 128-bit vectors and then adding the results can differ from reducing their combined 256-bit vector. See [Taming Floating-Point Sums](https://orlp.net/blog/taming-float-sums/) for more information and for other summation algorithms, including exact summation without accumulated rounding error. In that article's terms, our method has the precision properties of pairwise summation, although the exact pairing of values is different."]
+    fn reduce_sum(self) -> Self::Element;
     #[doc = "Return the element-wise maximum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]

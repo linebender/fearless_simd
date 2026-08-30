@@ -10,7 +10,7 @@ use crate::level::Level;
 use crate::ops::{NarrowingMode, Op, OpSig, relaxed_narrow_method};
 use crate::types::{ScalarType, VecType};
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 
 #[derive(Clone, Copy)]
 pub(crate) struct Fallback;
@@ -290,7 +290,13 @@ impl Level for Fallback {
                     }
                 }
             }
-            OpSig::Reduce { lane_op } => fallback_reduce_min_max(method_sig, vec_ty, lane_op),
+            OpSig::Reduce { lane_op } => {
+                if lane_op == "add" {
+                    fallback_reduce_sum(method_sig, vec_ty)
+                } else {
+                    fallback_reduce_min_max(method_sig, vec_ty, lane_op)
+                }
+            }
             OpSig::Widen { target_ty } => {
                 let scalar = target_ty.scalar.rust(target_ty.scalar_bits);
                 let half_len = vec_ty.len / 2;
@@ -817,6 +823,54 @@ fn fallback_reduce_min_max(
         });
         previous = quote! { reduced };
         previous_len = next_len;
+    }
+
+    quote! {
+        #method_sig {
+            #(#statements)*
+            #previous[0]
+        }
+    }
+}
+
+/// Build an adjacent balanced reduction one horizontal level at a time.
+fn fallback_reduce_sum(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    // The structure directly mirrors the SIMD constructions for two reasons:
+    // 1. We promise the same output across all platforms, which means
+    //    we have to perform additions in the same SIMD-friendly order,
+    //    because floating-point addition is not associative.
+    // 2. Expressing individual stages as arrays allows for autovectorization
+    //    on platforms we don't have explicit intrinsics for.
+    assert_eq!(
+        vec_ty.n_bits(),
+        128,
+        "wide reductions must use the generic 128-bit-grained implementation"
+    );
+
+    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+    let mut statements = Vec::new();
+    let mut previous = quote! { a };
+    let mut previous_len = vec_ty.len;
+    let mut level = 0;
+
+    while previous_len > 1 {
+        let name = format_ident!("sum_level_{level}");
+        let next_len = previous_len / 2;
+        let additions = (0..next_len).map(|index| {
+            let left_index = index * 2;
+            let right_index = left_index + 1;
+            if vec_ty.scalar == ScalarType::Float {
+                quote! { #previous[#left_index] + #previous[#right_index] }
+            } else {
+                quote! { #previous[#left_index].wrapping_add(#previous[#right_index]) }
+            }
+        });
+        statements.push(quote! {
+            let #name: [#scalar; #next_len] = [#(#additions),*];
+        });
+        previous = quote! { #name };
+        previous_len = next_len;
+        level += 1;
     }
 
     quote! {

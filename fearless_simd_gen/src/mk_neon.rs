@@ -214,18 +214,20 @@ impl Level for Neon {
                     "wide reductions must use the generic 128-bit-grained implementation"
                 );
 
-                if vec_ty.scalar_bits == 64
+                if lane_op != "add"
+                    && vec_ty.scalar_bits == 64
                     && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
                 {
                     return fallback_method(op, vec_ty);
                 }
 
                 let intrinsic = match lane_op {
+                    "add" => "vaddv",
                     "min" => "vminv",
                     "max" => "vmaxv",
                     "min_precise" => "vminnmv",
                     "max_precise" => "vmaxnmv",
-                    _ => unreachable!("unsupported min/max reduction lane operation"),
+                    _ => unreachable!("unsupported reduction lane operation"),
                 };
                 let reduce = simple_intrinsic(intrinsic, vec_ty);
                 self.kernel_method(op, vec_ty, |_| quote! { #reduce(a.into()) })

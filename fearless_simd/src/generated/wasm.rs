@@ -300,6 +300,13 @@ impl Simd for WasmSimd128 {
         f32x4_extract_lane::<0>(reduced.into())
     }
     #[inline(always)]
+    fn reduce_sum_f32x4(self, a: f32x4<Self>) -> f32 {
+        let a: v128 = a.into();
+        let adjacent = f32x4_add(a, i32x4_shuffle::<1, 0, 3, 2>(a, a));
+        let result = f32x4_add(adjacent, i32x4_shuffle::<2, 3, 2, 3>(adjacent, adjacent));
+        f32x4_extract_lane::<0>(result)
+    }
+    #[inline(always)]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         #[cfg(target_feature = "relaxed-simd")]
         {
@@ -702,6 +709,27 @@ impl Simd for WasmSimd128 {
         i8x16_extract_lane::<0>(reduced.into())
     }
     #[inline(always)]
+    fn reduce_sum_i8x16(self, a: i8x16<Self>) -> i8 {
+        let sum: v128 = a.into();
+        let sum = i8x16_add(
+            sum,
+            i8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7>(sum, sum),
+        );
+        let sum = i8x16_add(
+            sum,
+            i8x16_shuffle::<4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3>(sum, sum),
+        );
+        let sum = i8x16_add(
+            sum,
+            i8x16_shuffle::<2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1>(sum, sum),
+        );
+        let sum = i8x16_add(
+            sum,
+            i8x16_shuffle::<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0>(sum, sum),
+        );
+        i8x16_extract_lane::<0>(sum)
+    }
+    #[inline(always)]
     fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         i8x16_max(a.into(), b.into()).simd_into(self)
     }
@@ -1061,6 +1089,27 @@ impl Simd for WasmSimd128 {
         .simd_into(self);
         let reduced = self.min_u8x16(reduced, shuffled);
         u8x16_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
+    fn reduce_sum_u8x16(self, a: u8x16<Self>) -> u8 {
+        let sum: v128 = a.into();
+        let sum = u8x16_add(
+            sum,
+            u8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7>(sum, sum),
+        );
+        let sum = u8x16_add(
+            sum,
+            u8x16_shuffle::<4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3>(sum, sum),
+        );
+        let sum = u8x16_add(
+            sum,
+            u8x16_shuffle::<2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1>(sum, sum),
+        );
+        let sum = u8x16_add(
+            sum,
+            u8x16_shuffle::<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0>(sum, sum),
+        );
+        u8x16_extract_lane::<0>(sum)
     }
     #[inline(always)]
     fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -1444,6 +1493,14 @@ impl Simd for WasmSimd128 {
         i16x8_extract_lane::<0>(reduced.into())
     }
     #[inline(always)]
+    fn reduce_sum_i16x8(self, a: i16x8<Self>) -> i16 {
+        let sum: v128 = a.into();
+        let sum = i16x8_add(sum, i16x8_shuffle::<4, 5, 6, 7, 0, 1, 2, 3>(sum, sum));
+        let sum = i16x8_add(sum, i16x8_shuffle::<2, 3, 4, 5, 6, 7, 0, 1>(sum, sum));
+        let sum = i16x8_add(sum, i16x8_shuffle::<1, 2, 3, 4, 5, 6, 7, 0>(sum, sum));
+        i16x8_extract_lane::<0>(sum)
+    }
+    #[inline(always)]
     fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         i16x8_max(a.into(), b.into()).simd_into(self)
     }
@@ -1710,6 +1767,14 @@ impl Simd for WasmSimd128 {
             u16x8_shuffle::<1, 2, 3, 4, 5, 6, 7, 0>(reduced.into(), reduced.into()).simd_into(self);
         let reduced = self.min_u16x8(reduced, shuffled);
         u16x8_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
+    fn reduce_sum_u16x8(self, a: u16x8<Self>) -> u16 {
+        let sum: v128 = a.into();
+        let sum = u16x8_add(sum, u16x8_shuffle::<4, 5, 6, 7, 0, 1, 2, 3>(sum, sum));
+        let sum = u16x8_add(sum, u16x8_shuffle::<2, 3, 4, 5, 6, 7, 0, 1>(sum, sum));
+        let sum = u16x8_add(sum, u16x8_shuffle::<1, 2, 3, 4, 5, 6, 7, 0>(sum, sum));
+        u16x8_extract_lane::<0>(sum)
     }
     #[inline(always)]
     fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -2058,6 +2123,13 @@ impl Simd for WasmSimd128 {
         i32x4_extract_lane::<0>(reduced.into())
     }
     #[inline(always)]
+    fn reduce_sum_i32x4(self, a: i32x4<Self>) -> i32 {
+        let sum: v128 = a.into();
+        let sum = i32x4_add(sum, i32x4_shuffle::<2, 3, 0, 1>(sum, sum));
+        let sum = i32x4_add(sum, i32x4_shuffle::<1, 2, 3, 0>(sum, sum));
+        i32x4_extract_lane::<0>(sum)
+    }
+    #[inline(always)]
     fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         i32x4_max(a.into(), b.into()).simd_into(self)
     }
@@ -2311,6 +2383,13 @@ impl Simd for WasmSimd128 {
         let shuffled = u32x4_shuffle::<1, 2, 3, 0>(reduced.into(), reduced.into()).simd_into(self);
         let reduced = self.min_u32x4(reduced, shuffled);
         u32x4_extract_lane::<0>(reduced.into())
+    }
+    #[inline(always)]
+    fn reduce_sum_u32x4(self, a: u32x4<Self>) -> u32 {
+        let sum: v128 = a.into();
+        let sum = u32x4_add(sum, u32x4_shuffle::<2, 3, 0, 1>(sum, sum));
+        let sum = u32x4_add(sum, u32x4_shuffle::<1, 2, 3, 0>(sum, sum));
+        u32x4_extract_lane::<0>(sum)
     }
     #[inline(always)]
     fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -2647,6 +2726,12 @@ impl Simd for WasmSimd128 {
         f64x2_extract_lane::<0>(reduced.into())
     }
     #[inline(always)]
+    fn reduce_sum_f64x2(self, a: f64x2<Self>) -> f64 {
+        let a: v128 = a.into();
+        let result = f64x2_add(a, i64x2_shuffle::<1, 1>(a, a));
+        f64x2_extract_lane::<0>(result)
+    }
+    #[inline(always)]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         #[cfg(target_feature = "relaxed-simd")]
         {
@@ -2963,6 +3048,12 @@ impl Simd for WasmSimd128 {
         reduced[0]
     }
     #[inline(always)]
+    fn reduce_sum_i64x2(self, a: i64x2<Self>) -> i64 {
+        let sum: v128 = a.into();
+        let sum = i64x2_add(sum, i64x2_shuffle::<1, 0>(sum, sum));
+        i64x2_extract_lane::<0>(sum)
+    }
+    #[inline(always)]
     fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         [
             i64::max(a[0usize], b[0usize]),
@@ -3212,6 +3303,12 @@ impl Simd for WasmSimd128 {
     fn reduce_min_u64x2(self, a: u64x2<Self>) -> u64 {
         let reduced: [u64; 1usize] = [u64::min(a[0usize], a[1usize])];
         reduced[0]
+    }
+    #[inline(always)]
+    fn reduce_sum_u64x2(self, a: u64x2<Self>) -> u64 {
+        let sum: v128 = a.into();
+        let sum = u64x2_add(sum, u64x2_shuffle::<1, 0>(sum, sum));
+        u64x2_extract_lane::<0>(sum)
     }
     #[inline(always)]
     fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {

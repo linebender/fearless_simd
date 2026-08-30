@@ -167,6 +167,58 @@ fn reduce_min_max(method_sig: TokenStream, vec_ty: &VecType, lane_op: &str) -> T
     }
 }
 
+fn reduce_sum(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(
+        vec_ty.n_bits(),
+        128,
+        "wide reductions must use the generic 128-bit-grained implementation"
+    );
+
+    let body = match (vec_ty.scalar, vec_ty.scalar_bits) {
+        (ScalarType::Float, 32) => quote! {
+            let a: v128 = a.into();
+            let adjacent = f32x4_add(a, i32x4_shuffle::<1, 0, 3, 2>(a, a));
+            let result = f32x4_add(
+                adjacent,
+                i32x4_shuffle::<2, 3, 2, 3>(adjacent, adjacent),
+            );
+            f32x4_extract_lane::<0>(result)
+        },
+        (ScalarType::Float, 64) => quote! {
+            let a: v128 = a.into();
+            let result = f64x2_add(a, i64x2_shuffle::<1, 1>(a, a));
+            f64x2_extract_lane::<0>(result)
+        },
+        (ScalarType::Int | ScalarType::Unsigned, _) => {
+            let add = simple_intrinsic("add", vec_ty);
+            let shuffle = simple_intrinsic("shuffle", vec_ty);
+            let extract = simple_intrinsic("extract_lane", vec_ty);
+            let mut stages = Vec::new();
+            let mut offset = vec_ty.len / 2;
+            while offset > 0 {
+                let indices = (0..vec_ty.len)
+                    .map(|index| Literal::usize_unsuffixed((index + offset) % vec_ty.len));
+                stages.push(quote! {
+                    let sum = #add(sum, #shuffle::<#(#indices),*>(sum, sum));
+                });
+                offset /= 2;
+            }
+            quote! {
+                let sum: v128 = a.into();
+                #(#stages)*
+                #extract::<0>(sum)
+            }
+        }
+        _ => unreachable!("reduce_sum only operates on numeric vectors"),
+    };
+
+    quote! {
+        #method_sig {
+            #body
+        }
+    }
+}
+
 impl Level for WasmSimd128 {
     fn name(&self) -> &'static str {
         "WasmSimd128"
@@ -290,7 +342,9 @@ impl Level for WasmSimd128 {
                 }
             }
             OpSig::Reduce { lane_op } => {
-                if vec_ty.scalar_bits == 64
+                if lane_op == "add" {
+                    reduce_sum(method_sig, vec_ty)
+                } else if vec_ty.scalar_bits == 64
                     && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
                 {
                     fallback_method(op, vec_ty)
