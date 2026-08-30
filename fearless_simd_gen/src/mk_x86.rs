@@ -1365,18 +1365,25 @@ impl X86 {
                 self.kernel_method(op, vec_ty, |_| {
                     quote! {
                         let value: __m128i = a.into();
-                        // Multiplication modulo 2^8 is sign-independent. Multiplying each
-                        // packed i16 lane by its high byte puts the adjacent byte product in
-                        // the low byte. Any high-byte terms cannot affect the final low byte
-                        // through the remaining i16 multiplications.
-                        let high = _mm_srli_epi16::<8>(value);
-                        let product = _mm_mullo_epi16(value, high);
+                        // Multiplication modulo 2^8 is sign-independent. Unpacking each byte
+                        // with itself makes an i16 lane whose low byte is still the original
+                        // value. Multiply corresponding lanes from the low and high halves,
+                        // then use a balanced pshufd tree. Pollution in the high byte cannot
+                        // affect the final low byte through the remaining i16 multiplications.
+                        let product = _mm_mullo_epi16(
+                            _mm_unpacklo_epi8(value, value),
+                            _mm_unpackhi_epi8(value, value),
+                        );
+                        let product = _mm_mullo_epi16(
+                            product,
+                            _mm_shuffle_epi32::<0b11_10_11_10>(product),
+                        );
+                        let product = _mm_mullo_epi16(
+                            product,
+                            _mm_shuffle_epi32::<0b01_01_01_01>(product),
+                        );
                         let product =
-                            _mm_mullo_epi16(product, _mm_srli_si128::<8>(product));
-                        let product =
-                            _mm_mullo_epi16(product, _mm_srli_si128::<4>(product));
-                        let product =
-                            _mm_mullo_epi16(product, _mm_srli_si128::<2>(product));
+                            _mm_mullo_epi16(product, _mm_srli_epi32::<16>(product));
                         let lanes: [#scalar; #len] =
                             crate::transmute::checked_transmute_copy(&product);
                         lanes[0]
@@ -1389,12 +1396,16 @@ impl X86 {
                 self.kernel_method(op, vec_ty, |_| {
                     quote! {
                         let product: __m128i = a.into();
+                        let product = _mm_mullo_epi16(
+                            product,
+                            _mm_shuffle_epi32::<0b11_10_11_10>(product),
+                        );
+                        let product = _mm_mullo_epi16(
+                            product,
+                            _mm_shuffle_epi32::<0b01_01_01_01>(product),
+                        );
                         let product =
-                            _mm_mullo_epi16(product, _mm_srli_si128::<8>(product));
-                        let product =
-                            _mm_mullo_epi16(product, _mm_srli_si128::<4>(product));
-                        let product =
-                            _mm_mullo_epi16(product, _mm_srli_si128::<2>(product));
+                            _mm_mullo_epi16(product, _mm_srli_epi32::<16>(product));
                         let lanes: [#scalar; #len] =
                             crate::transmute::checked_transmute_copy(&product);
                         lanes[0]

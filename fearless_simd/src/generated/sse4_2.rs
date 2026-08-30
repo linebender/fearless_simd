@@ -1153,11 +1153,13 @@ impl Simd for Sse4_2 {
             #[inline(always)]
             fn kernel(token: Sse4_2, a: i8x16<Sse4_2>) -> i8 {
                 let value: __m128i = a.into();
-                let high = _mm_srli_epi16::<8>(value);
-                let product = _mm_mullo_epi16(value, high);
-                let product = _mm_mullo_epi16(product, _mm_srli_si128::<8>(product));
-                let product = _mm_mullo_epi16(product, _mm_srli_si128::<4>(product));
-                let product = _mm_mullo_epi16(product, _mm_srli_si128::<2>(product));
+                let product = _mm_mullo_epi16(
+                    _mm_unpacklo_epi8(value, value),
+                    _mm_unpackhi_epi8(value, value),
+                );
+                let product = _mm_mullo_epi16(product, _mm_shuffle_epi32::<0b11_10_11_10>(product));
+                let product = _mm_mullo_epi16(product, _mm_shuffle_epi32::<0b01_01_01_01>(product));
+                let product = _mm_mullo_epi16(product, _mm_srli_epi32::<16>(product));
                 let lanes: [i8; 16usize] = crate::transmute::checked_transmute_copy(&product);
                 lanes[0]
             }
@@ -1737,11 +1739,13 @@ impl Simd for Sse4_2 {
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u8x16<Sse4_2>) -> u8 {
                 let value: __m128i = a.into();
-                let high = _mm_srli_epi16::<8>(value);
-                let product = _mm_mullo_epi16(value, high);
-                let product = _mm_mullo_epi16(product, _mm_srli_si128::<8>(product));
-                let product = _mm_mullo_epi16(product, _mm_srli_si128::<4>(product));
-                let product = _mm_mullo_epi16(product, _mm_srli_si128::<2>(product));
+                let product = _mm_mullo_epi16(
+                    _mm_unpacklo_epi8(value, value),
+                    _mm_unpackhi_epi8(value, value),
+                );
+                let product = _mm_mullo_epi16(product, _mm_shuffle_epi32::<0b11_10_11_10>(product));
+                let product = _mm_mullo_epi16(product, _mm_shuffle_epi32::<0b01_01_01_01>(product));
+                let product = _mm_mullo_epi16(product, _mm_srli_epi32::<16>(product));
                 let lanes: [u8; 16usize] = crate::transmute::checked_transmute_copy(&product);
                 lanes[0]
             }
@@ -2406,9 +2410,9 @@ impl Simd for Sse4_2 {
             #[inline(always)]
             fn kernel(token: Sse4_2, a: i16x8<Sse4_2>) -> i16 {
                 let product: __m128i = a.into();
-                let product = _mm_mullo_epi16(product, _mm_srli_si128::<8>(product));
-                let product = _mm_mullo_epi16(product, _mm_srli_si128::<4>(product));
-                let product = _mm_mullo_epi16(product, _mm_srli_si128::<2>(product));
+                let product = _mm_mullo_epi16(product, _mm_shuffle_epi32::<0b11_10_11_10>(product));
+                let product = _mm_mullo_epi16(product, _mm_shuffle_epi32::<0b01_01_01_01>(product));
+                let product = _mm_mullo_epi16(product, _mm_srli_epi32::<16>(product));
                 let lanes: [i16; 8usize] = crate::transmute::checked_transmute_copy(&product);
                 lanes[0]
             }
@@ -2935,9 +2939,9 @@ impl Simd for Sse4_2 {
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u16x8<Sse4_2>) -> u16 {
                 let product: __m128i = a.into();
-                let product = _mm_mullo_epi16(product, _mm_srli_si128::<8>(product));
-                let product = _mm_mullo_epi16(product, _mm_srli_si128::<4>(product));
-                let product = _mm_mullo_epi16(product, _mm_srli_si128::<2>(product));
+                let product = _mm_mullo_epi16(product, _mm_shuffle_epi32::<0b11_10_11_10>(product));
+                let product = _mm_mullo_epi16(product, _mm_shuffle_epi32::<0b01_01_01_01>(product));
+                let product = _mm_mullo_epi16(product, _mm_srli_epi32::<16>(product));
                 let lanes: [u16; 8usize] = crate::transmute::checked_transmute_copy(&product);
                 lanes[0]
             }

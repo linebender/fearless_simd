@@ -347,6 +347,13 @@ fn reduce_product_i8x16<S: Simd>(simd: S) {
     both_halves[9] = 5;
     assert_eq!(i8x16::from_slice(simd, &both_halves).reduce_product(), 120);
 
+    let mut all_stages = [1; 16];
+    all_stages[12] = 2;
+    all_stages[13] = 3;
+    all_stages[14] = 4;
+    all_stages[15] = 5;
+    assert_eq!(i8x16::from_slice(simd, &all_stages).reduce_product(), 120);
+
     let mut reversed_high_bits = [1; 16];
     reversed_high_bits[8] = -1;
     reversed_high_bits[9] = i8::MIN;
@@ -407,6 +414,13 @@ fn reduce_product_u8x16<S: Simd>(simd: S) {
     both_halves[9] = 5;
     assert_eq!(u8x16::from_slice(simd, &both_halves).reduce_product(), 120);
 
+    let mut all_stages = [1; 16];
+    all_stages[12] = 2;
+    all_stages[13] = 3;
+    all_stages[14] = 4;
+    all_stages[15] = 5;
+    assert_eq!(u8x16::from_slice(simd, &all_stages).reduce_product(), 120);
+
     let mut upper_high_bits = [1; 16];
     upper_high_bits[8] = u8::MAX;
     upper_high_bits[9] = 128;
@@ -441,6 +455,13 @@ fn reduce_product_i16x8<S: Simd>(simd: S) {
     both_halves[4] = 4;
     both_halves[5] = 5;
     assert_eq!(i16x8::from_slice(simd, &both_halves).reduce_product(), 120);
+
+    let mut all_stages = [1; 8];
+    all_stages[2] = 2;
+    all_stages[3] = 3;
+    all_stages[6] = 4;
+    all_stages[7] = 5;
+    assert_eq!(i16x8::from_slice(simd, &all_stages).reduce_product(), 120);
 
     let mut negative = [1; 8];
     negative[0] = -2;
@@ -483,6 +504,13 @@ fn reduce_product_u16x8<S: Simd>(simd: S) {
     both_halves[4] = 4;
     both_halves[5] = 5;
     assert_eq!(u16x8::from_slice(simd, &both_halves).reduce_product(), 120);
+
+    let mut all_stages = [1; 8];
+    all_stages[2] = 2;
+    all_stages[3] = 3;
+    all_stages[6] = 4;
+    all_stages[7] = 5;
+    assert_eq!(u16x8::from_slice(simd, &all_stages).reduce_product(), 120);
 
     let mut zero = [1; 8];
     zero[3] = 0;
