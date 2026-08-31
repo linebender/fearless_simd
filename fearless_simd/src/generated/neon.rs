@@ -464,9 +464,7 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f32x4<Neon>) -> f32x4<Neon> {
-                let c1 = vcvtq_s32_f32(a.into());
-                let c2 = vcvtq_f32_s32(c1);
-                vsubq_f32(a.into(), c2).simd_into(token)
+                vsubq_f32(a.into(), vrndq_f32(a.into())).simd_into(token)
             }
         );
         kernel(self, a)
@@ -3787,9 +3785,7 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f64x2<Neon>) -> f64x2<Neon> {
-                let c1 = vcvtq_s64_f64(a.into());
-                let c2 = vcvtq_f64_s64(c1);
-                vsubq_f64(a.into(), c2).simd_into(token)
+                vsubq_f64(a.into(), vrndq_f64(a.into())).simd_into(token)
             }
         );
         kernel(self, a)
