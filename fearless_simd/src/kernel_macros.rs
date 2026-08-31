@@ -109,9 +109,7 @@ macro_rules! __fearless_simd_kernel_dispatch {
         $($body:tt)*
     ) => {
         $crate::__fearless_simd_kernel_impl! {
-            @cfg target_arch = "aarch64";
-            @token_ty $crate::Neon;
-            @kernel_attrs #[target_feature(enable = "neon")];
+            @level Neon;
             $($body)*
         }
     };
@@ -121,9 +119,7 @@ macro_rules! __fearless_simd_kernel_dispatch {
         $($body:tt)*
     ) => {
         $crate::__fearless_simd_kernel_impl! {
-            @cfg all(target_arch = "wasm32", target_feature = "simd128");
-            @token_ty $crate::WasmSimd128;
-            @kernel_attrs;
+            @level WasmSimd128;
             $($body)*
         }
     };
@@ -133,9 +129,7 @@ macro_rules! __fearless_simd_kernel_dispatch {
         $($body:tt)*
     ) => {
         $crate::__fearless_simd_kernel_impl! {
-            @cfg any(target_arch = "x86", target_arch = "x86_64");
-            @token_ty $crate::Sse2;
-            @kernel_attrs #[target_feature(enable = "fxsr,sse,sse2")];
+            @level Sse2;
             $($body)*
         }
     };
@@ -145,9 +139,7 @@ macro_rules! __fearless_simd_kernel_dispatch {
         $($body:tt)*
     ) => {
         $crate::__fearless_simd_kernel_impl! {
-            @cfg any(target_arch = "x86", target_arch = "x86_64");
-            @token_ty $crate::Sse4_2;
-            @kernel_attrs #[target_feature(enable = "fxsr,sse4.2,cmpxchg16b,popcnt")];
+            @level Sse4_2;
             $($body)*
         }
     };
@@ -157,11 +149,7 @@ macro_rules! __fearless_simd_kernel_dispatch {
         $($body:tt)*
     ) => {
         $crate::__fearless_simd_kernel_impl! {
-            @cfg any(target_arch = "x86", target_arch = "x86_64");
-            @token_ty $crate::Avx2;
-            @kernel_attrs #[target_feature(
-                enable = "fxsr,avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave"
-            )];
+            @level Avx2;
             $($body)*
         }
     };
@@ -171,11 +159,7 @@ macro_rules! __fearless_simd_kernel_dispatch {
         $($body:tt)*
     ) => {
         $crate::__fearless_simd_kernel_impl! {
-            @cfg any(target_arch = "x86", target_arch = "x86_64");
-            @token_ty $crate::Avx512;
-            @kernel_attrs #[target_feature(
-                enable = "fxsr,adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves"
-            )];
+            @level Avx512;
             $($body)*
         }
     };
@@ -196,10 +180,11 @@ macro_rules! __fearless_simd_kernel_dispatch {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __fearless_simd_kernel_impl {
+    // This macro has to be exported so `kernel!` can expand in downstream
+    // crates, but callers must not be able to choose arbitrary target features
+    // or token types. Keep this helper keyed only by known SIMD levels.
     (
-        @cfg $cfg:meta;
-        @token_ty $token_ty:ty;
-        @kernel_attrs $(#[$kernel_attr:meta])*;
+        @level Neon;
         $(#[$meta:meta])*
         $vis:vis fn $name:ident(
             $token:ident $(, $arg:ident : $arg_ty:ty)* $(,)?
@@ -207,24 +192,177 @@ macro_rules! __fearless_simd_kernel_impl {
             $($kernel_body:tt)*
         }
     ) => {
-        #[cfg($cfg)]
+        #[cfg(target_arch = "aarch64")]
         $(#[$meta])*
         $vis fn $name(
-            $token: $token_ty $(, $arg: $arg_ty)*
+            $token: $crate::Neon $(, $arg: $arg_ty)*
         ) $(-> $ret)? {
             #[inline] // can't use `#[inline(always)]` with target features
-            $(#[$kernel_attr])*
+            #[target_feature(enable = "neon")]
             fn __fearless_simd_kernel(
-                $token: $token_ty $(, $arg: $arg_ty)*
+                $token: $crate::Neon $(, $arg: $arg_ty)*
             ) $(-> $ret)? {
                 let _ = $token;
                 $($kernel_body)*
             }
 
             // SAFETY: the SIMD token proves that the required target features are available.
-            #[allow(unused_unsafe, reason = "for WASM which has no target feature requirements and is safe to call")]
             unsafe { __fearless_simd_kernel($token $(, $arg)*) }
         }
+    };
+
+    (
+        @level WasmSimd128;
+        $(#[$meta:meta])*
+        $vis:vis fn $name:ident(
+            $token:ident $(, $arg:ident : $arg_ty:ty)* $(,)?
+        ) $(-> $ret:ty)? {
+            $($kernel_body:tt)*
+        }
+    ) => {
+        #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+        $(#[$meta])*
+        $vis fn $name(
+            $token: $crate::WasmSimd128 $(, $arg: $arg_ty)*
+        ) $(-> $ret)? {
+            #[inline]
+            fn __fearless_simd_kernel(
+                $token: $crate::WasmSimd128 $(, $arg: $arg_ty)*
+            ) $(-> $ret)? {
+                let _ = $token;
+                $($kernel_body)*
+            }
+
+            __fearless_simd_kernel($token $(, $arg)*)
+        }
+    };
+
+    (
+        @level Sse2;
+        $(#[$meta:meta])*
+        $vis:vis fn $name:ident(
+            $token:ident $(, $arg:ident : $arg_ty:ty)* $(,)?
+        ) $(-> $ret:ty)? {
+            $($kernel_body:tt)*
+        }
+    ) => {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        $(#[$meta])*
+        $vis fn $name(
+            $token: $crate::Sse2 $(, $arg: $arg_ty)*
+        ) $(-> $ret)? {
+            #[inline] // can't use `#[inline(always)]` with target features
+            #[target_feature(enable = "fxsr,sse,sse2")]
+            fn __fearless_simd_kernel(
+                $token: $crate::Sse2 $(, $arg: $arg_ty)*
+            ) $(-> $ret)? {
+                let _ = $token;
+                $($kernel_body)*
+            }
+
+            // SAFETY: the SIMD token proves that the required target features are available.
+            unsafe { __fearless_simd_kernel($token $(, $arg)*) }
+        }
+    };
+
+    (
+        @level Sse4_2;
+        $(#[$meta:meta])*
+        $vis:vis fn $name:ident(
+            $token:ident $(, $arg:ident : $arg_ty:ty)* $(,)?
+        ) $(-> $ret:ty)? {
+            $($kernel_body:tt)*
+        }
+    ) => {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        $(#[$meta])*
+        $vis fn $name(
+            $token: $crate::Sse4_2 $(, $arg: $arg_ty)*
+        ) $(-> $ret)? {
+            #[inline] // can't use `#[inline(always)]` with target features
+            #[target_feature(enable = "fxsr,sse4.2,cmpxchg16b,popcnt")]
+            fn __fearless_simd_kernel(
+                $token: $crate::Sse4_2 $(, $arg: $arg_ty)*
+            ) $(-> $ret)? {
+                let _ = $token;
+                $($kernel_body)*
+            }
+
+            // SAFETY: the SIMD token proves that the required target features are available.
+            unsafe { __fearless_simd_kernel($token $(, $arg)*) }
+        }
+    };
+
+    (
+        @level Avx2;
+        $(#[$meta:meta])*
+        $vis:vis fn $name:ident(
+            $token:ident $(, $arg:ident : $arg_ty:ty)* $(,)?
+        ) $(-> $ret:ty)? {
+            $($kernel_body:tt)*
+        }
+    ) => {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        $(#[$meta])*
+        $vis fn $name(
+            $token: $crate::Avx2 $(, $arg: $arg_ty)*
+        ) $(-> $ret)? {
+            #[inline] // can't use `#[inline(always)]` with target features
+            #[target_feature(
+                enable = "fxsr,avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave"
+            )]
+            fn __fearless_simd_kernel(
+                $token: $crate::Avx2 $(, $arg: $arg_ty)*
+            ) $(-> $ret)? {
+                let _ = $token;
+                $($kernel_body)*
+            }
+
+            // SAFETY: the SIMD token proves that the required target features are available.
+            unsafe { __fearless_simd_kernel($token $(, $arg)*) }
+        }
+    };
+
+    (
+        @level Avx512;
+        $(#[$meta:meta])*
+        $vis:vis fn $name:ident(
+            $token:ident $(, $arg:ident : $arg_ty:ty)* $(,)?
+        ) $(-> $ret:ty)? {
+            $($kernel_body:tt)*
+        }
+    ) => {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        $(#[$meta])*
+        $vis fn $name(
+            $token: $crate::Avx512 $(, $arg: $arg_ty)*
+        ) $(-> $ret)? {
+            #[inline] // can't use `#[inline(always)]` with target features
+            #[target_feature(
+                enable = "fxsr,adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves"
+            )]
+            fn __fearless_simd_kernel(
+                $token: $crate::Avx512 $(, $arg: $arg_ty)*
+            ) $(-> $ret)? {
+                let _ = $token;
+                $($kernel_body)*
+            }
+
+            // SAFETY: the SIMD token proves that the required target features are available.
+            unsafe { __fearless_simd_kernel($token $(, $arg)*) }
+        }
+    };
+
+    (
+        @level $token_ty:ident;
+        $($body:tt)*
+    ) => {
+        compile_error!(concat!(
+            "fearless_simd::kernel! expects its SIMD token argument type to be written as ",
+            "one of `Neon`, `WasmSimd128`, `Sse2`, `Sse4_2`, `Avx2`, or `Avx512`; got `",
+            stringify!($token_ty),
+            "`",
+        ));
     };
 }
 
