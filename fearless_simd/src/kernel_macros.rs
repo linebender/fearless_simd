@@ -299,7 +299,10 @@ mod tests {
         }
     }
 
-    #[allow(dead_code)]
+    #[allow(
+        dead_code,
+        reason = "the associated SSE2 kernels are cfg-disabled on non-x86 targets"
+    )]
     struct AssociatedKernels;
 
     impl AssociatedKernels {
@@ -310,7 +313,10 @@ mod tests {
         );
     }
 
-    #[allow(dead_code)]
+    #[allow(
+        dead_code,
+        reason = "the associated SSE2 kernels are cfg-disabled on non-x86 targets"
+    )]
     trait AssociatedKernelTrait {
         crate::kernel!(
             fn trait_sse2(_sse2: Sse2, value: u32) -> u32 {
