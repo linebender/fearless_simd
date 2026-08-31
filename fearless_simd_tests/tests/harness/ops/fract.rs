@@ -102,3 +102,71 @@ fn fract_f64x4<S: Simd>(simd: S) {
     let result = simd.fract_f64x4(a);
     assert_eq!(result.as_slice(), expected.as_slice());
 }
+
+#[simd_test]
+fn fract_f32x4_edge_cases<S: Simd>(simd: S) {
+    let values = [
+        -0.0,
+        2_147_483_904.0_f32, // 2^31 + one f32 ULP
+        f32::MAX,
+        f32::INFINITY,
+    ];
+    let a = f32x4::from_slice(simd, &values);
+    let result = simd.fract_f32x4(a);
+
+    assert_eq!(result[0].to_bits(), 0.0_f32.to_bits());
+    assert_eq!(result[1].to_bits(), 0.0_f32.to_bits());
+    assert_eq!(result[2].to_bits(), 0.0_f32.to_bits());
+    assert!(result[3].is_nan());
+
+    let values = [
+        -2_147_483_904.0_f32, // -2^31 - one f32 ULP
+        f32::MIN,
+        f32::NEG_INFINITY,
+        f32::NAN,
+    ];
+    let a = f32x4::from_slice(simd, &values);
+    let result = simd.fract_f32x4(a);
+
+    assert_eq!(result[0].to_bits(), 0.0_f32.to_bits());
+    assert_eq!(result[1].to_bits(), 0.0_f32.to_bits());
+    assert!(result[2].is_nan());
+    assert!(result[3].is_nan());
+}
+
+#[simd_test]
+fn fract_f64x2_edge_cases<S: Simd>(simd: S) {
+    let values = [
+        -0.0,
+        9_223_372_036_854_777_856.0_f64, // 2^63 + one f64 ULP
+    ];
+    let a = f64x2::from_slice(simd, &values);
+    let result = simd.fract_f64x2(a);
+
+    assert_eq!(result[0].to_bits(), 0.0_f64.to_bits());
+    assert_eq!(result[1].to_bits(), 0.0_f64.to_bits());
+
+    let values = [f64::MAX, f64::INFINITY];
+    let a = f64x2::from_slice(simd, &values);
+    let result = simd.fract_f64x2(a);
+
+    assert_eq!(result[0].to_bits(), 0.0_f64.to_bits());
+    assert!(result[1].is_nan());
+
+    let values = [
+        -9_223_372_036_854_777_856.0_f64, // -2^63 - one f64 ULP
+        f64::MIN,
+    ];
+    let a = f64x2::from_slice(simd, &values);
+    let result = simd.fract_f64x2(a);
+
+    assert_eq!(result[0].to_bits(), 0.0_f64.to_bits());
+    assert_eq!(result[1].to_bits(), 0.0_f64.to_bits());
+
+    let values = [f64::NEG_INFINITY, f64::NAN];
+    let a = f64x2::from_slice(simd, &values);
+    let result = simd.fract_f64x2(a);
+
+    assert!(result[0].is_nan());
+    assert!(result[1].is_nan());
+}
