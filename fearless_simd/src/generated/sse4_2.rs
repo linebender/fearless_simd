@@ -1460,8 +1460,7 @@ impl Simd for Sse4_2 {
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u8x16<Sse4_2>, indices: u8x16<Sse4_2>) -> u8x16<Sse4_2> {
                 let indices = indices.into();
-                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
-                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let zeroing_indices = _mm_adds_epu8(indices, _mm_set1_epi8(0x70));
                 let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
@@ -1471,6 +1470,31 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn concat_swizzle_dyn_u8x16(
+        self,
+        a: u8x16<Self>,
+        b: u8x16<Self>,
+        indices: u8x16<Self>,
+    ) -> u8x16<Self> {
+        self.concat_swizzle_dyn_precise_u8x16(a, b, indices)
+    }
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u8x16(
+        self,
+        a: u8x16<Self>,
+        b: u8x16<Self>,
+        indices: u8x16<Self>,
+    ) -> u8x16<Self> {
+        let first_table = Bytes::to_bytes(a);
+        let second_table = Bytes::to_bytes(b);
+        let second_table_offset = self.splat_u8x16(16);
+        let from_first = self.swizzle_dyn_precise_u8x16(first_table, indices);
+        let from_second = self
+            .swizzle_dyn_precise_u8x16(second_table, self.sub_u8x16(indices, second_table_offset));
+        let result_bytes = self.or_u8x16(from_first, from_second);
+        Bytes::from_bytes(result_bytes)
     }
     #[inline(always)]
     fn count_ones_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
@@ -6288,6 +6312,31 @@ impl Simd for Sse4_2 {
         kernel(self, a, indices)
     }
     #[inline(always)]
+    fn concat_swizzle_dyn_u8x32(
+        self,
+        a: u8x32<Self>,
+        b: u8x32<Self>,
+        indices: u8x32<Self>,
+    ) -> u8x32<Self> {
+        self.concat_swizzle_dyn_precise_u8x32(a, b, indices)
+    }
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u8x32(
+        self,
+        a: u8x32<Self>,
+        b: u8x32<Self>,
+        indices: u8x32<Self>,
+    ) -> u8x32<Self> {
+        let first_table = Bytes::to_bytes(a);
+        let second_table = Bytes::to_bytes(b);
+        let second_table_offset = self.splat_u8x32(32);
+        let from_first = self.swizzle_dyn_precise_u8x32(first_table, indices);
+        let from_second = self
+            .swizzle_dyn_precise_u8x32(second_table, self.sub_u8x32(indices, second_table_offset));
+        let result_bytes = self.or_u8x32(from_first, from_second);
+        Bytes::from_bytes(result_bytes)
+    }
+    #[inline(always)]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self> {
         u8x64 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -6788,7 +6837,51 @@ impl Simd for Sse4_2 {
         for lane in 0..64usize {
             let index = indices[lane] as usize;
             let value = bytes[index % 64usize];
-            output[lane] = if index < 64usize { value } else { 0 };
+            output[lane] = core::hint::select_unpredictable(index < 64usize, value, 0u8);
+        }
+        let result: u8x64<Self> = output.simd_into(self);
+        Bytes::from_bytes(result)
+    }
+    #[inline(always)]
+    fn concat_swizzle_dyn_u8x64(
+        self,
+        a: u8x64<Self>,
+        b: u8x64<Self>,
+        indices: u8x64<Self>,
+    ) -> u8x64<Self> {
+        let first_table = Bytes::to_bytes(a);
+        let second_table = Bytes::to_bytes(b);
+        let mut output = [0u8; 64usize];
+        for lane in 0..64usize {
+            let index = indices[lane] as usize % 128usize;
+            output[lane] = if index < 64usize {
+                first_table[index]
+            } else {
+                second_table[index - 64usize]
+            };
+        }
+        let result: u8x64<Self> = output.simd_into(self);
+        Bytes::from_bytes(result)
+    }
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u8x64(
+        self,
+        a: u8x64<Self>,
+        b: u8x64<Self>,
+        indices: u8x64<Self>,
+    ) -> u8x64<Self> {
+        let first_table = Bytes::to_bytes(a);
+        let second_table = Bytes::to_bytes(b);
+        let mut output = [0u8; 64usize];
+        for lane in 0..64usize {
+            let index = indices[lane] as usize;
+            let table_index = index % 64usize;
+            let value = if index < 64usize {
+                first_table[table_index]
+            } else {
+                second_table[table_index]
+            };
+            output[lane] = if index < 128usize { value } else { 0 };
         }
         let result: u8x64<Self> = output.simd_into(self);
         Bytes::from_bytes(result)

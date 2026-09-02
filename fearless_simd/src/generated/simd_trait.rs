@@ -243,6 +243,34 @@ pub trait Simd:
     fn swizzle_dyn_precise_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
     }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_f32x4(
+        self,
+        a: f32x4<Self>,
+        b: f32x4<Self>,
+        indices: u8x16<Self>,
+    ) -> f32x4<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_f32x4(
+        self,
+        a: f32x4<Self>,
+        b: f32x4<Self>,
+        indices: u8x16<Self>,
+    ) -> f32x4<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
     #[doc = "Compute the absolute value of each element."]
     fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Negate each element of the vector."]
@@ -379,6 +407,34 @@ pub trait Simd:
     fn swizzle_dyn_precise_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
     }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_i8x16(
+        self,
+        a: i8x16<Self>,
+        b: i8x16<Self>,
+        indices: u8x16<Self>,
+    ) -> i8x16<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_i8x16(
+        self,
+        a: i8x16<Self>,
+        b: i8x16<Self>,
+        indices: u8x16<Self>,
+    ) -> i8x16<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     fn count_ones_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Return the number of zeros in the binary representation of each element."]
@@ -482,6 +538,20 @@ pub trait Simd:
     fn swizzle_dyn_u8x16(self, a: u8x16<Self>, indices: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
     fn swizzle_dyn_precise_u8x16(self, a: u8x16<Self>, indices: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    fn concat_swizzle_dyn_u8x16(
+        self,
+        a: u8x16<Self>,
+        b: u8x16<Self>,
+        indices: u8x16<Self>,
+    ) -> u8x16<Self>;
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    fn concat_swizzle_dyn_precise_u8x16(
+        self,
+        a: u8x16<Self>,
+        b: u8x16<Self>,
+        indices: u8x16<Self>,
+    ) -> u8x16<Self>;
     #[doc = "Return the number of ones in the binary representation of each element."]
     fn count_ones_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Return the number of zeros in the binary representation of each element."]
@@ -629,6 +699,34 @@ pub trait Simd:
     fn swizzle_dyn_precise_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
     }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_i16x8(
+        self,
+        a: i16x8<Self>,
+        b: i16x8<Self>,
+        indices: u8x16<Self>,
+    ) -> i16x8<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_i16x8(
+        self,
+        a: i16x8<Self>,
+        b: i16x8<Self>,
+        indices: u8x16<Self>,
+    ) -> i16x8<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     fn count_ones_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Return the number of zeros in the binary representation of each element."]
@@ -746,6 +844,34 @@ pub trait Simd:
     #[inline(always)]
     fn swizzle_dyn_precise_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_u16x8(
+        self,
+        a: u16x8<Self>,
+        b: u16x8<Self>,
+        indices: u8x16<Self>,
+    ) -> u16x8<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u16x8(
+        self,
+        a: u16x8<Self>,
+        b: u16x8<Self>,
+        indices: u8x16<Self>,
+    ) -> u16x8<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
     }
     #[doc = "Return the number of ones in the binary representation of each element."]
     fn count_ones_u16x8(self, a: u16x8<Self>) -> u16x8<Self>;
@@ -900,6 +1026,34 @@ pub trait Simd:
     fn swizzle_dyn_precise_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
     }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_i32x4(
+        self,
+        a: i32x4<Self>,
+        b: i32x4<Self>,
+        indices: u8x16<Self>,
+    ) -> i32x4<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_i32x4(
+        self,
+        a: i32x4<Self>,
+        b: i32x4<Self>,
+        indices: u8x16<Self>,
+    ) -> i32x4<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     fn count_ones_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Return the number of zeros in the binary representation of each element."]
@@ -1019,6 +1173,34 @@ pub trait Simd:
     #[inline(always)]
     fn swizzle_dyn_precise_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_u32x4(
+        self,
+        a: u32x4<Self>,
+        b: u32x4<Self>,
+        indices: u8x16<Self>,
+    ) -> u32x4<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u32x4(
+        self,
+        a: u32x4<Self>,
+        b: u32x4<Self>,
+        indices: u8x16<Self>,
+    ) -> u32x4<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
     }
     #[doc = "Return the number of ones in the binary representation of each element."]
     fn count_ones_u32x4(self, a: u32x4<Self>) -> u32x4<Self>;
@@ -1175,6 +1357,34 @@ pub trait Simd:
     fn swizzle_dyn_precise_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
     }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_f64x2(
+        self,
+        a: f64x2<Self>,
+        b: f64x2<Self>,
+        indices: u8x16<Self>,
+    ) -> f64x2<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_f64x2(
+        self,
+        a: f64x2<Self>,
+        b: f64x2<Self>,
+        indices: u8x16<Self>,
+    ) -> f64x2<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
     #[doc = "Compute the absolute value of each element."]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Negate each element of the vector."]
@@ -1315,6 +1525,34 @@ pub trait Simd:
     fn swizzle_dyn_precise_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
     }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_i64x2(
+        self,
+        a: i64x2<Self>,
+        b: i64x2<Self>,
+        indices: u8x16<Self>,
+    ) -> i64x2<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_i64x2(
+        self,
+        a: i64x2<Self>,
+        b: i64x2<Self>,
+        indices: u8x16<Self>,
+    ) -> i64x2<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     fn count_ones_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Return the number of zeros in the binary representation of each element."]
@@ -1432,6 +1670,34 @@ pub trait Simd:
     #[inline(always)]
     fn swizzle_dyn_precise_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_u64x2(
+        self,
+        a: u64x2<Self>,
+        b: u64x2<Self>,
+        indices: u8x16<Self>,
+    ) -> u64x2<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u64x2(
+        self,
+        a: u64x2<Self>,
+        b: u64x2<Self>,
+        indices: u8x16<Self>,
+    ) -> u64x2<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x16(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
     }
     #[doc = "Return the number of ones in the binary representation of each element."]
     fn count_ones_u64x2(self, a: u64x2<Self>) -> u64x2<Self>;
@@ -1598,6 +1864,34 @@ pub trait Simd:
     #[inline(always)]
     fn swizzle_dyn_precise_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_f32x8(
+        self,
+        a: f32x8<Self>,
+        b: f32x8<Self>,
+        indices: u8x32<Self>,
+    ) -> f32x8<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_f32x8(
+        self,
+        a: f32x8<Self>,
+        b: f32x8<Self>,
+        indices: u8x32<Self>,
+    ) -> f32x8<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
     }
     #[doc = "Compute the absolute value of each element."]
     #[inline(always)]
@@ -1982,6 +2276,34 @@ pub trait Simd:
     fn swizzle_dyn_precise_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
     }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_i8x32(
+        self,
+        a: i8x32<Self>,
+        b: i8x32<Self>,
+        indices: u8x32<Self>,
+    ) -> i8x32<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_i8x32(
+        self,
+        a: i8x32<Self>,
+        b: i8x32<Self>,
+        indices: u8x32<Self>,
+    ) -> i8x32<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
@@ -2255,6 +2577,20 @@ pub trait Simd:
     fn swizzle_dyn_u8x32(self, a: u8x32<Self>, indices: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
     fn swizzle_dyn_precise_u8x32(self, a: u8x32<Self>, indices: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    fn concat_swizzle_dyn_u8x32(
+        self,
+        a: u8x32<Self>,
+        b: u8x32<Self>,
+        indices: u8x32<Self>,
+    ) -> u8x32<Self>;
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    fn concat_swizzle_dyn_precise_u8x32(
+        self,
+        a: u8x32<Self>,
+        b: u8x32<Self>,
+        indices: u8x32<Self>,
+    ) -> u8x32<Self>;
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
@@ -2634,6 +2970,34 @@ pub trait Simd:
     fn swizzle_dyn_precise_i16x16(self, a: i16x16<Self>, indices: u8x32<Self>) -> i16x16<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
     }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_i16x16(
+        self,
+        a: i16x16<Self>,
+        b: i16x16<Self>,
+        indices: u8x32<Self>,
+    ) -> i16x16<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_i16x16(
+        self,
+        a: i16x16<Self>,
+        b: i16x16<Self>,
+        indices: u8x32<Self>,
+    ) -> i16x16<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
@@ -2938,6 +3302,34 @@ pub trait Simd:
     #[inline(always)]
     fn swizzle_dyn_precise_u16x16(self, a: u16x16<Self>, indices: u8x32<Self>) -> u16x16<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_u16x16(
+        self,
+        a: u16x16<Self>,
+        b: u16x16<Self>,
+        indices: u8x32<Self>,
+    ) -> u16x16<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u16x16(
+        self,
+        a: u16x16<Self>,
+        b: u16x16<Self>,
+        indices: u8x32<Self>,
+    ) -> u16x16<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
     }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
@@ -3341,6 +3733,34 @@ pub trait Simd:
     fn swizzle_dyn_precise_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
     }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_i32x8(
+        self,
+        a: i32x8<Self>,
+        b: i32x8<Self>,
+        indices: u8x32<Self>,
+    ) -> i32x8<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_i32x8(
+        self,
+        a: i32x8<Self>,
+        b: i32x8<Self>,
+        indices: u8x32<Self>,
+    ) -> i32x8<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
@@ -3647,6 +4067,34 @@ pub trait Simd:
     #[inline(always)]
     fn swizzle_dyn_precise_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_u32x8(
+        self,
+        a: u32x8<Self>,
+        b: u32x8<Self>,
+        indices: u8x32<Self>,
+    ) -> u32x8<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u32x8(
+        self,
+        a: u32x8<Self>,
+        b: u32x8<Self>,
+        indices: u8x32<Self>,
+    ) -> u32x8<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
     }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
@@ -4056,6 +4504,34 @@ pub trait Simd:
     fn swizzle_dyn_precise_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
     }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_f64x4(
+        self,
+        a: f64x4<Self>,
+        b: f64x4<Self>,
+        indices: u8x32<Self>,
+    ) -> f64x4<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_f64x4(
+        self,
+        a: f64x4<Self>,
+        b: f64x4<Self>,
+        indices: u8x32<Self>,
+    ) -> f64x4<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
     #[doc = "Compute the absolute value of each element."]
     #[inline(always)]
     fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
@@ -4458,6 +4934,34 @@ pub trait Simd:
     fn swizzle_dyn_precise_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
     }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_i64x4(
+        self,
+        a: i64x4<Self>,
+        b: i64x4<Self>,
+        indices: u8x32<Self>,
+    ) -> i64x4<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_i64x4(
+        self,
+        a: i64x4<Self>,
+        b: i64x4<Self>,
+        indices: u8x32<Self>,
+    ) -> i64x4<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
@@ -4756,6 +5260,34 @@ pub trait Simd:
     #[inline(always)]
     fn swizzle_dyn_precise_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_u64x4(
+        self,
+        a: u64x4<Self>,
+        b: u64x4<Self>,
+        indices: u8x32<Self>,
+    ) -> u64x4<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u64x4(
+        self,
+        a: u64x4<Self>,
+        b: u64x4<Self>,
+        indices: u8x32<Self>,
+    ) -> u64x4<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x32(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
     }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
@@ -5161,6 +5693,34 @@ pub trait Simd:
     fn swizzle_dyn_precise_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
     }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_f32x16(
+        self,
+        a: f32x16<Self>,
+        b: f32x16<Self>,
+        indices: u8x64<Self>,
+    ) -> f32x16<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_f32x16(
+        self,
+        a: f32x16<Self>,
+        b: f32x16<Self>,
+        indices: u8x64<Self>,
+    ) -> f32x16<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
     #[doc = "Compute the absolute value of each element."]
     #[inline(always)]
     fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -5552,6 +6112,34 @@ pub trait Simd:
     fn swizzle_dyn_precise_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
     }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_i8x64(
+        self,
+        a: i8x64<Self>,
+        b: i8x64<Self>,
+        indices: u8x64<Self>,
+    ) -> i8x64<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_i8x64(
+        self,
+        a: i8x64<Self>,
+        b: i8x64<Self>,
+        indices: u8x64<Self>,
+    ) -> i8x64<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
@@ -5823,6 +6411,20 @@ pub trait Simd:
     fn swizzle_dyn_u8x64(self, a: u8x64<Self>, indices: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
     fn swizzle_dyn_precise_u8x64(self, a: u8x64<Self>, indices: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    fn concat_swizzle_dyn_u8x64(
+        self,
+        a: u8x64<Self>,
+        b: u8x64<Self>,
+        indices: u8x64<Self>,
+    ) -> u8x64<Self>;
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    fn concat_swizzle_dyn_precise_u8x64(
+        self,
+        a: u8x64<Self>,
+        b: u8x64<Self>,
+        indices: u8x64<Self>,
+    ) -> u8x64<Self>;
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
@@ -6198,6 +6800,34 @@ pub trait Simd:
     fn swizzle_dyn_precise_i16x32(self, a: i16x32<Self>, indices: u8x64<Self>) -> i16x32<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
     }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_i16x32(
+        self,
+        a: i16x32<Self>,
+        b: i16x32<Self>,
+        indices: u8x64<Self>,
+    ) -> i16x32<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_i16x32(
+        self,
+        a: i16x32<Self>,
+        b: i16x32<Self>,
+        indices: u8x64<Self>,
+    ) -> i16x32<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
@@ -6506,6 +7136,34 @@ pub trait Simd:
     #[inline(always)]
     fn swizzle_dyn_precise_u16x32(self, a: u16x32<Self>, indices: u8x64<Self>) -> u16x32<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_u16x32(
+        self,
+        a: u16x32<Self>,
+        b: u16x32<Self>,
+        indices: u8x64<Self>,
+    ) -> u16x32<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u16x32(
+        self,
+        a: u16x32<Self>,
+        b: u16x32<Self>,
+        indices: u8x64<Self>,
+    ) -> u16x32<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
     }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
@@ -6918,6 +7576,34 @@ pub trait Simd:
     fn swizzle_dyn_precise_i32x16(self, a: i32x16<Self>, indices: u8x64<Self>) -> i32x16<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
     }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_i32x16(
+        self,
+        a: i32x16<Self>,
+        b: i32x16<Self>,
+        indices: u8x64<Self>,
+    ) -> i32x16<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_i32x16(
+        self,
+        a: i32x16<Self>,
+        b: i32x16<Self>,
+        indices: u8x64<Self>,
+    ) -> i32x16<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
@@ -7226,6 +7912,34 @@ pub trait Simd:
     #[inline(always)]
     fn swizzle_dyn_precise_u32x16(self, a: u32x16<Self>, indices: u8x64<Self>) -> u32x16<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_u32x16(
+        self,
+        a: u32x16<Self>,
+        b: u32x16<Self>,
+        indices: u8x64<Self>,
+    ) -> u32x16<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u32x16(
+        self,
+        a: u32x16<Self>,
+        b: u32x16<Self>,
+        indices: u8x64<Self>,
+    ) -> u32x16<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
     }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
@@ -7631,6 +8345,34 @@ pub trait Simd:
     fn swizzle_dyn_precise_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
     }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_f64x8(
+        self,
+        a: f64x8<Self>,
+        b: f64x8<Self>,
+        indices: u8x64<Self>,
+    ) -> f64x8<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_f64x8(
+        self,
+        a: f64x8<Self>,
+        b: f64x8<Self>,
+        indices: u8x64<Self>,
+    ) -> f64x8<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
     #[doc = "Compute the absolute value of each element."]
     #[inline(always)]
     fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
@@ -8031,6 +8773,34 @@ pub trait Simd:
     fn swizzle_dyn_precise_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
     }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_i64x8(
+        self,
+        a: i64x8<Self>,
+        b: i64x8<Self>,
+        indices: u8x64<Self>,
+    ) -> i64x8<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_i64x8(
+        self,
+        a: i64x8<Self>,
+        b: i64x8<Self>,
+        indices: u8x64<Self>,
+    ) -> i64x8<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
@@ -8327,6 +9097,34 @@ pub trait Simd:
     #[inline(always)]
     fn swizzle_dyn_precise_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_u64x8(
+        self,
+        a: u64x8<Self>,
+        b: u64x8<Self>,
+        indices: u8x64<Self>,
+    ) -> u64x8<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
+    }
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u64x8(
+        self,
+        a: u64x8<Self>,
+        b: u64x8<Self>,
+        indices: u8x64<Self>,
+    ) -> u64x8<Self> {
+        Bytes::from_bytes(self.concat_swizzle_dyn_precise_u8x64(
+            Bytes::to_bytes(a),
+            Bytes::to_bytes(b),
+            indices,
+        ))
     }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
@@ -9247,6 +10045,18 @@ pub trait SimdBase<S: Simd>:
     fn swizzle_dyn(self, indices: impl SimdInto<Self::Bytes, S>) -> Self;
     #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero."]
     fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self;
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices safely produce implementation-defined byte values.\n\nUse [`SimdBase::concat_swizzle_dyn_precise`] if out-of-range indices must produce zero."]
+    fn concat_swizzle_dyn(
+        self,
+        rhs: impl SimdInto<Self, S>,
+        indices: impl SimdInto<Self::Bytes, S>,
+    ) -> Self;
+    #[doc = "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero."]
+    fn concat_swizzle_dyn_precise(
+        self,
+        rhs: impl SimdInto<Self, S>,
+        indices: impl SimdInto<Self::Bytes, S>,
+    ) -> Self;
     #[doc = "Return the maximum element in the vector. Integer vectors always return the exact maximum.\n\nFor floating-point vectors with no NaNs, this returns the true maximum. If any lane is NaN, the entire result is implementation-defined: it may be NaN or a numeric lane that is not the true maximum. See `reduce_max_precise` for a version that ignores quiet NaNs.\n\nIf the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned."]
     fn reduce_max(self) -> Self::Element;
     #[doc = "Return the minimum element in the vector. Integer vectors always return the exact minimum.\n\nFor floating-point vectors with no NaNs, this returns the true minimum. If any lane is NaN, the entire result is implementation-defined: it may be NaN or a numeric lane that is not the true minimum. See `reduce_min_precise` for a version that ignores quiet NaNs.\n\nIf the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned."]

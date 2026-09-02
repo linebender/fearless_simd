@@ -992,6 +992,40 @@ impl Simd for Neon {
         kernel(self, a, indices)
     }
     #[inline(always)]
+    fn concat_swizzle_dyn_u8x16(
+        self,
+        a: u8x16<Self>,
+        b: u8x16<Self>,
+        indices: u8x16<Self>,
+    ) -> u8x16<Self> {
+        self.concat_swizzle_dyn_precise_u8x16(a, b, indices)
+    }
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u8x16(
+        self,
+        a: u8x16<Self>,
+        b: u8x16<Self>,
+        indices: u8x16<Self>,
+    ) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Neon,
+                a: u8x16<Neon>,
+                b: u8x16<Neon>,
+                indices: u8x16<Neon>,
+            ) -> u8x16<Neon> {
+                let table = uint8x16x2_t(Bytes::to_bytes(a).val.0, Bytes::to_bytes(b).val.0);
+                let result = vqtbl2q_u8(table, indices.into());
+                Bytes::from_bytes(u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a, b, indices)
+    }
+    #[inline(always)]
     fn count_ones_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4989,6 +5023,44 @@ impl Simd for Neon {
         kernel(self, a, indices)
     }
     #[inline(always)]
+    fn concat_swizzle_dyn_u8x32(
+        self,
+        a: u8x32<Self>,
+        b: u8x32<Self>,
+        indices: u8x32<Self>,
+    ) -> u8x32<Self> {
+        self.concat_swizzle_dyn_precise_u8x32(a, b, indices)
+    }
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u8x32(
+        self,
+        a: u8x32<Self>,
+        b: u8x32<Self>,
+        indices: u8x32<Self>,
+    ) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Neon,
+                a: u8x32<Neon>,
+                b: u8x32<Neon>,
+                indices: u8x32<Neon>,
+            ) -> u8x32<Neon> {
+                let a = Bytes::to_bytes(a).val.0;
+                let b = Bytes::to_bytes(b).val.0;
+                let table = uint8x16x4_t(a.0, a.1, b.0, b.1);
+                let indices: uint8x16x2_t = indices.into();
+                let result =
+                    uint8x16x2_t(vqtbl4q_u8(table, indices.0), vqtbl4q_u8(table, indices.1));
+                Bytes::from_bytes(u8x32 {
+                    val: crate::support::Aligned256(result),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a, b, indices)
+    }
+    #[inline(always)]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self> {
         u8x64 {
             val: crate::support::Aligned512(uint8x16x4_t(
@@ -5837,6 +5909,48 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn concat_swizzle_dyn_u8x64(
+        self,
+        a: u8x64<Self>,
+        b: u8x64<Self>,
+        indices: u8x64<Self>,
+    ) -> u8x64<Self> {
+        self.concat_swizzle_dyn_precise_u8x64(a, b, indices)
+    }
+    #[inline(always)]
+    fn concat_swizzle_dyn_precise_u8x64(
+        self,
+        a: u8x64<Self>,
+        b: u8x64<Self>,
+        indices: u8x64<Self>,
+    ) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Neon,
+                a: u8x64<Neon>,
+                b: u8x64<Neon>,
+                indices: u8x64<Neon>,
+            ) -> u8x64<Neon> {
+                let a = Bytes::to_bytes(a).val.0;
+                let b = Bytes::to_bytes(b).val.0;
+                let indices: uint8x16x4_t = indices.into();
+                let b_offset = vdupq_n_u8(64);
+                let result = uint8x16x4_t(
+                    vqtbx4q_u8(vqtbl4q_u8(a, indices.0), b, vsubq_u8(indices.0, b_offset)),
+                    vqtbx4q_u8(vqtbl4q_u8(a, indices.1), b, vsubq_u8(indices.1, b_offset)),
+                    vqtbx4q_u8(vqtbl4q_u8(a, indices.2), b, vsubq_u8(indices.2, b_offset)),
+                    vqtbx4q_u8(vqtbl4q_u8(a, indices.3), b, vsubq_u8(indices.3, b_offset)),
+                );
+                Bytes::from_bytes(u8x64 {
+                    val: crate::support::Aligned512(result),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a, b, indices)
     }
     #[inline(always)]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>) {

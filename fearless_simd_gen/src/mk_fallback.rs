@@ -641,7 +641,7 @@ impl Level for Fallback {
                 let bytes_ty = vec_ty.bytes_ty();
                 let bytes_rust = bytes_ty.rust();
                 let byte_count = bytes_ty.len;
-                // This formulation lowers into one cmov per element on SSE2/SSE4.2
+                // This formulation requests branchless selection on scalar targets
                 // and autovectorizes on RISC-V.
                 quote! {
                     #method_sig {
@@ -652,7 +652,63 @@ impl Level for Fallback {
                             // and select zero afterwards. This avoids a branch that could be mispredicted.
                             let index = indices[lane] as usize;
                             let value = bytes[index % #byte_count];
-                            output[lane] = if index < #byte_count { value } else { 0 };
+                            output[lane] = core::hint::select_unpredictable(
+                                index < #byte_count,
+                                value,
+                                0u8,
+                            );
+                        }
+                        let result: #bytes_rust<Self> = output.simd_into(self);
+                        Bytes::from_bytes(result)
+                    }
+                }
+            }
+            OpSig::ConcatSwizzleDyn => {
+                let bytes_ty = vec_ty.bytes_ty();
+                let bytes_rust = bytes_ty.rust();
+                let byte_count = bytes_ty.len;
+                let table_byte_count = byte_count * 2;
+
+                quote! {
+                    #method_sig {
+                        let first_table = Bytes::to_bytes(a);
+                        let second_table = Bytes::to_bytes(b);
+                        let mut output = [0u8; #byte_count];
+                        for lane in 0..#byte_count {
+                            let index = indices[lane] as usize % #table_byte_count;
+                            output[lane] = if index < #byte_count {
+                                first_table[index]
+                            } else {
+                                second_table[index - #byte_count]
+                            };
+                        }
+                        let result: #bytes_rust<Self> = output.simd_into(self);
+                        Bytes::from_bytes(result)
+                    }
+                }
+            }
+            OpSig::ConcatSwizzleDynPrecise => {
+                let bytes_ty = vec_ty.bytes_ty();
+                let bytes_rust = bytes_ty.rust();
+                let byte_count = bytes_ty.len;
+                let table_byte_count = byte_count * 2;
+
+                quote! {
+                    #method_sig {
+                        let first_table = Bytes::to_bytes(a);
+                        let second_table = Bytes::to_bytes(b);
+                        let mut output = [0u8; #byte_count];
+                        for lane in 0..#byte_count {
+                            // Keep both possible loads in bounds so LLVM may execute them
+                            // unconditionally, then select zero for an out-of-range index.
+                            let index = indices[lane] as usize;
+                            let table_index = index % #byte_count;
+                            let value = if index < #byte_count {
+                                first_table[table_index]
+                            } else {
+                                second_table[table_index]
+                            };
+                            output[lane] = if index < #table_byte_count { value } else { 0 };
                         }
                         let result: #bytes_rust<Self> = output.simd_into(self);
                         Bytes::from_bytes(result)
