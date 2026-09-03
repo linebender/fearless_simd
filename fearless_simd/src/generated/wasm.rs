@@ -307,6 +307,12 @@ impl Simd for WasmSimd128 {
         f32x4_extract_lane::<0>(result)
     }
     #[inline(always)]
+    fn reduce_product_f32x4(self, a: f32x4<Self>) -> f32 {
+        let a: v128 = a.into();
+        let adjacent = f32x4_mul(a, u64x2_shr(a, 32));
+        f32x4_extract_lane::<0>(adjacent) * f32x4_extract_lane::<2>(adjacent)
+    }
+    #[inline(always)]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         #[cfg(target_feature = "relaxed-simd")]
         {
@@ -738,6 +744,14 @@ impl Simd for WasmSimd128 {
         i8x16_extract_lane::<0>(sum)
     }
     #[inline(always)]
+    fn reduce_product_i8x16(self, a: i8x16<Self>) -> i8 {
+        let a: v128 = a.into();
+        let product = i16x8_mul(a, u16x8_shr(a, 8));
+        let product = i16x8_mul(product, u64x2_shr(product, 32));
+        let product = i16x8_mul(product, u32x4_shr(product, 16));
+        i16x8_extract_lane::<0>(product).wrapping_mul(i16x8_extract_lane::<4>(product)) as i8
+    }
+    #[inline(always)]
     fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         i8x16_max(a.into(), b.into()).simd_into(self)
     }
@@ -1126,6 +1140,14 @@ impl Simd for WasmSimd128 {
             u8x16_shuffle::<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0>(sum, sum),
         );
         u8x16_extract_lane::<0>(sum)
+    }
+    #[inline(always)]
+    fn reduce_product_u8x16(self, a: u8x16<Self>) -> u8 {
+        let a: v128 = a.into();
+        let product = u16x8_mul(a, u16x8_shr(a, 8));
+        let product = u16x8_mul(product, u64x2_shr(product, 32));
+        let product = u16x8_mul(product, u32x4_shr(product, 16));
+        u16x8_extract_lane::<0>(product).wrapping_mul(u16x8_extract_lane::<4>(product)) as u8
     }
     #[inline(always)]
     fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -1555,6 +1577,13 @@ impl Simd for WasmSimd128 {
         i16x8_extract_lane::<0>(sum)
     }
     #[inline(always)]
+    fn reduce_product_i16x8(self, a: i16x8<Self>) -> i16 {
+        let a: v128 = a.into();
+        let product = i16x8_mul(a, u64x2_shr(a, 32));
+        let product = i16x8_mul(product, u32x4_shr(product, 16));
+        i16x8_extract_lane::<0>(product).wrapping_mul(i16x8_extract_lane::<4>(product))
+    }
+    #[inline(always)]
     fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         i16x8_max(a.into(), b.into()).simd_into(self)
     }
@@ -1837,6 +1866,13 @@ impl Simd for WasmSimd128 {
         let sum = u16x8_add(sum, u16x8_shuffle::<2, 3, 4, 5, 6, 7, 0, 1>(sum, sum));
         let sum = u16x8_add(sum, u16x8_shuffle::<1, 2, 3, 4, 5, 6, 7, 0>(sum, sum));
         u16x8_extract_lane::<0>(sum)
+    }
+    #[inline(always)]
+    fn reduce_product_u16x8(self, a: u16x8<Self>) -> u16 {
+        let a: v128 = a.into();
+        let product = u16x8_mul(a, u64x2_shr(a, 32));
+        let product = u16x8_mul(product, u32x4_shr(product, 16));
+        u16x8_extract_lane::<0>(product).wrapping_mul(u16x8_extract_lane::<4>(product))
     }
     #[inline(always)]
     fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -2240,6 +2276,12 @@ impl Simd for WasmSimd128 {
         i32x4_extract_lane::<0>(sum)
     }
     #[inline(always)]
+    fn reduce_product_i32x4(self, a: i32x4<Self>) -> i32 {
+        let a: v128 = a.into();
+        let product = i32x4_mul(a, u64x2_shr(a, 32));
+        i32x4_extract_lane::<0>(product).wrapping_mul(i32x4_extract_lane::<2>(product))
+    }
+    #[inline(always)]
     fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         i32x4_max(a.into(), b.into()).simd_into(self)
     }
@@ -2512,6 +2554,12 @@ impl Simd for WasmSimd128 {
         let sum = u32x4_add(sum, u32x4_shuffle::<2, 3, 0, 1>(sum, sum));
         let sum = u32x4_add(sum, u32x4_shuffle::<1, 2, 3, 0>(sum, sum));
         u32x4_extract_lane::<0>(sum)
+    }
+    #[inline(always)]
+    fn reduce_product_u32x4(self, a: u32x4<Self>) -> u32 {
+        let a: v128 = a.into();
+        let product = u32x4_mul(a, u64x2_shr(a, 32));
+        u32x4_extract_lane::<0>(product).wrapping_mul(u32x4_extract_lane::<2>(product))
     }
     #[inline(always)]
     fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -2884,6 +2932,11 @@ impl Simd for WasmSimd128 {
         f64x2_extract_lane::<0>(result)
     }
     #[inline(always)]
+    fn reduce_product_f64x2(self, a: f64x2<Self>) -> f64 {
+        let a: v128 = a.into();
+        f64x2_extract_lane::<0>(a) * f64x2_extract_lane::<1>(a)
+    }
+    #[inline(always)]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         #[cfg(target_feature = "relaxed-simd")]
         {
@@ -3224,6 +3277,11 @@ impl Simd for WasmSimd128 {
         i64x2_extract_lane::<0>(sum)
     }
     #[inline(always)]
+    fn reduce_product_i64x2(self, a: i64x2<Self>) -> i64 {
+        let a: v128 = a.into();
+        i64x2_extract_lane::<0>(a).wrapping_mul(i64x2_extract_lane::<1>(a))
+    }
+    #[inline(always)]
     fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         [
             i64::max(a[0usize], b[0usize]),
@@ -3497,6 +3555,11 @@ impl Simd for WasmSimd128 {
         let sum: v128 = a.into();
         let sum = u64x2_add(sum, u64x2_shuffle::<1, 0>(sum, sum));
         u64x2_extract_lane::<0>(sum)
+    }
+    #[inline(always)]
+    fn reduce_product_u64x2(self, a: u64x2<Self>) -> u64 {
+        let a: v128 = a.into();
+        u64x2_extract_lane::<0>(a).wrapping_mul(u64x2_extract_lane::<1>(a))
     }
     #[inline(always)]
     fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {

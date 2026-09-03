@@ -282,6 +282,19 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_product_f32x4(self, a: f32x4<Self>) -> f32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> f32 {
+                let product: float32x4_t = a.into();
+                let product = vmulq_f32(product, vextq_f32::<1>(product, product));
+                let product = vmulq_f32(product, vextq_f32::<2>(product, product));
+                vgetq_lane_f32::<0>(product)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -773,6 +786,21 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_product_i8x16(self, a: i8x16<Self>) -> i8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>) -> i8 {
+                let product: int8x16_t = a.into();
+                let product = vmulq_s8(product, vextq_s8::<1>(product, product));
+                let product = vmulq_s8(product, vextq_s8::<2>(product, product));
+                let product = vmulq_s8(product, vextq_s8::<4>(product, product));
+                let product = vmulq_s8(product, vextq_s8::<8>(product, product));
+                vgetq_lane_s8::<0>(product)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1181,6 +1209,21 @@ impl Simd for Neon {
             #[inline(always)]
             fn kernel(token: Neon, a: u8x16<Neon>) -> u8 {
                 vaddvq_u8(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_product_u8x16(self, a: u8x16<Self>) -> u8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>) -> u8 {
+                let product: uint8x16_t = a.into();
+                let product = vmulq_u8(product, vextq_u8::<1>(product, product));
+                let product = vmulq_u8(product, vextq_u8::<2>(product, product));
+                let product = vmulq_u8(product, vextq_u8::<4>(product, product));
+                let product = vmulq_u8(product, vextq_u8::<8>(product, product));
+                vgetq_lane_u8::<0>(product)
             }
         );
         kernel(self, a)
@@ -1776,6 +1819,20 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_product_i16x8(self, a: i16x8<Self>) -> i16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>) -> i16 {
+                let product: int16x8_t = a.into();
+                let product = vmulq_s16(product, vextq_s16::<1>(product, product));
+                let product = vmulq_s16(product, vextq_s16::<2>(product, product));
+                let product = vmulq_s16(product, vextq_s16::<4>(product, product));
+                vgetq_lane_s16::<0>(product)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2183,6 +2240,20 @@ impl Simd for Neon {
             #[inline(always)]
             fn kernel(token: Neon, a: u16x8<Neon>) -> u16 {
                 vaddvq_u16(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_product_u16x8(self, a: u16x8<Self>) -> u16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>) -> u16 {
+                let product: uint16x8_t = a.into();
+                let product = vmulq_u16(product, vextq_u16::<1>(product, product));
+                let product = vmulq_u16(product, vextq_u16::<2>(product, product));
+                let product = vmulq_u16(product, vextq_u16::<4>(product, product));
+                vgetq_lane_u16::<0>(product)
             }
         );
         kernel(self, a)
@@ -2803,6 +2874,19 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_product_i32x4(self, a: i32x4<Self>) -> i32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>) -> i32 {
+                let product: int32x4_t = a.into();
+                let product = vmulq_s32(product, vextq_s32::<1>(product, product));
+                let product = vmulq_s32(product, vextq_s32::<2>(product, product));
+                vgetq_lane_s32::<0>(product)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3220,6 +3304,19 @@ impl Simd for Neon {
             #[inline(always)]
             fn kernel(token: Neon, a: u32x4<Neon>) -> u32 {
                 vaddvq_u32(a.into())
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_product_u32x4(self, a: u32x4<Self>) -> u32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>) -> u32 {
+                let product: uint32x4_t = a.into();
+                let product = vmulq_u32(product, vextq_u32::<1>(product, product));
+                let product = vmulq_u32(product, vextq_u32::<2>(product, product));
+                vgetq_lane_u32::<0>(product)
             }
         );
         kernel(self, a)
@@ -3813,6 +3910,17 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_product_f64x2(self, a: f64x2<Self>) -> f64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> f64 {
+                let a: float64x2_t = a.into();
+                vgetq_lane_f64::<0>(a) * vgetq_lane_f64::<1>(a)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4300,6 +4408,11 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reduce_product_i64x2(self, a: i64x2<Self>) -> i64 {
+        let mul_level_0: [i64; 1usize] = [a[0usize].wrapping_mul(a[1usize])];
+        mul_level_0[0]
+    }
+    #[inline(always)]
     fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         [
             i64::max(a[0usize], b[0usize]),
@@ -4694,6 +4807,11 @@ impl Simd for Neon {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_product_u64x2(self, a: u64x2<Self>) -> u64 {
+        let mul_level_0: [u64; 1usize] = [a[0usize].wrapping_mul(a[1usize])];
+        mul_level_0[0]
     }
     #[inline(always)]
     fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {

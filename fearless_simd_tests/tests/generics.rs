@@ -94,6 +94,10 @@ fn generic_reduce_sum<S: Simd, V: SimdBase<S>>(vector: V) -> V::Element {
     vector.reduce_sum()
 }
 
+fn generic_reduce_product<S: Simd, V: SimdBase<S>>(vector: V) -> V::Element {
+    vector.reduce_product()
+}
+
 // Ensure that a generic vector's 128-bit block is its own block
 fn generic_block_splat<S: Simd, V: SimdBase<S>>(block: V::Block) -> V::Block {
     V::Block::block_splat(block)

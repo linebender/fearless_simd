@@ -334,9 +334,15 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn reduce_sum_f32x4(self, a: f32x4<Self>) -> f32 {
-        let sum_level_0: [f32; 2usize] = [a[0usize] + a[1usize], a[2usize] + a[3usize]];
-        let sum_level_1: [f32; 1usize] = [sum_level_0[0usize] + sum_level_0[1usize]];
-        sum_level_1[0]
+        let add_level_0: [f32; 2usize] = [a[0usize] + a[1usize], a[2usize] + a[3usize]];
+        let add_level_1: [f32; 1usize] = [add_level_0[0usize] + add_level_0[1usize]];
+        add_level_1[0]
+    }
+    #[inline(always)]
+    fn reduce_product_f32x4(self, a: f32x4<Self>) -> f32 {
+        let mul_level_0: [f32; 2usize] = [a[0usize] * a[1usize], a[2usize] * a[3usize]];
+        let mul_level_1: [f32; 1usize] = [mul_level_0[0usize] * mul_level_0[1usize]];
+        mul_level_1[0]
     }
     #[inline(always)]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
@@ -1020,7 +1026,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn reduce_sum_i8x16(self, a: i8x16<Self>) -> i8 {
-        let sum_level_0: [i8; 8usize] = [
+        let add_level_0: [i8; 8usize] = [
             a[0usize].wrapping_add(a[1usize]),
             a[2usize].wrapping_add(a[3usize]),
             a[4usize].wrapping_add(a[5usize]),
@@ -1030,18 +1036,43 @@ impl Simd for Fallback {
             a[12usize].wrapping_add(a[13usize]),
             a[14usize].wrapping_add(a[15usize]),
         ];
-        let sum_level_1: [i8; 4usize] = [
-            sum_level_0[0usize].wrapping_add(sum_level_0[1usize]),
-            sum_level_0[2usize].wrapping_add(sum_level_0[3usize]),
-            sum_level_0[4usize].wrapping_add(sum_level_0[5usize]),
-            sum_level_0[6usize].wrapping_add(sum_level_0[7usize]),
+        let add_level_1: [i8; 4usize] = [
+            add_level_0[0usize].wrapping_add(add_level_0[1usize]),
+            add_level_0[2usize].wrapping_add(add_level_0[3usize]),
+            add_level_0[4usize].wrapping_add(add_level_0[5usize]),
+            add_level_0[6usize].wrapping_add(add_level_0[7usize]),
         ];
-        let sum_level_2: [i8; 2usize] = [
-            sum_level_1[0usize].wrapping_add(sum_level_1[1usize]),
-            sum_level_1[2usize].wrapping_add(sum_level_1[3usize]),
+        let add_level_2: [i8; 2usize] = [
+            add_level_1[0usize].wrapping_add(add_level_1[1usize]),
+            add_level_1[2usize].wrapping_add(add_level_1[3usize]),
         ];
-        let sum_level_3: [i8; 1usize] = [sum_level_2[0usize].wrapping_add(sum_level_2[1usize])];
-        sum_level_3[0]
+        let add_level_3: [i8; 1usize] = [add_level_2[0usize].wrapping_add(add_level_2[1usize])];
+        add_level_3[0]
+    }
+    #[inline(always)]
+    fn reduce_product_i8x16(self, a: i8x16<Self>) -> i8 {
+        let mul_level_0: [i8; 8usize] = [
+            a[0usize].wrapping_mul(a[1usize]),
+            a[2usize].wrapping_mul(a[3usize]),
+            a[4usize].wrapping_mul(a[5usize]),
+            a[6usize].wrapping_mul(a[7usize]),
+            a[8usize].wrapping_mul(a[9usize]),
+            a[10usize].wrapping_mul(a[11usize]),
+            a[12usize].wrapping_mul(a[13usize]),
+            a[14usize].wrapping_mul(a[15usize]),
+        ];
+        let mul_level_1: [i8; 4usize] = [
+            mul_level_0[0usize].wrapping_mul(mul_level_0[1usize]),
+            mul_level_0[2usize].wrapping_mul(mul_level_0[3usize]),
+            mul_level_0[4usize].wrapping_mul(mul_level_0[5usize]),
+            mul_level_0[6usize].wrapping_mul(mul_level_0[7usize]),
+        ];
+        let mul_level_2: [i8; 2usize] = [
+            mul_level_1[0usize].wrapping_mul(mul_level_1[1usize]),
+            mul_level_1[2usize].wrapping_mul(mul_level_1[3usize]),
+        ];
+        let mul_level_3: [i8; 1usize] = [mul_level_2[0usize].wrapping_mul(mul_level_2[1usize])];
+        mul_level_3[0]
     }
     #[inline(always)]
     fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -1989,7 +2020,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn reduce_sum_u8x16(self, a: u8x16<Self>) -> u8 {
-        let sum_level_0: [u8; 8usize] = [
+        let add_level_0: [u8; 8usize] = [
             a[0usize].wrapping_add(a[1usize]),
             a[2usize].wrapping_add(a[3usize]),
             a[4usize].wrapping_add(a[5usize]),
@@ -1999,18 +2030,43 @@ impl Simd for Fallback {
             a[12usize].wrapping_add(a[13usize]),
             a[14usize].wrapping_add(a[15usize]),
         ];
-        let sum_level_1: [u8; 4usize] = [
-            sum_level_0[0usize].wrapping_add(sum_level_0[1usize]),
-            sum_level_0[2usize].wrapping_add(sum_level_0[3usize]),
-            sum_level_0[4usize].wrapping_add(sum_level_0[5usize]),
-            sum_level_0[6usize].wrapping_add(sum_level_0[7usize]),
+        let add_level_1: [u8; 4usize] = [
+            add_level_0[0usize].wrapping_add(add_level_0[1usize]),
+            add_level_0[2usize].wrapping_add(add_level_0[3usize]),
+            add_level_0[4usize].wrapping_add(add_level_0[5usize]),
+            add_level_0[6usize].wrapping_add(add_level_0[7usize]),
         ];
-        let sum_level_2: [u8; 2usize] = [
-            sum_level_1[0usize].wrapping_add(sum_level_1[1usize]),
-            sum_level_1[2usize].wrapping_add(sum_level_1[3usize]),
+        let add_level_2: [u8; 2usize] = [
+            add_level_1[0usize].wrapping_add(add_level_1[1usize]),
+            add_level_1[2usize].wrapping_add(add_level_1[3usize]),
         ];
-        let sum_level_3: [u8; 1usize] = [sum_level_2[0usize].wrapping_add(sum_level_2[1usize])];
-        sum_level_3[0]
+        let add_level_3: [u8; 1usize] = [add_level_2[0usize].wrapping_add(add_level_2[1usize])];
+        add_level_3[0]
+    }
+    #[inline(always)]
+    fn reduce_product_u8x16(self, a: u8x16<Self>) -> u8 {
+        let mul_level_0: [u8; 8usize] = [
+            a[0usize].wrapping_mul(a[1usize]),
+            a[2usize].wrapping_mul(a[3usize]),
+            a[4usize].wrapping_mul(a[5usize]),
+            a[6usize].wrapping_mul(a[7usize]),
+            a[8usize].wrapping_mul(a[9usize]),
+            a[10usize].wrapping_mul(a[11usize]),
+            a[12usize].wrapping_mul(a[13usize]),
+            a[14usize].wrapping_mul(a[15usize]),
+        ];
+        let mul_level_1: [u8; 4usize] = [
+            mul_level_0[0usize].wrapping_mul(mul_level_0[1usize]),
+            mul_level_0[2usize].wrapping_mul(mul_level_0[3usize]),
+            mul_level_0[4usize].wrapping_mul(mul_level_0[5usize]),
+            mul_level_0[6usize].wrapping_mul(mul_level_0[7usize]),
+        ];
+        let mul_level_2: [u8; 2usize] = [
+            mul_level_1[0usize].wrapping_mul(mul_level_1[1usize]),
+            mul_level_1[2usize].wrapping_mul(mul_level_1[3usize]),
+        ];
+        let mul_level_3: [u8; 1usize] = [mul_level_2[0usize].wrapping_mul(mul_level_2[1usize])];
+        mul_level_3[0]
     }
     #[inline(always)]
     fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -3086,18 +3142,33 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn reduce_sum_i16x8(self, a: i16x8<Self>) -> i16 {
-        let sum_level_0: [i16; 4usize] = [
+        let add_level_0: [i16; 4usize] = [
             a[0usize].wrapping_add(a[1usize]),
             a[2usize].wrapping_add(a[3usize]),
             a[4usize].wrapping_add(a[5usize]),
             a[6usize].wrapping_add(a[7usize]),
         ];
-        let sum_level_1: [i16; 2usize] = [
-            sum_level_0[0usize].wrapping_add(sum_level_0[1usize]),
-            sum_level_0[2usize].wrapping_add(sum_level_0[3usize]),
+        let add_level_1: [i16; 2usize] = [
+            add_level_0[0usize].wrapping_add(add_level_0[1usize]),
+            add_level_0[2usize].wrapping_add(add_level_0[3usize]),
         ];
-        let sum_level_2: [i16; 1usize] = [sum_level_1[0usize].wrapping_add(sum_level_1[1usize])];
-        sum_level_2[0]
+        let add_level_2: [i16; 1usize] = [add_level_1[0usize].wrapping_add(add_level_1[1usize])];
+        add_level_2[0]
+    }
+    #[inline(always)]
+    fn reduce_product_i16x8(self, a: i16x8<Self>) -> i16 {
+        let mul_level_0: [i16; 4usize] = [
+            a[0usize].wrapping_mul(a[1usize]),
+            a[2usize].wrapping_mul(a[3usize]),
+            a[4usize].wrapping_mul(a[5usize]),
+            a[6usize].wrapping_mul(a[7usize]),
+        ];
+        let mul_level_1: [i16; 2usize] = [
+            mul_level_0[0usize].wrapping_mul(mul_level_0[1usize]),
+            mul_level_0[2usize].wrapping_mul(mul_level_0[3usize]),
+        ];
+        let mul_level_2: [i16; 1usize] = [mul_level_1[0usize].wrapping_mul(mul_level_1[1usize])];
+        mul_level_2[0]
     }
     #[inline(always)]
     fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -3696,18 +3767,33 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn reduce_sum_u16x8(self, a: u16x8<Self>) -> u16 {
-        let sum_level_0: [u16; 4usize] = [
+        let add_level_0: [u16; 4usize] = [
             a[0usize].wrapping_add(a[1usize]),
             a[2usize].wrapping_add(a[3usize]),
             a[4usize].wrapping_add(a[5usize]),
             a[6usize].wrapping_add(a[7usize]),
         ];
-        let sum_level_1: [u16; 2usize] = [
-            sum_level_0[0usize].wrapping_add(sum_level_0[1usize]),
-            sum_level_0[2usize].wrapping_add(sum_level_0[3usize]),
+        let add_level_1: [u16; 2usize] = [
+            add_level_0[0usize].wrapping_add(add_level_0[1usize]),
+            add_level_0[2usize].wrapping_add(add_level_0[3usize]),
         ];
-        let sum_level_2: [u16; 1usize] = [sum_level_1[0usize].wrapping_add(sum_level_1[1usize])];
-        sum_level_2[0]
+        let add_level_2: [u16; 1usize] = [add_level_1[0usize].wrapping_add(add_level_1[1usize])];
+        add_level_2[0]
+    }
+    #[inline(always)]
+    fn reduce_product_u16x8(self, a: u16x8<Self>) -> u16 {
+        let mul_level_0: [u16; 4usize] = [
+            a[0usize].wrapping_mul(a[1usize]),
+            a[2usize].wrapping_mul(a[3usize]),
+            a[4usize].wrapping_mul(a[5usize]),
+            a[6usize].wrapping_mul(a[7usize]),
+        ];
+        let mul_level_1: [u16; 2usize] = [
+            mul_level_0[0usize].wrapping_mul(mul_level_0[1usize]),
+            mul_level_0[2usize].wrapping_mul(mul_level_0[3usize]),
+        ];
+        let mul_level_2: [u16; 1usize] = [mul_level_1[0usize].wrapping_mul(mul_level_1[1usize])];
+        mul_level_2[0]
     }
     #[inline(always)]
     fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -4476,12 +4562,21 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn reduce_sum_i32x4(self, a: i32x4<Self>) -> i32 {
-        let sum_level_0: [i32; 2usize] = [
+        let add_level_0: [i32; 2usize] = [
             a[0usize].wrapping_add(a[1usize]),
             a[2usize].wrapping_add(a[3usize]),
         ];
-        let sum_level_1: [i32; 1usize] = [sum_level_0[0usize].wrapping_add(sum_level_0[1usize])];
-        sum_level_1[0]
+        let add_level_1: [i32; 1usize] = [add_level_0[0usize].wrapping_add(add_level_0[1usize])];
+        add_level_1[0]
+    }
+    #[inline(always)]
+    fn reduce_product_i32x4(self, a: i32x4<Self>) -> i32 {
+        let mul_level_0: [i32; 2usize] = [
+            a[0usize].wrapping_mul(a[1usize]),
+            a[2usize].wrapping_mul(a[3usize]),
+        ];
+        let mul_level_1: [i32; 1usize] = [mul_level_0[0usize].wrapping_mul(mul_level_0[1usize])];
+        mul_level_1[0]
     }
     #[inline(always)]
     fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -4875,12 +4970,21 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn reduce_sum_u32x4(self, a: u32x4<Self>) -> u32 {
-        let sum_level_0: [u32; 2usize] = [
+        let add_level_0: [u32; 2usize] = [
             a[0usize].wrapping_add(a[1usize]),
             a[2usize].wrapping_add(a[3usize]),
         ];
-        let sum_level_1: [u32; 1usize] = [sum_level_0[0usize].wrapping_add(sum_level_0[1usize])];
-        sum_level_1[0]
+        let add_level_1: [u32; 1usize] = [add_level_0[0usize].wrapping_add(add_level_0[1usize])];
+        add_level_1[0]
+    }
+    #[inline(always)]
+    fn reduce_product_u32x4(self, a: u32x4<Self>) -> u32 {
+        let mul_level_0: [u32; 2usize] = [
+            a[0usize].wrapping_mul(a[1usize]),
+            a[2usize].wrapping_mul(a[3usize]),
+        ];
+        let mul_level_1: [u32; 1usize] = [mul_level_0[0usize].wrapping_mul(mul_level_0[1usize])];
+        mul_level_1[0]
     }
     #[inline(always)]
     fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -5355,8 +5459,13 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn reduce_sum_f64x2(self, a: f64x2<Self>) -> f64 {
-        let sum_level_0: [f64; 1usize] = [a[0usize] + a[1usize]];
-        sum_level_0[0]
+        let add_level_0: [f64; 1usize] = [a[0usize] + a[1usize]];
+        add_level_0[0]
+    }
+    #[inline(always)]
+    fn reduce_product_f64x2(self, a: f64x2<Self>) -> f64 {
+        let mul_level_0: [f64; 1usize] = [a[0usize] * a[1usize]];
+        mul_level_0[0]
     }
     #[inline(always)]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
@@ -5714,8 +5823,13 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn reduce_sum_i64x2(self, a: i64x2<Self>) -> i64 {
-        let sum_level_0: [i64; 1usize] = [a[0usize].wrapping_add(a[1usize])];
-        sum_level_0[0]
+        let add_level_0: [i64; 1usize] = [a[0usize].wrapping_add(a[1usize])];
+        add_level_0[0]
+    }
+    #[inline(always)]
+    fn reduce_product_i64x2(self, a: i64x2<Self>) -> i64 {
+        let mul_level_0: [i64; 1usize] = [a[0usize].wrapping_mul(a[1usize])];
+        mul_level_0[0]
     }
     #[inline(always)]
     fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -6012,8 +6126,13 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn reduce_sum_u64x2(self, a: u64x2<Self>) -> u64 {
-        let sum_level_0: [u64; 1usize] = [a[0usize].wrapping_add(a[1usize])];
-        sum_level_0[0]
+        let add_level_0: [u64; 1usize] = [a[0usize].wrapping_add(a[1usize])];
+        add_level_0[0]
+    }
+    #[inline(always)]
+    fn reduce_product_u64x2(self, a: u64x2<Self>) -> u64 {
+        let mul_level_0: [u64; 1usize] = [a[0usize].wrapping_mul(a[1usize])];
+        mul_level_0[0]
     }
     #[inline(always)]
     fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {

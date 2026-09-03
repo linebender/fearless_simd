@@ -221,6 +221,84 @@ fn reduce_sum(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
     }
 }
 
+fn reduce_product(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(
+        vec_ty.n_bits(),
+        128,
+        "wide reductions must use the generic 128-bit-grained implementation"
+    );
+
+    let body = match (vec_ty.scalar, vec_ty.scalar_bits) {
+        (ScalarType::Float, 32) => quote! {
+            let a: v128 = a.into();
+            // Shifting each 64-bit half places lanes 1 and 3 in lanes 0 and 2,
+            // respectively. Only those two products feed the result, preserving
+            // the promised adjacent balanced tree exactly. The multiplications by
+            // zero in the unused lanes have no observable status flags in WASM.
+            let adjacent = f32x4_mul(a, u64x2_shr(a, 32));
+            f32x4_extract_lane::<0>(adjacent) * f32x4_extract_lane::<2>(adjacent)
+        },
+        (ScalarType::Float, 64) => quote! {
+            let a: v128 = a.into();
+            f64x2_extract_lane::<0>(a) * f64x2_extract_lane::<1>(a)
+        },
+        (ScalarType::Int | ScalarType::Unsigned, 8) => {
+            // WASM has no packed 8-bit multiply. Reinterpret each adjacent byte pair as
+            // the 16-bit value `even + 256 * odd`, shift out `odd`, and multiply. The low
+            // byte is `even * odd` modulo 2^8; pollution in the high byte cannot affect
+            // the final low byte through subsequent multiplications.
+            let widened_ty = VecType::new(vec_ty.scalar, 16, 8);
+            let mul = simple_intrinsic("mul", &widened_ty);
+            let extract = simple_intrinsic("extract_lane", &widened_ty);
+            let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+
+            quote! {
+                let a: v128 = a.into();
+                let product = #mul(a, u16x8_shr(a, 8));
+                let product = #mul(product, u64x2_shr(product, 32));
+                let product = #mul(product, u32x4_shr(product, 16));
+                #extract::<0>(product)
+                    .wrapping_mul(#extract::<4>(product)) as #scalar
+            }
+        }
+        (ScalarType::Int | ScalarType::Unsigned, 16) => {
+            let mul = simple_intrinsic("mul", vec_ty);
+            let extract = simple_intrinsic("extract_lane", vec_ty);
+
+            quote! {
+                let a: v128 = a.into();
+                let product = #mul(a, u64x2_shr(a, 32));
+                let product = #mul(product, u32x4_shr(product, 16));
+                #extract::<0>(product).wrapping_mul(#extract::<4>(product))
+            }
+        }
+        (ScalarType::Int | ScalarType::Unsigned, 32) => {
+            let mul = simple_intrinsic("mul", vec_ty);
+            let extract = simple_intrinsic("extract_lane", vec_ty);
+
+            quote! {
+                let a: v128 = a.into();
+                let product = #mul(a, u64x2_shr(a, 32));
+                #extract::<0>(product).wrapping_mul(#extract::<2>(product))
+            }
+        }
+        (ScalarType::Int | ScalarType::Unsigned, 64) => {
+            let extract = simple_intrinsic("extract_lane", vec_ty);
+            quote! {
+                let a: v128 = a.into();
+                #extract::<0>(a).wrapping_mul(#extract::<1>(a))
+            }
+        }
+        _ => unreachable!("reduce_product only operates on numeric vectors"),
+    };
+
+    quote! {
+        #method_sig {
+            #body
+        }
+    }
+}
+
 fn saturating_add_sub_method(op: Op, vec_ty: &VecType, arithmetic: SaturatingOp) -> TokenStream {
     use SaturatingOp::{Add, Sub};
 
@@ -467,6 +545,8 @@ impl Level for WasmSimd128 {
             OpSig::Reduce { lane_op } => {
                 if lane_op == "add" {
                     reduce_sum(method_sig, vec_ty)
+                } else if lane_op == "mul" {
+                    reduce_product(method_sig, vec_ty)
                 } else if vec_ty.scalar_bits == 64
                     && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
                 {
