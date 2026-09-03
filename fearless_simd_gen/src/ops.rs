@@ -47,6 +47,13 @@ pub(crate) enum NarrowingMode {
     Saturate,
     Relaxed,
 }
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum SaturatingOp {
+    Add,
+    Sub,
+}
+
 #[derive(Clone, Copy)]
 pub(crate) enum OpSig {
     /// Takes a single scalar argument, and returns the corresponding vector type.
@@ -986,10 +993,30 @@ const INT_OPS: &[Op] = &[
         "Add two vectors element-wise, wrapping on overflow.",
     ),
     Op::new(
+        "saturating_add",
+        OpKind::VecTraitMethod,
+        OpSig::Binary,
+        "Add two vectors element-wise, saturating on overflow.\n\n\
+        \"Saturating\" means that if the result is not representable, \
+        the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\n\
+        On x86 it is implemented in hardware only for 8-bit and 16-bit elements. \
+        For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86.",
+    ),
+    Op::new(
         "sub",
         OpKind::Overloaded(CoreOpTrait::Sub),
         OpSig::Binary,
         "Subtract two vectors element-wise, wrapping on overflow.",
+    ),
+    Op::new(
+        "saturating_sub",
+        OpKind::VecTraitMethod,
+        OpSig::Binary,
+        "Subtract two vectors element-wise, saturating on overflow.\n\n\
+        \"Saturating\" means that if the result is not representable, \
+        the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\n\
+        On x86 it is implemented in hardware only for 8-bit and 16-bit elements. \
+        For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86.",
     ),
     Op::new(
         "mul",

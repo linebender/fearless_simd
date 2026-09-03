@@ -14,7 +14,8 @@ use crate::generic::{
 };
 use crate::level::Level;
 use crate::ops::{
-    ElementDirection, NarrowingMode, Op, OpSig, Quantifier, SlideGranularity, relaxed_narrow_method,
+    ElementDirection, NarrowingMode, Op, OpSig, Quantifier, SaturatingOp, SlideGranularity,
+    relaxed_narrow_method,
 };
 use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Literal, Span, TokenStream};
@@ -2339,8 +2340,258 @@ impl X86 {
         }
     }
 
+    fn handle_saturating_add_sub(
+        &self,
+        op: Op,
+        saturating_op: SaturatingOp,
+        vec_ty: &VecType,
+    ) -> TokenStream {
+        use SaturatingOp::{Add, Sub};
+        use ScalarType::{Float, Int, Unsigned};
+
+        assert!(
+            matches!(vec_ty.scalar, Int | Unsigned),
+            "Saturating arithmetic is not implementable for floats"
+        );
+
+        match (*self, vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits()) {
+            // x86 has native instructions for 8-bit and 16-bit elements only.
+            (_, _, 8 | 16, _) => {
+                let intrinsic = simple_intrinsic(
+                    match saturating_op {
+                        Add => "adds",
+                        Sub => "subs",
+                    },
+                    vec_ty,
+                );
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        #intrinsic(a.into(), b.into()).simd_into(#token)
+                    }
+                })
+            }
+            // SSE2 emulations are possible but complex so we don't bother, SSE2 is too rare.
+            (Self::Sse2, _, 32 | 64, _) => fallback_method(op, vec_ty),
+            (Self::Avx512, Int, lane_bits @ (32 | 64), bits) => {
+                let shift = Literal::usize_unsuffixed(lane_bits - 1);
+                let max = match lane_bits {
+                    32 => quote! { i32::MAX },
+                    64 => quote! { i64::MAX },
+                    _ => unreachable!(),
+                };
+                let suffix = format!("epi{lane_bits}");
+                let arithmetic = intrinsic_ident(
+                    match saturating_op {
+                        Add => "add",
+                        Sub => "sub",
+                    },
+                    &suffix,
+                    bits,
+                );
+                let add = intrinsic_ident("add", &suffix, bits);
+                let shift_right_logical = intrinsic_ident("srli", &suffix, bits);
+                let shift_right_arithmetic = intrinsic_ident("srai", &suffix, bits);
+                let set1 = set1_intrinsic(vec_ty);
+                let ternary = intrinsic_ident("ternarylogic", &suffix, bits);
+                let overflow_bits = match saturating_op {
+                    Add => quote! {
+                        // 0x42 computes `(a ^ wrapped) & (b ^ wrapped)`.
+                        let overflow_bits = #ternary::<0x42>(a, b, wrapped);
+                    },
+                    Sub => quote! {
+                        // 0x18 computes `(a ^ b) & (a ^ wrapped)`.
+                        let overflow_bits = #ternary::<0x18>(a, b, wrapped);
+                    },
+                };
+
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        let a = a.into();
+                        let b = b.into();
+                        let wrapped = #arithmetic(a, b);
+
+                        // The sign bit of this expression is set exactly when the
+                        // signed arithmetic operation overflows.
+                        #overflow_bits
+                        let overflow_mask =
+                            #shift_right_arithmetic::<#shift>(overflow_bits);
+
+                        // The top bit of `a` selects the saturation direction. Logical
+                        // shift produces 0 or 1; adding that to MAX gives MAX or MIN.
+                        let direction = #add(
+                            #shift_right_logical::<#shift>(a),
+                            #set1(#max),
+                        );
+
+                        // 0xca is a bitwise select: use `direction` where overflowed,
+                        // and the wrapped result everywhere else.
+                        #ternary::<0xca>(overflow_mask, direction, wrapped).simd_into(#token)
+                    }
+                })
+            }
+            (Self::Sse4_2 | Self::Avx2, Unsigned, 32, _bits)
+            | (Self::Avx512, Unsigned, 32 | 64, _bits) => {
+                let expression = match saturating_op {
+                    Add => {
+                        let bits = vec_ty.n_bits();
+                        let add = simple_sign_unaware_intrinsic("add", vec_ty);
+                        let xor = intrinsic_ident("xor", coarse_type(vec_ty), bits);
+                        let set1 = set1_intrinsic(vec_ty);
+                        let min = simple_intrinsic("min", vec_ty);
+                        quote! {
+                            // Clamp `a` to the greatest value that can be added to `b`.
+                            let threshold = #xor(b, #set1(-1));
+                            #add(#min(a, threshold), b)
+                        }
+                    }
+                    Sub => {
+                        let sub = simple_sign_unaware_intrinsic("sub", vec_ty);
+                        let max = simple_intrinsic("max", vec_ty);
+                        quote! {
+                            // Clamping `a` upward to `b` makes underflow produce zero.
+                            #sub(#max(a, b), b)
+                        }
+                    }
+                };
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        let a = a.into();
+                        let b = b.into();
+                        #expression.simd_into(#token)
+                    }
+                })
+            }
+            (Self::Sse4_2 | Self::Avx2, Unsigned, 64, _bits) => {
+                let bits = vec_ty.n_bits();
+                let arithmetic = simple_sign_unaware_intrinsic(
+                    match saturating_op {
+                        Add => "add",
+                        Sub => "sub",
+                    },
+                    vec_ty,
+                );
+                let xor = intrinsic_ident("xor", coarse_type(vec_ty), bits);
+                let set1 = set1_intrinsic(vec_ty);
+                let cmpgt = simple_sign_unaware_intrinsic("cmpgt", vec_ty);
+                let finish = match saturating_op {
+                    Add => {
+                        let or = intrinsic_ident("or", coarse_type(vec_ty), bits);
+                        quote! {
+                            let overflow = #cmpgt(
+                                #xor(a, sign_bias),
+                                #xor(wrapped, sign_bias),
+                            );
+                            #or(wrapped, overflow)
+                        }
+                    }
+                    Sub => {
+                        let and = intrinsic_ident("and", coarse_type(vec_ty), bits);
+                        quote! {
+                            // A strict comparison is sufficient: when `a == b`, the
+                            // wrapped difference is already zero.
+                            let no_borrow = #cmpgt(
+                                #xor(a, sign_bias),
+                                #xor(b, sign_bias),
+                            );
+                            #and(wrapped, no_borrow)
+                        }
+                    }
+                };
+
+                // SSE4.2 and AVX2 have signed, but not unsigned, qword comparisons.
+                // Flipping the sign bit maps unsigned order onto signed order.
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        let a = a.into();
+                        let b = b.into();
+                        let wrapped = #arithmetic(a, b);
+                        let sign_bias = #set1(i64::MIN);
+                        #finish.simd_into(#token)
+                    }
+                })
+            }
+            (Self::Sse4_2 | Self::Avx2, Int, lane_bits @ (32 | 64), bits) => {
+                let arithmetic = simple_sign_unaware_intrinsic(
+                    match saturating_op {
+                        Add => "add",
+                        Sub => "sub",
+                    },
+                    vec_ty,
+                );
+                let add = simple_sign_unaware_intrinsic("add", vec_ty);
+                let xor = intrinsic_ident("xor", coarse_type(vec_ty), bits);
+                let set1 = set1_intrinsic(vec_ty);
+                let cmpgt = simple_sign_unaware_intrinsic("cmpgt", vec_ty);
+                let bound = match (*self, lane_bits) {
+                    (_, 32) => {
+                        let shift = intrinsic_ident("srai", "epi32", bits);
+                        quote! {
+                            let bound = #xor(#shift::<31>(a), #set1(i32::MAX));
+                        }
+                    }
+                    (Self::Sse4_2, 64) => {
+                        let shuffle = intrinsic_ident("shuffle", "epi32", bits);
+                        let shift = intrinsic_ident("srai", "epi32", bits);
+                        quote! {
+                            let a_sign = #shift::<31>(#shuffle::<0xf5>(a));
+                            let bound = #xor(a_sign, #set1(i64::MAX));
+                        }
+                    }
+                    (Self::Avx2, 64) => {
+                        let shift = intrinsic_ident("srli", "epi64", bits);
+                        quote! {
+                            // AVX2 can construct the endpoint directly from `a`'s sign
+                            // without the high-dword shuffle required by SSE4.2.
+                            let bound = #add(#shift::<63>(a), #set1(i64::MAX));
+                        }
+                    }
+                    _ => unreachable!(),
+                };
+                let comparison = match saturating_op {
+                    Add => quote! { #cmpgt(a, wrapped) },
+                    Sub => quote! { #cmpgt(wrapped, a) },
+                };
+                let to_float = cast_ident(Int, Float, lane_bits, lane_bits, bits);
+                let to_int = cast_ident(Float, Int, lane_bits, lane_bits, bits);
+                let blend_suffix = match lane_bits {
+                    32 => "ps",
+                    64 => "pd",
+                    _ => unreachable!(),
+                };
+                let blend = intrinsic_ident("blendv", blend_suffix, bits);
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        let a = a.into();
+                        let b = b.into();
+                        let wrapped = #arithmetic(a, b);
+
+                        // Only the sign bit of each lane is meaningful here, so use a
+                        // lane-granularity floating-point blend instead of BLENDV_EPI8.
+                        let overflow = #xor(#comparison, b);
+                        #bound
+                        let result = #blend(
+                            #to_float(wrapped),
+                            #to_float(bound),
+                            #to_float(overflow),
+                        );
+                        #to_int(result).simd_into(#token)
+                    }
+                })
+            }
+            _ => unreachable!(),
+        }
+    }
+
     pub(crate) fn handle_binary(&self, op: Op, method: &str, vec_ty: &VecType) -> TokenStream {
         let method_sig = op.simd_trait_method_sig(vec_ty);
+
+        if let Some(saturating_op) = match method {
+            "saturating_add" => Some(SaturatingOp::Add),
+            "saturating_sub" => Some(SaturatingOp::Sub),
+            _ => None,
+        } {
+            return self.handle_saturating_add_sub(op, saturating_op, vec_ty);
+        }
 
         if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask {
             let lane_mask = avx512_mask_lane_bits(vec_ty);

@@ -933,11 +933,31 @@ impl Simd for Sse4_2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i8x16<Sse4_2>, b: i8x16<Sse4_2>) -> i8x16<Sse4_2> {
+                _mm_adds_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: i8x16<Sse4_2>, b: i8x16<Sse4_2>) -> i8x16<Sse4_2> {
                 _mm_sub_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i8x16<Sse4_2>, b: i8x16<Sse4_2>) -> i8x16<Sse4_2> {
+                _mm_subs_epi8(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -1506,11 +1526,31 @@ impl Simd for Sse4_2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u8x16<Sse4_2>, b: u8x16<Sse4_2>) -> u8x16<Sse4_2> {
+                _mm_adds_epu8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u8x16<Sse4_2>, b: u8x16<Sse4_2>) -> u8x16<Sse4_2> {
                 _mm_sub_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u8x16<Sse4_2>, b: u8x16<Sse4_2>) -> u8x16<Sse4_2> {
+                _mm_subs_epu8(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -2228,11 +2268,31 @@ impl Simd for Sse4_2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i16x8<Sse4_2>, b: i16x8<Sse4_2>) -> i16x8<Sse4_2> {
+                _mm_adds_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: i16x8<Sse4_2>, b: i16x8<Sse4_2>) -> i16x8<Sse4_2> {
                 _mm_sub_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i16x8<Sse4_2>, b: i16x8<Sse4_2>) -> i16x8<Sse4_2> {
+                _mm_subs_epi16(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -2742,11 +2802,31 @@ impl Simd for Sse4_2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u16x8<Sse4_2>, b: u16x8<Sse4_2>) -> u16x8<Sse4_2> {
+                _mm_adds_epu16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u16x8<Sse4_2>, b: u16x8<Sse4_2>) -> u16x8<Sse4_2> {
                 _mm_sub_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u16x8<Sse4_2>, b: u16x8<Sse4_2>) -> u16x8<Sse4_2> {
+                _mm_subs_epu16(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -3464,11 +3544,51 @@ impl Simd for Sse4_2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i32x4<Sse4_2>, b: i32x4<Sse4_2>) -> i32x4<Sse4_2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm_add_epi32(a, b);
+                let overflow = _mm_xor_si128(_mm_cmpgt_epi32(a, wrapped), b);
+                let bound = _mm_xor_si128(_mm_srai_epi32::<31>(a), _mm_set1_epi32(i32::MAX));
+                let result = _mm_blendv_ps(
+                    _mm_castsi128_ps(wrapped),
+                    _mm_castsi128_ps(bound),
+                    _mm_castsi128_ps(overflow),
+                );
+                _mm_castps_si128(result).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: i32x4<Sse4_2>, b: i32x4<Sse4_2>) -> i32x4<Sse4_2> {
                 _mm_sub_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i32x4<Sse4_2>, b: i32x4<Sse4_2>) -> i32x4<Sse4_2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm_sub_epi32(a, b);
+                let overflow = _mm_xor_si128(_mm_cmpgt_epi32(wrapped, a), b);
+                let bound = _mm_xor_si128(_mm_srai_epi32::<31>(a), _mm_set1_epi32(i32::MAX));
+                let result = _mm_blendv_ps(
+                    _mm_castsi128_ps(wrapped),
+                    _mm_castsi128_ps(bound),
+                    _mm_castsi128_ps(overflow),
+                );
+                _mm_castps_si128(result).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -3951,11 +4071,36 @@ impl Simd for Sse4_2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u32x4<Sse4_2>, b: u32x4<Sse4_2>) -> u32x4<Sse4_2> {
+                let a = a.into();
+                let b = b.into();
+                let threshold = _mm_xor_si128(b, _mm_set1_epi32(-1));
+                _mm_add_epi32(_mm_min_epu32(a, threshold), b).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u32x4<Sse4_2>, b: u32x4<Sse4_2>) -> u32x4<Sse4_2> {
                 _mm_sub_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u32x4<Sse4_2>, b: u32x4<Sse4_2>) -> u32x4<Sse4_2> {
+                let a = a.into();
+                let b = b.into();
+                _mm_sub_epi32(_mm_max_epu32(a, b), b).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -5263,11 +5408,53 @@ impl Simd for Sse4_2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i64x2<Sse4_2>, b: i64x2<Sse4_2>) -> i64x2<Sse4_2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm_add_epi64(a, b);
+                let overflow = _mm_xor_si128(_mm_cmpgt_epi64(a, wrapped), b);
+                let a_sign = _mm_srai_epi32::<31>(_mm_shuffle_epi32::<0xf5>(a));
+                let bound = _mm_xor_si128(a_sign, _mm_set1_epi64x(i64::MAX));
+                let result = _mm_blendv_pd(
+                    _mm_castsi128_pd(wrapped),
+                    _mm_castsi128_pd(bound),
+                    _mm_castsi128_pd(overflow),
+                );
+                _mm_castpd_si128(result).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: i64x2<Sse4_2>, b: i64x2<Sse4_2>) -> i64x2<Sse4_2> {
                 _mm_sub_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i64x2<Sse4_2>, b: i64x2<Sse4_2>) -> i64x2<Sse4_2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm_sub_epi64(a, b);
+                let overflow = _mm_xor_si128(_mm_cmpgt_epi64(wrapped, a), b);
+                let a_sign = _mm_srai_epi32::<31>(_mm_shuffle_epi32::<0xf5>(a));
+                let bound = _mm_xor_si128(a_sign, _mm_set1_epi64x(i64::MAX));
+                let result = _mm_blendv_pd(
+                    _mm_castsi128_pd(wrapped),
+                    _mm_castsi128_pd(bound),
+                    _mm_castsi128_pd(overflow),
+                );
+                _mm_castpd_si128(result).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -5713,11 +5900,45 @@ impl Simd for Sse4_2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u64x2<Sse4_2>, b: u64x2<Sse4_2>) -> u64x2<Sse4_2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm_add_epi64(a, b);
+                let sign_bias = _mm_set1_epi64x(i64::MIN);
+                let overflow = _mm_cmpgt_epi64(
+                    _mm_xor_si128(a, sign_bias),
+                    _mm_xor_si128(wrapped, sign_bias),
+                );
+                _mm_or_si128(wrapped, overflow).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u64x2<Sse4_2>, b: u64x2<Sse4_2>) -> u64x2<Sse4_2> {
                 _mm_sub_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u64x2<Sse4_2>, b: u64x2<Sse4_2>) -> u64x2<Sse4_2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm_sub_epi64(a, b);
+                let sign_bias = _mm_set1_epi64x(i64::MIN);
+                let no_borrow =
+                    _mm_cmpgt_epi64(_mm_xor_si128(a, sign_bias), _mm_xor_si128(b, sign_bias));
+                _mm_and_si128(wrapped, no_borrow).simd_into(token)
             }
         );
         kernel(self, a, b)

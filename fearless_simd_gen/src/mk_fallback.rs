@@ -892,6 +892,8 @@ fn rhs_reference(method: &str) -> bool {
             | "wrapping_sub"
             | "wrapping_mul"
             | "wrapping_add"
+            | "saturating_add"
+            | "saturating_sub"
             | "wrapping_shl"
             | "wrapping_shr"
     )
