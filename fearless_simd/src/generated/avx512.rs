@@ -2052,6 +2052,26 @@ impl Simd for Avx512 {
         };
     }
     #[inline(always)]
+    fn rotate_elements_left_mask8x16<const OFFSET: usize>(
+        self,
+        a: mask8x16<Self>,
+    ) -> mask8x16<Self> {
+        mask8x16 {
+            val: (a.val.rotate_right((OFFSET % 16) as u32)) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask8x16<const OFFSET: usize>(
+        self,
+        a: mask8x16<Self>,
+    ) -> mask8x16<Self> {
+        mask8x16 {
+            val: (a.val.rotate_left((OFFSET % 16) as u32)) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
         mask8x16 {
             val: ((u64::from((a).val) & u64::from((b).val)) & 65535u64) as _,
@@ -3161,6 +3181,26 @@ impl Simd for Avx512 {
         };
     }
     #[inline(always)]
+    fn rotate_elements_left_mask16x8<const OFFSET: usize>(
+        self,
+        a: mask16x8<Self>,
+    ) -> mask16x8<Self> {
+        mask16x8 {
+            val: (a.val.rotate_right((OFFSET % 8) as u32)) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask16x8<const OFFSET: usize>(
+        self,
+        a: mask16x8<Self>,
+    ) -> mask16x8<Self> {
+        mask16x8 {
+            val: (a.val.rotate_left((OFFSET % 8) as u32)) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
         mask16x8 {
             val: ((u64::from((a).val) & u64::from((b).val)) & 255u64) as _,
@@ -4264,6 +4304,40 @@ impl Simd for Avx512 {
             val: (bits) as _,
             simd: self,
         };
+    }
+    #[inline(always)]
+    fn rotate_elements_left_mask32x4<const OFFSET: usize>(
+        self,
+        a: mask32x4<Self>,
+    ) -> mask32x4<Self> {
+        let bits = u64::from((a).val) & 15u64;
+        let offset = OFFSET % 4;
+        let bits = if offset == 0 {
+            bits
+        } else {
+            ((bits >> offset) | (bits << (4 - offset))) & 15u64
+        };
+        mask32x4 {
+            val: (bits) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask32x4<const OFFSET: usize>(
+        self,
+        a: mask32x4<Self>,
+    ) -> mask32x4<Self> {
+        let bits = u64::from((a).val) & 15u64;
+        let offset = OFFSET % 4;
+        let bits = if offset == 0 {
+            bits
+        } else {
+            ((bits << offset) | (bits >> (4 - offset))) & 15u64
+        };
+        mask32x4 {
+            val: (bits) as _,
+            simd: self,
+        }
     }
     #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
@@ -5836,6 +5910,40 @@ impl Simd for Avx512 {
             val: (bits) as _,
             simd: self,
         };
+    }
+    #[inline(always)]
+    fn rotate_elements_left_mask64x2<const OFFSET: usize>(
+        self,
+        a: mask64x2<Self>,
+    ) -> mask64x2<Self> {
+        let bits = u64::from((a).val) & 3u64;
+        let offset = OFFSET % 2;
+        let bits = if offset == 0 {
+            bits
+        } else {
+            ((bits >> offset) | (bits << (2 - offset))) & 3u64
+        };
+        mask64x2 {
+            val: (bits) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask64x2<const OFFSET: usize>(
+        self,
+        a: mask64x2<Self>,
+    ) -> mask64x2<Self> {
+        let bits = u64::from((a).val) & 3u64;
+        let offset = OFFSET % 2;
+        let bits = if offset == 0 {
+            bits
+        } else {
+            ((bits << offset) | (bits >> (2 - offset))) & 3u64
+        };
+        mask64x2 {
+            val: (bits) as _,
+            simd: self,
+        }
     }
     #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
@@ -7555,6 +7663,26 @@ impl Simd for Avx512 {
         };
     }
     #[inline(always)]
+    fn rotate_elements_left_mask8x32<const OFFSET: usize>(
+        self,
+        a: mask8x32<Self>,
+    ) -> mask8x32<Self> {
+        mask8x32 {
+            val: (a.val.rotate_right((OFFSET % 32) as u32)) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask8x32<const OFFSET: usize>(
+        self,
+        a: mask8x32<Self>,
+    ) -> mask8x32<Self> {
+        mask8x32 {
+            val: (a.val.rotate_left((OFFSET % 32) as u32)) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
         mask8x32 {
             val: ((u64::from((a).val) & u64::from((b).val)) & 4294967295u64) as _,
@@ -8656,6 +8784,26 @@ impl Simd for Avx512 {
         };
     }
     #[inline(always)]
+    fn rotate_elements_left_mask16x16<const OFFSET: usize>(
+        self,
+        a: mask16x16<Self>,
+    ) -> mask16x16<Self> {
+        mask16x16 {
+            val: (a.val.rotate_right((OFFSET % 16) as u32)) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask16x16<const OFFSET: usize>(
+        self,
+        a: mask16x16<Self>,
+    ) -> mask16x16<Self> {
+        mask16x16 {
+            val: (a.val.rotate_left((OFFSET % 16) as u32)) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
         mask16x16 {
             val: ((u64::from((a).val) & u64::from((b).val)) & 65535u64) as _,
@@ -9753,6 +9901,26 @@ impl Simd for Avx512 {
             val: (bits) as _,
             simd: self,
         };
+    }
+    #[inline(always)]
+    fn rotate_elements_left_mask32x8<const OFFSET: usize>(
+        self,
+        a: mask32x8<Self>,
+    ) -> mask32x8<Self> {
+        mask32x8 {
+            val: (a.val.rotate_right((OFFSET % 8) as u32)) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask32x8<const OFFSET: usize>(
+        self,
+        a: mask32x8<Self>,
+    ) -> mask32x8<Self> {
+        mask32x8 {
+            val: (a.val.rotate_left((OFFSET % 8) as u32)) as _,
+            simd: self,
+        }
     }
     #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
@@ -11312,6 +11480,40 @@ impl Simd for Avx512 {
             val: (bits) as _,
             simd: self,
         };
+    }
+    #[inline(always)]
+    fn rotate_elements_left_mask64x4<const OFFSET: usize>(
+        self,
+        a: mask64x4<Self>,
+    ) -> mask64x4<Self> {
+        let bits = u64::from((a).val) & 15u64;
+        let offset = OFFSET % 4;
+        let bits = if offset == 0 {
+            bits
+        } else {
+            ((bits >> offset) | (bits << (4 - offset))) & 15u64
+        };
+        mask64x4 {
+            val: (bits) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask64x4<const OFFSET: usize>(
+        self,
+        a: mask64x4<Self>,
+    ) -> mask64x4<Self> {
+        let bits = u64::from((a).val) & 15u64;
+        let offset = OFFSET % 4;
+        let bits = if offset == 0 {
+            bits
+        } else {
+            ((bits << offset) | (bits >> (4 - offset))) & 15u64
+        };
+        mask64x4 {
+            val: (bits) as _,
+            simd: self,
+        }
     }
     #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
@@ -13090,6 +13292,26 @@ impl Simd for Avx512 {
         };
     }
     #[inline(always)]
+    fn rotate_elements_left_mask8x64<const OFFSET: usize>(
+        self,
+        a: mask8x64<Self>,
+    ) -> mask8x64<Self> {
+        mask8x64 {
+            val: a.val.rotate_right((OFFSET % 64) as u32),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask8x64<const OFFSET: usize>(
+        self,
+        a: mask8x64<Self>,
+    ) -> mask8x64<Self> {
+        mask8x64 {
+            val: a.val.rotate_left((OFFSET % 64) as u32),
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
         mask8x64 {
             val: (u64::from((a).val) & u64::from((b).val)) & u64::MAX,
@@ -14203,6 +14425,26 @@ impl Simd for Avx512 {
             val: (bits) as _,
             simd: self,
         };
+    }
+    #[inline(always)]
+    fn rotate_elements_left_mask16x32<const OFFSET: usize>(
+        self,
+        a: mask16x32<Self>,
+    ) -> mask16x32<Self> {
+        mask16x32 {
+            val: (a.val.rotate_right((OFFSET % 32) as u32)) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask16x32<const OFFSET: usize>(
+        self,
+        a: mask16x32<Self>,
+    ) -> mask16x32<Self> {
+        mask16x32 {
+            val: (a.val.rotate_left((OFFSET % 32) as u32)) as _,
+            simd: self,
+        }
     }
     #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
@@ -15323,6 +15565,26 @@ impl Simd for Avx512 {
             val: (bits) as _,
             simd: self,
         };
+    }
+    #[inline(always)]
+    fn rotate_elements_left_mask32x16<const OFFSET: usize>(
+        self,
+        a: mask32x16<Self>,
+    ) -> mask32x16<Self> {
+        mask32x16 {
+            val: (a.val.rotate_right((OFFSET % 16) as u32)) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask32x16<const OFFSET: usize>(
+        self,
+        a: mask32x16<Self>,
+    ) -> mask32x16<Self> {
+        mask32x16 {
+            val: (a.val.rotate_left((OFFSET % 16) as u32)) as _,
+            simd: self,
+        }
     }
     #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
@@ -16905,6 +17167,26 @@ impl Simd for Avx512 {
             val: (bits) as _,
             simd: self,
         };
+    }
+    #[inline(always)]
+    fn rotate_elements_left_mask64x8<const OFFSET: usize>(
+        self,
+        a: mask64x8<Self>,
+    ) -> mask64x8<Self> {
+        mask64x8 {
+            val: (a.val.rotate_right((OFFSET % 8) as u32)) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask64x8<const OFFSET: usize>(
+        self,
+        a: mask64x8<Self>,
+    ) -> mask64x8<Self> {
+        mask64x8 {
+            val: (a.val.rotate_left((OFFSET % 8) as u32)) as _,
+            simd: self,
+        }
     }
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {

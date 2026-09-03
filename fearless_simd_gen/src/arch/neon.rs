@@ -70,16 +70,10 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
             quote! { #intrinsic ( #( #args ),* ) }
         }
         "fract" => {
-            let to = VecType::new(ScalarType::Int, ty.scalar_bits, ty.len);
-            let c1 = cvt_intrinsic("vcvt", &to, ty);
-            let c2 = cvt_intrinsic("vcvt", ty, &to);
+            let trunc = simple_intrinsic("vrnd", ty);
             let sub = simple_intrinsic("vsub", ty);
-            quote! {
-                let c1 = #c1(a.into());
-                let c2 = #c2(c1);
-
-                #sub(a.into(), c2)
-            }
+            let a = &args[0];
+            quote! { #sub(#a, #trunc(#a)) }
         }
         "approximate_recip" => {
             let vrecpe = simple_intrinsic("vrecpe", ty);

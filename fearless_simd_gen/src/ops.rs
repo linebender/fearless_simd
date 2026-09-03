@@ -36,6 +36,12 @@ pub(crate) enum SlideGranularity {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ElementDirection {
+    Left,
+    Right,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum NarrowingMode {
     Wrap,
     Saturate,
@@ -84,6 +90,8 @@ pub(crate) enum OpSig {
     Deinterleave,
     /// Takes two arguments of a vector type, plus a const generic shift amount, and returns that same vector type.
     Slide { granularity: SlideGranularity },
+    /// Takes a mask and a const generic offset, and rotates its logical lanes.
+    RotateElements { direction: ElementDirection },
     /// Takes a vector and a same-width byte-index vector, and returns the original vector type with its bytes
     /// dynamically swizzled within each 128-bit block.
     SwizzleDynWithinBlocks,
@@ -232,7 +240,7 @@ impl Op {
         body: impl FnOnce(&Ident) -> TokenStream,
     ) -> TokenStream {
         assert!(
-            !matches!(self.sig, OpSig::Slide { .. }),
+            !matches!(self.sig, OpSig::Slide { .. } | OpSig::RotateElements { .. }),
             "kernel! does not support const-generic methods"
         );
 
@@ -274,6 +282,7 @@ impl Op {
         let vec = quote! { #ty<#simd_ty> };
         let const_params = match self.sig {
             OpSig::Slide { .. } => quote! { <const SHIFT: usize> },
+            OpSig::RotateElements { .. } => quote! { <const OFFSET: usize> },
             _ => TokenStream::new(),
         };
 
@@ -322,6 +331,7 @@ impl Op {
                 (vec![vec.clone(), vec.clone()], quote! { (#vec, #vec) })
             }
             OpSig::Slide { .. } => (vec![vec.clone(), vec.clone()], vec),
+            OpSig::RotateElements { .. } => (vec![vec.clone()], vec),
             OpSig::SwizzleDynWithinBlocks | OpSig::SwizzleDyn | OpSig::SwizzleDynPrecise => {
                 let bytes_ty = vec_ty.bytes_ty().rust();
                 (vec![vec.clone(), quote! { #bytes_ty<#simd_ty> }], vec)
@@ -413,6 +423,10 @@ impl Op {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
                 quote! { <const SHIFT: usize>(#arg0, #arg1: impl SimdInto<Self, S>) -> Self }
+            }
+            OpSig::RotateElements { .. } => {
+                let arg0 = &arg_names[0];
+                quote! { <const OFFSET: usize>(#arg0) -> Self }
             }
             OpSig::SwizzleDynWithinBlocks | OpSig::SwizzleDyn | OpSig::SwizzleDynPrecise => {
                 let arg0 = &arg_names[0];
@@ -1092,6 +1106,24 @@ macro_rules! mask_reduce_blurb {
 
 const MASK_OPS: &[Op] = &[
     Op::new(
+        "rotate_elements_left",
+        OpKind::VecTraitMethod,
+        OpSig::RotateElements {
+            direction: ElementDirection::Left,
+        },
+        "Rotate the mask elements to the left by `OFFSET`.\n\n\
+        If `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`.",
+    ),
+    Op::new(
+        "rotate_elements_right",
+        OpKind::VecTraitMethod,
+        OpSig::RotateElements {
+            direction: ElementDirection::Right,
+        },
+        "Rotate the mask elements to the right by `OFFSET`.\n\n\
+        If `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`.",
+    ),
+    Op::new(
         "and",
         OpKind::Overloaded(CoreOpTrait::BitAnd),
         OpSig::Binary,
@@ -1685,6 +1717,7 @@ impl OpSig {
                 | Self::LoadInterleaved { .. }
                 | Self::StoreInterleaved { .. }
                 | Self::MaskSet
+                | Self::RotateElements { .. }
                 | Self::SwizzleDyn
                 | Self::SwizzleDynPrecise
                 | Self::Slide {
@@ -1726,6 +1759,7 @@ impl OpSig {
             Self::MaskSet => &["a", "index", "value"],
             Self::Unary
             | Self::Reduce { .. }
+            | Self::RotateElements { .. }
             | Self::Split { .. }
             | Self::Cvt { .. }
             | Self::Widen { .. }
@@ -1758,9 +1792,11 @@ impl OpSig {
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
             | Self::MaskSet => &[],
-            Self::Unary | Self::Reduce { .. } | Self::Cvt { .. } | Self::MaskReduce { .. } => {
-                &["self"]
-            }
+            Self::Unary
+            | Self::Reduce { .. }
+            | Self::RotateElements { .. }
+            | Self::Cvt { .. }
+            | Self::MaskReduce { .. } => &["self"],
             Self::Widen { .. } => &[],
             Self::Narrow { .. } => &[],
             Self::SwizzleDynWithinBlocks | Self::SwizzleDyn | Self::SwizzleDynPrecise => {
@@ -1817,6 +1853,7 @@ impl OpSig {
             | Self::Widen { .. }
             | Self::Narrow { .. }
             | Self::Shift
+            | Self::RotateElements { .. }
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
             | Self::MaskSet

@@ -8,12 +8,14 @@ use crate::arch::x86::{
 };
 use crate::generic::{
     count_zeros_method, fallback_method, generic_block_combine, generic_block_split,
-    generic_mask_from_bitmask, generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
-    recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
+    generic_mask_from_bitmask, generic_mask_set, generic_op_name, integer_lane_mask_rotate,
+    integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body, reverse_method,
+    reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{
-    NarrowingMode, Op, OpSig, Quantifier, SaturatingOp, SlideGranularity, relaxed_narrow_method,
+    ElementDirection, NarrowingMode, Op, OpSig, Quantifier, SaturatingOp, SlideGranularity,
+    relaxed_narrow_method,
 };
 use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Literal, Span, TokenStream};
@@ -326,6 +328,9 @@ impl Level for X86 {
                 } else {
                     self.handle_reduce_min_max(op, vec_ty, lane_op)
                 }
+            }
+            OpSig::RotateElements { direction } => {
+                self.handle_mask_rotate_elements(op, vec_ty, direction)
             }
             OpSig::Widen { target_ty } => self.handle_widen(op, vec_ty, target_ty),
             OpSig::Narrow { target_ty, mode } => self.handle_narrow(op, vec_ty, target_ty, mode),
@@ -1484,6 +1489,64 @@ impl X86 {
                 let bits = #bits;
                 let bits = if value { bits | bit } else { bits & !bit };
                 *a = #result;
+            }
+        }
+    }
+
+    pub(crate) fn handle_mask_rotate_elements(
+        &self,
+        op: Op,
+        vec_ty: &VecType,
+        direction: ElementDirection,
+    ) -> TokenStream {
+        assert_eq!(
+            vec_ty.scalar,
+            ScalarType::Mask,
+            "mask element rotation only operates on masks"
+        );
+
+        if *self != Self::Avx512 {
+            return integer_lane_mask_rotate(op, vec_ty);
+        }
+
+        let method_sig = op.simd_trait_method_sig(vec_ty);
+        let len = Literal::usize_unsuffixed(vec_ty.len);
+
+        if vec_ty.len == avx512_mask_register_bits(vec_ty) {
+            let rotate = match direction {
+                // Lane zero is the low bit, so rotating elements left rotates bits right.
+                ElementDirection::Left => quote! { rotate_right },
+                ElementDirection::Right => quote! { rotate_left },
+            };
+            let result =
+                avx512_mask_value(vec_ty, quote! { a.val.#rotate((OFFSET % #len) as u32) });
+            return quote! {
+                #method_sig {
+                    #result
+                }
+            };
+        }
+
+        // Two- and four-lane masks both occupy an __mmask8, so rotate within
+        // the logical lane width rather than the storage type's eight bits.
+        let lane_mask = avx512_mask_lane_bits(vec_ty);
+        let input = avx512_mask_bits_expr(quote! { a });
+        let rotated = match direction {
+            ElementDirection::Left => {
+                quote! { ((bits >> offset) | (bits << (#len - offset))) & #lane_mask }
+            }
+            ElementDirection::Right => {
+                quote! { ((bits << offset) | (bits >> (#len - offset))) & #lane_mask }
+            }
+        };
+        let result = avx512_mask_value(vec_ty, quote! { bits });
+
+        quote! {
+            #method_sig {
+                let bits = #input & #lane_mask;
+                let offset = OFFSET % #len;
+                let bits = if offset == 0 { bits } else { #rotated };
+                #result
             }
         }
     }
@@ -4187,19 +4250,22 @@ impl X86 {
                     let bytes = Bytes::to_bytes(a).val.0;
                     let indices = indices.into();
                     let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                    let local = _mm256_shuffle_epi8(bytes, indices);
-                    let remote = _mm256_shuffle_epi8(swapped, indices);
 
-                    // Move index bit 4 into each byte's sign bit for VPBLENDVB.
-                    // The high output lane has the opposite local/remote mapping,
-                    // so invert its blend controls.
-                    let select_remote = _mm256_slli_epi16::<3>(indices);
-                    let flip_high_lane = _mm256_set_m128i(
-                        _mm_set1_epi8(i8::MIN),
-                        _mm_setzero_si128(),
+                    // For an in-range index, set the sign bit in the shuffle
+                    // control for the table half that does not contain the
+                    // requested byte. The high output lane has the opposite
+                    // local/remote mapping.
+                    let lane_bias = _mm256_set_m128i(
+                        _mm_set1_epi8(-16),
+                        _mm_set1_epi8(112),
                     );
-                    let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                    let result = _mm256_blendv_epi8(local, remote, select_remote);
+                    let local_control = _mm256_add_epi8(indices, lane_bias);
+                    let remote_control =
+                        _mm256_xor_si256(local_control, _mm256_set1_epi8(i8::MIN));
+
+                    let local = _mm256_shuffle_epi8(bytes, local_control);
+                    let remote = _mm256_shuffle_epi8(swapped, remote_control);
+                    let result = _mm256_or_si256(local, remote);
                 },
                 (Self::Avx512, 128 | 256 | 512) => {
                     let permute = intrinsic_ident("permutexvar", "epi8", vec_ty.n_bits());
@@ -4246,20 +4312,28 @@ impl X86 {
                 }
                 (Self::Avx2, 256) => quote! {
                     let bytes = Bytes::to_bytes(a);
-                    let idxs = indices;
-                    let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                    let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
+                    let indices = indices.into();
+                    let swapped = _mm256_permute2x128_si256::<0x01>(bytes.val.0, bytes.val.0);
 
                     // Adding 0x60 preserves the low nibble and bit 4 for valid
                     // indices 0..=31. Larger indices get their high bit set, so
                     // VPSHUFB supplies the required out-of-bounds zeroing.
-                    let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
+                    let control = _mm256_adds_epu8(indices, _mm256_set1_epi8(0x60));
 
-                    // Move index bit 4 into each byte's sign bit for VPBLENDVB.
-                    let select_high = _mm256_slli_epi16::<3>(control);
-                    let from_low = _mm256_shuffle_epi8(lolo, control);
-                    let from_high = _mm256_shuffle_epi8(hihi, control);
-                    let result = _mm256_blendv_epi8(from_low, from_high, select_high);
+                    let local = _mm256_shuffle_epi8(bytes.val.0, control);
+                    let remote = _mm256_shuffle_epi8(swapped, control);
+
+                    // In the low lane, adding 0x10 moves the valid index's bit 4
+                    // into the sign bit. The high lane has the opposite
+                    // local/remote mapping, so adding 0x90 flips the selection.
+                    // Out-of-range indices already zeroed both shuffle results,
+                    // making the blend selection irrelevant for them.
+                    let select_bias = _mm256_set_m128i(
+                        _mm_set1_epi8(-112),
+                        _mm_set1_epi8(16),
+                    );
+                    let select_remote = _mm256_add_epi8(control, select_bias);
+                    let result = _mm256_blendv_epi8(local, remote, select_remote);
                     let result_bytes = #bytes { val: #wrapper(result), simd: #token };
                 },
                 (Self::Avx512, 128 | 256 | 512) => {

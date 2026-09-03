@@ -396,13 +396,18 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
             op.vec_trait_method_sig()
         };
         if let Some(method_sig) = method_sig {
-            let call_args = sig
-                .forwarding_call_args()
-                .expect("this method can be forwarded to a specific Simd function");
+            let call = if matches!(sig, OpSig::RotateElements { .. }) {
+                quote! { self.simd.#trait_method::<OFFSET>(self) }
+            } else {
+                let call_args = sig
+                    .forwarding_call_args()
+                    .expect("this method can be forwarded to a specific Simd function");
+                quote! { self.simd.#trait_method(#call_args) }
+            };
             methods.push(quote! {
                 #[inline(always)]
                 #method_sig {
-                    self.simd.#trait_method(#call_args)
+                    #call
                 }
             });
         }
