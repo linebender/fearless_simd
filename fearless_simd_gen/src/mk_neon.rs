@@ -6,7 +6,8 @@ use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
     count_zeros_method, fallback_method, generic_mask_set, generic_op_name,
-    integer_lane_mask_splat_arg, reverse_method, reverse_vector_mask_method,
+    integer_lane_mask_rotate, integer_lane_mask_splat_arg, reverse_method,
+    reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{NarrowingMode, Op, SlideGranularity, relaxed_narrow_method};
@@ -232,6 +233,7 @@ impl Level for Neon {
                 let reduce = simple_intrinsic(intrinsic, vec_ty);
                 self.kernel_method(op, vec_ty, |_| quote! { #reduce(a.into()) })
             }
+            OpSig::RotateElements { .. } => integer_lane_mask_rotate(op, vec_ty),
             OpSig::LoadInterleaved {
                 block_size,
                 block_count,

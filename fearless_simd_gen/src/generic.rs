@@ -6,7 +6,7 @@ use quote::{ToTokens, quote};
 
 use crate::{
     level::Level,
-    ops::{Op, OpSig, SlideGranularity},
+    ops::{ElementDirection, Op, OpSig, SlideGranularity},
     types::{ScalarType, VecType},
 };
 
@@ -190,6 +190,44 @@ pub(crate) fn integer_lane_mask_splat_arg(vec_ty: &VecType) -> TokenStream {
     }
 }
 
+/// Rotate an integer-lane mask by bitcasting its storage to the corresponding
+/// signed vector and forwarding to `SimdBase`'s element rotation.
+///
+/// This is only valid for backends whose masks use full integer lanes. Compact
+/// predicate masks, such as AVX-512 masks, need their own implementation.
+pub(crate) fn integer_lane_mask_rotate(op: Op, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(
+        vec_ty.scalar,
+        ScalarType::Mask,
+        "mask element rotation only operates on masks"
+    );
+    let direction = match op.sig {
+        OpSig::RotateElements { direction } => direction,
+        _ => panic!("integer_lane_mask_rotate only implements mask element rotation"),
+    };
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let rotate = match direction {
+        ElementDirection::Left => quote! { rotate_elements_left },
+        ElementDirection::Right => quote! { rotate_elements_right },
+    };
+    let int_ty = vec_ty.cast(ScalarType::Int).rust();
+    let mask_ty = vec_ty.rust();
+
+    quote! {
+        #method_sig {
+            let int = #int_ty {
+                val: crate::transmute::checked_transmute_copy(&a.val),
+                simd: self,
+            };
+            let rotated = int.#rotate::<OFFSET>();
+            #mask_ty {
+                val: crate::transmute::checked_transmute_copy(&rotated.val),
+                simd: self,
+            }
+        }
+    }
+}
+
 /// Generic operation implementations.
 ///
 /// Most operations are implemented using split/combine, while some forward to
@@ -232,6 +270,9 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                     self.#do_half(self.#combine_halves(a0, a1))
                 }
             }
+        }
+        OpSig::RotateElements { .. } => {
+            panic!("mask element rotation must operate on the full mask")
         }
         OpSig::Binary => {
             quote! {

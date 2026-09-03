@@ -7,7 +7,7 @@ use quote::{format_ident, quote};
 use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
     count_zeros_method, fallback_method, generic_block_combine, generic_block_split,
-    generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
+    generic_mask_set, generic_op_name, integer_lane_mask_rotate, integer_lane_mask_splat_arg,
     recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
 };
 use crate::level::Level;
@@ -627,6 +627,7 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
+            OpSig::RotateElements { .. } => integer_lane_mask_rotate(op, vec_ty),
             OpSig::Select => {
                 // Rust includes unsigned versions of the lane select intrinsics, but they're
                 // just aliases for the signed ones

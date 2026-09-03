@@ -987,6 +987,14 @@ impl<S: Simd> SimdMask<S> for mask8x16<S> {
         *slice = (*self).into();
     }
     #[inline(always)]
+    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_left_mask8x16::<OFFSET>(self)
+    }
+    #[inline(always)]
+    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_right_mask8x16::<OFFSET>(self)
+    }
+    #[inline(always)]
     fn reverse(self) -> Self {
         self.simd.reverse_mask8x16(self)
     }
@@ -1675,6 +1683,14 @@ impl<S: Simd> SimdMask<S> for mask16x8<S> {
         *slice = (*self).into();
     }
     #[inline(always)]
+    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_left_mask16x8::<OFFSET>(self)
+    }
+    #[inline(always)]
+    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_right_mask16x8::<OFFSET>(self)
+    }
+    #[inline(always)]
     fn reverse(self) -> Self {
         self.simd.reverse_mask16x8(self)
     }
@@ -2361,6 +2377,14 @@ impl<S: Simd> SimdMask<S> for mask32x4<S> {
     fn store_slice(&self, slice: &mut [i32]) {
         let slice: &mut [i32; 4] = slice.try_into().unwrap();
         *slice = (*self).into();
+    }
+    #[inline(always)]
+    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_left_mask32x4::<OFFSET>(self)
+    }
+    #[inline(always)]
+    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_right_mask32x4::<OFFSET>(self)
     }
     #[inline(always)]
     fn reverse(self) -> Self {
@@ -3373,6 +3397,14 @@ impl<S: Simd> SimdMask<S> for mask64x2<S> {
     fn store_slice(&self, slice: &mut [i64]) {
         let slice: &mut [i64; 2] = slice.try_into().unwrap();
         *slice = (*self).into();
+    }
+    #[inline(always)]
+    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_left_mask64x2::<OFFSET>(self)
+    }
+    #[inline(always)]
+    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_right_mask64x2::<OFFSET>(self)
     }
     #[inline(always)]
     fn reverse(self) -> Self {
@@ -4408,6 +4440,14 @@ impl<S: Simd> SimdMask<S> for mask8x32<S> {
         *slice = (*self).into();
     }
     #[inline(always)]
+    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_left_mask8x32::<OFFSET>(self)
+    }
+    #[inline(always)]
+    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_right_mask8x32::<OFFSET>(self)
+    }
+    #[inline(always)]
     fn reverse(self) -> Self {
         self.simd.reverse_mask8x32(self)
     }
@@ -5102,6 +5142,14 @@ impl<S: Simd> SimdMask<S> for mask16x16<S> {
     fn store_slice(&self, slice: &mut [i16]) {
         let slice: &mut [i16; 16] = slice.try_into().unwrap();
         *slice = (*self).into();
+    }
+    #[inline(always)]
+    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_left_mask16x16::<OFFSET>(self)
+    }
+    #[inline(always)]
+    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_right_mask16x16::<OFFSET>(self)
     }
     #[inline(always)]
     fn reverse(self) -> Self {
@@ -5804,6 +5852,14 @@ impl<S: Simd> SimdMask<S> for mask32x8<S> {
     fn store_slice(&self, slice: &mut [i32]) {
         let slice: &mut [i32; 8] = slice.try_into().unwrap();
         *slice = (*self).into();
+    }
+    #[inline(always)]
+    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_left_mask32x8::<OFFSET>(self)
+    }
+    #[inline(always)]
+    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_right_mask32x8::<OFFSET>(self)
     }
     #[inline(always)]
     fn reverse(self) -> Self {
@@ -6801,6 +6857,14 @@ impl<S: Simd> SimdMask<S> for mask64x4<S> {
     fn store_slice(&self, slice: &mut [i64]) {
         let slice: &mut [i64; 4] = slice.try_into().unwrap();
         *slice = (*self).into();
+    }
+    #[inline(always)]
+    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_left_mask64x4::<OFFSET>(self)
+    }
+    #[inline(always)]
+    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_right_mask64x4::<OFFSET>(self)
     }
     #[inline(always)]
     fn reverse(self) -> Self {
@@ -7891,6 +7955,14 @@ impl<S: Simd> SimdMask<S> for mask8x64<S> {
         *slice = (*self).into();
     }
     #[inline(always)]
+    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_left_mask8x64::<OFFSET>(self)
+    }
+    #[inline(always)]
+    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_right_mask8x64::<OFFSET>(self)
+    }
+    #[inline(always)]
     fn reverse(self) -> Self {
         self.simd.reverse_mask8x64(self)
     }
@@ -8607,6 +8679,14 @@ impl<S: Simd> SimdMask<S> for mask16x32<S> {
         *slice = (*self).into();
     }
     #[inline(always)]
+    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_left_mask16x32::<OFFSET>(self)
+    }
+    #[inline(always)]
+    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_right_mask16x32::<OFFSET>(self)
+    }
+    #[inline(always)]
     fn reverse(self) -> Self {
         self.simd.reverse_mask16x32(self)
     }
@@ -9313,6 +9393,14 @@ impl<S: Simd> SimdMask<S> for mask32x16<S> {
     fn store_slice(&self, slice: &mut [i32]) {
         let slice: &mut [i32; 16] = slice.try_into().unwrap();
         *slice = (*self).into();
+    }
+    #[inline(always)]
+    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_left_mask32x16::<OFFSET>(self)
+    }
+    #[inline(always)]
+    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_right_mask32x16::<OFFSET>(self)
     }
     #[inline(always)]
     fn reverse(self) -> Self {
@@ -10328,6 +10416,14 @@ impl<S: Simd> SimdMask<S> for mask64x8<S> {
     fn store_slice(&self, slice: &mut [i64]) {
         let slice: &mut [i64; 8] = slice.try_into().unwrap();
         *slice = (*self).into();
+    }
+    #[inline(always)]
+    fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_left_mask64x8::<OFFSET>(self)
+    }
+    #[inline(always)]
+    fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
+        self.simd.rotate_elements_right_mask64x8::<OFFSET>(self)
     }
     #[inline(always)]
     fn reverse(self) -> Self {
