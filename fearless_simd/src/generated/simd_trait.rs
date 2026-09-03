@@ -385,11 +385,11 @@ pub trait Simd:
     fn count_zeros_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     fn saturating_add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     fn saturating_sub_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
@@ -492,11 +492,11 @@ pub trait Simd:
     fn count_zeros_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     fn saturating_add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     fn saturating_sub_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
@@ -653,11 +653,11 @@ pub trait Simd:
     fn count_zeros_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     fn saturating_add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     fn saturating_sub_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
@@ -775,11 +775,11 @@ pub trait Simd:
     fn count_zeros_u16x8(self, a: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     fn saturating_add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     fn saturating_sub_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
@@ -942,11 +942,11 @@ pub trait Simd:
     fn count_zeros_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     fn saturating_add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     fn saturating_sub_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
@@ -1066,11 +1066,11 @@ pub trait Simd:
     fn count_zeros_u32x4(self, a: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     fn saturating_add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     fn saturating_sub_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
@@ -1375,11 +1375,11 @@ pub trait Simd:
     fn count_zeros_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     fn saturating_add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     fn saturating_sub_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
@@ -1497,11 +1497,11 @@ pub trait Simd:
     fn count_zeros_u64x2(self, a: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     fn saturating_add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     fn saturating_sub_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
@@ -2073,7 +2073,7 @@ pub trait Simd:
         let (b0, b1) = self.split_i8x32(b);
         self.combine_i8x16(self.add_i8x16(a0, b0), self.add_i8x16(a1, b1))
     }
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     #[inline(always)]
     fn saturating_add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         let (a0, a1) = self.split_i8x32(a);
@@ -2090,7 +2090,7 @@ pub trait Simd:
         let (b0, b1) = self.split_i8x32(b);
         self.combine_i8x16(self.sub_i8x16(a0, b0), self.sub_i8x16(a1, b1))
     }
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     #[inline(always)]
     fn saturating_sub_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         let (a0, a1) = self.split_i8x32(a);
@@ -2366,7 +2366,7 @@ pub trait Simd:
         let (b0, b1) = self.split_u8x32(b);
         self.combine_u8x16(self.add_u8x16(a0, b0), self.add_u8x16(a1, b1))
     }
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     #[inline(always)]
     fn saturating_add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
         let (a0, a1) = self.split_u8x32(a);
@@ -2383,7 +2383,7 @@ pub trait Simd:
         let (b0, b1) = self.split_u8x32(b);
         self.combine_u8x16(self.sub_u8x16(a0, b0), self.sub_u8x16(a1, b1))
     }
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     #[inline(always)]
     fn saturating_sub_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
         let (a0, a1) = self.split_u8x32(a);
@@ -2775,7 +2775,7 @@ pub trait Simd:
         let (b0, b1) = self.split_i16x16(b);
         self.combine_i16x8(self.add_i16x8(a0, b0), self.add_i16x8(a1, b1))
     }
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     #[inline(always)]
     fn saturating_add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
         let (a0, a1) = self.split_i16x16(a);
@@ -2792,7 +2792,7 @@ pub trait Simd:
         let (b0, b1) = self.split_i16x16(b);
         self.combine_i16x8(self.sub_i16x8(a0, b0), self.sub_i16x8(a1, b1))
     }
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     #[inline(always)]
     fn saturating_sub_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
         let (a0, a1) = self.split_i16x16(a);
@@ -3100,7 +3100,7 @@ pub trait Simd:
         let (b0, b1) = self.split_u16x16(b);
         self.combine_u16x8(self.add_u16x8(a0, b0), self.add_u16x8(a1, b1))
     }
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     #[inline(always)]
     fn saturating_add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
         let (a0, a1) = self.split_u16x16(a);
@@ -3117,7 +3117,7 @@ pub trait Simd:
         let (b0, b1) = self.split_u16x16(b);
         self.combine_u16x8(self.sub_u16x8(a0, b0), self.sub_u16x8(a1, b1))
     }
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     #[inline(always)]
     fn saturating_sub_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
         let (a0, a1) = self.split_u16x16(a);
@@ -3532,7 +3532,7 @@ pub trait Simd:
         let (b0, b1) = self.split_i32x8(b);
         self.combine_i32x4(self.add_i32x4(a0, b0), self.add_i32x4(a1, b1))
     }
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     #[inline(always)]
     fn saturating_add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
         let (a0, a1) = self.split_i32x8(a);
@@ -3549,7 +3549,7 @@ pub trait Simd:
         let (b0, b1) = self.split_i32x8(b);
         self.combine_i32x4(self.sub_i32x4(a0, b0), self.sub_i32x4(a1, b1))
     }
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     #[inline(always)]
     fn saturating_sub_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
         let (a0, a1) = self.split_i32x8(a);
@@ -3859,7 +3859,7 @@ pub trait Simd:
         let (b0, b1) = self.split_u32x8(b);
         self.combine_u32x4(self.add_u32x4(a0, b0), self.add_u32x4(a1, b1))
     }
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     #[inline(always)]
     fn saturating_add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
         let (a0, a1) = self.split_u32x8(a);
@@ -3876,7 +3876,7 @@ pub trait Simd:
         let (b0, b1) = self.split_u32x8(b);
         self.combine_u32x4(self.sub_u32x4(a0, b0), self.sub_u32x4(a1, b1))
     }
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     #[inline(always)]
     fn saturating_sub_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
         let (a0, a1) = self.split_u32x8(a);
@@ -4699,7 +4699,7 @@ pub trait Simd:
         let (b0, b1) = self.split_i64x4(b);
         self.combine_i64x2(self.add_i64x2(a0, b0), self.add_i64x2(a1, b1))
     }
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     #[inline(always)]
     fn saturating_add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         let (a0, a1) = self.split_i64x4(a);
@@ -4716,7 +4716,7 @@ pub trait Simd:
         let (b0, b1) = self.split_i64x4(b);
         self.combine_i64x2(self.sub_i64x2(a0, b0), self.sub_i64x2(a1, b1))
     }
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     #[inline(always)]
     fn saturating_sub_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         let (a0, a1) = self.split_i64x4(a);
@@ -5018,7 +5018,7 @@ pub trait Simd:
         let (b0, b1) = self.split_u64x4(b);
         self.combine_u64x2(self.add_u64x2(a0, b0), self.add_u64x2(a1, b1))
     }
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     #[inline(always)]
     fn saturating_add_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
         let (a0, a1) = self.split_u64x4(a);
@@ -5035,7 +5035,7 @@ pub trait Simd:
         let (b0, b1) = self.split_u64x4(b);
         self.combine_u64x2(self.sub_u64x2(a0, b0), self.sub_u64x2(a1, b1))
     }
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     #[inline(always)]
     fn saturating_sub_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
         let (a0, a1) = self.split_u64x4(a);
@@ -5843,7 +5843,7 @@ pub trait Simd:
         let (b0, b1) = self.split_i8x64(b);
         self.combine_i8x32(self.add_i8x32(a0, b0), self.add_i8x32(a1, b1))
     }
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     #[inline(always)]
     fn saturating_add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
         let (a0, a1) = self.split_i8x64(a);
@@ -5860,7 +5860,7 @@ pub trait Simd:
         let (b0, b1) = self.split_i8x64(b);
         self.combine_i8x32(self.sub_i8x32(a0, b0), self.sub_i8x32(a1, b1))
     }
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     #[inline(always)]
     fn saturating_sub_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
         let (a0, a1) = self.split_i8x64(a);
@@ -6134,7 +6134,7 @@ pub trait Simd:
         let (b0, b1) = self.split_u8x64(b);
         self.combine_u8x32(self.add_u8x32(a0, b0), self.add_u8x32(a1, b1))
     }
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     #[inline(always)]
     fn saturating_add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
         let (a0, a1) = self.split_u8x64(a);
@@ -6151,7 +6151,7 @@ pub trait Simd:
         let (b0, b1) = self.split_u8x64(b);
         self.combine_u8x32(self.sub_u8x32(a0, b0), self.sub_u8x32(a1, b1))
     }
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     #[inline(always)]
     fn saturating_sub_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
         let (a0, a1) = self.split_u8x64(a);
@@ -6539,7 +6539,7 @@ pub trait Simd:
         let (b0, b1) = self.split_i16x32(b);
         self.combine_i16x16(self.add_i16x16(a0, b0), self.add_i16x16(a1, b1))
     }
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     #[inline(always)]
     fn saturating_add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
         let (a0, a1) = self.split_i16x32(a);
@@ -6556,7 +6556,7 @@ pub trait Simd:
         let (b0, b1) = self.split_i16x32(b);
         self.combine_i16x16(self.sub_i16x16(a0, b0), self.sub_i16x16(a1, b1))
     }
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     #[inline(always)]
     fn saturating_sub_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
         let (a0, a1) = self.split_i16x32(a);
@@ -6868,7 +6868,7 @@ pub trait Simd:
         let (b0, b1) = self.split_u16x32(b);
         self.combine_u16x16(self.add_u16x16(a0, b0), self.add_u16x16(a1, b1))
     }
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     #[inline(always)]
     fn saturating_add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
         let (a0, a1) = self.split_u16x32(a);
@@ -6885,7 +6885,7 @@ pub trait Simd:
         let (b0, b1) = self.split_u16x32(b);
         self.combine_u16x16(self.sub_u16x16(a0, b0), self.sub_u16x16(a1, b1))
     }
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     #[inline(always)]
     fn saturating_sub_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
         let (a0, a1) = self.split_u16x32(a);
@@ -7309,7 +7309,7 @@ pub trait Simd:
         let (b0, b1) = self.split_i32x16(b);
         self.combine_i32x8(self.add_i32x8(a0, b0), self.add_i32x8(a1, b1))
     }
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     #[inline(always)]
     fn saturating_add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
         let (a0, a1) = self.split_i32x16(a);
@@ -7326,7 +7326,7 @@ pub trait Simd:
         let (b0, b1) = self.split_i32x16(b);
         self.combine_i32x8(self.sub_i32x8(a0, b0), self.sub_i32x8(a1, b1))
     }
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     #[inline(always)]
     fn saturating_sub_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
         let (a0, a1) = self.split_i32x16(a);
@@ -7638,7 +7638,7 @@ pub trait Simd:
         let (b0, b1) = self.split_u32x16(b);
         self.combine_u32x8(self.add_u32x8(a0, b0), self.add_u32x8(a1, b1))
     }
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     #[inline(always)]
     fn saturating_add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
         let (a0, a1) = self.split_u32x16(a);
@@ -7655,7 +7655,7 @@ pub trait Simd:
         let (b0, b1) = self.split_u32x16(b);
         self.combine_u32x8(self.sub_u32x8(a0, b0), self.sub_u32x8(a1, b1))
     }
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     #[inline(always)]
     fn saturating_sub_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
         let (a0, a1) = self.split_u32x16(a);
@@ -8472,7 +8472,7 @@ pub trait Simd:
         let (b0, b1) = self.split_i64x8(b);
         self.combine_i64x4(self.add_i64x4(a0, b0), self.add_i64x4(a1, b1))
     }
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     #[inline(always)]
     fn saturating_add_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
         let (a0, a1) = self.split_i64x8(a);
@@ -8489,7 +8489,7 @@ pub trait Simd:
         let (b0, b1) = self.split_i64x8(b);
         self.combine_i64x4(self.sub_i64x4(a0, b0), self.sub_i64x4(a1, b1))
     }
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     #[inline(always)]
     fn saturating_sub_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
         let (a0, a1) = self.split_i64x8(a);
@@ -8789,7 +8789,7 @@ pub trait Simd:
         let (b0, b1) = self.split_u64x8(b);
         self.combine_u64x4(self.add_u64x4(a0, b0), self.add_u64x4(a1, b1))
     }
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     #[inline(always)]
     fn saturating_add_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
         let (a0, a1) = self.split_u64x8(a);
@@ -8806,7 +8806,7 @@ pub trait Simd:
         let (b0, b1) = self.split_u64x8(b);
         self.combine_u64x4(self.sub_u64x4(a0, b0), self.sub_u64x4(a1, b1))
     }
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     #[inline(always)]
     fn saturating_sub_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
         let (a0, a1) = self.split_u64x8(a);
@@ -9857,9 +9857,9 @@ pub trait SimdInt<S: Simd>:
     fn count_ones(self) -> Self;
     #[doc = "Return the number of zeros in the binary representation of each element."]
     fn count_zeros(self) -> Self;
-    #[doc = "Add two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86."]
+    #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     fn saturating_add(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Subtract two vectors element-wise, returning the maximum value on overflow.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86."]
+    #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]
     fn saturating_sub(self, rhs: impl SimdInto<Self, S>) -> Self;
 }
 #[doc = r" Functionality implemented by SIMD masks."]

@@ -996,9 +996,11 @@ const INT_OPS: &[Op] = &[
         "saturating_add",
         OpKind::VecTraitMethod,
         OpSig::Binary,
-        "Add two vectors element-wise, returning the maximum value on overflow.\n\n\
+        "Add two vectors element-wise, saturating on overflow.\n\n\
+        \"Saturating\" means that if the result is not representable, \
+        the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\n\
         On x86 it is implemented in hardware only for 8-bit and 16-bit elements. \
-        For 32-bit and 64-bit vectors this operation is slower than overflowing addition on x86.",
+        For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86.",
     ),
     Op::new(
         "sub",
@@ -1010,9 +1012,11 @@ const INT_OPS: &[Op] = &[
         "saturating_sub",
         OpKind::VecTraitMethod,
         OpSig::Binary,
-        "Subtract two vectors element-wise, returning the maximum value on overflow.\n\n\
+        "Subtract two vectors element-wise, saturating on overflow.\n\n\
+        \"Saturating\" means that if the result is not representable, \
+        the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\n\
         On x86 it is implemented in hardware only for 8-bit and 16-bit elements. \
-        For 32-bit and 64-bit vectors this operation is slower than overflowing subtraction on x86.",
+        For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86.",
     ),
     Op::new(
         "mul",
