@@ -795,11 +795,31 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i8x16<Avx2>, b: i8x16<Avx2>) -> i8x16<Avx2> {
+                _mm_adds_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i8x16<Avx2>, b: i8x16<Avx2>) -> i8x16<Avx2> {
                 _mm_sub_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i8x16<Avx2>, b: i8x16<Avx2>) -> i8x16<Avx2> {
+                _mm_subs_epi8(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -1382,11 +1402,31 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u8x16<Avx2>, b: u8x16<Avx2>) -> u8x16<Avx2> {
+                _mm_adds_epu8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u8x16<Avx2>, b: u8x16<Avx2>) -> u8x16<Avx2> {
                 _mm_sub_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u8x16<Avx2>, b: u8x16<Avx2>) -> u8x16<Avx2> {
+                _mm_subs_epu8(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -1900,6 +1940,36 @@ impl Simd for Avx2 {
         *a = lanes.simd_into(self);
     }
     #[inline(always)]
+    fn rotate_elements_left_mask8x16<const OFFSET: usize>(
+        self,
+        a: mask8x16<Self>,
+    ) -> mask8x16<Self> {
+        let int = i8x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_left::<OFFSET>();
+        mask8x16 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask8x16<const OFFSET: usize>(
+        self,
+        a: mask8x16<Self>,
+    ) -> mask8x16<Self> {
+        let int = i8x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_right::<OFFSET>();
+        mask8x16 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2091,11 +2161,31 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i16x8<Avx2>, b: i16x8<Avx2>) -> i16x8<Avx2> {
+                _mm_adds_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i16x8<Avx2>, b: i16x8<Avx2>) -> i16x8<Avx2> {
                 _mm_sub_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i16x8<Avx2>, b: i16x8<Avx2>) -> i16x8<Avx2> {
+                _mm_subs_epi16(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -2619,11 +2709,31 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u16x8<Avx2>, b: u16x8<Avx2>) -> u16x8<Avx2> {
+                _mm_adds_epu16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u16x8<Avx2>, b: u16x8<Avx2>) -> u16x8<Avx2> {
                 _mm_sub_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u16x8<Avx2>, b: u16x8<Avx2>) -> u16x8<Avx2> {
+                _mm_subs_epu16(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -3133,6 +3243,36 @@ impl Simd for Avx2 {
         *a = lanes.simd_into(self);
     }
     #[inline(always)]
+    fn rotate_elements_left_mask16x8<const OFFSET: usize>(
+        self,
+        a: mask16x8<Self>,
+    ) -> mask16x8<Self> {
+        let int = i16x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_left::<OFFSET>();
+        mask16x8 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask16x8<const OFFSET: usize>(
+        self,
+        a: mask16x8<Self>,
+    ) -> mask16x8<Self> {
+        let int = i16x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_right::<OFFSET>();
+        mask16x8 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3328,11 +3468,51 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i32x4<Avx2>, b: i32x4<Avx2>) -> i32x4<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm_add_epi32(a, b);
+                let overflow = _mm_xor_si128(_mm_cmpgt_epi32(a, wrapped), b);
+                let bound = _mm_xor_si128(_mm_srai_epi32::<31>(a), _mm_set1_epi32(i32::MAX));
+                let result = _mm_blendv_ps(
+                    _mm_castsi128_ps(wrapped),
+                    _mm_castsi128_ps(bound),
+                    _mm_castsi128_ps(overflow),
+                );
+                _mm_castps_si128(result).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i32x4<Avx2>, b: i32x4<Avx2>) -> i32x4<Avx2> {
                 _mm_sub_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i32x4<Avx2>, b: i32x4<Avx2>) -> i32x4<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm_sub_epi32(a, b);
+                let overflow = _mm_xor_si128(_mm_cmpgt_epi32(wrapped, a), b);
+                let bound = _mm_xor_si128(_mm_srai_epi32::<31>(a), _mm_set1_epi32(i32::MAX));
+                let result = _mm_blendv_ps(
+                    _mm_castsi128_ps(wrapped),
+                    _mm_castsi128_ps(bound),
+                    _mm_castsi128_ps(overflow),
+                );
+                _mm_castps_si128(result).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -3827,11 +4007,36 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u32x4<Avx2>, b: u32x4<Avx2>) -> u32x4<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let threshold = _mm_xor_si128(b, _mm_set1_epi32(-1));
+                _mm_add_epi32(_mm_min_epu32(a, threshold), b).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u32x4<Avx2>, b: u32x4<Avx2>) -> u32x4<Avx2> {
                 _mm_sub_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u32x4<Avx2>, b: u32x4<Avx2>) -> u32x4<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                _mm_sub_epi32(_mm_max_epu32(a, b), b).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -4309,6 +4514,36 @@ impl Simd for Avx2 {
         let mut lanes: [i32; 4usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
+    }
+    #[inline(always)]
+    fn rotate_elements_left_mask32x4<const OFFSET: usize>(
+        self,
+        a: mask32x4<Self>,
+    ) -> mask32x4<Self> {
+        let int = i32x4 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_left::<OFFSET>();
+        mask32x4 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask32x4<const OFFSET: usize>(
+        self,
+        a: mask32x4<Self>,
+    ) -> mask32x4<Self> {
+        let int = i32x4 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_right::<OFFSET>();
+        mask32x4 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
     }
     #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
@@ -5110,11 +5345,51 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i64x2<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm_add_epi64(a, b);
+                let overflow = _mm_xor_si128(_mm_cmpgt_epi64(a, wrapped), b);
+                let bound = _mm_add_epi64(_mm_srli_epi64::<63>(a), _mm_set1_epi64x(i64::MAX));
+                let result = _mm_blendv_pd(
+                    _mm_castsi128_pd(wrapped),
+                    _mm_castsi128_pd(bound),
+                    _mm_castsi128_pd(overflow),
+                );
+                _mm_castpd_si128(result).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i64x2<Avx2> {
                 _mm_sub_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i64x2<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm_sub_epi64(a, b);
+                let overflow = _mm_xor_si128(_mm_cmpgt_epi64(wrapped, a), b);
+                let bound = _mm_add_epi64(_mm_srli_epi64::<63>(a), _mm_set1_epi64x(i64::MAX));
+                let result = _mm_blendv_pd(
+                    _mm_castsi128_pd(wrapped),
+                    _mm_castsi128_pd(bound),
+                    _mm_castsi128_pd(overflow),
+                );
+                _mm_castpd_si128(result).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -5567,11 +5842,45 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x2<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm_add_epi64(a, b);
+                let sign_bias = _mm_set1_epi64x(i64::MIN);
+                let overflow = _mm_cmpgt_epi64(
+                    _mm_xor_si128(a, sign_bias),
+                    _mm_xor_si128(wrapped, sign_bias),
+                );
+                _mm_or_si128(wrapped, overflow).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x2<Avx2> {
                 _mm_sub_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x2<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm_sub_epi64(a, b);
+                let sign_bias = _mm_set1_epi64x(i64::MIN);
+                let no_borrow =
+                    _mm_cmpgt_epi64(_mm_xor_si128(a, sign_bias), _mm_xor_si128(b, sign_bias));
+                _mm_and_si128(wrapped, no_borrow).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -5990,6 +6299,36 @@ impl Simd for Avx2 {
         let mut lanes: [i64; 2usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
+    }
+    #[inline(always)]
+    fn rotate_elements_left_mask64x2<const OFFSET: usize>(
+        self,
+        a: mask64x2<Self>,
+    ) -> mask64x2<Self> {
+        let int = i64x2 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_left::<OFFSET>();
+        mask64x2 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask64x2<const OFFSET: usize>(
+        self,
+        a: mask64x2<Self>,
+    ) -> mask64x2<Self> {
+        let int = i64x2 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_right::<OFFSET>();
+        mask64x2 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
     }
     #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
@@ -6714,11 +7053,31 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i8x32<Avx2>, b: i8x32<Avx2>) -> i8x32<Avx2> {
+                _mm256_adds_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i8x32<Avx2>, b: i8x32<Avx2>) -> i8x32<Avx2> {
                 _mm256_sub_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i8x32<Avx2>, b: i8x32<Avx2>) -> i8x32<Avx2> {
+                _mm256_subs_epi8(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -7182,12 +7541,12 @@ impl Simd for Avx2 {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
                 let swapped = _mm256_permute2x128_si256::<0x01>(bytes, bytes);
-                let local = _mm256_shuffle_epi8(bytes, indices);
-                let remote = _mm256_shuffle_epi8(swapped, indices);
-                let select_remote = _mm256_slli_epi16::<3>(indices);
-                let flip_high_lane = _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                let select_remote = _mm256_xor_si256(select_remote, flip_high_lane);
-                let result = _mm256_blendv_epi8(local, remote, select_remote);
+                let lane_bias = _mm256_set_m128i(_mm_set1_epi8(-16), _mm_set1_epi8(112));
+                let local_control = _mm256_add_epi8(indices, lane_bias);
+                let remote_control = _mm256_xor_si256(local_control, _mm256_set1_epi8(i8::MIN));
+                let local = _mm256_shuffle_epi8(bytes, local_control);
+                let remote = _mm256_shuffle_epi8(swapped, remote_control);
+                let result = _mm256_or_si256(local, remote);
                 Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -7202,14 +7561,14 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u8x32<Avx2>, indices: u8x32<Avx2>) -> u8x32<Avx2> {
                 let bytes = Bytes::to_bytes(a);
-                let idxs = indices;
-                let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
-                let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
-                let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
-                let select_high = _mm256_slli_epi16::<3>(control);
-                let from_low = _mm256_shuffle_epi8(lolo, control);
-                let from_high = _mm256_shuffle_epi8(hihi, control);
-                let result = _mm256_blendv_epi8(from_low, from_high, select_high);
+                let indices = indices.into();
+                let swapped = _mm256_permute2x128_si256::<0x01>(bytes.val.0, bytes.val.0);
+                let control = _mm256_adds_epu8(indices, _mm256_set1_epi8(0x60));
+                let local = _mm256_shuffle_epi8(bytes.val.0, control);
+                let remote = _mm256_shuffle_epi8(swapped, control);
+                let select_bias = _mm256_set_m128i(_mm_set1_epi8(-112), _mm_set1_epi8(16));
+                let select_remote = _mm256_add_epi8(control, select_bias);
+                let result = _mm256_blendv_epi8(local, remote, select_remote);
                 let result_bytes = u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -7256,11 +7615,31 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u8x32<Avx2>, b: u8x32<Avx2>) -> u8x32<Avx2> {
+                _mm256_adds_epu8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u8x32<Avx2>, b: u8x32<Avx2>) -> u8x32<Avx2> {
                 _mm256_sub_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u8x32<Avx2>, b: u8x32<Avx2>) -> u8x32<Avx2> {
+                _mm256_subs_epu8(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -7695,6 +8074,36 @@ impl Simd for Avx2 {
         *a = lanes.simd_into(self);
     }
     #[inline(always)]
+    fn rotate_elements_left_mask8x32<const OFFSET: usize>(
+        self,
+        a: mask8x32<Self>,
+    ) -> mask8x32<Self> {
+        let int = i8x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_left::<OFFSET>();
+        mask8x32 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask8x32<const OFFSET: usize>(
+        self,
+        a: mask8x32<Self>,
+    ) -> mask8x32<Self> {
+        let int = i8x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_right::<OFFSET>();
+        mask8x32 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -7922,11 +8331,31 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i16x16<Avx2>, b: i16x16<Avx2>) -> i16x16<Avx2> {
+                _mm256_adds_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i16x16<Avx2>, b: i16x16<Avx2>) -> i16x16<Avx2> {
                 _mm256_sub_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i16x16<Avx2>, b: i16x16<Avx2>) -> i16x16<Avx2> {
+                _mm256_subs_epi16(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -8395,11 +8824,31 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u16x16<Avx2>, b: u16x16<Avx2>) -> u16x16<Avx2> {
+                _mm256_adds_epu16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u16x16<Avx2>, b: u16x16<Avx2>) -> u16x16<Avx2> {
                 _mm256_sub_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u16x16<Avx2>, b: u16x16<Avx2>) -> u16x16<Avx2> {
+                _mm256_subs_epu16(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -8834,6 +9283,36 @@ impl Simd for Avx2 {
         *a = lanes.simd_into(self);
     }
     #[inline(always)]
+    fn rotate_elements_left_mask16x16<const OFFSET: usize>(
+        self,
+        a: mask16x16<Self>,
+    ) -> mask16x16<Self> {
+        let int = i16x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_left::<OFFSET>();
+        mask16x16 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask16x16<const OFFSET: usize>(
+        self,
+        a: mask16x16<Self>,
+    ) -> mask16x16<Self> {
+        let int = i16x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_right::<OFFSET>();
+        mask16x16 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9065,11 +9544,53 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i32x8<Avx2>, b: i32x8<Avx2>) -> i32x8<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm256_add_epi32(a, b);
+                let overflow = _mm256_xor_si256(_mm256_cmpgt_epi32(a, wrapped), b);
+                let bound =
+                    _mm256_xor_si256(_mm256_srai_epi32::<31>(a), _mm256_set1_epi32(i32::MAX));
+                let result = _mm256_blendv_ps(
+                    _mm256_castsi256_ps(wrapped),
+                    _mm256_castsi256_ps(bound),
+                    _mm256_castsi256_ps(overflow),
+                );
+                _mm256_castps_si256(result).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i32x8<Avx2>, b: i32x8<Avx2>) -> i32x8<Avx2> {
                 _mm256_sub_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i32x8<Avx2>, b: i32x8<Avx2>) -> i32x8<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm256_sub_epi32(a, b);
+                let overflow = _mm256_xor_si256(_mm256_cmpgt_epi32(wrapped, a), b);
+                let bound =
+                    _mm256_xor_si256(_mm256_srai_epi32::<31>(a), _mm256_set1_epi32(i32::MAX));
+                let result = _mm256_blendv_ps(
+                    _mm256_castsi256_ps(wrapped),
+                    _mm256_castsi256_ps(bound),
+                    _mm256_castsi256_ps(overflow),
+                );
+                _mm256_castps_si256(result).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -9508,11 +10029,36 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u32x8<Avx2>, b: u32x8<Avx2>) -> u32x8<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let threshold = _mm256_xor_si256(b, _mm256_set1_epi32(-1));
+                _mm256_add_epi32(_mm256_min_epu32(a, threshold), b).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u32x8<Avx2>, b: u32x8<Avx2>) -> u32x8<Avx2> {
                 _mm256_sub_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u32x8<Avx2>, b: u32x8<Avx2>) -> u32x8<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                _mm256_sub_epi32(_mm256_max_epu32(a, b), b).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -9914,6 +10460,36 @@ impl Simd for Avx2 {
         let mut lanes: [i32; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
+    }
+    #[inline(always)]
+    fn rotate_elements_left_mask32x8<const OFFSET: usize>(
+        self,
+        a: mask32x8<Self>,
+    ) -> mask32x8<Self> {
+        let int = i32x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_left::<OFFSET>();
+        mask32x8 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask32x8<const OFFSET: usize>(
+        self,
+        a: mask32x8<Self>,
+    ) -> mask32x8<Self> {
+        let int = i32x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_right::<OFFSET>();
+        mask32x8 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
     }
     #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
@@ -10681,11 +11257,53 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i64x4<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm256_add_epi64(a, b);
+                let overflow = _mm256_xor_si256(_mm256_cmpgt_epi64(a, wrapped), b);
+                let bound =
+                    _mm256_add_epi64(_mm256_srli_epi64::<63>(a), _mm256_set1_epi64x(i64::MAX));
+                let result = _mm256_blendv_pd(
+                    _mm256_castsi256_pd(wrapped),
+                    _mm256_castsi256_pd(bound),
+                    _mm256_castsi256_pd(overflow),
+                );
+                _mm256_castpd_si256(result).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i64x4<Avx2> {
                 _mm256_sub_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i64x4<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm256_sub_epi64(a, b);
+                let overflow = _mm256_xor_si256(_mm256_cmpgt_epi64(wrapped, a), b);
+                let bound =
+                    _mm256_add_epi64(_mm256_srli_epi64::<63>(a), _mm256_set1_epi64x(i64::MAX));
+                let result = _mm256_blendv_pd(
+                    _mm256_castsi256_pd(wrapped),
+                    _mm256_castsi256_pd(bound),
+                    _mm256_castsi256_pd(overflow),
+                );
+                _mm256_castpd_si256(result).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -11110,11 +11728,47 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn saturating_add_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u64x4<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm256_add_epi64(a, b);
+                let sign_bias = _mm256_set1_epi64x(i64::MIN);
+                let overflow = _mm256_cmpgt_epi64(
+                    _mm256_xor_si256(a, sign_bias),
+                    _mm256_xor_si256(wrapped, sign_bias),
+                );
+                _mm256_or_si256(wrapped, overflow).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn sub_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u64x4<Avx2> {
                 _mm256_sub_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_sub_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u64x4<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let wrapped = _mm256_sub_epi64(a, b);
+                let sign_bias = _mm256_set1_epi64x(i64::MIN);
+                let no_borrow = _mm256_cmpgt_epi64(
+                    _mm256_xor_si256(a, sign_bias),
+                    _mm256_xor_si256(b, sign_bias),
+                );
+                _mm256_and_si256(wrapped, no_borrow).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -11479,6 +12133,36 @@ impl Simd for Avx2 {
         *a = lanes.simd_into(self);
     }
     #[inline(always)]
+    fn rotate_elements_left_mask64x4<const OFFSET: usize>(
+        self,
+        a: mask64x4<Self>,
+    ) -> mask64x4<Self> {
+        let int = i64x4 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_left::<OFFSET>();
+        mask64x4 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask64x4<const OFFSET: usize>(
+        self,
+        a: mask64x4<Self>,
+    ) -> mask64x4<Self> {
+        let int = i64x4 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_right::<OFFSET>();
+        mask64x4 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11785,6 +12469,36 @@ impl Simd for Avx2 {
         *a = lanes.simd_into(self);
     }
     #[inline(always)]
+    fn rotate_elements_left_mask8x64<const OFFSET: usize>(
+        self,
+        a: mask8x64<Self>,
+    ) -> mask8x64<Self> {
+        let int = i8x64 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_left::<OFFSET>();
+        mask8x64 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask8x64<const OFFSET: usize>(
+        self,
+        a: mask8x64<Self>,
+    ) -> mask8x64<Self> {
+        let int = i8x64 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_right::<OFFSET>();
+        mask8x64 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn split_mask8x64(self, a: mask8x64<Self>) -> (mask8x32<Self>, mask8x32<Self>) {
         (
             mask8x32 {
@@ -11881,6 +12595,36 @@ impl Simd for Avx2 {
         let mut lanes: [i16; 32usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
+    }
+    #[inline(always)]
+    fn rotate_elements_left_mask16x32<const OFFSET: usize>(
+        self,
+        a: mask16x32<Self>,
+    ) -> mask16x32<Self> {
+        let int = i16x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_left::<OFFSET>();
+        mask16x32 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask16x32<const OFFSET: usize>(
+        self,
+        a: mask16x32<Self>,
+    ) -> mask16x32<Self> {
+        let int = i16x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_right::<OFFSET>();
+        mask16x32 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
     }
     #[inline(always)]
     fn split_mask16x32(self, a: mask16x32<Self>) -> (mask16x16<Self>, mask16x16<Self>) {
@@ -11990,6 +12734,36 @@ impl Simd for Avx2 {
         let mut lanes: [i32; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
+    }
+    #[inline(always)]
+    fn rotate_elements_left_mask32x16<const OFFSET: usize>(
+        self,
+        a: mask32x16<Self>,
+    ) -> mask32x16<Self> {
+        let int = i32x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_left::<OFFSET>();
+        mask32x16 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask32x16<const OFFSET: usize>(
+        self,
+        a: mask32x16<Self>,
+    ) -> mask32x16<Self> {
+        let int = i32x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_right::<OFFSET>();
+        mask32x16 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
     }
     #[inline(always)]
     fn split_mask32x16(self, a: mask32x16<Self>) -> (mask32x8<Self>, mask32x8<Self>) {
@@ -12126,6 +12900,36 @@ impl Simd for Avx2 {
         let mut lanes: [i64; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
+    }
+    #[inline(always)]
+    fn rotate_elements_left_mask64x8<const OFFSET: usize>(
+        self,
+        a: mask64x8<Self>,
+    ) -> mask64x8<Self> {
+        let int = i64x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_left::<OFFSET>();
+        mask64x8 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_mask64x8<const OFFSET: usize>(
+        self,
+        a: mask64x8<Self>,
+    ) -> mask64x8<Self> {
+        let int = i64x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        };
+        let rotated = int.rotate_elements_right::<OFFSET>();
+        mask64x8 {
+            val: crate::transmute::checked_transmute_copy(&rotated.val),
+            simd: self,
+        }
     }
     #[inline(always)]
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>) {

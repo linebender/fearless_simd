@@ -41,6 +41,24 @@ fn swizzle_dyn_u8x32_crosses_blocks<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn swizzle_dyn_u8x32_every_valid_index_in_both_lanes<S: Simd>(simd: S) {
+    // Every value has four bits set, so ORing two distinct table bytes cannot
+    // accidentally produce either input byte.
+    let bytes = [
+        15, 23, 27, 29, 30, 39, 43, 45, 46, 51, 53, 54, 57, 58, 60, 71, 75, 77, 78, 83, 85, 86, 89,
+        90, 92, 99, 101, 102, 105, 106, 108, 113,
+    ];
+    let value = u8x32::simd_from(simd, bytes);
+
+    for index in 0_u8..32 {
+        let index_vec = u8x32::simd_from(simd, [index; 32]);
+        let result = value.swizzle_dyn(index_vec);
+
+        assert_eq!(*result, [bytes[usize::from(index)]; 32], "index {index}");
+    }
+}
+
+#[simd_test]
 fn swizzle_dyn_u8x64_crosses_blocks<S: Simd>(simd: S) {
     let bytes: [u8; 64] = core::array::from_fn(|i| u8::try_from(i + 1).unwrap());
     let indices: [u8; 64] = core::array::from_fn(|i| {
