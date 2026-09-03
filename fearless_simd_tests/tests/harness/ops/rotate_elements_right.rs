@@ -433,12 +433,16 @@ fn rotate_elements_right_u64x8<S: Simd>(simd: S) {
 fn rotate_elements_right_mask8x16<S: Simd>(simd: S) {
     let a = mask8x16::from_bitmask(simd, 0x8000);
     assert_eq!(a.rotate_elements_right::<1>().to_bitmask(), 0x0001);
+    let b = mask8x16::from_bitmask(simd, 0x5555);
+    assert_eq!(b.rotate_elements_right::<1>().to_bitmask(), 0xaaaa);
 }
 
 #[simd_test]
 fn rotate_elements_right_mask16x8<S: Simd>(simd: S) {
     let a = mask16x8::from_bitmask(simd, 0x80);
     assert_eq!(a.rotate_elements_right::<1>().to_bitmask(), 0x01);
+    let b = mask16x8::from_bitmask(simd, 0x55);
+    assert_eq!(b.rotate_elements_right::<1>().to_bitmask(), 0xaa);
 }
 
 #[simd_test]
@@ -452,6 +456,8 @@ fn rotate_elements_right_mask32x4<S: Simd>(simd: S) {
         a.rotate_elements_right::<{ usize::MAX }>().to_bitmask(),
         0b0100
     );
+    let b = mask32x4::from_bitmask(simd, 0b0101);
+    assert_eq!(b.rotate_elements_right::<1>().to_bitmask(), 0b1010);
 }
 
 #[simd_test]
@@ -464,6 +470,8 @@ fn rotate_elements_right_mask64x2<S: Simd>(simd: S) {
 fn rotate_elements_right_mask8x32<S: Simd>(simd: S) {
     let a = mask8x32::from_bitmask(simd, 0x8000_0000);
     assert_eq!(a.rotate_elements_right::<1>().to_bitmask(), 0x0000_0001);
+    let b = mask8x32::from_bitmask(simd, 0x5555_5555);
+    assert_eq!(b.rotate_elements_right::<1>().to_bitmask(), 0xaaaa_aaaa);
 }
 
 #[simd_test]
@@ -498,6 +506,11 @@ fn rotate_elements_right_mask8x64<S: Simd>(simd: S) {
     assert_eq!(
         a.rotate_elements_right::<64>().to_bitmask(),
         0x8000_0000_0000_0000
+    );
+    let b = mask8x64::from_bitmask(simd, 0x5555_5555_5555_5555);
+    assert_eq!(
+        b.rotate_elements_right::<1>().to_bitmask(),
+        0xaaaa_aaaa_aaaa_aaaa
     );
 }
 
