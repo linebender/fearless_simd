@@ -658,7 +658,7 @@ const COMMON_BASE_OPS: &[Op] = &[
         For a vector with N elements, this operation performs N-1 roundings.\n\n\
         For a given vector type and lane count, this operation produces the same result on all platforms and backends down to the bit pattern, except that when the result is NaN, its exact bit pattern is unspecified. \
         This fixed-width guarantee does not make code using native-width associated types such as `S::f32s` independent of the selected SIMD level, because their lane counts can differ.\n\n\
-        The result of this operation is **not** bit-exact to scalar sum of the elements because it multiplies elements in a different (but fixed) order.\n\n\
+        The result of this operation is **not** bit-exact to scalar product of the elements because it multiplies elements in a different (but fixed) order.\n\n\
         Intermediate operations can overflow, underflow, or multiply infinity by zero to produce NaN even when the exact real-number product is representable.\n\n\
         Because floating-point multiplication is not associative, separately reducing smaller vectors and then multiplying their results can differ from reducing their combined wider vector.",
     ),
