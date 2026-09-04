@@ -416,7 +416,7 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
     quote! {
         impl<S: Simd> SimdMask<S> for #name<S> {
             type Element = #scalar;
-            const N: usize = #len;
+            const LEN: usize = #len;
 
             #[inline(always)]
             fn witness(&self) -> S {
@@ -556,7 +556,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
         impl<S: Simd> SimdBase<S> for #name<S> {
             type Element = #scalar;
             type ByteVector = #byte_vector<S>;
-            const N: usize = #len;
+            const LEN: usize = #len;
             type Mask = #mask_ty<S>;
             type Block = #block_ty<S>;
             type Array = [#scalar; #len];

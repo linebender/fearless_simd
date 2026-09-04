@@ -75,7 +75,7 @@ use fearless_simd::{dispatch, prelude::*, Level};
 
 #[inline(always)]
 fn double_u32s<S: Simd>(simd: S, values: &mut [u32]) {
-    let mut chunks = values.chunks_exact_mut(S::u32s::N); // the CPU's native SIMD width
+    let mut chunks = values.chunks_exact_mut(S::u32s::LEN); // the CPU's native SIMD width
     for chunk in &mut chunks {
         let v = S::u32s::from_slice(simd, chunk);
         (v * 2).store_slice(chunk);

@@ -9,14 +9,14 @@ use fearless_simd_dev_macros::simd_test;
 fn assert_mask_set_roundtrip<S: Simd, M: SimdMask<S>>(simd: S) {
     let mut mask = M::from_bitmask(simd, 0);
     let mut expected = 0_u64;
-    for i in 0..M::N {
+    for i in 0..M::LEN {
         mask.set(i, true);
         expected |= 1_u64 << i;
         assert_eq!(mask.to_bitmask(), expected);
         assert!(mask.test(i));
     }
 
-    for i in 0..M::N {
+    for i in 0..M::LEN {
         mask.set(i, false);
         expected &= !(1_u64 << i);
         assert_eq!(mask.to_bitmask(), expected);

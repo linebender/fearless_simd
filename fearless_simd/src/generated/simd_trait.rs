@@ -195,7 +195,7 @@ pub trait Simd:
     #[doc = r"     simd.vectorize("]
     #[doc = r"         #[inline(always)]"]
     #[doc = r"         || {"]
-    #[doc = r"             let mut chunks = values.chunks_exact_mut(S::u32s::N);"]
+    #[doc = r"             let mut chunks = values.chunks_exact_mut(S::u32s::LEN);"]
     #[doc = r"             for chunk in &mut chunks {"]
     #[doc = r"                 let value = S::u32s::from_slice(simd, chunk);"]
     #[doc = r"                 (value * 2).store_slice(chunk);"]
@@ -217,7 +217,7 @@ pub trait Simd:
     fn splat_f32x4(self, val: f32) -> f32x4<Self>;
     #[doc = "Reverse the order of the vector's elements."]
     fn reverse_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -355,7 +355,7 @@ pub trait Simd:
     fn splat_i8x16(self, val: i8) -> i8x16<Self>;
     #[doc = "Reverse the order of the vector's elements."]
     fn reverse_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -473,7 +473,7 @@ pub trait Simd:
     fn splat_u8x16(self, val: u8) -> u8x16<Self>;
     #[doc = "Reverse the order of the vector's elements."]
     fn reverse_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -584,12 +584,12 @@ pub trait Simd:
     fn to_bitmask_mask8x16(self, a: mask8x16<Self>) -> u64;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask8x16(self, a: &mut mask8x16<Self>, index: usize, value: bool) -> ();
-    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_left_mask8x16<const OFFSET: usize>(
         self,
         a: mask8x16<Self>,
     ) -> mask8x16<Self>;
-    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_right_mask8x16<const OFFSET: usize>(
         self,
         a: mask8x16<Self>,
@@ -627,7 +627,7 @@ pub trait Simd:
     fn splat_i16x8(self, val: i16) -> i16x8<Self>;
     #[doc = "Reverse the order of the vector's elements."]
     fn reverse_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -751,7 +751,7 @@ pub trait Simd:
     fn splat_u16x8(self, val: u16) -> u16x8<Self>;
     #[doc = "Reverse the order of the vector's elements."]
     fn reverse_u16x8(self, a: u16x8<Self>) -> u16x8<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -877,12 +877,12 @@ pub trait Simd:
     fn to_bitmask_mask16x8(self, a: mask16x8<Self>) -> u64;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask16x8(self, a: &mut mask16x8<Self>, index: usize, value: bool) -> ();
-    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_left_mask16x8<const OFFSET: usize>(
         self,
         a: mask16x8<Self>,
     ) -> mask16x8<Self>;
-    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_right_mask16x8<const OFFSET: usize>(
         self,
         a: mask16x8<Self>,
@@ -920,7 +920,7 @@ pub trait Simd:
     fn splat_i32x4(self, val: i32) -> i32x4<Self>;
     #[doc = "Reverse the order of the vector's elements."]
     fn reverse_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -1046,7 +1046,7 @@ pub trait Simd:
     fn splat_u32x4(self, val: u32) -> u32x4<Self>;
     #[doc = "Reverse the order of the vector's elements."]
     fn reverse_u32x4(self, a: u32x4<Self>) -> u32x4<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -1174,12 +1174,12 @@ pub trait Simd:
     fn to_bitmask_mask32x4(self, a: mask32x4<Self>) -> u64;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask32x4(self, a: &mut mask32x4<Self>, index: usize, value: bool) -> ();
-    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_left_mask32x4<const OFFSET: usize>(
         self,
         a: mask32x4<Self>,
     ) -> mask32x4<Self>;
-    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_right_mask32x4<const OFFSET: usize>(
         self,
         a: mask32x4<Self>,
@@ -1217,7 +1217,7 @@ pub trait Simd:
     fn splat_f64x2(self, val: f64) -> f64x2<Self>;
     #[doc = "Reverse the order of the vector's elements."]
     fn reverse_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -1359,7 +1359,7 @@ pub trait Simd:
     fn splat_i64x2(self, val: i64) -> i64x2<Self>;
     #[doc = "Reverse the order of the vector's elements."]
     fn reverse_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -1483,7 +1483,7 @@ pub trait Simd:
     fn splat_u64x2(self, val: u64) -> u64x2<Self>;
     #[doc = "Reverse the order of the vector's elements."]
     fn reverse_u64x2(self, a: u64x2<Self>) -> u64x2<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -1609,12 +1609,12 @@ pub trait Simd:
     fn to_bitmask_mask64x2(self, a: mask64x2<Self>) -> u64;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask64x2(self, a: &mut mask64x2<Self>, index: usize, value: bool) -> ();
-    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_left_mask64x2<const OFFSET: usize>(
         self,
         a: mask64x2<Self>,
     ) -> mask64x2<Self>;
-    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_right_mask64x2<const OFFSET: usize>(
         self,
         a: mask64x2<Self>,
@@ -1660,7 +1660,7 @@ pub trait Simd:
         let (a0, a1) = self.split_f32x8(a);
         self.combine_f32x4(self.reverse_f32x4(a1), self.reverse_f32x4(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -2049,7 +2049,7 @@ pub trait Simd:
         let (a0, a1) = self.split_i8x32(a);
         self.combine_i8x16(self.reverse_i8x16(a1), self.reverse_i8x16(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -2349,7 +2349,7 @@ pub trait Simd:
         let (a0, a1) = self.split_u8x32(a);
         self.combine_u8x16(self.reverse_u8x16(a1), self.reverse_u8x16(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -2653,12 +2653,12 @@ pub trait Simd:
     }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask8x32(self, a: &mut mask8x32<Self>, index: usize, value: bool) -> ();
-    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_left_mask8x32<const OFFSET: usize>(
         self,
         a: mask8x32<Self>,
     ) -> mask8x32<Self>;
-    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_right_mask8x32<const OFFSET: usize>(
         self,
         a: mask8x32<Self>,
@@ -2759,7 +2759,7 @@ pub trait Simd:
         let (a0, a1) = self.split_i16x16(a);
         self.combine_i16x8(self.reverse_i16x8(a1), self.reverse_i16x8(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -3090,7 +3090,7 @@ pub trait Simd:
         let (a0, a1) = self.split_u16x16(a);
         self.combine_u16x8(self.reverse_u16x8(a1), self.reverse_u16x8(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -3426,12 +3426,12 @@ pub trait Simd:
     }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask16x16(self, a: &mut mask16x16<Self>, index: usize, value: bool) -> ();
-    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_left_mask16x16<const OFFSET: usize>(
         self,
         a: mask16x16<Self>,
     ) -> mask16x16<Self>;
-    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_right_mask16x16<const OFFSET: usize>(
         self,
         a: mask16x16<Self>,
@@ -3532,7 +3532,7 @@ pub trait Simd:
         let (a0, a1) = self.split_i32x8(a);
         self.combine_i32x4(self.reverse_i32x4(a1), self.reverse_i32x4(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -3865,7 +3865,7 @@ pub trait Simd:
         let (a0, a1) = self.split_u32x8(a);
         self.combine_u32x4(self.reverse_u32x4(a1), self.reverse_u32x4(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -4203,12 +4203,12 @@ pub trait Simd:
     }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask32x8(self, a: &mut mask32x8<Self>, index: usize, value: bool) -> ();
-    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_left_mask32x8<const OFFSET: usize>(
         self,
         a: mask32x8<Self>,
     ) -> mask32x8<Self>;
-    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_right_mask32x8<const OFFSET: usize>(
         self,
         a: mask32x8<Self>,
@@ -4309,7 +4309,7 @@ pub trait Simd:
         let (a0, a1) = self.split_f64x4(a);
         self.combine_f64x2(self.reverse_f64x2(a1), self.reverse_f64x2(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -4717,7 +4717,7 @@ pub trait Simd:
         let (a0, a1) = self.split_i64x4(a);
         self.combine_i64x2(self.reverse_i64x2(a1), self.reverse_i64x2(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i64x4<const SHIFT: usize>(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -5042,7 +5042,7 @@ pub trait Simd:
         let (a0, a1) = self.split_u64x4(a);
         self.combine_u64x2(self.reverse_u64x2(a1), self.reverse_u64x2(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u64x4<const SHIFT: usize>(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -5372,12 +5372,12 @@ pub trait Simd:
     }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask64x4(self, a: &mut mask64x4<Self>, index: usize, value: bool) -> ();
-    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_left_mask64x4<const OFFSET: usize>(
         self,
         a: mask64x4<Self>,
     ) -> mask64x4<Self>;
-    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_right_mask64x4<const OFFSET: usize>(
         self,
         a: mask64x4<Self>,
@@ -5478,7 +5478,7 @@ pub trait Simd:
         let (a0, a1) = self.split_f32x16(a);
         self.combine_f32x8(self.reverse_f32x8(a1), self.reverse_f32x8(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -5879,7 +5879,7 @@ pub trait Simd:
         let (a0, a1) = self.split_i8x64(a);
         self.combine_i8x32(self.reverse_i8x32(a1), self.reverse_i8x32(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -6177,7 +6177,7 @@ pub trait Simd:
         let (a0, a1) = self.split_u8x64(a);
         self.combine_u8x32(self.reverse_u8x32(a1), self.reverse_u8x32(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -6479,12 +6479,12 @@ pub trait Simd:
     }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask8x64(self, a: &mut mask8x64<Self>, index: usize, value: bool) -> ();
-    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_left_mask8x64<const OFFSET: usize>(
         self,
         a: mask8x64<Self>,
     ) -> mask8x64<Self>;
-    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_right_mask8x64<const OFFSET: usize>(
         self,
         a: mask8x64<Self>,
@@ -6583,7 +6583,7 @@ pub trait Simd:
         let (a0, a1) = self.split_i16x32(a);
         self.combine_i16x16(self.reverse_i16x16(a1), self.reverse_i16x16(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -6918,7 +6918,7 @@ pub trait Simd:
         let (a0, a1) = self.split_u16x32(a);
         self.combine_u16x16(self.reverse_u16x16(a1), self.reverse_u16x16(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -7258,12 +7258,12 @@ pub trait Simd:
     }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask16x32(self, a: &mut mask16x32<Self>, index: usize, value: bool) -> ();
-    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_left_mask16x32<const OFFSET: usize>(
         self,
         a: mask16x32<Self>,
     ) -> mask16x32<Self>;
-    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_right_mask16x32<const OFFSET: usize>(
         self,
         a: mask16x32<Self>,
@@ -7365,7 +7365,7 @@ pub trait Simd:
         let (a0, a1) = self.split_i32x16(a);
         self.combine_i32x8(self.reverse_i32x8(a1), self.reverse_i32x8(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -7700,7 +7700,7 @@ pub trait Simd:
         let (a0, a1) = self.split_u32x16(a);
         self.combine_u32x8(self.reverse_u32x8(a1), self.reverse_u32x8(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -8040,12 +8040,12 @@ pub trait Simd:
     }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask32x16(self, a: &mut mask32x16<Self>, index: usize, value: bool) -> ();
-    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_left_mask32x16<const OFFSET: usize>(
         self,
         a: mask32x16<Self>,
     ) -> mask32x16<Self>;
-    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_right_mask32x16<const OFFSET: usize>(
         self,
         a: mask32x16<Self>,
@@ -8144,7 +8144,7 @@ pub trait Simd:
         let (a0, a1) = self.split_f64x8(a);
         self.combine_f64x4(self.reverse_f64x4(a1), self.reverse_f64x4(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -8550,7 +8550,7 @@ pub trait Simd:
         let (a0, a1) = self.split_i64x8(a);
         self.combine_i64x4(self.reverse_i64x4(a1), self.reverse_i64x4(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i64x8<const SHIFT: usize>(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -8873,7 +8873,7 @@ pub trait Simd:
         let (a0, a1) = self.split_u64x8(a);
         self.combine_u64x4(self.reverse_u64x4(a1), self.reverse_u64x4(a0))
     }
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u64x8<const SHIFT: usize>(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     #[inline(always)]
@@ -9201,12 +9201,12 @@ pub trait Simd:
     }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask64x8(self, a: &mut mask64x8<Self>, index: usize, value: bool) -> ();
-    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_left_mask64x8<const OFFSET: usize>(
         self,
         a: mask64x8<Self>,
     ) -> mask64x8<Self>;
-    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_right_mask64x8<const OFFSET: usize>(
         self,
         a: mask64x8<Self>,
@@ -9483,7 +9483,7 @@ pub trait SimdBase<S: Simd>:
     #[doc = r" This vector type's lane count. This is useful when you're"]
     #[doc = r" working with a native-width vector (e.g. [`Simd::f32s`]) and"]
     #[doc = r" want to process data in native-width chunks."]
-    const N: usize;
+    const LEN: usize;
     #[doc = r" A SIMD vector mask with the same number of logical lanes."]
     #[doc = r""]
     #[doc = r" Masks intentionally do not implement [`SimdBase`]. SSE, NEON, WASM, and the"]
@@ -9493,7 +9493,7 @@ pub trait SimdBase<S: Simd>:
     #[doc = r" A 128-bit SIMD vector of the same scalar type."]
     type Block: SimdBase<S, Element = Self::Element, Block = Self::Block>;
     #[doc = r" The array type that this vector type corresponds to, which will"]
-    #[doc = r" always be `[Self::Element; Self::N]`. It has the same layout as"]
+    #[doc = r" always be `[Self::Element; Self::LEN]`. It has the same layout as"]
     #[doc = r" this vector type, but likely has a lower alignment."]
     type Array: Copy
         + Debug
@@ -9548,14 +9548,14 @@ pub trait SimdBase<S: Simd>:
     fn block_splat(block: Self::Block) -> Self;
     #[doc = r" Create a SIMD vector where each element is produced by"]
     #[doc = r" calling `f` with that element's lane index (from 0 to"]
-    #[doc = r" [`SimdBase::N`] - 1)."]
+    #[doc = r" [`SimdBase::LEN`] - 1)."]
     fn from_fn(simd: S, f: impl FnMut(usize) -> Self::Element) -> Self;
     #[doc = r" Rotate the vector elements to the left by `OFFSET`."]
     #[doc = r""]
-    #[doc = r" If `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = r" If `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     #[inline(always)]
     fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        match OFFSET % Self::N {
+        match OFFSET % Self::LEN {
             0 => self.slide::<0>(self),
             1 => self.slide::<1>(self),
             2 => self.slide::<2>(self),
@@ -9625,10 +9625,10 @@ pub trait SimdBase<S: Simd>:
     }
     #[doc = r" Rotate the vector elements to the right by `OFFSET`."]
     #[doc = r""]
-    #[doc = r" If `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = r" If `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     #[inline(always)]
     fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        match Self::N - OFFSET % Self::N {
+        match Self::LEN - OFFSET % Self::LEN {
             1 => self.slide::<1>(self),
             2 => self.slide::<2>(self),
             3 => self.slide::<3>(self),
@@ -9698,10 +9698,10 @@ pub trait SimdBase<S: Simd>:
     }
     #[doc = r" Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right."]
     #[doc = r""]
-    #[doc = r" If `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    #[doc = r" If `OFFSET` is greater than or equal to `Self::LEN`, all lanes are filled with `padding`."]
     #[inline(always)]
     fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        match OFFSET.min(Self::N) {
+        match OFFSET.min(Self::LEN) {
             0 => self.slide::<0>(padding),
             1 => self.slide::<1>(padding),
             2 => self.slide::<2>(padding),
@@ -9772,11 +9772,11 @@ pub trait SimdBase<S: Simd>:
     }
     #[doc = r" Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left."]
     #[doc = r""]
-    #[doc = r" If `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    #[doc = r" If `OFFSET` is greater than or equal to `Self::LEN`, all lanes are filled with `padding`."]
     #[inline(always)]
     fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
         let padding = Self::splat(self.witness(), padding);
-        match Self::N.saturating_sub(OFFSET) {
+        match Self::LEN.saturating_sub(OFFSET) {
             0 => padding.slide::<0>(self),
             1 => padding.slide::<1>(self),
             2 => padding.slide::<2>(self),
@@ -9849,7 +9849,7 @@ pub trait SimdBase<S: Simd>:
     fn splat(simd: S, val: Self::Element) -> Self;
     #[doc = "Reverse the order of the vector's elements."]
     fn reverse(self) -> Self;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self;
@@ -10030,7 +10030,7 @@ pub trait SimdMask<S: Simd>:
     #[doc = r" (integer value -1)."]
     type Element: SimdElement;
     #[doc = r" This mask type's lane count."]
-    const N: usize;
+    const LEN: usize;
     #[doc = r" Get the [`Simd`] implementation associated with this type."]
     fn witness(&self) -> S;
     #[doc = r" Create a SIMD mask with all lanes set to the given boolean value."]
@@ -10038,12 +10038,12 @@ pub trait SimdMask<S: Simd>:
     #[doc = r" Create a mask from a compact bitmask."]
     #[doc = r""]
     #[doc = r" Bit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above"]
-    #[doc = r" [`Self::N`] are ignored."]
+    #[doc = r" [`Self::LEN`] are ignored."]
     fn from_bitmask(simd: S, bits: u64) -> Self;
     #[doc = r" Convert this mask to a compact bitmask."]
     #[doc = r""]
     #[doc = r" Bit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above"]
-    #[doc = r" [`Self::N`] are cleared."]
+    #[doc = r" [`Self::LEN`] are cleared."]
     fn to_bitmask(self) -> u64;
     #[doc = r" Test whether one logical lane is set."]
     #[doc = r""]
@@ -10051,9 +10051,9 @@ pub trait SimdMask<S: Simd>:
     #[inline(always)]
     fn test(&self, index: usize) -> bool {
         assert!(
-            index < Self::N,
+            index < Self::LEN,
             "mask lane index {index} is out of bounds for {} lanes",
-            Self::N
+            Self::LEN
         );
         (((*self).to_bitmask() >> index) & 1) != 0
     }
@@ -10069,9 +10069,9 @@ pub trait SimdMask<S: Simd>:
     #[doc = r""]
     #[doc = r" The slice must be exactly the size of the SIMD mask."]
     fn store_slice(&self, slice: &mut [Self::Element]);
-    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_left<const OFFSET: usize>(self) -> Self;
-    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_right<const OFFSET: usize>(self) -> Self;
     #[doc = "Reverse the order of the mask's logical lanes."]
     fn reverse(self) -> Self;

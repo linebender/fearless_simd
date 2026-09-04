@@ -27,7 +27,7 @@ fn sigmoid<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) {
     // the callee will also never get an AVX2 implementation.
     // The downgrade only needs to happen once anywhere in the call chain.
 
-    let n = S::f32s::N;
+    let n = S::f32s::LEN;
     for (x, y) in x.chunks_exact(n).zip(out.chunks_exact_mut(n)) {
         let a = S::f32s::from_slice(simd, x);
         let b = a / (a * a + 1.0).sqrt();
