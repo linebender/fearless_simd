@@ -1,0 +1,5 @@
+error: `#[simd]` cannot be combined with `#[instruction_set]`
+ --> tests/ui/simd/fail/instruction_set.rs:7:1
+  |
+7 | #[instruction_set(arm::a32)]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

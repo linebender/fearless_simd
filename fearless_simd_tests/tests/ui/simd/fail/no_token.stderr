@@ -1,0 +1,7 @@
+error: `#[simd]` requires a SIMD token parameter after any receiver
+ --> tests/ui/simd/fail/no_token.rs:6:1
+  |
+6 | #[simd]
+  | ^^^^^^^
+  |
+  = note: this error originates in the attribute macro `simd` (in Nightly builds, run with -Z macro-backtrace for more info)

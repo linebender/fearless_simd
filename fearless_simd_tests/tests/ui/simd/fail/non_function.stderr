@@ -1,0 +1,5 @@
+error: expected `fn`
+ --> tests/ui/simd/fail/non_function.rs:7:1
+  |
+7 | struct NotAFunction;
+  | ^^^^^^

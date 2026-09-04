@@ -9,18 +9,26 @@
 //! No matter what level of abstraction you're after, be it autovectorization and multiversioning, or portable SIMD, or safe access to raw
 //! intrinsics and nothing more, `fearless_simd` has you covered!
 //!
-//! Zero dependencies, safe public APIs, and [very little](https://shnatsel.github.io/safe-simd-in-rust-even-on-the-inside/) `unsafe` under the hood.
+//! The core crate has zero dependencies, safe public APIs, and
+//! [very little](https://shnatsel.github.io/safe-simd-in-rust-even-on-the-inside/)
+//! `unsafe` under the hood.
 //!
 //! # Automatic vectorization
 //!
-//! Put the code to vectorize in an `#[inline(always)]` function generic over [`Simd`].
+//! The easiest way to define a SIMD-generic function is the experimental
+//! [`#[simd]`](https://docs.rs/fearless_simd_macros/latest/fearless_simd_macros/attr.simd.html)
+//! attribute from the separately versioned `fearless_simd_macros` crate. The companion macro
+//! crate is optional: `fearless_simd` does not depend on it, so users of only the core API do not
+//! pay for its procedural-macro dependencies.
 //!
-//! This will generate several implementations for different SIMD levels and select the best one at runtime:
+//! [`dispatch`] generates implementations for the available SIMD levels and selects the best one
+//! at runtime:
 //!
-//! ```rust
+//! ```ignore
 //! use fearless_simd::{dispatch, Level, Simd};
+//! use fearless_simd_macros::simd;
 //!
-//! #[inline(always)]
+//! #[simd]
 //! fn double_u32s<S: Simd>(_: S, values: &mut [u32]) {
 //!     for value in values {
 //!         *value = *value * 2;
@@ -33,14 +41,38 @@
 //! assert_eq!(values, [2, 4, 6, 8, 10]);
 //! ```
 //!
+//! The attribute uses the public [`Simd::vectorize`] API. You can call it directly to get the same
+//! behavior without depending on the macro crate:
+//!
+//! ```rust
+//! use fearless_simd::{dispatch, Level, Simd};
+//!
+//! fn double_u32s<S: Simd>(simd: S, values: &mut [u32]) {
+//!     simd.vectorize(
+//!         #[inline(always)]
+//!         || {
+//!             for value in values {
+//!                 *value = *value * 2;
+//!             }
+//!         },
+//!     );
+//! }
+//!
+//! let mut values = [1, 2, 3, 4, 5];
+//! let level = Level::new();
+//! dispatch!(level, simd => double_u32s(simd, &mut values));
+//! assert_eq!(values, [2, 4, 6, 8, 10]);
+//! ```
+//!
 //! # Portable SIMD
 //!
 //! Use the vector types for explicit lane-wise operations while staying generic over the SIMD level:
 //!
-//! ```rust
+//! ```ignore
 //! use fearless_simd::{dispatch, prelude::*, Level};
+//! use fearless_simd_macros::simd;
 //!
-//! #[inline(always)]
+//! #[simd]
 //! fn double_u32s<S: Simd>(simd: S, values: &mut [u32]) {
 //!     let mut chunks = values.chunks_exact_mut(S::u32s::N); // the CPU's native SIMD width
 //!     for chunk in &mut chunks {
@@ -101,13 +133,17 @@
 //!
 //! # Inlining
 //!
-//! Fearless SIMD relies heavily on Rust's inlining support to create functions which have the given target features enabled.
+//! Fearless SIMD relies on Rust's inlining support to place SIMD code in a context with the
+//! appropriate target features enabled.
 //!
 //! As a rule of thumb:
 //!
-//! - All SIMD functions need `#[inline(always)]`.
+//! - Put `#[simd]` on SIMD-generic functions, or wrap their bodies in [`Simd::vectorize`].
 //! - Use [`dispatch`] when calling SIMD code from non-SIMD code.
-//! - Use [`vectorize()`][Simd::vectorize] when calling SIMD from SIMD if you don't want to force inlining.
+//! - A closure passed directly to [`Simd::vectorize`] needs `#[inline(always)]`; `#[simd]` adds
+//!   this closure annotation for you.
+//! - Helpers that are not themselves wrapped by `#[simd]` or [`Simd::vectorize`] still need to be
+//!   inlined into a SIMD-enabled caller.
 //!
 //! [The article describing the design](https://shnatsel.github.io/safe-simd-in-rust-even-on-the-inside/#the-abi-would-like-a-word) covers why this is the
 //! case. There's also Q&A on [Zulip](https://xi.zulipchat.com/#narrow/channel/514230-simd/topic/inlining/with/546913433).
@@ -216,8 +252,9 @@ extern crate std;
 #[cfg(all(not(feature = "libm"), not(feature = "std")))]
 compile_error!("fearless_simd requires either the `std` or `libm` feature");
 
-// Suppress the unused_crate_dependencies lint when both std and libm are specified.
-#[cfg(all(feature = "std", feature = "libm"))]
+// Some native SIMD backends do not need libm unless fallback support is also enabled.
+// Keep the optional dependency marked as used for every supported target configuration.
+#[cfg(feature = "libm")]
 use libm as _;
 
 mod generated;

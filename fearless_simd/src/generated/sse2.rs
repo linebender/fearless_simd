@@ -205,6 +205,7 @@ impl Simd for Sse2 {
     }
     #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
+        #[inline]
         #[target_feature(enable = "fxsr,sse,sse2")]
         fn vectorize_sse2<F: FnOnce() -> R, R>(f: F) -> R {
             f()

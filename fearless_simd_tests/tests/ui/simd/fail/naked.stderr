@@ -1,0 +1,5 @@
+error: `#[simd]` cannot be used on a naked function
+ --> tests/ui/simd/fail/naked.rs:7:1
+  |
+7 | #[naked]
+  | ^^^^^^^^
