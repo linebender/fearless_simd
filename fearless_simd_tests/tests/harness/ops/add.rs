@@ -81,7 +81,7 @@ fn add_u32x4<S: Simd>(simd: S) {
 fn wrapping_add_u32<S: Simd>(simd: S) {
     assert_eq!(
         (S::u32s::splat(simd, u32::MAX) + 1).as_slice(),
-        &vec![0; S::u32s::N]
+        &vec![0; S::u32s::LEN]
     );
 }
 

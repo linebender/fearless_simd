@@ -575,9 +575,9 @@ const BASE_OPS: &[Op] = &[
         OpSig::Slide {
             granularity: SlideGranularity::AcrossBlocks,
         },
-        "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n\
-         `SHIFT` must be within [0, `Self::N`].\n\n\
-         This can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\n\
+        "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n\
+         `SHIFT` must be within [0, `Self::LEN`].\n\n\
+         This can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\n\
          This can also be used to rotate items within a vector by providing the same vector as both operands.\n\n\
          ```text\n\n\
          slide::<1>([a b c d], [e f g h]) == [b c d e]\n\n\
@@ -1129,7 +1129,7 @@ const MASK_OPS: &[Op] = &[
             direction: ElementDirection::Left,
         },
         "Rotate the mask elements to the left by `OFFSET`.\n\n\
-        If `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`.",
+        If `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`.",
     ),
     Op::new(
         "rotate_elements_right",
@@ -1138,7 +1138,7 @@ const MASK_OPS: &[Op] = &[
             direction: ElementDirection::Right,
         },
         "Rotate the mask elements to the right by `OFFSET`.\n\n\
-        If `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`.",
+        If `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`.",
     ),
     Op::new(
         "and",

@@ -22,6 +22,7 @@ You can find its changes [documented below](#070-2026-08-11).
 
 ### Changed
 
+- Breaking change: `SimdBase::N` and `SimdMask::N` have been renamed to `LEN`, matching the `std::simd` naming.
 - Breaking change: `SimdBase::as_array` now borrows the vector and returns an array reference, while owned extraction has moved to `to_array`. The old `as_array_ref` and `as_array_mut` methods have been replaced by `as_array` and `as_mut_array`, matching the `std::simd` API.
 
 ## [0.7.0][] (2026-08-11)

@@ -109,7 +109,7 @@ fn generic_four_interleaved_color_transform<S: Simd, V: SimdInterleaved<S>>(
     simd: S,
     pixels: &mut [V::Element],
 ) {
-    let mut chunks = pixels.chunks_exact_mut(V::N * 4);
+    let mut chunks = pixels.chunks_exact_mut(V::LEN * 4);
     for chunk in &mut chunks {
         let [red, green, blue, alpha] = V::load_four_interleaved(simd, chunk);
         V::store_four_interleaved([blue, green, red, alpha], chunk);

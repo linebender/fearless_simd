@@ -8,7 +8,7 @@ use fearless_simd_dev_macros::simd_test;
 
 #[simd_test]
 fn bitcast_native<S: Simd>(simd: S) {
-    let expected: Vec<u8> = (0..S::u8s::N).map(|i| i as u8).collect();
+    let expected: Vec<u8> = (0..S::u8s::LEN).map(|i| i as u8).collect();
     let u8s = S::u8s::from_slice(simd, &expected);
     let i8s: S::i8s = u8s.bitcast();
     let u16s: S::u16s = i8s.bitcast();

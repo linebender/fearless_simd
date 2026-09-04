@@ -1813,7 +1813,7 @@ fn widen_narrow_random<S: Simd>(simd: S) {
         let input_f32: [f32; 8] = core::array::from_fn(|_| f32::from_bits(rng.u32(..)));
         let input_f32 = f32x8::from_slice(simd, &input_f32);
         let (low, high) = input_f32.widen();
-        for i in 0..f64x4::<S>::N {
+        for i in 0..f64x4::<S>::LEN {
             let expected_low = input_f32[i] as f64;
             let expected_high = input_f32[i + 4] as f64;
             if expected_low.is_nan() {
@@ -1838,7 +1838,7 @@ fn widen_narrow_random<S: Simd>(simd: S) {
         let roundtrip = low.narrow(high);
         let saturated_roundtrip = low.saturating_narrow(high);
         let relaxed_roundtrip = low.relaxed_narrow(high);
-        for i in 0..f32x8::<S>::N {
+        for i in 0..f32x8::<S>::LEN {
             if input_f32[i].is_nan() {
                 assert!(roundtrip[i].is_nan(), "f32 roundtrip iteration {iteration}");
                 assert!(
@@ -1875,7 +1875,7 @@ fn widen_narrow_random<S: Simd>(simd: S) {
         let narrowed = a_f64.narrow(b_f64);
         let saturated = a_f64.saturating_narrow(b_f64);
         let relaxed = a_f64.relaxed_narrow(b_f64);
-        for i in 0..f32x8::<S>::N {
+        for i in 0..f32x8::<S>::LEN {
             let source = if i < 4 { a_f64[i] } else { b_f64[i - 4] };
             let expected = source as f32;
             if expected.is_nan() {

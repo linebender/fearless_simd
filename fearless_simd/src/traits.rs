@@ -294,7 +294,7 @@ pub trait SimdCvtFloat<T: Seal>: Seal {
 ///     simd: S,
 ///     pixels: &mut [V::Element],
 /// ) {
-///     let mut chunks = pixels.chunks_exact_mut(V::N * 4);
+///     let mut chunks = pixels.chunks_exact_mut(V::LEN * 4);
 ///     for chunk in &mut chunks {
 ///         let [red, green, blue, alpha] = V::load_four_interleaved(simd, chunk);
 ///         V::store_four_interleaved([blue, green, red, alpha], chunk);
@@ -316,7 +316,7 @@ pub trait SimdInterleaved<S: Simd>: SimdBase<S> {
     ///
     /// # Panics
     ///
-    /// Panics unless `src.len()` is exactly `Self::N * 4`.
+    /// Panics unless `src.len()` is exactly `Self::LEN * 4`.
     fn load_four_interleaved(simd: S, src: &[Self::Element]) -> [Self; 4];
 
     /// Store four vectors into a scalar slice with four-way interleaving.
@@ -330,7 +330,7 @@ pub trait SimdInterleaved<S: Simd>: SimdBase<S> {
     ///
     /// # Panics
     ///
-    /// Panics unless `dest.len()` is exactly `Self::N * 4`.
+    /// Panics unless `dest.len()` is exactly `Self::LEN * 4`.
     fn store_four_interleaved(vectors: [Self; 4], dest: &mut [Self::Element]);
 }
 
