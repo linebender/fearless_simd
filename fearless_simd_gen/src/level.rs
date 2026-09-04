@@ -207,6 +207,18 @@ pub(crate) trait Level {
                     #level_body
                 }
 
+                // We use #[inline] rather than #[inline(always)] deliberately.
+                //
+                // Using #[inline(always)] results in both #vectorize_body
+                // and the outer function always being inlined,
+                // despite #vectorize_body carrying a weaker #[inline],
+                // causing extreme code bloat.
+                //
+                // The exact cause is difficult to determine with certainty,
+                // but it looks as if the LLVM inliner walks the call tree
+                // from the leaves to the root, so it first inlines
+                // #vectorize_body into vectorize() and then feels bound
+                // by the outer #[inline(always)].
                 #[inline]
                 fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
                     #vectorize_body
