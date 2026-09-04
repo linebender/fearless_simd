@@ -192,7 +192,7 @@ impl Simd for WasmSimd128 {
     fn level(self) -> Level {
         Level::WasmSimd128(self)
     }
-    #[inline(always)]
+    #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
         #[inline]
         fn vectorize_inner<F: FnOnce() -> R, R>(f: F) -> R {

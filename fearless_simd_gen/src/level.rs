@@ -207,7 +207,7 @@ pub(crate) trait Level {
                     #level_body
                 }
 
-                #[inline(always)]
+                #[inline]
                 fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
                     #vectorize_body
                 }

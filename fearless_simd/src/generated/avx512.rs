@@ -379,7 +379,7 @@ impl Simd for Avx512 {
     fn level(self) -> Level {
         Level::Avx512(self)
     }
-    #[inline(always)]
+    #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
         #[inline]
         #[target_feature(
