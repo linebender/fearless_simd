@@ -235,9 +235,8 @@ This version of Fearless SIMD has been verified to compile with **Rust 1.89** an
 
 Future versions of Fearless SIMD might increase the Rust version requirement. This will be accompanied by a minor version bump.
 
-MSRV increases do not impact existing users:
-Cargo supports [an MSRV-aware resolver](https://doc.rust-lang.org/edition-guide/rust-2024/cargo-resolver.html) and will not select a version that fails to build,
-and we provide [security backports](SECURITY.md) to older Rust versions released within the last 3 years.
+If you require a fixed MSRV, we recommend using Cargo's [MSRV-aware resolver](https://doc.rust-lang.org/edition-guide/rust-2024/cargo-resolver.html) which will not select a version that fails to build.
+We will provide [security backports](SECURITY.md) to older Rust versions released within the last 3 years.
 
 ## Community
 
