@@ -45,6 +45,8 @@ pub trait Bytes: Sized + Seal {
 
     #[doc(alias = "reinterpret")]
     #[doc(alias = "transmute")]
+    #[doc(alias = "to_bits")]
+    #[doc(alias = "from_bits")]
     /// Bitcast directly to another SIMD vector with the same byte representation.
     /// This is effectively a safe [transmute](core::mem::transmute) for SIMD types.
     ///
