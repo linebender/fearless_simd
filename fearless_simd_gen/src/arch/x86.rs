@@ -71,6 +71,10 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
                 }
                 _ => unreachable!(),
             },
+            "abs" if ty.scalar == ScalarType::Int => {
+                let intrinsic = simple_intrinsic("abs", ty);
+                quote! { #intrinsic( #( #args ),* ) }
+            }
             "abs" => {
                 let set1 = set1_intrinsic(ty);
                 let andnot = simple_intrinsic("andnot", ty);

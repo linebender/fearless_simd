@@ -213,6 +213,8 @@ pub trait Simd:
     #[doc = r" assert_eq!(values, [2, 4, 6, 8, 10]);"]
     #[doc = r" ```"]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R;
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_f32x4(self, val: f32) -> f32x4<Self>;
     #[doc = "Reverse the order of the vector's elements."]
@@ -243,8 +245,6 @@ pub trait Simd:
     fn swizzle_dyn_precise_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
     }
-    #[doc = "Compute the absolute value of each element."]
-    fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Negate each element of the vector."]
     fn neg_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
@@ -351,6 +351,8 @@ pub trait Simd:
     fn cvt_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self>;
     #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
     fn cvt_i32_precise_f32x4(self, a: f32x4<Self>) -> i32x4<Self>;
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    fn abs_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i8x16(self, val: i8) -> i8x16<Self>;
     #[doc = "Reverse the order of the vector's elements."]
@@ -469,6 +471,11 @@ pub trait Simd:
     ) -> ();
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
     fn widen_i8x16(self, a: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>);
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        a
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u8x16(self, val: u8) -> u8x16<Self>;
     #[doc = "Reverse the order of the vector's elements."]
@@ -623,6 +630,8 @@ pub trait Simd:
     fn all_false_mask8x16(self, a: mask8x16<Self>) -> bool;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x32<Self>;
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    fn abs_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i16x8(self, val: i16) -> i16x8<Self>;
     #[doc = "Reverse the order of the vector's elements."]
@@ -747,6 +756,11 @@ pub trait Simd:
     fn saturating_narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self>;
     #[doc = "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\nInputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn relaxed_narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self>;
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        a
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u16x8(self, val: u16) -> u16x8<Self>;
     #[doc = "Reverse the order of the vector's elements."]
@@ -916,6 +930,8 @@ pub trait Simd:
     fn all_false_mask16x8(self, a: mask16x8<Self>) -> bool;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x16<Self>;
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    fn abs_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i32x4(self, val: i32) -> i32x4<Self>;
     #[doc = "Reverse the order of the vector's elements."]
@@ -1042,6 +1058,11 @@ pub trait Simd:
     fn relaxed_narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self>;
     #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self>;
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        a
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u32x4(self, val: u32) -> u32x4<Self>;
     #[doc = "Reverse the order of the vector's elements."]
@@ -1213,6 +1234,8 @@ pub trait Simd:
     fn all_false_mask32x4(self, a: mask32x4<Self>) -> bool;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x8<Self>;
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_f64x2(self, val: f64) -> f64x2<Self>;
     #[doc = "Reverse the order of the vector's elements."]
@@ -1243,8 +1266,6 @@ pub trait Simd:
     fn swizzle_dyn_precise_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(a), indices))
     }
-    #[doc = "Compute the absolute value of each element."]
-    fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Negate each element of the vector."]
     fn neg_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
@@ -1355,6 +1376,8 @@ pub trait Simd:
     fn cvt_i64_f64x2(self, a: f64x2<Self>) -> i64x2<Self>;
     #[doc = "Convert each floating-point element to a signed 64-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
     fn cvt_i64_precise_f64x2(self, a: f64x2<Self>) -> i64x2<Self>;
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    fn abs_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i64x2(self, val: i64) -> i64x2<Self>;
     #[doc = "Reverse the order of the vector's elements."]
@@ -1479,6 +1502,11 @@ pub trait Simd:
     fn relaxed_narrow_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i32x4<Self>;
     #[doc = "Convert each signed 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f64_i64x2(self, a: i64x2<Self>) -> f64x2<Self>;
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        a
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u64x2(self, val: u64) -> u64x2<Self>;
     #[doc = "Reverse the order of the vector's elements."]
@@ -1648,6 +1676,12 @@ pub trait Simd:
     fn all_false_mask64x2(self, a: mask64x2<Self>) -> bool;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x4<Self>;
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f32x4(self.abs_f32x4(a0), self.abs_f32x4(a1))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
     fn splat_f32x8(self, val: f32) -> f32x8<Self> {
@@ -1690,12 +1724,6 @@ pub trait Simd:
     #[inline(always)]
     fn swizzle_dyn_precise_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
-    }
-    #[doc = "Compute the absolute value of each element."]
-    #[inline(always)]
-    fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_f32x4(self.abs_f32x4(a0), self.abs_f32x4(a1))
     }
     #[doc = "Negate each element of the vector."]
     #[inline(always)]
@@ -2037,6 +2065,12 @@ pub trait Simd:
             self.cvt_i32_precise_f32x4(a1),
         )
     }
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        self.combine_i8x16(self.abs_i8x16(a0), self.abs_i8x16(a1))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
     fn splat_i8x32(self, val: i8) -> i8x32<Self> {
@@ -2336,6 +2370,11 @@ pub trait Simd:
         let (a00, a01) = self.widen_i8x16(a0);
         let (a10, a11) = self.widen_i8x16(a1);
         (self.combine_i16x8(a00, a01), self.combine_i16x8(a10, a11))
+    }
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
+        a
     }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
@@ -2747,6 +2786,12 @@ pub trait Simd:
     fn combine_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x64<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask8x32(self, a: mask8x32<Self>) -> (mask8x16<Self>, mask8x16<Self>);
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        self.combine_i16x8(self.abs_i16x8(a0), self.abs_i16x8(a1))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
     fn splat_i16x16(self, val: i16) -> i16x16<Self> {
@@ -3077,6 +3122,11 @@ pub trait Simd:
             self.relaxed_narrow_i16x8(a0, a1),
             self.relaxed_narrow_i16x8(b0, b1),
         )
+    }
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
+        a
     }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
@@ -3520,6 +3570,12 @@ pub trait Simd:
     fn combine_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x32<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask16x16(self, a: mask16x16<Self>) -> (mask16x8<Self>, mask16x8<Self>);
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        self.combine_i32x4(self.abs_i32x4(a0), self.abs_i32x4(a1))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
     fn splat_i32x8(self, val: i32) -> i32x8<Self> {
@@ -3852,6 +3908,11 @@ pub trait Simd:
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_i32x8(a);
         self.combine_f32x4(self.cvt_f32_i32x4(a0), self.cvt_f32_i32x4(a1))
+    }
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
+        a
     }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
@@ -4297,6 +4358,12 @@ pub trait Simd:
     fn combine_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x16<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask32x8(self, a: mask32x8<Self>) -> (mask32x4<Self>, mask32x4<Self>);
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_f64x2(self.abs_f64x2(a0), self.abs_f64x2(a1))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
     fn splat_f64x4(self, val: f64) -> f64x4<Self> {
@@ -4339,12 +4406,6 @@ pub trait Simd:
     #[inline(always)]
     fn swizzle_dyn_precise_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x32(Bytes::to_bytes(a), indices))
-    }
-    #[doc = "Compute the absolute value of each element."]
-    #[inline(always)]
-    fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        self.combine_f64x2(self.abs_f64x2(a0), self.abs_f64x2(a1))
     }
     #[doc = "Negate each element of the vector."]
     #[inline(always)]
@@ -4705,6 +4766,12 @@ pub trait Simd:
             self.cvt_i64_precise_f64x2(a1),
         )
     }
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        self.combine_i64x2(self.abs_i64x2(a0), self.abs_i64x2(a1))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
     fn splat_i64x4(self, val: i64) -> i64x4<Self> {
@@ -5029,6 +5096,11 @@ pub trait Simd:
     fn cvt_f64_i64x4(self, a: i64x4<Self>) -> f64x4<Self> {
         let (a0, a1) = self.split_i64x4(a);
         self.combine_f64x2(self.cvt_f64_i64x2(a0), self.cvt_f64_i64x2(a1))
+    }
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_u64x4(self, a: u64x4<Self>) -> u64x4<Self> {
+        a
     }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
@@ -5466,6 +5538,12 @@ pub trait Simd:
     fn combine_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask64x4(self, a: mask64x4<Self>) -> (mask64x2<Self>, mask64x2<Self>);
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f32x8(self.abs_f32x8(a0), self.abs_f32x8(a1))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
     fn splat_f32x16(self, val: f32) -> f32x16<Self> {
@@ -5512,12 +5590,6 @@ pub trait Simd:
     #[inline(always)]
     fn swizzle_dyn_precise_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
-    }
-    #[doc = "Compute the absolute value of each element."]
-    #[inline(always)]
-    fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.abs_f32x8(a0), self.abs_f32x8(a1))
     }
     #[doc = "Negate each element of the vector."]
     #[inline(always)]
@@ -5867,6 +5939,12 @@ pub trait Simd:
             self.cvt_i32_precise_f32x8(a1),
         )
     }
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        self.combine_i8x32(self.abs_i8x32(a0), self.abs_i8x32(a1))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
     fn splat_i8x64(self, val: i8) -> i8x64<Self> {
@@ -6164,6 +6242,11 @@ pub trait Simd:
         let (a00, a01) = self.widen_i8x32(a0);
         let (a10, a11) = self.widen_i8x32(a1);
         (self.combine_i16x16(a00, a01), self.combine_i16x16(a10, a11))
+    }
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
+        a
     }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
@@ -6571,6 +6654,12 @@ pub trait Simd:
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask8x64(self, a: mask8x64<Self>) -> (mask8x32<Self>, mask8x32<Self>);
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        self.combine_i16x16(self.abs_i16x16(a0), self.abs_i16x16(a1))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
     fn splat_i16x32(self, val: i16) -> i16x32<Self> {
@@ -6905,6 +6994,11 @@ pub trait Simd:
             self.relaxed_narrow_i16x16(a0, a1),
             self.relaxed_narrow_i16x16(b0, b1),
         )
+    }
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
+        a
     }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
@@ -7353,6 +7447,12 @@ pub trait Simd:
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask16x32(self, a: mask16x32<Self>) -> (mask16x16<Self>, mask16x16<Self>);
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        self.combine_i32x8(self.abs_i32x8(a0), self.abs_i32x8(a1))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
     fn splat_i32x16(self, val: i32) -> i32x16<Self> {
@@ -7687,6 +7787,11 @@ pub trait Simd:
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_i32x16(a);
         self.combine_f32x8(self.cvt_f32_i32x8(a0), self.cvt_f32_i32x8(a1))
+    }
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
+        a
     }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
@@ -8132,6 +8237,12 @@ pub trait Simd:
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask32x16(self, a: mask32x16<Self>) -> (mask32x8<Self>, mask32x8<Self>);
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f64x4(self.abs_f64x4(a0), self.abs_f64x4(a1))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
     fn splat_f64x8(self, val: f64) -> f64x8<Self> {
@@ -8174,12 +8285,6 @@ pub trait Simd:
     #[inline(always)]
     fn swizzle_dyn_precise_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
         Bytes::from_bytes(self.swizzle_dyn_precise_u8x64(Bytes::to_bytes(a), indices))
-    }
-    #[doc = "Compute the absolute value of each element."]
-    #[inline(always)]
-    fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.abs_f64x4(a0), self.abs_f64x4(a1))
     }
     #[doc = "Negate each element of the vector."]
     #[inline(always)]
@@ -8538,6 +8643,12 @@ pub trait Simd:
             self.cvt_i64_precise_f64x4(a1),
         )
     }
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        self.combine_i64x4(self.abs_i64x4(a0), self.abs_i64x4(a1))
+    }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
     fn splat_i64x8(self, val: i64) -> i64x8<Self> {
@@ -8860,6 +8971,11 @@ pub trait Simd:
     fn cvt_f64_i64x8(self, a: i64x8<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_i64x8(a);
         self.combine_f64x4(self.cvt_f64_i64x4(a0), self.cvt_f64_i64x4(a1))
+    }
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    #[inline(always)]
+    fn abs_u64x8(self, a: u64x8<Self>) -> u64x8<Self> {
+        a
     }
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     #[inline(always)]
@@ -9845,6 +9961,8 @@ pub trait SimdBase<S: Simd>:
             _ => unreachable!(),
         }
     }
+    #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
+    fn abs(self) -> Self;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat(simd: S, val: Self::Element) -> Self;
     #[doc = "Reverse the order of the vector's elements."]
@@ -9935,8 +10053,6 @@ pub trait SimdFloat<S: Simd>:
     fn to_int_precise<T: SimdCvtTruncate<Self>>(self) -> T {
         T::truncate_from_precise(self)
     }
-    #[doc = "Compute the absolute value of each element."]
-    fn abs(self) -> Self;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt(self) -> Self;
     #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]

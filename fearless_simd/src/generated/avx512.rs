@@ -390,6 +390,16 @@ impl Simd for Avx512 {
         unsafe { vectorize_avx512(f) }
     }
     #[inline(always)]
+    fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_andnot_ps(_mm_set1_ps(-0.0), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_f32x4(self, val: f32) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -420,16 +430,6 @@ impl Simd for Avx512 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x4<Avx512>) -> f32x4<Avx512> {
-                _mm_andnot_ps(_mm_set1_ps(-0.0), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn neg_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -944,6 +944,16 @@ impl Simd for Avx512 {
                 let is_not_nan = _mm_cmp_ps_mask::<7i32>(a, a);
                 converted = _mm_mask_blend_epi32(is_not_nan, _mm_setzero_si128(), converted);
                 converted.simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn abs_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>) -> i8x16<Avx512> {
+                _mm_abs_epi8(a.into()).simd_into(token)
             }
         );
         kernel(self, a)
@@ -2206,6 +2216,16 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
+    fn abs_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>) -> i16x8<Avx512> {
+                _mm_abs_epi16(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_i16x8(self, val: i16) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3365,6 +3385,16 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
+    fn abs_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_abs_epi32(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_i32x4(self, val: i32) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4522,6 +4552,16 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
+    fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_andnot_pd(_mm_set1_pd(-0.0), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_f64x2(self, val: f64) -> f64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4552,16 +4592,6 @@ impl Simd for Avx512 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x2<Avx512>) -> f64x2<Avx512> {
-                _mm_andnot_pd(_mm_set1_pd(-0.0), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn neg_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -5066,6 +5096,16 @@ impl Simd for Avx512 {
                 let is_not_nan = _mm_cmp_pd_mask::<7i32>(a, a);
                 converted = _mm_mask_blend_epi64(is_not_nan, _mm_setzero_si128(), converted);
                 converted.simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn abs_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x2<Avx512>) -> i64x2<Avx512> {
+                _mm_abs_epi64(a.into()).simd_into(token)
             }
         );
         kernel(self, a)
@@ -6149,6 +6189,16 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
+    fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_andnot_ps(_mm256_set1_ps(-0.0), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_f32x8(self, val: f32) -> f32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6219,16 +6269,6 @@ impl Simd for Avx512 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x8<Avx512>) -> f32x8<Avx512> {
-                _mm256_andnot_ps(_mm256_set1_ps(-0.0), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn neg_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
@@ -6678,6 +6718,16 @@ impl Simd for Avx512 {
                 let is_not_nan = _mm256_cmp_ps_mask::<7i32>(a, a);
                 converted = _mm256_mask_blend_epi32(is_not_nan, _mm256_setzero_si256(), converted);
                 converted.simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn abs_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>) -> i8x32<Avx512> {
+                _mm256_abs_epi8(a.into()).simd_into(token)
             }
         );
         kernel(self, a)
@@ -7900,6 +7950,16 @@ impl Simd for Avx512 {
         )
     }
     #[inline(always)]
+    fn abs_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>) -> i16x16<Avx512> {
+                _mm256_abs_epi16(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_i16x16(self, val: i16) -> i16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9021,6 +9081,16 @@ impl Simd for Avx512 {
         )
     }
     #[inline(always)]
+    fn abs_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>) -> i32x8<Avx512> {
+                _mm256_abs_epi32(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_i32x8(self, val: i32) -> i32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10140,6 +10210,16 @@ impl Simd for Avx512 {
         )
     }
     #[inline(always)]
+    fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_andnot_pd(_mm256_set1_pd(-0.0), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_f64x4(self, val: f64) -> f64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10210,16 +10290,6 @@ impl Simd for Avx512 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x4<Avx512>) -> f64x4<Avx512> {
-                _mm256_andnot_pd(_mm256_set1_pd(-0.0), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn neg_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
@@ -10656,6 +10726,16 @@ impl Simd for Avx512 {
                 let is_not_nan = _mm256_cmp_pd_mask::<7i32>(a, a);
                 converted = _mm256_mask_blend_epi64(is_not_nan, _mm256_setzero_si256(), converted);
                 converted.simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn abs_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x4<Avx512>) -> i64x4<Avx512> {
+                _mm256_abs_epi64(a.into()).simd_into(token)
             }
         );
         kernel(self, a)
@@ -11733,6 +11813,16 @@ impl Simd for Avx512 {
         )
     }
     #[inline(always)]
+    fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>) -> f32x16<Avx512> {
+                _mm512_andnot_ps(_mm512_set1_ps(-0.0), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_f32x16(self, val: f32) -> f32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11806,16 +11896,6 @@ impl Simd for Avx512 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x16<Avx512>) -> f32x16<Avx512> {
-                _mm512_andnot_ps(_mm512_set1_ps(-0.0), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn neg_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -12287,6 +12367,16 @@ impl Simd for Avx512 {
                 let is_not_nan = _mm512_cmp_ps_mask::<7i32>(a, a);
                 converted = _mm512_mask_blend_epi32(is_not_nan, _mm512_setzero_si512(), converted);
                 converted.simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn abs_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>) -> i8x64<Avx512> {
+                _mm512_abs_epi8(a.into()).simd_into(token)
             }
         );
         kernel(self, a)
@@ -13521,6 +13611,16 @@ impl Simd for Avx512 {
         )
     }
     #[inline(always)]
+    fn abs_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>) -> i16x32<Avx512> {
+                _mm512_abs_epi16(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_i16x32(self, val: i16) -> i16x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -14654,6 +14754,16 @@ impl Simd for Avx512 {
                 simd: self,
             },
         )
+    }
+    #[inline(always)]
+    fn abs_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>) -> i32x16<Avx512> {
+                _mm512_abs_epi32(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_i32x16(self, val: i32) -> i32x16<Self> {
@@ -15796,6 +15906,16 @@ impl Simd for Avx512 {
         )
     }
     #[inline(always)]
+    fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>) -> f64x8<Avx512> {
+                _mm512_andnot_pd(_mm512_set1_pd(-0.0), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_f64x8(self, val: f64) -> f64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -15869,16 +15989,6 @@ impl Simd for Avx512 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x8<Avx512>) -> f64x8<Avx512> {
-                _mm512_andnot_pd(_mm512_set1_pd(-0.0), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn neg_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
@@ -16325,6 +16435,16 @@ impl Simd for Avx512 {
                 let is_not_nan = _mm512_cmp_pd_mask::<7i32>(a, a);
                 converted = _mm512_mask_blend_epi64(is_not_nan, _mm512_setzero_si512(), converted);
                 converted.simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn abs_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x8<Avx512>) -> i64x8<Avx512> {
+                _mm512_abs_epi64(a.into()).simd_into(token)
             }
         );
         kernel(self, a)

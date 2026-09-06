@@ -109,6 +109,16 @@ impl Simd for Neon {
         unsafe { vectorize_neon(f) }
     }
     #[inline(always)]
+    fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> f32x4<Neon> {
+                vabsq_f32(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_f32x4(self, val: f32) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -139,16 +149,6 @@ impl Simd for Neon {
             val: crate::support::Aligned128(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: f32x4<Neon>) -> f32x4<Neon> {
-                vabsq_f32(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn neg_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -578,6 +578,16 @@ impl Simd for Neon {
     #[inline(always)]
     fn cvt_i32_precise_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
         self.cvt_i32_f32x4(a)
+    }
+    #[inline(always)]
+    fn abs_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>) -> i8x16<Neon> {
+                vabsq_s8(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_i8x16(self, val: i8) -> i8x16<Self> {
@@ -1610,6 +1620,16 @@ impl Simd for Neon {
             val: crate::support::Aligned256(int8x16x2_t(a.val.0, b.val.0)),
             simd: self,
         }
+    }
+    #[inline(always)]
+    fn abs_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>) -> i16x8<Neon> {
+                vabsq_s16(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_i16x8(self, val: i16) -> i16x8<Self> {
@@ -2663,6 +2683,16 @@ impl Simd for Neon {
             val: crate::support::Aligned256(int16x8x2_t(a.val.0, b.val.0)),
             simd: self,
         }
+    }
+    #[inline(always)]
+    fn abs_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>) -> i32x4<Neon> {
+                vabsq_s32(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_i32x4(self, val: i32) -> i32x4<Self> {
@@ -3737,6 +3767,16 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> f64x2<Neon> {
+                vabsq_f64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_f64x2(self, val: f64) -> f64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3767,16 +3807,6 @@ impl Simd for Neon {
             val: crate::support::Aligned128(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: f64x2<Neon>) -> f64x2<Neon> {
-                vabsq_f64(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn neg_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -4209,6 +4239,16 @@ impl Simd for Neon {
     #[inline(always)]
     fn cvt_i64_precise_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
         self.cvt_i64_f64x2(a)
+    }
+    #[inline(always)]
+    fn abs_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i64x2<Neon>) -> i64x2<Neon> {
+                vabsq_s64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {

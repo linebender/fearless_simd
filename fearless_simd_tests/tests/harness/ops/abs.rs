@@ -103,3 +103,535 @@ fn abs_f64x8_special_bit_patterns<S: Simd>(simd: S) {
 
     assert_eq!(result_bits, expected);
 }
+
+#[simd_test]
+fn abs_i8x16<S: Simd>(simd: S) {
+    let max = i8::MAX;
+    let min = i8::MIN;
+    let a = i8x16::from_slice(
+        simd,
+        &[
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+        ],
+    );
+    let expected = [
+        min, max, max, 0, 1, 1, 42, 42, min, max, max, 0, 1, 1, 42, 42,
+    ];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_i8x16(a), expected);
+}
+
+#[simd_test]
+fn abs_i8x32<S: Simd>(simd: S) {
+    let max = i8::MAX;
+    let min = i8::MIN;
+    let a = i8x32::from_slice(
+        simd,
+        &[
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+        ],
+    );
+    let expected = [
+        min, max, max, 0, 1, 1, 42, 42, min, max, max, 0, 1, 1, 42, 42, min, max, max, 0, 1, 1, 42,
+        42, min, max, max, 0, 1, 1, 42, 42,
+    ];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_i8x32(a), expected);
+}
+
+#[simd_test]
+fn abs_i8x64<S: Simd>(simd: S) {
+    let max = i8::MAX;
+    let min = i8::MIN;
+    let a = i8x64::from_slice(
+        simd,
+        &[
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+        ],
+    );
+    let expected = [
+        min, max, max, 0, 1, 1, 42, 42, min, max, max, 0, 1, 1, 42, 42, min, max, max, 0, 1, 1, 42,
+        42, min, max, max, 0, 1, 1, 42, 42, min, max, max, 0, 1, 1, 42, 42, min, max, max, 0, 1, 1,
+        42, 42, min, max, max, 0, 1, 1, 42, 42, min, max, max, 0, 1, 1, 42, 42,
+    ];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_i8x64(a), expected);
+}
+
+#[simd_test]
+fn abs_i16x8<S: Simd>(simd: S) {
+    let max = i16::MAX;
+    let min = i16::MIN;
+    let a = i16x8::from_slice(simd, &[min, min + 1, max, 0, -1, 1, -42, 42]);
+    let expected = [min, max, max, 0, 1, 1, 42, 42];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_i16x8(a), expected);
+}
+
+#[simd_test]
+fn abs_i16x16<S: Simd>(simd: S) {
+    let max = i16::MAX;
+    let min = i16::MIN;
+    let a = i16x16::from_slice(
+        simd,
+        &[
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+        ],
+    );
+    let expected = [
+        min, max, max, 0, 1, 1, 42, 42, min, max, max, 0, 1, 1, 42, 42,
+    ];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_i16x16(a), expected);
+}
+
+#[simd_test]
+fn abs_i16x32<S: Simd>(simd: S) {
+    let max = i16::MAX;
+    let min = i16::MIN;
+    let a = i16x32::from_slice(
+        simd,
+        &[
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+        ],
+    );
+    let expected = [
+        min, max, max, 0, 1, 1, 42, 42, min, max, max, 0, 1, 1, 42, 42, min, max, max, 0, 1, 1, 42,
+        42, min, max, max, 0, 1, 1, 42, 42,
+    ];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_i16x32(a), expected);
+}
+
+#[simd_test]
+fn abs_i32x4<S: Simd>(simd: S) {
+    let max = i32::MAX;
+    let min = i32::MIN;
+    let a = i32x4::from_slice(simd, &[min, min + 1, max, 0]);
+    let expected = [min, max, max, 0];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_i32x4(a), expected);
+    let a = i32x4::from_slice(simd, &[-1, 1, -42, 42]);
+    let expected = [1, 1, 42, 42];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_i32x4(a), expected);
+}
+
+#[simd_test]
+fn abs_i32x8<S: Simd>(simd: S) {
+    let max = i32::MAX;
+    let min = i32::MIN;
+    let a = i32x8::from_slice(simd, &[min, min + 1, max, 0, -1, 1, -42, 42]);
+    let expected = [min, max, max, 0, 1, 1, 42, 42];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_i32x8(a), expected);
+}
+
+#[simd_test]
+fn abs_i32x16<S: Simd>(simd: S) {
+    let max = i32::MAX;
+    let min = i32::MIN;
+    let a = i32x16::from_slice(
+        simd,
+        &[
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+            min,
+            min + 1,
+            max,
+            0,
+            -1,
+            1,
+            -42,
+            42,
+        ],
+    );
+    let expected = [
+        min, max, max, 0, 1, 1, 42, 42, min, max, max, 0, 1, 1, 42, 42,
+    ];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_i32x16(a), expected);
+}
+
+#[simd_test]
+fn abs_i64x2<S: Simd>(simd: S) {
+    let max = i64::MAX;
+    let min = i64::MIN;
+    let a = i64x2::from_slice(simd, &[min, min + 1]);
+    let expected = [min, max];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_i64x2(a), expected);
+    let a = i64x2::from_slice(simd, &[max, 0]);
+    let expected = [max, 0];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_i64x2(a), expected);
+    let a = i64x2::from_slice(simd, &[-1, 1]);
+    let expected = [1, 1];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_i64x2(a), expected);
+    let a = i64x2::from_slice(simd, &[-42, 42]);
+    let expected = [42, 42];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_i64x2(a), expected);
+}
+
+#[simd_test]
+fn abs_i64x4<S: Simd>(simd: S) {
+    let max = i64::MAX;
+    let min = i64::MIN;
+    let a = i64x4::from_slice(simd, &[min, min + 1, max, 0]);
+    let expected = [min, max, max, 0];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_i64x4(a), expected);
+    let a = i64x4::from_slice(simd, &[-1, 1, -42, 42]);
+    let expected = [1, 1, 42, 42];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_i64x4(a), expected);
+}
+
+#[simd_test]
+fn abs_i64x8<S: Simd>(simd: S) {
+    let max = i64::MAX;
+    let min = i64::MIN;
+    let a = i64x8::from_slice(simd, &[min, min + 1, max, 0, -1, 1, -42, 42]);
+    let expected = [min, max, max, 0, 1, 1, 42, 42];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_i64x8(a), expected);
+}
+
+#[simd_test]
+fn abs_u8x16<S: Simd>(simd: S) {
+    let max = u8::MAX;
+    let high_bit = 1 << (u8::BITS - 1);
+    let a = u8x16::from_slice(
+        simd,
+        &[
+            0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1,
+        ],
+    );
+    let expected = [
+        0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1,
+    ];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_u8x16(a), expected);
+}
+
+#[simd_test]
+fn abs_u8x32<S: Simd>(simd: S) {
+    let max = u8::MAX;
+    let high_bit = 1 << (u8::BITS - 1);
+    let a = u8x32::from_slice(
+        simd,
+        &[
+            0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0,
+            max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1,
+        ],
+    );
+    let expected = [
+        0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max,
+        high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1,
+    ];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_u8x32(a), expected);
+}
+
+#[simd_test]
+fn abs_u8x64<S: Simd>(simd: S) {
+    let max = u8::MAX;
+    let high_bit = 1 << (u8::BITS - 1);
+    let a = u8x64::from_slice(
+        simd,
+        &[
+            0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0,
+            max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0,
+            max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0,
+            max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1,
+        ],
+    );
+    let expected = [
+        0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max,
+        high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max,
+        high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max,
+        high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1,
+    ];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_u8x64(a), expected);
+}
+
+#[simd_test]
+fn abs_u16x8<S: Simd>(simd: S) {
+    let max = u16::MAX;
+    let high_bit = 1 << (u16::BITS - 1);
+    let a = u16x8::from_slice(simd, &[0, max, high_bit, 1, 0, max, high_bit, 1]);
+    let expected = [0, max, high_bit, 1, 0, max, high_bit, 1];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_u16x8(a), expected);
+}
+
+#[simd_test]
+fn abs_u16x16<S: Simd>(simd: S) {
+    let max = u16::MAX;
+    let high_bit = 1 << (u16::BITS - 1);
+    let a = u16x16::from_slice(
+        simd,
+        &[
+            0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1,
+        ],
+    );
+    let expected = [
+        0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1,
+    ];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_u16x16(a), expected);
+}
+
+#[simd_test]
+fn abs_u16x32<S: Simd>(simd: S) {
+    let max = u16::MAX;
+    let high_bit = 1 << (u16::BITS - 1);
+    let a = u16x32::from_slice(
+        simd,
+        &[
+            0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0,
+            max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1,
+        ],
+    );
+    let expected = [
+        0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max,
+        high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1,
+    ];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_u16x32(a), expected);
+}
+
+#[simd_test]
+fn abs_u32x4<S: Simd>(simd: S) {
+    let max = u32::MAX;
+    let high_bit = 1 << (u32::BITS - 1);
+    let a = u32x4::from_slice(simd, &[0, max, high_bit, 1]);
+    let expected = [0, max, high_bit, 1];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_u32x4(a), expected);
+}
+
+#[simd_test]
+fn abs_u32x8<S: Simd>(simd: S) {
+    let max = u32::MAX;
+    let high_bit = 1 << (u32::BITS - 1);
+    let a = u32x8::from_slice(simd, &[0, max, high_bit, 1, 0, max, high_bit, 1]);
+    let expected = [0, max, high_bit, 1, 0, max, high_bit, 1];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_u32x8(a), expected);
+}
+
+#[simd_test]
+fn abs_u32x16<S: Simd>(simd: S) {
+    let max = u32::MAX;
+    let high_bit = 1 << (u32::BITS - 1);
+    let a = u32x16::from_slice(
+        simd,
+        &[
+            0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1,
+        ],
+    );
+    let expected = [
+        0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1, 0, max, high_bit, 1,
+    ];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_u32x16(a), expected);
+}
+
+#[simd_test]
+fn abs_u64x2<S: Simd>(simd: S) {
+    let max = u64::MAX;
+    let high_bit = 1 << (u64::BITS - 1);
+    let a = u64x2::from_slice(simd, &[0, max]);
+    let expected = [0, max];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_u64x2(a), expected);
+    let a = u64x2::from_slice(simd, &[high_bit, 1]);
+    let expected = [high_bit, 1];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_u64x2(a), expected);
+}
+
+#[simd_test]
+fn abs_u64x4<S: Simd>(simd: S) {
+    let max = u64::MAX;
+    let high_bit = 1 << (u64::BITS - 1);
+    let a = u64x4::from_slice(simd, &[0, max, high_bit, 1]);
+    let expected = [0, max, high_bit, 1];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_u64x4(a), expected);
+}
+
+#[simd_test]
+fn abs_u64x8<S: Simd>(simd: S) {
+    let max = u64::MAX;
+    let high_bit = 1 << (u64::BITS - 1);
+    let a = u64x8::from_slice(simd, &[0, max, high_bit, 1, 0, max, high_bit, 1]);
+    let expected = [0, max, high_bit, 1, 0, max, high_bit, 1];
+    assert_eq!(*a.abs(), expected);
+    assert_eq!(*simd.abs_u64x8(a), expected);
+}

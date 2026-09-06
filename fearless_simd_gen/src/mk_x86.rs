@@ -1833,6 +1833,27 @@ impl X86 {
         method: &str,
         vec_ty: &VecType,
     ) -> TokenStream {
+        if method == "abs" && vec_ty.scalar == ScalarType::Int {
+            if *self == Self::Sse2 {
+                return fallback_method(op, vec_ty);
+            }
+            if vec_ty.scalar_bits == 64 && *self != Self::Avx512 {
+                // Packed i64 abs requires AVX-512. With an all-ones mask for
+                // negative lanes, (a ^ mask) - mask computes wrapping abs.
+                let zero = intrinsic_ident("setzero", coarse_type(vec_ty), vec_ty.n_bits());
+                let cmpgt = simple_intrinsic("cmpgt", vec_ty);
+                let xor = intrinsic_ident("xor", coarse_type(vec_ty), vec_ty.n_bits());
+                let sub = simple_intrinsic("sub", vec_ty);
+                return self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        let a = a.into();
+                        let mask = #cmpgt(#zero(), a);
+                        #sub(#xor(a, mask), mask).simd_into(#token)
+                    }
+                });
+            }
+        }
+
         if method == "reverse" {
             if vec_ty.scalar == ScalarType::Mask {
                 if *self == Self::Avx512 {

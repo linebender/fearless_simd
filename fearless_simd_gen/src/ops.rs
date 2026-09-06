@@ -558,6 +558,16 @@ fn splat_arg_ty(vec_ty: &VecType) -> TokenStream {
 
 const BASE_OPS: &[Op] = &[
     Op::new(
+        "abs",
+        OpKind::BaseTraitMethod,
+        OpSig::Unary,
+        "Compute the absolute value of each element.\n\n\
+        Unsigned integers are unchanged. Signed integers use wrapping absolute value: \
+        the minimum representable value remains unchanged. This matches `i32::abs()`.\n\n\
+        For floating-point elements, clear the sign bit, preserving all other bits. \
+        For example, negative zero becomes positive zero.",
+    ),
+    Op::new(
         "splat",
         OpKind::BaseTraitMethod,
         OpSig::Splat,
@@ -846,12 +856,6 @@ const MASK_REPRESENTATION_OPS: &[Op] = &[
 ];
 
 const FLOAT_OPS: &[Op] = &[
-    Op::new(
-        "abs",
-        OpKind::VecTraitMethod,
-        OpSig::Unary,
-        "Compute the absolute value of each element.",
-    ),
     Op::new(
         "neg",
         OpKind::Overloaded(CoreOpTrait::Neg),

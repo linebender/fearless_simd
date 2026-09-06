@@ -200,6 +200,10 @@ impl Simd for WasmSimd128 {
         vectorize_inner(f)
     }
     #[inline(always)]
+    fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
+        f32x4_abs(a.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn splat_f32x4(self, val: f32) -> f32x4<Self> {
         f32x4_splat(val).simd_into(self)
     }
@@ -223,10 +227,6 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        f32x4_abs(a.into()).simd_into(self)
     }
     #[inline(always)]
     fn neg_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -543,6 +543,10 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn cvt_i32_precise_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
         i32x4_trunc_sat_f32x4(a.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn abs_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        i8x16_abs(a.into()).simd_into(self)
     }
     #[inline(always)]
     fn splat_i8x16(self, val: i8) -> i8x16<Self> {
@@ -1436,6 +1440,10 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn abs_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        i16x8_abs(a.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn splat_i16x8(self, val: i16) -> i16x8<Self> {
         i16x8_splat(val).simd_into(self)
     }
@@ -2143,6 +2151,10 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn abs_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        i32x4_abs(a.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn splat_i32x4(self, val: i32) -> i32x4<Self> {
         i32x4_splat(val).simd_into(self)
     }
@@ -2834,6 +2846,10 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
+        f64x2_abs(a.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn splat_f64x2(self, val: f64) -> f64x2<Self> {
         f64x2_splat(val).simd_into(self)
     }
@@ -2857,10 +2873,6 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        f64x2_abs(a.into()).simd_into(self)
     }
     #[inline(always)]
     fn neg_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -3149,6 +3161,10 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn cvt_i64_precise_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
         [a[0usize] as i64, a[1usize] as i64].simd_into(self)
+    }
+    #[inline(always)]
+    fn abs_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        i64x2_abs(a.into()).simd_into(self)
     }
     #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {

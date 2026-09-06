@@ -36,6 +36,11 @@ fn generic_i64_to_f64<S: Simd>(x: S::i64s) -> S::f64s {
     x.to_float()
 }
 
+// Ensure absolute value is available with only a numeric base trait bound.
+fn generic_abs<S: Simd, V: SimdBase<S>>(value: V) -> V {
+    value.abs()
+}
+
 // Ensure that integer operations exposed through `SimdInt` are available to generic code.
 fn generic_saturating_add<S: Simd, V: SimdInt<S>>(lhs: V, rhs: V) -> V {
     lhs.saturating_add(rhs)

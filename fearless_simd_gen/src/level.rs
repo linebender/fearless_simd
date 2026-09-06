@@ -137,7 +137,9 @@ pub(crate) trait Level {
         let mut methods = vec![];
         for vec_ty in SIMD_TYPES {
             for op in ops_for_type(vec_ty) {
-                if op.sig.should_route_swizzle_through_bytes(vec_ty)
+                // Unsigned absolute value uses the identity default at every width.
+                if (op.method == "abs" && vec_ty.scalar == ScalarType::Unsigned)
+                    || op.sig.should_route_swizzle_through_bytes(vec_ty)
                     || op.reversed_compare_method().is_some()
                     || self.should_use_generic_op(&op, vec_ty)
                 {

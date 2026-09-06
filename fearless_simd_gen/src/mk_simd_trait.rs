@@ -24,7 +24,15 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
             let doc_alias = op
                 .doc_alias()
                 .map(|alias| quote! { #[doc(alias = #alias)] });
-            if op.sig.should_route_swizzle_through_bytes(vec_ty) {
+            if op.method == "abs" && vec_ty.scalar == ScalarType::Unsigned {
+                methods.extend(quote! {
+                    #[doc = #doc]
+                    #[inline(always)]
+                    #method_sig {
+                        a
+                    }
+                });
+            } else if op.sig.should_route_swizzle_through_bytes(vec_ty) {
                 let method = byte_swizzle_op(&op, vec_ty);
                 methods.extend(quote! {
                     #[doc = #doc]

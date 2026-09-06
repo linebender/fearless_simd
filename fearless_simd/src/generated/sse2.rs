@@ -212,6 +212,16 @@ impl Simd for Sse2 {
         unsafe { vectorize_sse2(f) }
     }
     #[inline(always)]
+    fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f32x4<Sse2>) -> f32x4<Sse2> {
+                _mm_andnot_ps(_mm_set1_ps(-0.0), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_f32x4(self, val: f32) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -240,16 +250,6 @@ impl Simd for Sse2 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse2, a: f32x4<Sse2>) -> f32x4<Sse2> {
-                _mm_andnot_ps(_mm_set1_ps(-0.0), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn neg_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -805,6 +805,28 @@ impl Simd for Sse2 {
             a[1usize] as i32,
             a[2usize] as i32,
             a[3usize] as i32,
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn abs_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        [
+            i8::wrapping_abs(a[0usize]),
+            i8::wrapping_abs(a[1usize]),
+            i8::wrapping_abs(a[2usize]),
+            i8::wrapping_abs(a[3usize]),
+            i8::wrapping_abs(a[4usize]),
+            i8::wrapping_abs(a[5usize]),
+            i8::wrapping_abs(a[6usize]),
+            i8::wrapping_abs(a[7usize]),
+            i8::wrapping_abs(a[8usize]),
+            i8::wrapping_abs(a[9usize]),
+            i8::wrapping_abs(a[10usize]),
+            i8::wrapping_abs(a[11usize]),
+            i8::wrapping_abs(a[12usize]),
+            i8::wrapping_abs(a[13usize]),
+            i8::wrapping_abs(a[14usize]),
+            i8::wrapping_abs(a[15usize]),
         ]
         .simd_into(self)
     }
@@ -2449,6 +2471,20 @@ impl Simd for Sse2 {
         }
     }
     #[inline(always)]
+    fn abs_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        [
+            i16::wrapping_abs(a[0usize]),
+            i16::wrapping_abs(a[1usize]),
+            i16::wrapping_abs(a[2usize]),
+            i16::wrapping_abs(a[3usize]),
+            i16::wrapping_abs(a[4usize]),
+            i16::wrapping_abs(a[5usize]),
+            i16::wrapping_abs(a[6usize]),
+            i16::wrapping_abs(a[7usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn splat_i16x8(self, val: i16) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3825,6 +3861,16 @@ impl Simd for Sse2 {
         }
     }
     #[inline(always)]
+    fn abs_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        [
+            i32::wrapping_abs(a[0usize]),
+            i32::wrapping_abs(a[1usize]),
+            i32::wrapping_abs(a[2usize]),
+            i32::wrapping_abs(a[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn splat_i32x4(self, val: i32) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5183,6 +5229,16 @@ impl Simd for Sse2 {
         }
     }
     #[inline(always)]
+    fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f64x2<Sse2>) -> f64x2<Sse2> {
+                _mm_andnot_pd(_mm_set1_pd(-0.0), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_f64x2(self, val: f64) -> f64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5211,16 +5267,6 @@ impl Simd for Sse2 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
-    }
-    #[inline(always)]
-    fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse2, a: f64x2<Sse2>) -> f64x2<Sse2> {
-                _mm_andnot_pd(_mm_set1_pd(-0.0), a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn neg_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -5710,6 +5756,10 @@ impl Simd for Sse2 {
     #[inline(always)]
     fn cvt_i64_precise_f64x2(self, a: f64x2<Self>) -> i64x2<Self> {
         [a[0usize] as i64, a[1usize] as i64].simd_into(self)
+    }
+    #[inline(always)]
+    fn abs_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        [i64::wrapping_abs(a[0usize]), i64::wrapping_abs(a[1usize])].simd_into(self)
     }
     #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
