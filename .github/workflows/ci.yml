@@ -60,6 +60,17 @@ on:
       - main
 
 jobs:
+  semver-checks:
+    name: cargo semver-checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check semver
+        uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          package: fearless_simd
+
   fmt:
     name: formatting
     runs-on: ubuntu-latest
@@ -394,7 +405,6 @@ jobs:
             --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128,+relaxed-simd"' \
             --config 'target.wasm32-wasip1.rustdocflags = "-Ctarget-feature=+simd128,+relaxed-simd"' \
             --config 'target.wasm32-wasip1.runner = "wasmtime"'
-
 
   check-msrv:
     name: cargo check (msrv)
