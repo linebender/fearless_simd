@@ -11,19 +11,41 @@ You can find its changes [documented below](#070-2026-08-11).
 
 ## [Unreleased]
 
+This release has an [MSRV][] of 1.89.
+
 ### Added
 
-- Added `reverse` for all SIMD vector and mask types.
-- Added lane-wise `saturating_add` and `saturating_sub` for all integer vector types and backends.
-- Added lane-wise `count_ones` and `count_zeros` operations for all integer vector types and backends.
+- Added `reverse` for all SIMD vector and mask types. ([#356][] by [@Shnatsel][])
+- Added `rotate_elements_left` and `rotate_elements_right` to mask types. Rotations wrap the offset, matching the existing non-mask vector operations. ([#360][] by [@Shnatsel][])
+- Added lane-wise `saturating_add` and `saturating_sub` for all integer vector types and backends. ([#352][] by [@Shnatsel][])
+- Added lane-wise `count_ones` and `count_zeros` operations for all integer vector types and backends. The result has the same vector type as the input, including for signed integers. ([#345][] by [@Shnatsel][])
+- Added `reduce_min`, `reduce_max`, `reduce_min_precise`, and `reduce_max_precise` for all non-mask vector types. The precise floating-point variants ignore quiet NaNs, returning NaN only when all lanes are quiet NaNs; signaling NaNs have implementation-defined behavior. ([#358][] by [@Shnatsel][])
+- Added `reduce_sum` and `reduce_product` for all non-mask vector types. Integer arithmetic wraps. Floating-point reductions use a fixed order that produces identical results across backends for a given vector type and lane count, except for NaN bit patterns. Summation limits each lane's contribution to at most `log2(N)` roundings for `N` lanes. ([#357][], [#361][] by [@Shnatsel][])
 - Added `mul_add_precise` and `mul_sub_precise` for floating-point vectors. They guarantee the infinite-precision product-plus-add rounded once, including on SIMD levels without hardware fused multiply-add instructions. They are not susceptible to the [bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library, `std::simd` and musl libc that causes incorrect rounding for subnormal results. SSE4.2 gets SIMD emulation of these operations for better performance. ([#323][], [#324][] by [@Shnatsel][])
-- Documented the storage representation of the SIMD vector types. The documented representation will not change without a semver major version change.
-- Added `TryFrom` bounds to `SimdIntElement`, allowing attempted conversion from all primitive integer types.
+- Documented the storage representation of the SIMD vector types. The documented representation will not change without a semver major version change. ([#330][] by [@danderson][])
+- Added `TryFrom` bounds to `SimdIntElement`, allowing attempted conversion from all primitive integer types. ([#335][] by [@danderson][], [@Shnatsel][])
+- Added a security policy. Starting with v1.0, the latest Fearless SIMD version for each MSRV will receive security backports for at least three years after that Rust version was released. ([#367][] by [@Shnatsel][], [@DJMcNab][])
 
 ### Changed
 
-- Breaking change: `SimdBase::N` and `SimdMask::N` have been renamed to `LEN`, matching the `std::simd` naming.
-- Breaking change: `SimdBase::as_array` now borrows the vector and returns an array reference, while owned extraction has moved to `to_array`. The old `as_array_ref` and `as_array_mut` methods have been replaced by `as_array` and `as_mut_array`, matching the `std::simd` API.
+- Breaking change: `SimdBase::N` and `SimdMask::N` have been renamed to `LEN`, matching the `std::simd` naming. ([#366][] by [@Shnatsel][])
+- Breaking change: `SimdBase::as_array` now borrows the vector and returns an array reference, while owned extraction has moved to `to_array`. The old `as_array_ref` and `as_array_mut` methods have been replaced by `as_array` and `as_mut_array`, matching the `std::simd` API. ([#351][] by [@Shnatsel][])
+- Breaking change: `abs` has moved from `SimdFloat` to `SimdBase` and is now available on integer vectors. Signed integers use wrapping absolute value, leaving the minimum representable value unchanged; unsigned integers are unchanged. ([#371][] by [@Shnatsel][])
+- Conversions between 64-bit integers and floating-point values have been optimized on x86, particularly for 256-bit AVX2 vectors. ([#348][] by [@Shnatsel][])
+- x86 code generation has been improved for 8-bit integer multiplication, 8-bit per-lane left shifts on AVX-512, and 8-bit and 16-bit integer `unzip` on SSE4.2 and AVX2. ([#350][] by [@Shnatsel][])
+- `swizzle_dyn` and `swizzle_dyn_precise` have been optimized on AVX2. On WebAssembly with `relaxed-simd` enabled, 128-bit `swizzle_dyn` now uses the relaxed swizzle instruction. ([#322][], [#362][] by [@Shnatsel][])
+- `SimdMask::to_bitmask` has been optimized on NEON, including dedicated implementations for wide masks. ([#344][] by [@Shnatsel][])
+- Mask reductions (`any_true`, `all_true`, `any_false`, and `all_false`) on masks wider than a native register now combine vector halves before reducing, avoiding branches and repeated scalar extraction. ([#343][] by [@Dr-Emann][])
+- `Level::is_fallback` is now marked inline, allowing callers to eliminate the function call when the result is a compile-time constant. ([#336][] by [@Dr-Emann][])
+- Shift documentation now explains the performance cost of per-lane shifts. Documentation searches for `to_bits` and `from_bits` now find `Bytes::bitcast`. ([#359][], [#370][] by [@Shnatsel][])
+- Future MSRV increases will require a minor version bump instead of being permitted in patch releases. ([#367][] by [@Shnatsel][], [@DJMcNab][])
+
+### Fixed
+
+- Fixed `fract` on NEON for large finite values and infinities. Large finite values now return zero, and infinities return NaN, matching the other backends. ([#365][] by [@Shnatsel][])
+- Fixed the sign of zero returned by `mul_sub` on NEON for some combinations of signed inputs. ([#323][] by [@Shnatsel][])
+- Hardened the hidden `kernel!` implementation helpers so callers cannot bypass SIMD token and target-feature checks by invoking them directly. ([#363][] by [@Shnatsel][])
+- Fixed the README example link and the `libm` documentation link when building without the `libm` feature. ([#331][], [#333][] by [@danderson][])
 
 ## [0.7.0][] (2026-08-11)
 
@@ -246,6 +268,7 @@ No changelog was kept for this release.
 [@LaurenzV]: https://github.com/LaurenzV
 [@Shnatsel]: https://github.com/Shnatsel
 [@danderson]: https://github.com/danderson
+[@Dr-Emann]: https://github.com/Dr-Emann
 
 [#75]: https://github.com/linebender/fearless_simd/pull/75
 [#76]: https://github.com/linebender/fearless_simd/pull/76
@@ -351,8 +374,34 @@ No changelog was kept for this release.
 [#318]: https://github.com/linebender/fearless_simd/pull/318
 [#320]: https://github.com/linebender/fearless_simd/pull/320
 [#321]: https://github.com/linebender/fearless_simd/pull/321
+[#322]: https://github.com/linebender/fearless_simd/pull/322
 [#323]: https://github.com/linebender/fearless_simd/pull/323
 [#324]: https://github.com/linebender/fearless_simd/pull/324
+[#330]: https://github.com/linebender/fearless_simd/pull/330
+[#331]: https://github.com/linebender/fearless_simd/pull/331
+[#333]: https://github.com/linebender/fearless_simd/pull/333
+[#335]: https://github.com/linebender/fearless_simd/pull/335
+[#336]: https://github.com/linebender/fearless_simd/pull/336
+[#343]: https://github.com/linebender/fearless_simd/pull/343
+[#344]: https://github.com/linebender/fearless_simd/pull/344
+[#345]: https://github.com/linebender/fearless_simd/pull/345
+[#348]: https://github.com/linebender/fearless_simd/pull/348
+[#350]: https://github.com/linebender/fearless_simd/pull/350
+[#351]: https://github.com/linebender/fearless_simd/pull/351
+[#352]: https://github.com/linebender/fearless_simd/pull/352
+[#356]: https://github.com/linebender/fearless_simd/pull/356
+[#357]: https://github.com/linebender/fearless_simd/pull/357
+[#358]: https://github.com/linebender/fearless_simd/pull/358
+[#359]: https://github.com/linebender/fearless_simd/pull/359
+[#360]: https://github.com/linebender/fearless_simd/pull/360
+[#361]: https://github.com/linebender/fearless_simd/pull/361
+[#362]: https://github.com/linebender/fearless_simd/pull/362
+[#363]: https://github.com/linebender/fearless_simd/pull/363
+[#365]: https://github.com/linebender/fearless_simd/pull/365
+[#366]: https://github.com/linebender/fearless_simd/pull/366
+[#367]: https://github.com/linebender/fearless_simd/pull/367
+[#370]: https://github.com/linebender/fearless_simd/pull/370
+[#371]: https://github.com/linebender/fearless_simd/pull/371
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.7.0...HEAD
 [0.7.0]: https://github.com/linebender/fearless_simd/compare/v0.6.0...v0.7.0
