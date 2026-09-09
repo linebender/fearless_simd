@@ -3,7 +3,11 @@
 
 //! Converts a single RGBA pixel from linear RGB to sRGB.
 //!
-//! This example demonstrates the usual Fearless SIMD structure:
+//! This example demonstrates:
+//! - processing data in fixed-size chunks
+//! - safely dropping down to platform-specific intrinsics
+//!
+//! It follows the usual Fearless SIMD structure:
 //!
 //! - write the main computation as an `#[inline(always)]` function generic over
 //!   [`Simd`];
