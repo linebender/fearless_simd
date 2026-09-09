@@ -8,7 +8,7 @@
 //! - SSE and NEON get 128 bit chunks
 //! - AVX2 gets 256 bit ones
 //! - AVX-512 gets 512-bit ones
-//! 
+//!
 //! All from a single function.
 
 use fearless_simd::{Level, dispatch, prelude::*};
