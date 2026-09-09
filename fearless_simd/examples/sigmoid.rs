@@ -3,7 +3,7 @@
 
 //! This example demonstrates the typical usage Fearless SIMD.
 //!
-//! The vector size maches the native vector size of the hardware:
+//! The vector size matches the native vector size of the hardware:
 //!
 //! - SSE and NEON get 128 bit chunks
 //! - AVX2 gets 256 bit ones
