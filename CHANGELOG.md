@@ -37,15 +37,12 @@ This release has an [MSRV][] of 1.89.
 - `SimdMask::to_bitmask` has been optimized on NEON, including dedicated implementations for wide masks. ([#344][] by [@Shnatsel][])
 - Mask reductions (`any_true`, `all_true`, `any_false`, and `all_false`) on masks wider than a native register now combine vector halves before reducing, avoiding branches and repeated scalar extraction. ([#343][] by [@Dr-Emann][])
 - `Level::is_fallback` is now marked inline, allowing callers to eliminate the function call when the result is a compile-time constant. ([#336][] by [@Dr-Emann][])
-- Shift documentation now explains the performance cost of per-lane shifts. Documentation searches for `to_bits` and `from_bits` now find `Bytes::bitcast`. ([#359][], [#370][] by [@Shnatsel][])
-- Future MSRV increases will require a minor version bump instead of being permitted in patch releases. ([#367][] by [@Shnatsel][], [@DJMcNab][])
 
 ### Fixed
 
 - Fixed `fract` on NEON for large finite values and infinities. Large finite values now return zero, and infinities return NaN, matching the other backends. ([#365][] by [@Shnatsel][])
 - Fixed the sign of zero returned by `mul_sub` on NEON for some combinations of signed inputs. ([#323][] by [@Shnatsel][])
 - Hardened the hidden `kernel!` implementation helpers so callers cannot bypass SIMD token and target-feature checks by invoking them directly. ([#363][] by [@Shnatsel][])
-- Fixed the README example link and the `libm` documentation link when building without the `libm` feature. ([#331][], [#333][] by [@danderson][])
 
 ## [0.7.0][] (2026-08-11)
 
