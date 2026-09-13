@@ -17,6 +17,8 @@ mod bitcast;
 mod block_splat;
 mod ceil;
 mod combine;
+mod concat_swizzle_dyn;
+mod concat_swizzle_dyn_precise;
 mod copysign;
 mod count_ones;
 mod count_zeros;
