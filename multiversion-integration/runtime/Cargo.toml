@@ -1,0 +1,13 @@
+[package]
+name = "simd-research-runtime"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[features]
+default = ["std"]
+std = ["fearless_simd/std"]
+libm = ["fearless_simd/libm"]
+
+[dependencies]
+fearless_simd = { path = "../../fearless_simd", default-features = false }

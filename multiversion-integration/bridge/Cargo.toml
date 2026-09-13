@@ -1,0 +1,20 @@
+[package]
+name = "fearless-generic-bridge"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["std"]
+std = ["fearless_simd/std", "bridge-kernels/std"]
+
+[dependencies]
+fearless_simd = { path = "../../fearless_simd", default-features = false, features = ["libm"] }
+bridge-kernels = { path = "kernels", default-features = false }
+
+[profile.release]
+lto = false
+codegen-units = 1
+
+[workspace]
+resolver = "2"
+members = ["kernels"]
