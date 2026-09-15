@@ -7,7 +7,7 @@
 
 use fearless_simd::{Level, dispatch, prelude::*};
 
-#[inline(always)]
+#[inline(always)] // or #[simd], either works
 fn disable_avx2<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) {
     let level = simd.level();
     match level {

@@ -49,7 +49,7 @@ fearless_simd::kernel!(
 ///
 /// This helper shows how portable SIMD code can opportunistically call
 /// target-specific kernels while still providing a fallback for every backend.
-#[inline(always)]
+#[inline(always)] // or #[simd], either works
 fn copy_alpha<S: Simd>(a: f32x4<S>, b: f32x4<S>) -> f32x4<S> {
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     if let Some(sse4_2) = a.simd.level().as_sse4_2() {
@@ -67,7 +67,7 @@ fn copy_alpha<S: Simd>(a: f32x4<S>, b: f32x4<S>) -> f32x4<S> {
 }
 
 /// Approximate the linear-RGB to sRGB transfer curve for RGB, preserving alpha.
-#[inline(always)]
+#[inline(always)] // or #[simd], either works
 fn to_srgb<S: Simd>(simd: S, rgba: [f32; 4]) -> [f32; 4] {
     let v: f32x4<S> = rgba.simd_into(simd);
     let vabs = v.abs();

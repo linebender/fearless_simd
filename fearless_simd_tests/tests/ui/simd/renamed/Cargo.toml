@@ -1,0 +1,13 @@
+[package]
+name = "simd-renamed-dependency"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[dependencies]
+simd_backend = { package = "fearless_simd", path = "../../../../../fearless_simd", default-features = false, features = [
+  "libm",
+] }
+fearless_simd_macros = { path = "../../../../../fearless_simd_macros" }
