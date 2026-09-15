@@ -15,6 +15,7 @@ This release has an [MSRV][] of 1.89.
 
 ### Added
 
+- Added `Native<S>` to `SimdFloatElement` and `SimdIntElement` to select native-width vectors in scalar-generic code. 
 - Added `reverse` for all SIMD vector and mask types. ([#356][] by [@Shnatsel][])
 - Added `rotate_elements_left` and `rotate_elements_right` to mask types. Rotations wrap the offset, matching the existing non-mask vector operations. ([#360][] by [@Shnatsel][])
 - Added lane-wise `saturating_add` and `saturating_sub` for all integer vector types and backends. ([#352][] by [@Shnatsel][])

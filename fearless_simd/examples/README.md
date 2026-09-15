@@ -4,6 +4,10 @@
 
 This example demonstrates the common case: process data in chunks that are optimal for the CPU it's running on.
 
+## sigmoid_generic
+
+This example uses `SimdFloatElement::Native<S>` to process both `f32` and `f64` with the same generic function. It uses the host's native SIMD vectors for optimal performance regardless of the CPU.
+
 ## sRGB
 
 The sRGB example demonstrates:

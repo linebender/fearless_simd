@@ -5,7 +5,7 @@
     missing_docs,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
-use crate::{Simd, SimdBase, seal::Seal};
+use crate::{Simd, SimdBase, SimdFloat, SimdInt, seal::Seal};
 use core::error::Error;
 use core::fmt::{Binary, Debug, Display, LowerExp, UpperExp};
 use core::iter::{Product, Sum};
@@ -206,6 +206,26 @@ impl SimdElement for i64 {
 }
 
 /// Types that can be used as elements in integer SIMD vectors.
+///
+/// [`Self::Native`] selects the native-width vector for this scalar type and a
+/// SIMD backend, so an integer-generic caller can use [`crate::dispatch!`]:
+///
+/// ```
+/// use fearless_simd::{dispatch, prelude::*, Level};
+///
+/// #[inline(always)]
+/// fn count_ones_simd<S: Simd, T: SimdIntElement>(simd: S, value: T) -> T {
+///     T::Native::<S>::splat(simd, value).count_ones()[0]
+/// }
+///
+/// fn count_ones<T: SimdIntElement>(level: Level, value: T) -> T {
+///     dispatch!(level, simd => count_ones_simd(simd, value))
+/// }
+///
+/// let level = Level::new();
+/// assert_eq!(count_ones(level, 7_u8), 3);
+/// assert_eq!(count_ones(level, 7_i64), 3);
+/// ```
 pub trait SimdIntElement:
     SimdElement
     + Eq
@@ -245,25 +265,76 @@ pub trait SimdIntElement:
     + for<'a> BitXor<&'a Self, Output = Self>
     + for<'a> BitXorAssign<&'a Self>
 {
+    /// The native-width integer vector for this scalar type and backend `S`.
+    ///
+    /// Its lane count depends on both the scalar type and the backend, and is
+    /// available as `T::Native::<S>::LEN` with [`SimdBase`] in scope.
+    type Native<S: Simd>: SimdInt<S, Element = Self>;
 }
 
-impl SimdIntElement for u8 {}
-impl SimdIntElement for u16 {}
-impl SimdIntElement for u32 {}
-impl SimdIntElement for u64 {}
-impl SimdIntElement for i8 {}
-impl SimdIntElement for i16 {}
-impl SimdIntElement for i32 {}
-impl SimdIntElement for i64 {}
+impl SimdIntElement for u8 {
+    type Native<S: Simd> = S::u8s;
+}
+impl SimdIntElement for u16 {
+    type Native<S: Simd> = S::u16s;
+}
+impl SimdIntElement for u32 {
+    type Native<S: Simd> = S::u32s;
+}
+impl SimdIntElement for u64 {
+    type Native<S: Simd> = S::u64s;
+}
+impl SimdIntElement for i8 {
+    type Native<S: Simd> = S::i8s;
+}
+impl SimdIntElement for i16 {
+    type Native<S: Simd> = S::i16s;
+}
+impl SimdIntElement for i32 {
+    type Native<S: Simd> = S::i32s;
+}
+impl SimdIntElement for i64 {
+    type Native<S: Simd> = S::i64s;
+}
 
 /// Types that can be used as elements in float SIMD vectors.
 ///
 /// The scalar conversion bounds are limited to types that every floating-point
 /// element can represent losslessly, including f16 for forward-compatibility.
-pub trait SimdFloatElement: SimdElement + Neg<Output = Self> + From<i8> + From<u8> {}
+///
+/// [`Self::Native`] selects the native-width vector for this scalar type and a
+/// SIMD backend, so a float-generic caller can use [`crate::dispatch!`]:
+///
+/// ```
+/// use fearless_simd::{dispatch, prelude::*, Level};
+///
+/// #[inline(always)]
+/// fn sqrt_simd<S: Simd, T: SimdFloatElement>(simd: S, value: T) -> T {
+///     T::Native::<S>::splat(simd, value).sqrt()[0]
+/// }
+///
+/// fn sqrt<T: SimdFloatElement>(level: Level, value: T) -> T {
+///     dispatch!(level, simd => sqrt_simd(simd, value))
+/// }
+///
+/// let level = Level::new();
+/// assert_eq!(sqrt(level, 4.0_f32), 2.0);
+/// assert_eq!(sqrt(level, 4.0_f64), 2.0);
+/// ```
+pub trait SimdFloatElement: SimdElement + Neg<Output = Self> + From<i8> + From<u8> {
+    /// The native-width floating-point vector for this scalar type and backend `S`.
+    ///
+    /// Its lane count depends on both the scalar type and the backend, and is
+    /// available as `T::Native::<S>::LEN` with [`SimdBase`] in scope.
+    type Native<S: Simd>: SimdFloat<S, Element = Self>;
+}
 
-impl SimdFloatElement for f32 {}
-impl SimdFloatElement for f64 {}
+impl SimdFloatElement for f32 {
+    type Native<S: Simd> = S::f32s;
+}
+impl SimdFloatElement for f64 {
+    type Native<S: Simd> = S::f64s;
+}
 
 /// Construction of integer vectors from floats by truncation
 pub trait SimdCvtTruncate<T: Seal>: Seal {

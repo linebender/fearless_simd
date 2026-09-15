@@ -5,7 +5,7 @@
 
 #![expect(dead_code, reason = "Compile only tests")]
 
-use fearless_simd::{f32x4, f64x2, prelude::*};
+use fearless_simd::{Level, dispatch, f32x4, f64x2, prelude::*};
 
 // Ensure that we can cast between generic native-width vectors
 fn generic_cast<S: Simd>(x: S::f32s) -> S::u32s {
@@ -228,4 +228,229 @@ fn generic_int_element_arithmetic<S: Simd, T: SimdInt<S>>(
     let by_value = ((value + one) << shift) - one;
     let by_reference = ((value + &one) << &shift) - &one;
     (by_value & value) | (by_reference ^ &value)
+}
+
+// Each scalar mapping must be exactly the existing native-width associated type.
+fn native_f32_mapping<S: Simd>(value: <f32 as SimdFloatElement>::Native<S>) -> S::f32s {
+    value
+}
+
+fn native_f64_mapping<S: Simd>(value: <f64 as SimdFloatElement>::Native<S>) -> S::f64s {
+    value
+}
+
+fn native_u8_mapping<S: Simd>(value: <u8 as SimdIntElement>::Native<S>) -> S::u8s {
+    value
+}
+
+fn native_u16_mapping<S: Simd>(value: <u16 as SimdIntElement>::Native<S>) -> S::u16s {
+    value
+}
+
+fn native_u32_mapping<S: Simd>(value: <u32 as SimdIntElement>::Native<S>) -> S::u32s {
+    value
+}
+
+fn native_u64_mapping<S: Simd>(value: <u64 as SimdIntElement>::Native<S>) -> S::u64s {
+    value
+}
+
+fn native_i8_mapping<S: Simd>(value: <i8 as SimdIntElement>::Native<S>) -> S::i8s {
+    value
+}
+
+fn native_i16_mapping<S: Simd>(value: <i16 as SimdIntElement>::Native<S>) -> S::i16s {
+    value
+}
+
+fn native_i32_mapping<S: Simd>(value: <i32 as SimdIntElement>::Native<S>) -> S::i32s {
+    value
+}
+
+fn native_i64_mapping<S: Simd>(value: <i64 as SimdIntElement>::Native<S>) -> S::i64s {
+    value
+}
+
+#[test]
+fn native_f32_dispatch() {
+    #[inline(always)]
+    fn kernel<S: Simd, T: SimdFloatElement>(simd: S, value: T) -> T {
+        T::Native::<S>::splat(simd, value).sqrt()[0]
+    }
+
+    fn run<T: SimdFloatElement>(level: Level, value: T) -> T {
+        dispatch!(level, simd => kernel(simd, value))
+    }
+
+    for level in [Level::new(), Level::fallback()] {
+        assert_eq!(run(level, 0.0_f32), 0.0);
+        assert_eq!(run(level, 4.0_f32), 2.0);
+        assert_eq!(run(level, 9.0_f32), 3.0);
+    }
+}
+
+#[test]
+fn native_f64_dispatch() {
+    #[inline(always)]
+    fn kernel<S: Simd, T: SimdFloatElement>(simd: S, value: T) -> T {
+        T::Native::<S>::splat(simd, value).sqrt()[0]
+    }
+
+    fn run<T: SimdFloatElement>(level: Level, value: T) -> T {
+        dispatch!(level, simd => kernel(simd, value))
+    }
+
+    for level in [Level::new(), Level::fallback()] {
+        assert_eq!(run(level, 0.0_f64), 0.0);
+        assert_eq!(run(level, 4.0_f64), 2.0);
+        assert_eq!(run(level, 9.0_f64), 3.0);
+    }
+}
+
+#[test]
+fn native_u8_dispatch() {
+    #[inline(always)]
+    fn kernel<S: Simd, T: SimdIntElement>(simd: S, value: T) -> T {
+        T::Native::<S>::splat(simd, value).count_ones()[0]
+    }
+
+    fn run<T: SimdIntElement>(level: Level, value: T) -> T {
+        dispatch!(level, simd => kernel(simd, value))
+    }
+
+    for level in [Level::new(), Level::fallback()] {
+        assert_eq!(run(level, 0_u8), 0);
+        assert_eq!(run(level, 7_u8), 3);
+        assert_eq!(run(level, u8::MAX), 8);
+    }
+}
+
+#[test]
+fn native_u16_dispatch() {
+    #[inline(always)]
+    fn kernel<S: Simd, T: SimdIntElement>(simd: S, value: T) -> T {
+        T::Native::<S>::splat(simd, value).count_ones()[0]
+    }
+
+    fn run<T: SimdIntElement>(level: Level, value: T) -> T {
+        dispatch!(level, simd => kernel(simd, value))
+    }
+
+    for level in [Level::new(), Level::fallback()] {
+        assert_eq!(run(level, 0_u16), 0);
+        assert_eq!(run(level, 7_u16), 3);
+        assert_eq!(run(level, u16::MAX), 16);
+    }
+}
+
+#[test]
+fn native_u32_dispatch() {
+    #[inline(always)]
+    fn kernel<S: Simd, T: SimdIntElement>(simd: S, value: T) -> T {
+        T::Native::<S>::splat(simd, value).count_ones()[0]
+    }
+
+    fn run<T: SimdIntElement>(level: Level, value: T) -> T {
+        dispatch!(level, simd => kernel(simd, value))
+    }
+
+    for level in [Level::new(), Level::fallback()] {
+        assert_eq!(run(level, 0_u32), 0);
+        assert_eq!(run(level, 7_u32), 3);
+        assert_eq!(run(level, u32::MAX), 32);
+    }
+}
+
+#[test]
+fn native_u64_dispatch() {
+    #[inline(always)]
+    fn kernel<S: Simd, T: SimdIntElement>(simd: S, value: T) -> T {
+        T::Native::<S>::splat(simd, value).count_ones()[0]
+    }
+
+    fn run<T: SimdIntElement>(level: Level, value: T) -> T {
+        dispatch!(level, simd => kernel(simd, value))
+    }
+
+    for level in [Level::new(), Level::fallback()] {
+        assert_eq!(run(level, 0_u64), 0);
+        assert_eq!(run(level, 7_u64), 3);
+        assert_eq!(run(level, u64::MAX), 64);
+    }
+}
+
+#[test]
+fn native_i8_dispatch() {
+    #[inline(always)]
+    fn kernel<S: Simd, T: SimdIntElement>(simd: S, value: T) -> T {
+        T::Native::<S>::splat(simd, value).count_ones()[0]
+    }
+
+    fn run<T: SimdIntElement>(level: Level, value: T) -> T {
+        dispatch!(level, simd => kernel(simd, value))
+    }
+
+    for level in [Level::new(), Level::fallback()] {
+        assert_eq!(run(level, 0_i8), 0);
+        assert_eq!(run(level, 7_i8), 3);
+        assert_eq!(run(level, i8::MAX), 7);
+        assert_eq!(run(level, -1_i8), 8);
+    }
+}
+
+#[test]
+fn native_i16_dispatch() {
+    #[inline(always)]
+    fn kernel<S: Simd, T: SimdIntElement>(simd: S, value: T) -> T {
+        T::Native::<S>::splat(simd, value).count_ones()[0]
+    }
+
+    fn run<T: SimdIntElement>(level: Level, value: T) -> T {
+        dispatch!(level, simd => kernel(simd, value))
+    }
+
+    for level in [Level::new(), Level::fallback()] {
+        assert_eq!(run(level, 0_i16), 0);
+        assert_eq!(run(level, 7_i16), 3);
+        assert_eq!(run(level, i16::MAX), 15);
+        assert_eq!(run(level, -1_i16), 16);
+    }
+}
+
+#[test]
+fn native_i32_dispatch() {
+    #[inline(always)]
+    fn kernel<S: Simd, T: SimdIntElement>(simd: S, value: T) -> T {
+        T::Native::<S>::splat(simd, value).count_ones()[0]
+    }
+
+    fn run<T: SimdIntElement>(level: Level, value: T) -> T {
+        dispatch!(level, simd => kernel(simd, value))
+    }
+
+    for level in [Level::new(), Level::fallback()] {
+        assert_eq!(run(level, 0_i32), 0);
+        assert_eq!(run(level, 7_i32), 3);
+        assert_eq!(run(level, i32::MAX), 31);
+        assert_eq!(run(level, -1_i32), 32);
+    }
+}
+
+#[test]
+fn native_i64_dispatch() {
+    #[inline(always)]
+    fn kernel<S: Simd, T: SimdIntElement>(simd: S, value: T) -> T {
+        T::Native::<S>::splat(simd, value).count_ones()[0]
+    }
+
+    fn run<T: SimdIntElement>(level: Level, value: T) -> T {
+        dispatch!(level, simd => kernel(simd, value))
+    }
+
+    for level in [Level::new(), Level::fallback()] {
+        assert_eq!(run(level, 0_i64), 0);
+        assert_eq!(run(level, 7_i64), 3);
+        assert_eq!(run(level, i64::MAX), 63);
+        assert_eq!(run(level, -1_i64), 64);
+    }
 }
