@@ -132,7 +132,7 @@
 //! intrinsics with the other approaches, using high-level code most of the time and dropping down to
 //! hardware-specific intrinsics only when necessary.
 //!
-//! ## The #[simd] annotation
+//! ## The `#[simd]` annotation
 //!
 //! Fearless SIMD requires functions that use SIMD to be annotated with the `#[simd]` attribute from the `fearless_simd_macros` crate.
 //!
