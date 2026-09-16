@@ -165,22 +165,13 @@ You can also [mix and match](https://github.com/linebender/fearless_simd/blob/ma
 intrinsics with the other approaches, using high-level code most of the time and dropping down to
 hardware-specific intrinsics only when necessary.
 
-## Inlining
+## The #[simd] annotation
 
-Fearless SIMD relies on Rust's inlining support to place SIMD code in a context with the
-appropriate target features enabled.
+Fearless SIMD requires functions that use SIMD to be annotated with the `#[simd]` attribute from the `fearless_simd_macros` crate.
 
-As a rule of thumb:
+Use [`dispatch`] when calling SIMD code from non-SIMD code.
 
-- Put `#[simd]` on SIMD-generic functions, or wrap their bodies in [`Simd::vectorize`].
-- Use [`dispatch`] when calling SIMD code from non-SIMD code.
-- A closure passed directly to [`Simd::vectorize`] needs `#[inline(always)]`; `#[simd]` adds
-  this closure annotation for you.
-- Helpers that are not themselves wrapped by `#[simd]` or [`Simd::vectorize`] still need to be
-  inlined into a SIMD-enabled caller.
-
-[The article describing the design](https://shnatsel.github.io/safe-simd-in-rust-even-on-the-inside/#the-abi-would-like-a-word) covers why this is the
-case. There's also Q&A on [Zulip](https://xi.zulipchat.com/#narrow/channel/514230-simd/topic/inlining/with/546913433).
+If you cannot use proc macros, you can achieve the same effect manually, but it requires some care. See [here](MANUAL_INLINING.md) for details. The use of `#[simd]` is recommended as the more robust and ergonomic option.
 
 ## Instruction set support
 
