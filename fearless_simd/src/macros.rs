@@ -197,6 +197,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_avx512 {
     any(
         disable_dispatch_avx512,
         not(all(
+            target_feature = "adx",
             target_feature = "aes",
             target_feature = "avx512bitalg",
             target_feature = "avx512bw",
@@ -244,6 +245,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_avx2 {
     disable_dispatch_avx2,
     all(
         not(disable_dispatch_avx512),
+        target_feature = "adx",
         target_feature = "aes",
         target_feature = "avx512bitalg",
         target_feature = "avx512bw",

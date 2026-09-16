@@ -31,7 +31,7 @@ fn sigmoid<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) {
     for (x, y) in x.chunks_exact(n).zip(out.chunks_exact_mut(n)) {
         let a = S::f32s::from_slice(simd, x);
         let b = a / (a * a + 1.0).sqrt();
-        y.copy_from_slice(b.as_slice());
+        b.store_slice(y);
     }
 }
 
