@@ -15,23 +15,9 @@ fearless_simd_macros = "0.1"
 
 The library must be in scope as `fearless_simd` in the module containing the
 annotated function. The dependency declaration above makes that name available
-automatically. For a renamed Cargo dependency, add an alias in that module:
+automatically.
 
-```rust,ignore
-use simd_backend as fearless_simd;
-```
-
-A library re-export can be imported with
-`use my_facade::simd_backend as fearless_simd;`. For use inside the
-`fearless_simd` library itself, write `use crate as fearless_simd;`.
-The macro does not inspect Cargo manifests to discover dependency names.
-
-The library version must provide the internal `__fearless_simd_dispatch!`
-helper. `Simd::vectorize` or `__fearless_simd_kernel_target_fn!` alone is not
-sufficient for compatibility with older library versions.
-
-Then apply `#[simd]` to a function whose first ordinary parameter is its SIMD
-token:
+Apply `#[simd]` to a function whose first argument is its SIMD token:
 
 ```rust,ignore
 use fearless_simd::prelude::*;
@@ -50,45 +36,23 @@ fn double_u32s<S: Simd>(simd: S, values: &mut [u32]) {
 }
 ```
 
-Conceptually, the macro passes the body and its arguments to a generated
-dispatcher:
+Conceptually, the macro expands the body to:
 
 ```rust,ignore
 fn double_u32s<S: Simd>(simd: S, values: &mut [u32]) {
-    dispatcher.call(
-        simd,
-        simd,
-        values,
+    simd.vectorize(
         #[inline(always)]
-        |simd, values| {
+        || {
             // Original body.
         },
     )
 }
 ```
 
-Here `dispatcher` represents generated helpers that select the token's backend
-and enable its target features. The first token selects the backend; the
-remaining values become arguments to the body. Each argument has a separate
-helper parameter, allowing the compiler to pass it in registers even when the
-helper remains out of line. There is no fixed argument-count limit.
-
-The attributed closure ensures that the original body is inlined into the
-target-feature-enabled helper. The helpers use ordinary `#[inline]` so large
-bodies can remain shared between callers. The macro does not add an `#[inline]`
-attribute to the annotated function. Any existing `#[inline]`, documentation,
-lint, conditional-compilation, or other function attributes remain on that
-function unchanged.
-Code-placement attributes such as `#[cold]` therefore continue to describe the
-outer wrapper; their effects are not transferred to the generated closure or
-the target-feature helper that executes it.
-
-The closure and dispatcher call are tail expressions, so the original body's
-value is preserved. The closure also receives the function's declared return
-type to preserve return-value coercions. Any `impl Trait` within that annotation
-is replaced with `_` for inference; the function's argument and return types
-remain unchanged. Ordinary parameter bindings and their lint attributes move
-into the closure, and the outer parameters receive private names.
+The actual implementation is more involved, because arguments captured by the
+closure are passed as a struct and are often stored on the stack instead of
+being passed in registers, which incurs some overhead. We avoid that overhead
+by expanding into a more verbose but slightly more optimal code.
 
 ## Accepted functions
 
