@@ -211,12 +211,6 @@ fn validate_simd_token(function: &ItemFn) -> Result<Option<Ident>> {
     match &*argument.pat {
         Pat::Ident(pattern) => {
             reject_conditional_attributes(&pattern.attrs)?;
-            if let Some(by_ref) = &pattern.by_ref {
-                return Err(syn::Error::new(
-                    by_ref.span,
-                    "the SIMD token parameter must be bound by value, not `ref`",
-                ));
-            }
             if let Some((at, _)) = &pattern.subpat {
                 return Err(syn::Error::new(
                     at.span,
@@ -535,12 +529,6 @@ mod tests {
         );
         assert!(
             expand_err(quote!(
-                fn f<S: Simd>(ref simd: S) {}
-            ))
-            .contains("bound by value")
-        );
-        assert!(
-            expand_err(quote!(
                 fn f<S: Simd>(simd @ _: S) {}
             ))
             .contains("subpattern")
@@ -551,6 +539,27 @@ mod tests {
             ))
             .contains("identifier or `_`")
         );
+    }
+
+    #[test]
+    fn accepts_ref_token_binding() {
+        expand_ok(quote! {
+            fn f<S: Simd>(ref simd: S) -> S {
+                let token: &S = simd;
+                *token
+            }
+        });
+    }
+
+    #[test]
+    fn accepts_ref_mut_token_binding() {
+        expand_ok(quote! {
+            fn f<S: Simd>(ref mut simd: S, replacement: S) -> S {
+                let token: &mut S = simd;
+                *token = replacement;
+                *token
+            }
+        });
     }
 
     #[test]

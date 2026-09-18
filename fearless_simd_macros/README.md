@@ -57,9 +57,10 @@ by expanding into a more verbose but slightly more optimal code.
 ## Accepted functions
 
 The first typed parameter after an optional `self` receiver is treated as the
-SIMD token. It must be a by-value identifier, such as `simd: S` or
-`mut simd: S`. An unused token may be written as `_: S`; the macro gives it a
-private hygienic binding. Destructured, `ref`, and `binding @ pattern`
+SIMD token. The parameter takes the token by value and supports identifier
+bindings such as `simd: S`, `mut simd: S`, `ref simd: S`, and `ref mut simd: S`.
+An unused token may be written as `_: S`; the macro gives it a
+private hygienic binding. Destructured and `binding @ pattern`
 parameters are not supported for the token. Neither `#[cfg]` nor `#[cfg_attr]`
 may be placed on that parameter.
 
