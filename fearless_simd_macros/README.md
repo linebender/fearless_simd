@@ -15,7 +15,7 @@ fearless_simd_macros = "0.1"
 
 The library must be in scope as `fearless_simd` in the module containing the
 annotated function. The dependency declaration above makes that name available
-automatically.
+automatically. `fearless_simd` v1.0 or later is required.
 
 Apply `#[simd]` to a function whose first argument is its SIMD token:
 
