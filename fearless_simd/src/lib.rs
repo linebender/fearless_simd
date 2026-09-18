@@ -21,7 +21,7 @@
 //! crate is optional: `fearless_simd` does not depend on it, so users of only the core API do not
 //! pay for its procedural-macro dependencies.
 //!
-//! [`dispatch`] generates implementations for the available SIMD levels and selects the best one
+//! [`dispatch!`] generates implementations for the available SIMD levels and selects the best one
 //! at runtime:
 //!
 //! ```ignore
@@ -136,7 +136,7 @@
 //!
 //! Fearless SIMD requires functions that use SIMD to be annotated with the `#[simd]` attribute from the `fearless_simd_macros` crate.
 //!
-//! Use [`dispatch`] when calling SIMD code from non-SIMD code.
+//! Use [`dispatch!`] when calling SIMD code from non-SIMD code.
 //!
 //! If you cannot use proc macros, [you can achieve the same effect manually](https://github.com/linebender/fearless_simd/blob/main/fearless_simd/SECURITY.md), but it requires some care. The use of `#[simd]` is recommended as the more robust and ergonomic option.
 //!
