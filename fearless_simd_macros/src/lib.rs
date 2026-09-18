@@ -62,15 +62,19 @@ fn expand(args: TokenStream2, item: TokenStream2) -> Result<TokenStream2> {
     // and pass each argument separately through the dispatcher. This preserves
     // register passing without forcing large bodies to inline into every caller.
     //
-    // Give outer parameters fresh names so we can forward their whole values,
-    // even when their original patterns destructure them. Move those patterns
-    // into the closure's parameters so the body can keep its original bindings.
+    // Preserve outer parameter names for documentation and IDEs when a pattern
+    // names the whole argument. Otherwise, give it a fresh name so we can forward
+    // its whole value. Move the original patterns into the closure's parameters
+    // so the body keeps its original bindings and borrowing behavior.
+    // Helper parameter names must always be fresh: caller names such as `entry`
+    // could otherwise collide with items inside the dispatch helpers.
     // Fresh generic argument types let the helpers forward these values without
     // having to reproduce the outer function's generics, lifetimes, or Self.
     // Keeping one closure body also preserves a single opaque return type when
     // the function returns impl Trait.
     let mut parameters = Vec::new();
     let mut arguments = Vec::new();
+    let mut helper_arguments = Vec::new();
     let mut argument_types = Vec::new();
     for (index, argument) in function.sig.inputs.iter_mut().enumerate() {
         let FnArg::Typed(argument) = argument else {
@@ -83,7 +87,24 @@ fn expand(args: TokenStream2, item: TokenStream2) -> Result<TokenStream2> {
             // conditional parameters as captures, just as in the old expansion.
             continue;
         }
-        let name = Ident::new(&format!("__fearless_argument_{index}"), Span::mixed_site());
+        let helper_name = Ident::new(&format!("__fearless_argument_{index}"), Span::mixed_site());
+        let name = if let Some(name) = argument_binding(&argument.pat) {
+            let name = name.clone();
+            // A bare identifier could resolve to a constant or unit constructor
+            // instead of binding the argument. Require a binding so forwarding
+            // cannot construct a new value; explicit path patterns use the fresh
+            // name fallback instead. Keep this check out of the visible signature.
+            function.block.stmts.push(syn::parse_quote! {
+                #[allow(
+                    clippy::redundant_pattern,
+                    reason = "force an identifier binding instead of a constant or unit constructor"
+                )]
+                let #name @ _ = #name;
+            });
+            name
+        } else {
+            helper_name.clone()
+        };
         let ty = Ident::new(&format!("__FearlessArgument{index}"), Span::mixed_site());
         let pattern = mem::replace(&mut argument.pat, Box::new(syn::parse_quote!(#name)));
         // Move lint attributes with the original binding. Duplicating `expect`
@@ -91,6 +112,7 @@ fn expand(args: TokenStream2, item: TokenStream2) -> Result<TokenStream2> {
         let attrs = mem::take(&mut argument.attrs);
         parameters.push(quote!(#(#attrs)* #pattern));
         arguments.push(name);
+        helper_arguments.push(helper_name);
         argument_types.push(ty);
     }
     // The first typed argument is the validated, unconditional SIMD token.
@@ -107,7 +129,7 @@ fn expand(args: TokenStream2, item: TokenStream2) -> Result<TokenStream2> {
     // The library macro owns the unsafe calls and resolves proof types through
     // $crate. A lookalike `fearless_simd` module cannot spoof those proofs.
     let dispatch_call: syn::Expr = syn::parse_quote! {
-        (fearless_simd::__fearless_simd_dispatch!(#(#argument_types => #arguments),*)).call(
+        (fearless_simd::__fearless_simd_dispatch!(#(#argument_types => #helper_arguments),*)).call(
             #token, #(#arguments,)*
             #[inline(always)]
             |#(#parameters),*| #closure_output { #use_token #(#original_statements)* }
@@ -119,6 +141,14 @@ fn expand(args: TokenStream2, item: TokenStream2) -> Result<TokenStream2> {
         .push(syn::Stmt::Expr(dispatch_call, None));
 
     Ok(quote!(#function))
+}
+
+fn argument_binding(pattern: &Pat) -> Option<&Ident> {
+    match pattern {
+        Pat::Ident(pattern) => Some(&pattern.ident),
+        Pat::Paren(pattern) => argument_binding(&pattern.pat),
+        _ => None,
+    }
 }
 
 struct InferImplTrait;
@@ -407,7 +437,7 @@ mod tests {
         });
         let text = expanded.to_string();
 
-        assert!(text.contains("__fearless_argument_1 : S"));
+        assert!(text.contains("backend : S"));
         assert!(text.contains("| mut backend , value |"));
     }
 
@@ -434,12 +464,54 @@ mod tests {
 
         assert_eq!(parsed.sig.inputs.len(), 2);
         assert_eq!(
-            parsed
-                .to_token_stream()
-                .to_string()
-                .matches("__fearless_simd_token")
-                .count(),
-            2
+            parsed.sig.inputs.to_token_stream().to_string(),
+            quote!(__fearless_argument_0: S, __fearless_simd_token: u32).to_string()
+        );
+    }
+
+    #[test]
+    fn preserves_named_parameters_and_original_closure_patterns() {
+        let expanded = expand_ok(quote! {
+            fn operation<S: Simd>(
+                simd: S,
+                value: String,
+                mut mutable: String,
+                ref borrowed: String,
+                ref mut borrowed_mut: String,
+                r#type: u32,
+                whole @ (left, right): (u32, u32),
+                (parenthesized): String,
+            ) {}
+        });
+        let parsed: ItemFn = syn::parse2(expanded).expect("expanded function parses");
+
+        assert_eq!(
+            parsed.sig.inputs.to_token_stream().to_string(),
+            quote!(
+                simd: S,
+                value: String,
+                mutable: String,
+                borrowed: String,
+                borrowed_mut: String,
+                r#type: u32,
+                whole: (u32, u32),
+                parenthesized: String,
+            )
+            .to_string()
+        );
+        let Some(Stmt::Expr(Expr::MethodCall(call), None)) = parsed.block.stmts.last() else {
+            panic!("function tail should be a method call");
+        };
+        let Some(Expr::Closure(closure)) = call.args.last() else {
+            panic!("last dispatcher argument should be a closure");
+        };
+        assert_eq!(
+            closure.inputs.to_token_stream().to_string(),
+            quote!(
+                simd, value, mut mutable, ref borrowed, ref mut borrowed_mut,
+                r#type, whole @ (left, right), (parenthesized)
+            )
+            .to_string()
         );
     }
 

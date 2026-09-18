@@ -31,8 +31,15 @@ fn names<S: Simd>(
     entry(__fearless_argument_0 + __fearless_argument_2 + r#type.0)
 }
 
+#[simd]
+fn helper_names<S: Simd>(simd: S, entry: String, f: String, proof: String) -> String {
+    entry + &f + &proof
+}
+
 macro_rules! pair {
-    ($a:ident, $b:ident) => { ($a, $b) };
+    ($a:ident, $b:ident) => {
+        ($a, $b)
+    };
 }
 
 #[simd]
@@ -44,7 +51,9 @@ impl __FearlessDispatch {
     #[simd]
     fn method<S: Simd>(&self, _: S, value: u32) -> u32 {
         macro_rules! receiver {
-            () => { self.0 };
+            () => {
+                self.0
+            };
         }
         receiver!() + value
     }
@@ -54,6 +63,10 @@ fn main() {
     let simd = Fallback::new();
     assert_eq!(unused_token(simd, 42), 42);
     assert_eq!(names(simd, 1, 2, __FearlessDispatch(3), 0), 7);
+    assert_eq!(
+        helper_names(simd, "a".into(), "b".into(), "c".into()),
+        "abc"
+    );
     assert_eq!(pattern(simd, (1, 2)), 3);
     assert_eq!(__FearlessDispatch(3).method(simd, 4), 7);
 }
