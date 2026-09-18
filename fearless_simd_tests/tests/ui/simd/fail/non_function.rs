@@ -5,6 +5,10 @@ use fearless_simd_macros::simd;
 
 #[simd]
 struct NotAFunction;
-//~^ ERROR: expected `fn`
+//~^ ERROR: `#[simd]` can only be used on function and method definitions: expected `fn`
+
+#[simd]
+enum NotAFunctionEither {}
+//~^ ERROR: `#[simd]` can only be used on function and method definitions: expected `fn`
 
 fn main() {}

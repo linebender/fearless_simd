@@ -6,7 +6,7 @@ use fearless_simd_macros::simd;
 trait Operation {
     #[simd]
     fn bodyless<S: fearless_simd::Simd>(simd: S);
-    //~^ ERROR: expected curly braces
+    //~^ ERROR: `#[simd]` can only be used on function and method definitions: expected curly braces
 }
 
 fn main() {}

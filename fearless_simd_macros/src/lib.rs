@@ -34,7 +34,12 @@ fn expand(args: TokenStream2, item: TokenStream2) -> Result<TokenStream2> {
 
     // ItemFn's signature grammar also accepts body-bearing inherent and trait
     // methods. Parsing the item rejects bodyless and specialization methods.
-    let mut function: ItemFn = syn::parse2(item)?;
+    let mut function = syn::parse2::<ItemFn>(item).map_err(|error| {
+        syn::Error::new(
+            error.span(),
+            format!("`#[simd]` can only be used on function and method definitions: {error}"),
+        )
+    })?;
 
     function.modifiers.require_empty()?;
     reject_unsupported_signature(&function)?;
@@ -566,17 +571,17 @@ mod tests {
 
     #[test]
     fn rejects_non_functions_and_bodyless_functions() {
-        assert!(
+        assert_eq!(
             expand_err(quote!(
                 struct NotAFunction;
-            ))
-            .contains("expected")
+            )),
+            "`#[simd]` can only be used on function and method definitions: expected `fn`"
         );
-        assert!(
+        assert_eq!(
             expand_err(quote!(
                 fn bodyless<S: Simd>(simd: S);
-            ))
-            .contains("expected")
+            )),
+            "`#[simd]` can only be used on function and method definitions: expected curly braces"
         );
     }
 }

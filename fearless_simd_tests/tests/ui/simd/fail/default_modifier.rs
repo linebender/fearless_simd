@@ -14,7 +14,7 @@ trait Operation {
 impl Operation for Fixture {
     #[simd]
     default fn operation<S: fearless_simd::Simd>(simd: S) {
-        //~^ ERROR: expected `fn`
+        //~^ ERROR: `#[simd]` can only be used on function and method definitions: expected `fn`
         let _ = simd;
     }
 }
