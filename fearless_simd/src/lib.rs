@@ -134,7 +134,7 @@
 //!
 //! ## The `#[simd]` annotation
 //!
-//! Fearless SIMD requires functions that use SIMD to be annotated with the `#[simd]` attribute from the `fearless_simd_macros` crate.
+//! Fearless SIMD requires functions that use SIMD to be annotated with the `#[simd]` attribute from the `fearless_simd_macros` crate. Without it the code will still compile, but run far slower, defeating the purpose of SIMD.
 //!
 //! Use [`dispatch!`] when calling SIMD code from non-SIMD code.
 //!
