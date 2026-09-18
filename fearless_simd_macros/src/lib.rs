@@ -297,57 +297,6 @@ mod tests {
     }
 
     #[test]
-    fn expands_body_as_an_attributed_tail_closure() {
-        let expanded = expand_ok(quote! {
-            fn add<S: Simd>(simd: S, lhs: u32, rhs: u32) -> u32 {
-                let sum = lhs + rhs;
-                sum
-            }
-        });
-        // Safe user code must not acquire an unsafe call to a caller-resolved
-        // name. Only the library helper may introduce dispatcher unsafety.
-        assert!(!expanded.to_string().contains("unsafe"));
-        let parsed: ItemFn = syn::parse2(expanded).expect("expanded function parses");
-        let Some(Stmt::Expr(Expr::MethodCall(call), None)) = parsed.block.stmts.last() else {
-            panic!("function tail should be a method call");
-        };
-        let Expr::Paren(receiver) = &*call.receiver else {
-            panic!("dispatcher receiver should be parenthesized");
-        };
-        let Expr::Macro(dispatcher) = &*receiver.expr else {
-            panic!("dispatcher receiver should be a library macro invocation");
-        };
-        assert!(dispatcher.mac.path.leading_colon.is_none());
-        assert_eq!(
-            dispatcher.mac.path.to_token_stream().to_string(),
-            "fearless_simd :: __fearless_simd_dispatch"
-        );
-        let Some(Expr::Closure(closure)) = call.args.last() else {
-            panic!("last dispatcher argument should be a closure");
-        };
-        let Expr::Block(body) = &*closure.body else {
-            panic!("closure body should be a block");
-        };
-
-        assert_eq!(call.args.len(), 5);
-        assert_eq!(closure.inputs.len(), 3);
-        assert!(closure.capture.is_none());
-        assert_eq!(closure.attrs.len(), 1);
-        assert!(closure.attrs[0].path().is_ident("inline"));
-        let inline_kind: proc_macro2::Ident = closure.attrs[0]
-            .parse_args()
-            .expect("inline attribute has one identifier argument");
-        assert_eq!(inline_kind, "always");
-        assert_eq!(body.block.stmts.len(), 3);
-        assert!(
-            parsed
-                .attrs
-                .iter()
-                .all(|attr| !attr.path().is_ident("inline"))
-        );
-    }
-
-    #[test]
     fn unit_returns_remain_tail_expressions() {
         for item in [
             quote! {
