@@ -41,30 +41,6 @@
 //! assert_eq!(values, [2, 4, 6, 8, 10]);
 //! ```
 //!
-//! The attribute generates helpers that pass ordinary arguments separately into a SIMD-enabled
-//! context. You can also establish that context directly with [`Simd::vectorize`] without
-//! depending on the macro crate, though captured arguments may require extra memory traffic:
-//!
-//! ```rust
-//! use fearless_simd::{dispatch, Level, Simd};
-//!
-//! fn double_u32s<S: Simd>(simd: S, values: &mut [u32]) {
-//!     simd.vectorize(
-//!         #[inline(always)]
-//!         || {
-//!             for value in values {
-//!                 *value = *value * 2;
-//!             }
-//!         },
-//!     );
-//! }
-//!
-//! let mut values = [1, 2, 3, 4, 5];
-//! let level = Level::new();
-//! dispatch!(level, simd => double_u32s(simd, &mut values));
-//! assert_eq!(values, [2, 4, 6, 8, 10]);
-//! ```
-//!
 //! # Portable SIMD
 //!
 //! Use the vector types for explicit lane-wise operations while staying generic over the SIMD level:
