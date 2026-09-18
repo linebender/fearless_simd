@@ -35,10 +35,26 @@ impl ImplementedOperation for Fixture {
     }
 }
 
+trait AssociatedTypeOperation {
+    type A;
+
+    fn with_associated_type<S: Simd>(&self, simd: S, value: Self::A) -> Self::A;
+}
+
+impl AssociatedTypeOperation for Fixture {
+    type A = u32;
+
+    #[simd]
+    fn with_associated_type<S: Simd>(&self, _: S, value: Self::A) -> Self::A {
+        value + 1
+    }
+}
+
 fn main() {
     let fixture = Fixture;
     let fallback = Fallback::new();
     assert_eq!(fixture.inherent(fallback, 1), 2);
     assert_eq!(fixture.default_method(fallback, 1), 3);
     assert_eq!(fixture.implemented(fallback, 1), 4);
+    assert_eq!(fixture.with_associated_type(fallback, 41), 42);
 }
