@@ -203,7 +203,25 @@ macro_rules! __fearless_simd_dispatch {
         // a zero-sized receiver: returning a generic function item from this
         // block loses the expected FnOnce signature during closure input
         // inference. Method lookup retains it without adding a machine argument.
+        // Suppress all Clippy groups on generated helpers only. The caller's
+        // function and body closure remain outside these lint scopes.
+        #[allow(
+            clippy::all,
+            clippy::pedantic,
+            clippy::nursery,
+            clippy::restriction,
+            clippy::cargo,
+            reason = "SIMD dispatch helpers are generated implementation details"
+        )]
         struct __FearlessDispatch;
+        #[allow(
+            clippy::all,
+            clippy::pedantic,
+            clippy::nursery,
+            clippy::restriction,
+            clippy::cargo,
+            reason = "SIMD dispatch helpers are generated implementation details"
+        )]
         impl __FearlessDispatch {
             // Do not force inlining: a large body may be shared by several
             // callers. Even an out-of-line dispatcher keeps separate arguments.
@@ -272,6 +290,14 @@ macro_rules! __fearless_simd_dispatch_entry {
     ($level:ident, $proof:ident, $f:ident; $($argument_type:ident => $argument:ident),*) => {{
         $crate::__fearless_simd_kernel_target_fn! {
             $level,
+            #[allow(
+                clippy::all,
+                clippy::pedantic,
+                clippy::nursery,
+                clippy::restriction,
+                clippy::cargo,
+                reason = "SIMD dispatch helpers are generated implementation details"
+            )]
             #[inline]
             fn entry<$($argument_type,)* F, R>(
                 _: $crate::$level, $($argument: $argument_type,)* f: F,
