@@ -6,6 +6,265 @@ use fearless_simd::{Simd, u32x8};
 use fearless_simd_dev_macros::simd_test;
 use fearless_simd_macros::simd;
 
+#[simd_test]
+fn simd_attribute_extracts_vector_and_mask_tokens<S: Simd>(simd: S) {
+    #[simd]
+    fn fixed<S: Simd>(a: u32x8<S>) -> u32x8<S> {
+        a + a
+    }
+
+    #[simd]
+    fn native<S: Simd>(a: S::u32s) -> S::u32s {
+        a + a
+    }
+
+    #[simd]
+    fn fixed_mask<S: Simd>(a: fearless_simd::mask32x8<S>) -> bool {
+        a.all_true()
+    }
+
+    #[simd]
+    fn native_mask<S: Simd>(a: S::mask32s) -> bool {
+        a.all_true()
+    }
+
+    let fixed_value = u32x8::splat(simd, 21);
+    assert_eq!(
+        fixed(fixed_value).as_slice(),
+        &[42; 8],
+        "a fixed-width vector should supply its token"
+    );
+    assert!(
+        fixed_mask(fixed_value.simd_eq(fixed_value)),
+        "a fixed-width mask should supply its token"
+    );
+    let native_value = S::u32s::splat(simd, 21);
+    assert!(
+        native::<S>(native_value)
+            .as_slice()
+            .iter()
+            .all(|&x| x == 42),
+        "a native-width vector should supply its token"
+    );
+    assert!(
+        native_mask::<S>(native_value.simd_eq(native_value)),
+        "a native-width mask should supply its token"
+    );
+}
+
+#[simd_test]
+fn simd_attribute_borrows_carriers<S: Simd>(simd: S) {
+    #[simd]
+    fn shared<S: Simd>(a: &u32x8<S>) -> u32x8<S> {
+        *a + *a
+    }
+
+    #[simd]
+    fn mutable<S: Simd>(a: &mut u32x8<S>) -> &mut u32x8<S> {
+        *a += 1;
+        a
+    }
+
+    #[simd]
+    fn token_ref<S: Simd>(simd: &S) -> S {
+        *simd
+    }
+
+    #[simd]
+    fn token_mut<S: Simd>(simd: &mut S) -> S {
+        *simd
+    }
+
+    #[simd]
+    fn nested_ref<S: Simd>(a: &&mut u32x8<S>) -> u32x8<S> {
+        **a
+    }
+
+    #[simd]
+    fn unsized_carrier<T: ExtractToken + ?Sized>(a: &T) -> T::S {
+        a.token()
+    }
+
+    let mut value = u32x8::splat(simd, 21);
+    assert_eq!(
+        shared(&value).as_slice(),
+        &[42; 8],
+        "shared carriers should remain borrowed"
+    );
+    mutable(&mut value)[0] = 100;
+    assert_eq!(
+        value.as_slice(),
+        &[100, 22, 22, 22, 22, 22, 22, 22],
+        "the returned borrow should refer to the original vector"
+    );
+    assert_eq!(
+        nested_ref(&&mut value).as_slice(),
+        value.as_slice(),
+        "reference forwarding should work recursively"
+    );
+    assert_eq!(
+        core::mem::discriminant(&token_ref(&simd).level()),
+        core::mem::discriminant(&simd.level()),
+        "a shared token reference should preserve the backend"
+    );
+    let mut token = simd.token();
+    assert_eq!(
+        core::mem::discriminant(&token_mut(&mut token).level()),
+        core::mem::discriminant(&simd.level()),
+        "a mutable token reference should preserve the backend"
+    );
+    let erased: &dyn ExtractToken<S = S> = &value;
+    assert_eq!(
+        core::mem::discriminant(&unsized_carrier(erased).level()),
+        core::mem::discriminant(&simd.level()),
+        "an unsized carrier should preserve the backend"
+    );
+}
+
+#[simd_test]
+fn simd_attribute_preserves_carrier_patterns<S: Simd>(simd: S) {
+    #[simd]
+    fn wildcard<S: Simd>(_: u32x8<S>) -> u32 {
+        42
+    }
+
+    #[simd]
+    fn ref_pattern<S: Simd>(ref a: u32x8<S>) -> u32x8<S> {
+        *a + *a
+    }
+
+    #[simd]
+    fn ref_mut_pattern<S: Simd>(ref mut a: u32x8<S>) -> u32x8<S> {
+        *a += 1;
+        *a
+    }
+
+    let value = u32x8::splat(simd, 21);
+    assert_eq!(
+        wildcard(value),
+        42,
+        "a wildcard carrier should receive a hidden binding"
+    );
+    assert_eq!(
+        ref_pattern(value).as_slice(),
+        &[42; 8],
+        "ref patterns should borrow the forwarded vector"
+    );
+    assert_eq!(
+        ref_mut_pattern(value).as_slice(),
+        &[22; 8],
+        "ref mut patterns should borrow the forwarded vector mutably"
+    );
+}
+
+#[simd_test]
+fn simd_attribute_extracts_owned_wrapper_once<S: Simd>(simd: S) {
+    use core::cell::Cell;
+
+    struct Wrapper<'a, S: Simd> {
+        vector: u32x8<S>,
+        extractions: &'a Cell<usize>,
+        drops: &'a Cell<usize>,
+    }
+
+    impl<S: Simd> ExtractToken for Wrapper<'_, S> {
+        type S = S;
+
+        #[inline]
+        fn token(&self) -> S {
+            self.extractions.set(self.extractions.get() + 1);
+            self.vector.token()
+        }
+    }
+
+    impl<S: Simd> Drop for Wrapper<'_, S> {
+        fn drop(&mut self) {
+            self.drops.set(self.drops.get() + 1);
+        }
+    }
+
+    impl<S: Simd> Wrapper<'_, S> {
+        #[inline]
+        fn token(&self) -> u32 {
+            123
+        }
+    }
+
+    #[simd]
+    fn update<S: Simd>(mut value: Wrapper<'_, S>) -> Wrapper<'_, S> {
+        assert_eq!(
+            value.extractions.get(),
+            1,
+            "extraction should happen before the body"
+        );
+        assert_eq!(
+            value.drops.get(),
+            0,
+            "the body should own the original carrier"
+        );
+        value.vector += 1;
+        value
+    }
+
+    let extractions = Cell::new(0);
+    let drops = Cell::new(0);
+    let value = Wrapper {
+        vector: u32x8::splat(simd, 41),
+        extractions: &extractions,
+        drops: &drops,
+    };
+    assert_eq!(
+        value.token(),
+        123,
+        "the inherent method has different semantics"
+    );
+    let result = update(value);
+    assert_eq!(
+        result.vector.as_slice(),
+        &[42; 8],
+        "the wrapper should be returned with the body's changes"
+    );
+    assert_eq!(
+        extractions.get(),
+        1,
+        "dispatch should use the trait exactly once"
+    );
+    drop(result);
+    assert_eq!(drops.get(), 1, "the carrier should be dropped exactly once");
+}
+
+#[simd_test]
+fn simd_attribute_returns_borrow_from_wrapper<S: Simd>(simd: S) {
+    struct Wrapper<S: Simd> {
+        vector: u32x8<S>,
+        label: String,
+    }
+
+    impl<S: Simd> ExtractToken for Wrapper<S> {
+        type S = S;
+
+        #[inline]
+        fn token(&self) -> S {
+            self.vector.token()
+        }
+    }
+
+    #[simd]
+    fn label<S: Simd>(value: &mut Wrapper<S>) -> &mut String {
+        &mut value.label
+    }
+
+    let mut value = Wrapper {
+        vector: u32x8::splat(simd, 0),
+        label: "hello".into(),
+    };
+    label(&mut value).push('!');
+    assert_eq!(
+        value.label, "hello!",
+        "the returned borrow should refer to the original wrapper's field"
+    );
+}
+
 #[simd]
 fn double_values<S: Simd>(_simd: S, values: &mut [u32]) {
     for value in values {

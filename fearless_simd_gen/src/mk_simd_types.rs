@@ -16,7 +16,7 @@ use crate::{
 
 pub(crate) fn mk_simd_types() -> TokenStream {
     let mut result = quote! {
-        use crate::{Bytes, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdMask, SimdCvtFloat, SimdCvtTruncate, SimdInterleaved, SimdWiden, SimdNarrow, seal::Seal};
+        use crate::{Bytes, ExtractToken, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdMask, SimdCvtFloat, SimdCvtTruncate, SimdInterleaved, SimdWiden, SimdNarrow, seal::Seal};
     };
     for ty in SIMD_TYPES {
         let name = ty.rust();
@@ -29,6 +29,17 @@ pub(crate) fn mk_simd_types() -> TokenStream {
         let select = generic_op_name("select", ty);
         let bytes = ty.bytes_ty().rust();
         let mask = ty.mask_ty().rust();
+
+        result.extend(quote! {
+            impl<S: Simd> ExtractToken for #name<S> {
+                type S = S;
+
+                #[inline]
+                fn token(&self) -> S {
+                    self.simd
+                }
+            }
+        });
 
         if ty.scalar == ScalarType::Mask {
             let splat = Ident::new(&format!("splat_{}", ty.rust_name()), Span::call_site());
@@ -419,11 +430,6 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
             const LEN: usize = #len;
 
             #[inline(always)]
-            fn witness(&self) -> S {
-                self.simd
-            }
-
-            #[inline(always)]
             fn splat(simd: S, val: bool) -> Self {
                 simd.#splat(val)
             }
@@ -560,11 +566,6 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
             type Mask = #mask_ty<S>;
             type Block = #block_ty<S>;
             type Array = [#scalar; #len];
-
-            #[inline(always)]
-            fn witness(&self) -> S {
-                self.simd
-            }
 
             #[inline(always)]
             fn as_slice(&self) -> &[#scalar] {

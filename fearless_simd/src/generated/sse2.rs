@@ -140,6 +140,13 @@ impl Sse2 {
     }
 }
 impl Seal for Sse2 {}
+impl ExtractToken for Sse2 {
+    type S = Self;
+    #[inline]
+    fn token(&self) -> Self {
+        *self
+    }
+}
 impl ArchTypes for Sse2 {
     type f32x4 = crate::support::Aligned128<__m128>;
     type i8x16 = crate::support::Aligned128<__m128i>;

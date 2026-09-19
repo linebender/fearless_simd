@@ -53,7 +53,7 @@ fn generic_saturating_sub<S: Simd, V: SimdInt<S>>(lhs: V, rhs: V) -> V {
 // Ensure that a generic vector's byte representation is itself a same-token
 // byte vector whose byte representation is idempotent.
 fn generic_bytes<S: Simd, V: SimdBase<S>>(value: V) -> V {
-    let simd = value.witness();
+    let simd = value.token();
     let bytes = value.to_bytes();
     let bytes =
         <V::Bytes as SimdBase<S>>::from_slice(simd, <V::Bytes as SimdBase<S>>::as_slice(&bytes));
@@ -200,7 +200,7 @@ fn generic_native_width_float_saturating_narrow<S: Simd>(low: S::f64s, high: S::
 fn generic_array_roundtrip<S: Simd, V: SimdBase<S>>(vector: V) -> V {
     fn require_debug<T: core::fmt::Debug>(_: &T) {}
 
-    let simd = vector.witness();
+    let simd = vector.token();
     let mut vector = vector;
     let mut array = vector.to_array();
     let array_copy = array;

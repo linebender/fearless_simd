@@ -16,6 +16,7 @@ This release has an [MSRV][] of 1.89.
 ### Added
 
 - Added `Native<S>` to `SimdFloatElement` and `SimdIntElement` to select native-width vectors in scalar-generic code. 
+- Added the public `ExtractToken` trait for SIMD tokens, vectors, masks, references, and user-defined wrappers. `#[simd]` now extracts its token from the first non-receiver parameter, allowing vector arguments without a separate token parameter.
 - Added `reverse` for all SIMD vector and mask types. ([#356][] by [@Shnatsel][])
 - Added `rotate_elements_left` and `rotate_elements_right` to mask types. Rotations wrap the offset, matching the existing non-mask vector operations. ([#360][] by [@Shnatsel][])
 - Added lane-wise `saturating_add` and `saturating_sub` for all integer vector types and backends. ([#352][] by [@Shnatsel][])
@@ -29,6 +30,7 @@ This release has an [MSRV][] of 1.89.
 
 ### Changed
 
+- Breaking change: `witness()` has moved from `SimdBase` and `SimdMask` to their new `ExtractToken` supertrait and has been renamed to `token()`.
 - Breaking change: `SimdBase::N` and `SimdMask::N` have been renamed to `LEN`, matching the `std::simd` naming. ([#366][] by [@Shnatsel][])
 - Breaking change: `SimdBase::as_array` now borrows the vector and returns an array reference, while owned extraction has moved to `to_array`. The old `as_array_ref` and `as_array_mut` methods have been replaced by `as_array` and `as_mut_array`, matching the `std::simd` API. ([#351][] by [@Shnatsel][])
 - Breaking change: `abs` has moved from `SimdFloat` to `SimdBase` and is now available on integer vectors. Signed integers use wrapping absolute value, leaving the minimum representable value unchanged; unsigned integers are unchanged. ([#371][] by [@Shnatsel][])
