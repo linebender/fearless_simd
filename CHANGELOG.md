@@ -15,7 +15,7 @@ This release has an [MSRV][] of 1.89.
 
 ### Added
 
-- Added `Native<S>` to `SimdFloatElement` and `SimdIntElement` to select native-width vectors in scalar-generic code. 
+- Added `Native<S>` to `SimdFloatElement` and `SimdIntElement` to select native-width vectors in scalar-generic code, with a generic sigmoid example demonstrating use with both `f32` and `f64`. ([#378][] by [@Shnatsel][], [@LaurenzV][])
 - Added `reverse` for all SIMD vector and mask types. ([#356][] by [@Shnatsel][])
 - Added `rotate_elements_left` and `rotate_elements_right` to mask types. Rotations wrap the offset, matching the existing non-mask vector operations. ([#360][] by [@Shnatsel][])
 - Added lane-wise `saturating_add` and `saturating_sub` for all integer vector types and backends. ([#352][] by [@Shnatsel][])
@@ -32,6 +32,7 @@ This release has an [MSRV][] of 1.89.
 - Breaking change: `SimdBase::N` and `SimdMask::N` have been renamed to `LEN`, matching the `std::simd` naming. ([#366][] by [@Shnatsel][])
 - Breaking change: `SimdBase::as_array` now borrows the vector and returns an array reference, while owned extraction has moved to `to_array`. The old `as_array_ref` and `as_array_mut` methods have been replaced by `as_array` and `as_mut_array`, matching the `std::simd` API. ([#351][] by [@Shnatsel][])
 - Breaking change: `abs` has moved from `SimdFloat` to `SimdBase` and is now available on integer vectors. Signed integers use wrapping absolute value, leaving the minimum representable value unchanged; unsigned integers are unchanged. ([#371][] by [@Shnatsel][])
+- `Simd::vectorize` now marks its inner wrappers `#[inline]`, allowing inlining into callers with compatible target features. ([#347][] by [@Shnatsel][])
 - Conversions between 64-bit integers and floating-point values have been optimized on x86, particularly for 256-bit AVX2 vectors. ([#348][] by [@Shnatsel][])
 - x86 code generation has been improved for 8-bit integer multiplication, 8-bit per-lane left shifts on AVX-512, and 8-bit and 16-bit integer `unzip` on SSE4.2 and AVX2. ([#350][] by [@Shnatsel][])
 - `swizzle_dyn` and `swizzle_dyn_precise` have been optimized on AVX2. On WebAssembly with `relaxed-simd` enabled, 128-bit `swizzle_dyn` now uses the relaxed swizzle instruction. ([#322][], [#362][] by [@Shnatsel][])
@@ -41,6 +42,7 @@ This release has an [MSRV][] of 1.89.
 
 ### Fixed
 
+- Fixed a possible dispatch panic with custom x86 target-feature configurations by including `adx` in the AVX-512 feature checks that control AVX2 dispatch availability. ([#377][] by [@Shnatsel][])
 - Fixed `fract` on NEON for large finite values and infinities. Large finite values now return zero, and infinities return NaN, matching the other backends. ([#365][] by [@Shnatsel][])
 - Fixed the sign of zero returned by `mul_sub` on NEON for some combinations of signed inputs. ([#323][] by [@Shnatsel][])
 - Hardened the hidden `kernel!` implementation helpers so callers cannot bypass SIMD token and target-feature checks by invoking them directly. ([#363][] by [@Shnatsel][])
@@ -383,6 +385,7 @@ No changelog was kept for this release.
 [#343]: https://github.com/linebender/fearless_simd/pull/343
 [#344]: https://github.com/linebender/fearless_simd/pull/344
 [#345]: https://github.com/linebender/fearless_simd/pull/345
+[#347]: https://github.com/linebender/fearless_simd/pull/347
 [#348]: https://github.com/linebender/fearless_simd/pull/348
 [#350]: https://github.com/linebender/fearless_simd/pull/350
 [#351]: https://github.com/linebender/fearless_simd/pull/351
@@ -400,6 +403,8 @@ No changelog was kept for this release.
 [#367]: https://github.com/linebender/fearless_simd/pull/367
 [#370]: https://github.com/linebender/fearless_simd/pull/370
 [#371]: https://github.com/linebender/fearless_simd/pull/371
+[#377]: https://github.com/linebender/fearless_simd/pull/377
+[#378]: https://github.com/linebender/fearless_simd/pull/378
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.7.0...HEAD
 [0.7.0]: https://github.com/linebender/fearless_simd/compare/v0.6.0...v0.7.0
