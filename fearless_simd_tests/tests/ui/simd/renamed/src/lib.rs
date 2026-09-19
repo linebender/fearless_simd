@@ -18,6 +18,11 @@ pub fn baseline_sum() -> u64 {
     simd_backend::dispatch!(simd_backend::Level::baseline(), simd => sum(simd, 1, 2, 3))
 }
 
+#[simd]
+pub fn double<S: simd_backend::Simd>(value: simd_backend::u32x4<S>) -> simd_backend::u32x4<S> {
+    value + value
+}
+
 pub mod facade {
     pub use simd_backend;
 }
@@ -33,5 +38,10 @@ pub mod through_reexport {
 
     pub fn baseline_sum() -> u64 {
         fearless_simd::dispatch!(fearless_simd::Level::baseline(), simd => sum(simd, 1, 2, 3))
+    }
+
+    #[simd]
+    pub fn double<S: fearless_simd::Simd>(value: fearless_simd::u32x4<S>) -> fearless_simd::u32x4<S> {
+        value + value
     }
 }

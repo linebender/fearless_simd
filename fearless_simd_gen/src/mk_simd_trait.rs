@@ -66,7 +66,7 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
     }
     let mut code = quote! {
         use core::fmt::Debug;
-        use crate::{seal::Seal, Level, SimdElement, SimdIntElement, SimdFloatElement, SimdFrom, SimdInto, SimdCvtTruncate, SimdCvtFloat, SimdWiden, SimdNarrow, Select, Bytes};
+        use crate::{seal::Seal, Level, ExtractToken, SimdElement, SimdIntElement, SimdFloatElement, SimdFrom, SimdInto, SimdCvtTruncate, SimdCvtFloat, SimdWiden, SimdNarrow, Select, Bytes};
         #imports
         /// The main SIMD trait, implemented by all SIMD token types.
         ///
@@ -103,7 +103,7 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
         ///     # assert_eq!(*result, [6.0, 8.0, 10.0, 12.0]);
         /// });
         /// ```
-        pub trait Simd: Sized + Clone + Copy + Send + Sync + Debug + Seal + arch_types::ArchTypes + 'static {
+        pub trait Simd: ExtractToken<S = Self> + Sized + Clone + Copy + Send + Sync + Debug + Seal + arch_types::ArchTypes + 'static {
             /// A native-width SIMD vector of [`f32`]s.
             type f32s: SimdFloat<Self, Element = f32, Block = f32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s> + SimdCvtFloat<Self::u32s> + SimdCvtFloat<Self::i32s>
                 + SimdWiden<Self, Widened = Self::f64s>;
@@ -289,7 +289,7 @@ fn mk_simd_base() -> TokenStream {
     quote! {
         /// Base functionality implemented by all SIMD vectors.
         pub trait SimdBase<S: Simd>:
-            Copy + Sync + Send + Debug + 'static
+            ExtractToken<S = S> + Copy + Sync + Send + Debug + 'static
             + Seal
             + Bytes<Bytes = Self::ByteVector> + SimdFrom<Self::Element, S> + SimdFrom<Self::Array, S>
             + core::ops::Index<usize, Output = Self::Element> + core::ops::IndexMut<usize, Output = Self::Element>
@@ -328,8 +328,6 @@ fn mk_simd_base() -> TokenStream {
                 + AsRef<[Self::Element]>
                 + AsMut<[Self::Element]>
                 + From<Self>;
-            /// Get the [`Simd`] implementation associated with this type.
-            fn witness(&self) -> S;
             fn as_slice(&self) -> &[Self::Element];
             fn as_mut_slice(&mut self) -> &mut [Self::Element];
             /// Create a SIMD vector from a slice.
@@ -531,7 +529,7 @@ fn mk_simd_mask() -> TokenStream {
         /// current backends may use all-zero/all-one integer vectors internally, while future
         /// predicate-register backends may use a compact representation.
         pub trait SimdMask<S: Simd>:
-            Copy + Sync + Send + 'static
+            ExtractToken<S = S> + Copy + Sync + Send + 'static
             + Seal
             + Select<Self>
             #(+ #op_traits)*
@@ -544,9 +542,6 @@ fn mk_simd_mask() -> TokenStream {
 
             /// This mask type's lane count.
             const LEN: usize;
-
-            /// Get the [`Simd`] implementation associated with this type.
-            fn witness(&self) -> S;
 
             /// Create a SIMD mask with all lanes set to the given boolean value.
             fn splat(simd: S, val: bool) -> Self;

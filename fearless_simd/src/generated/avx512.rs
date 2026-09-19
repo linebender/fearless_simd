@@ -52,6 +52,13 @@ impl Avx512 {
     }
 }
 impl Seal for Avx512 {}
+impl ExtractToken for Avx512 {
+    type S = Self;
+    #[inline]
+    fn witness(&self) -> Self {
+        *self
+    }
+}
 impl ArchTypes for Avx512 {
     type f32x4 = crate::support::Aligned128<__m128>;
     type i8x16 = crate::support::Aligned128<__m128i>;

@@ -13,8 +13,9 @@ use syn::{Attribute, FnArg, ItemFn, Pat, Result};
 /// Run a SIMD-generic function body with the token's target features enabled.
 ///
 /// The first typed parameter after an optional `self` receiver is used as the
-/// SIMD token. The library must be in scope as `fearless_simd`; for a renamed
-/// dependency, import it with `use simd_backend as fearless_simd;` in the
+/// SIMD token carrier: a token, vector, mask, or a value implementing
+/// `fearless_simd::ExtractToken`. The library must be in scope as `fearless_simd`;
+/// for a renamed dependency, import it with `use simd_backend as fearless_simd;` in the
 /// containing module. See the [crate-level documentation](crate) for the complete
 /// expansion, supported function forms, and semantic caveats.
 #[proc_macro_attribute]
@@ -45,10 +46,10 @@ fn expand(args: TokenStream2, item: TokenStream2) -> Result<TokenStream2> {
     reject_unsupported_signature(&function)?;
     reject_unsupported_attributes(&function.attrs)?;
 
-    let original_token = validate_simd_token(&function)?;
-    // The old expansion used this binding for vectorize even when the body
-    // did not use it. Preserve that usage for unused-variable lint purposes.
-    let use_token = original_token.map(|token| quote!(let _ = #token;));
+    let original_carrier = validate_token_carrier(&function)?;
+    // Token extraction uses the outer binding. Also mark the original binding
+    // in the body closure as used, so unused carriers do not trigger warnings.
+    let use_carrier = original_carrier.map(|carrier| quote!(let _ = #carrier;));
     let original_statements = mem::take(&mut function.block.stmts);
     // Give the closure the same expected return type so branch and early-return
     // coercions happen inside its body. Closures cannot name `impl Trait`, so
@@ -115,8 +116,13 @@ fn expand(args: TokenStream2, item: TokenStream2) -> Result<TokenStream2> {
         helper_arguments.push(helper_name);
         argument_types.push(ty);
     }
-    // The first typed argument is the validated, unconditional SIMD token.
-    let token = &arguments[0];
+    // Borrow the first argument only long enough to extract its token, before
+    // forwarding the original value. Carriers need not be Copy. Use the trait
+    // explicitly so an inherent witness() method cannot change dispatch.
+    let carrier = &arguments[0];
+    let witness = quote! {
+        fearless_simd::ExtractToken::witness(&#carrier)
+    };
 
     // Inner function attributes are held in function.attrs by Syn. Leaving
     // them there keeps them at the beginning of the outer function body,
@@ -130,9 +136,9 @@ fn expand(args: TokenStream2, item: TokenStream2) -> Result<TokenStream2> {
     // $crate. A lookalike `fearless_simd` module cannot spoof those proofs.
     let dispatch_call: syn::Expr = syn::parse_quote! {
         (fearless_simd::__fearless_simd_dispatch!(#(#argument_types => #helper_arguments),*)).call(
-            #token, #(#arguments,)*
+            #witness, #(#arguments,)*
             #[inline(always)]
-            |#(#parameters),*| #closure_output { #use_token #(#original_statements)* }
+            |#(#parameters),*| #closure_output { #use_carrier #(#original_statements)* }
         )
     };
     function
@@ -216,7 +222,7 @@ fn is_attribute(attr: &Attribute, name: &str) -> bool {
             .is_ok_and(|path| path.is_ident(name))
 }
 
-fn validate_simd_token(function: &ItemFn) -> Result<Option<Ident>> {
+fn validate_token_carrier(function: &ItemFn) -> Result<Option<Ident>> {
     let Some(argument) = function
         .sig
         .inputs
@@ -228,7 +234,7 @@ fn validate_simd_token(function: &ItemFn) -> Result<Option<Ident>> {
     else {
         return Err(syn::Error::new_spanned(
             &function.sig.inputs,
-            "`#[simd]` requires a SIMD token parameter after any receiver",
+            "`#[simd]` requires a SIMD token carrier parameter after any receiver",
         ));
     };
 
@@ -240,7 +246,7 @@ fn validate_simd_token(function: &ItemFn) -> Result<Option<Ident>> {
             if let Some((at, _)) = &pattern.subpat {
                 return Err(syn::Error::new(
                     at.span,
-                    "the SIMD token parameter cannot use an `@` subpattern",
+                    "the SIMD token carrier parameter cannot use an `@` subpattern",
                 ));
             }
             Ok(Some(pattern.ident.clone()))
@@ -251,7 +257,7 @@ fn validate_simd_token(function: &ItemFn) -> Result<Option<Ident>> {
         }
         pattern => Err(syn::Error::new_spanned(
             pattern,
-            "the SIMD token parameter must be an identifier or `_`",
+            "the SIMD token carrier parameter must be an identifier or `_`",
         )),
     }
 }
@@ -263,7 +269,7 @@ fn reject_conditional_attributes(attrs: &[Attribute]) -> Result<()> {
     {
         return Err(syn::Error::new_spanned(
             attr,
-            "the SIMD token parameter cannot be conditional",
+            "the SIMD token carrier parameter cannot be conditional",
         ));
     }
     Ok(())

@@ -330,6 +330,15 @@ pub(crate) trait Level {
 
             impl Seal for #level_tok {}
 
+            impl ExtractToken for #level_tok {
+                type S = Self;
+
+                #[inline]
+                fn witness(&self) -> Self {
+                    *self
+                }
+            }
+
             #arch_types_impl
 
             #simd_impl

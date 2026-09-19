@@ -129,6 +129,13 @@ impl WasmSimd128 {
     }
 }
 impl Seal for WasmSimd128 {}
+impl ExtractToken for WasmSimd128 {
+    type S = Self;
+    #[inline]
+    fn witness(&self) -> Self {
+        *self
+    }
+}
 impl ArchTypes for WasmSimd128 {
     type f32x4 = crate::support::Aligned128<v128>;
     type i8x16 = crate::support::Aligned128<v128>;

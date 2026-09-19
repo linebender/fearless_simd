@@ -15,6 +15,61 @@ use core::ops::{
 };
 use core::str::FromStr;
 
+/// A value that carries a SIMD token.
+///
+/// Implemented by all SIMD tokens, vectors, and masks, and by references to these
+/// types. User-defined wrappers can implement this trait by returning the token
+/// of a contained value.
+///
+/// The [`#[simd]`](https://docs.rs/fearless_simd_macros/latest/fearless_simd_macros/attr.simd.html)
+/// attribute extracts a token from its first non-receiver parameter using this
+/// trait.
+///
+/// ```
+/// use fearless_simd::{ExtractToken, Simd, f32x4};
+///
+/// // Four consecutive audio samples, processed together.
+/// struct AudioSamples<S: Simd>(f32x4<S>);
+///
+/// impl<S: Simd> ExtractToken for AudioSamples<S> {
+///     type S = S;
+///
+///     #[inline]
+///     fn witness(&self) -> S {
+///         self.0.witness()
+///     }
+/// }
+/// ```
+#[diagnostic::on_unimplemented(
+    message = "`{Self}` does not carry a SIMD token",
+    note = "If you are using #[simd], the first non-receiver parameter must carry a SIMD token. See the #[simd] documentation for more information."
+)]
+pub trait ExtractToken {
+    /// The SIMD implementation associated with this value.
+    type S: Simd;
+
+    /// Get the SIMD token associated with this value.
+    fn witness(&self) -> Self::S;
+}
+
+impl<T: ExtractToken + ?Sized> ExtractToken for &T {
+    type S = T::S;
+
+    #[inline]
+    fn witness(&self) -> Self::S {
+        T::witness(*self)
+    }
+}
+
+impl<T: ExtractToken + ?Sized> ExtractToken for &mut T {
+    type S = T::S;
+
+    #[inline]
+    fn witness(&self) -> Self::S {
+        T::witness(&**self)
+    }
+}
+
 /// Element-wise selection between two SIMD vectors using `self`.
 pub trait Select<T: Seal>: Seal {
     /// For each logical lane of this mask, select the first operand if the lane is true, and select the second

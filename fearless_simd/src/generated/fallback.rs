@@ -124,6 +124,13 @@ impl Fallback {
     }
 }
 impl Seal for Fallback {}
+impl ExtractToken for Fallback {
+    type S = Self;
+    #[inline]
+    fn witness(&self) -> Self {
+        *self
+    }
+}
 impl ArchTypes for Fallback {
     type f32x4 = crate::support::Aligned128<[f32; 4usize]>;
     type i8x16 = crate::support::Aligned128<[i8; 16usize]>;
