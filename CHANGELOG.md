@@ -30,7 +30,7 @@ This release has an [MSRV][] of 1.89.
 
 ### Changed
 
-- Breaking change: `witness()` has moved from `SimdBase` and `SimdMask` to their new `ExtractToken` supertrait. Import `ExtractToken` (also included in the prelude) for method calls on concrete types, and replace fully qualified calls through the old traits with `ExtractToken::witness`.
+- Breaking change: `witness()` has moved from `SimdBase` and `SimdMask` to their new `ExtractToken` supertrait and has been renamed to `token()`.
 - Breaking change: `SimdBase::N` and `SimdMask::N` have been renamed to `LEN`, matching the `std::simd` naming. ([#366][] by [@Shnatsel][])
 - Breaking change: `SimdBase::as_array` now borrows the vector and returns an array reference, while owned extraction has moved to `to_array`. The old `as_array_ref` and `as_array_mut` methods have been replaced by `as_array` and `as_mut_array`, matching the `std::simd` API. ([#351][] by [@Shnatsel][])
 - Breaking change: `abs` has moved from `SimdFloat` to `SimdBase` and is now available on integer vectors. Signed integers use wrapping absolute value, leaving the minimum representable value unchanged; unsigned integers are unchanged. ([#371][] by [@Shnatsel][])

@@ -121,7 +121,7 @@ impl Seal for Sse4_2 {}
 impl ExtractToken for Sse4_2 {
     type S = Self;
     #[inline]
-    fn witness(&self) -> Self {
+    fn token(&self) -> Self {
         *self
     }
 }

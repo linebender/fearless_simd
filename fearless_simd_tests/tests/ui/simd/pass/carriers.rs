@@ -13,12 +13,12 @@ use fearless_simd_macros::simd;
 
 #[simd]
 fn vector<S: Simd, V: SimdBase<S>>(value: V) -> S {
-    value.witness()
+    value.token()
 }
 
 #[simd]
 fn mask<S: Simd, M: SimdMask<S>>(value: M) -> S {
-    value.witness()
+    value.token()
 }
 
 #[simd]

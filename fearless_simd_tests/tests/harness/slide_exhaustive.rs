@@ -19,7 +19,7 @@ macro_rules! test_vector_slide {
             assert_eq!(
                 core::hint::black_box(
                     test_vec_a
-                        .witness()
+                        .token()
                         .vectorize(|| test_vec_a.slide::<$shift>(test_vec_b))
                         .as_slice()
                 ),
@@ -51,7 +51,7 @@ macro_rules! test_block_slide {
             assert_eq!(
                 core::hint::black_box(
                     test_vec_a
-                        .witness()
+                        .token()
                         .vectorize(|| test_vec_a.slide_within_blocks::<$shift>(test_vec_b))
                         .as_slice()
                 ),

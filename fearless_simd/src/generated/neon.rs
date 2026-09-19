@@ -40,7 +40,7 @@ impl Seal for Neon {}
 impl ExtractToken for Neon {
     type S = Self;
     #[inline]
-    fn witness(&self) -> Self {
+    fn token(&self) -> Self {
         *self
     }
 }

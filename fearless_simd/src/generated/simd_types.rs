@@ -10,7 +10,7 @@ use crate::{
 impl<S: Simd> ExtractToken for f32x4<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -347,7 +347,7 @@ impl<S: Simd> SimdInterleaved<S> for f32x4<S> {
 impl<S: Simd> ExtractToken for i8x16<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -656,7 +656,7 @@ impl<S: Simd> SimdInterleaved<S> for i8x16<S> {
 impl<S: Simd> ExtractToken for u8x16<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -965,7 +965,7 @@ impl<S: Simd> SimdInterleaved<S> for u8x16<S> {
 impl<S: Simd> ExtractToken for mask8x16<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -1074,7 +1074,7 @@ impl<S: Simd> SimdMask<S> for mask8x16<S> {
 impl<S: Simd> ExtractToken for i16x8<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -1390,7 +1390,7 @@ impl<S: Simd> SimdInterleaved<S> for i16x8<S> {
 impl<S: Simd> ExtractToken for u16x8<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -1706,7 +1706,7 @@ impl<S: Simd> SimdInterleaved<S> for u16x8<S> {
 impl<S: Simd> ExtractToken for mask16x8<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -1815,7 +1815,7 @@ impl<S: Simd> SimdMask<S> for mask16x8<S> {
 impl<S: Simd> ExtractToken for i32x4<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -2131,7 +2131,7 @@ impl<S: Simd> SimdInterleaved<S> for i32x4<S> {
 impl<S: Simd> ExtractToken for u32x4<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -2447,7 +2447,7 @@ impl<S: Simd> SimdInterleaved<S> for u32x4<S> {
 impl<S: Simd> ExtractToken for mask32x4<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -2556,7 +2556,7 @@ impl<S: Simd> SimdMask<S> for mask32x4<S> {
 impl<S: Simd> ExtractToken for f64x2<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -2901,7 +2901,7 @@ impl<S: Simd> SimdInterleaved<S> for f64x2<S> {
 impl<S: Simd> ExtractToken for i64x2<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -3210,7 +3210,7 @@ impl<S: Simd> SimdInterleaved<S> for i64x2<S> {
 impl<S: Simd> ExtractToken for u64x2<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -3519,7 +3519,7 @@ impl<S: Simd> SimdInterleaved<S> for u64x2<S> {
 impl<S: Simd> ExtractToken for mask64x2<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -3628,7 +3628,7 @@ impl<S: Simd> SimdMask<S> for mask64x2<S> {
 impl<S: Simd> ExtractToken for f32x8<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -3972,7 +3972,7 @@ impl<S: Simd> crate::SimdCombine<S> for f32x8<S> {
 impl<S: Simd> ExtractToken for i8x32<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -4292,7 +4292,7 @@ impl<S: Simd> crate::SimdCombine<S> for i8x32<S> {
 impl<S: Simd> ExtractToken for u8x32<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -4612,7 +4612,7 @@ impl<S: Simd> crate::SimdCombine<S> for u8x32<S> {
 impl<S: Simd> ExtractToken for mask8x32<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -4721,7 +4721,7 @@ impl<S: Simd> SimdMask<S> for mask8x32<S> {
 impl<S: Simd> ExtractToken for i16x16<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -5041,7 +5041,7 @@ impl<S: Simd> crate::SimdCombine<S> for i16x16<S> {
 impl<S: Simd> ExtractToken for u16x16<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -5361,7 +5361,7 @@ impl<S: Simd> crate::SimdCombine<S> for u16x16<S> {
 impl<S: Simd> ExtractToken for mask16x16<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -5470,7 +5470,7 @@ impl<S: Simd> SimdMask<S> for mask16x16<S> {
 impl<S: Simd> ExtractToken for i32x8<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -5793,7 +5793,7 @@ impl<S: Simd> crate::SimdCombine<S> for i32x8<S> {
 impl<S: Simd> ExtractToken for u32x8<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -6116,7 +6116,7 @@ impl<S: Simd> crate::SimdCombine<S> for u32x8<S> {
 impl<S: Simd> ExtractToken for mask32x8<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -6225,7 +6225,7 @@ impl<S: Simd> SimdMask<S> for mask32x8<S> {
 impl<S: Simd> ExtractToken for f64x4<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -6565,7 +6565,7 @@ impl<S: Simd> crate::SimdCombine<S> for f64x4<S> {
 impl<S: Simd> ExtractToken for i64x4<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -6869,7 +6869,7 @@ impl<S: Simd> crate::SimdCombine<S> for i64x4<S> {
 impl<S: Simd> ExtractToken for u64x4<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -7173,7 +7173,7 @@ impl<S: Simd> crate::SimdCombine<S> for u64x4<S> {
 impl<S: Simd> ExtractToken for mask64x4<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -7282,7 +7282,7 @@ impl<S: Simd> SimdMask<S> for mask64x4<S> {
 impl<S: Simd> ExtractToken for f32x16<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -7629,7 +7629,7 @@ impl<S: Simd> crate::SimdSplit<S> for f32x16<S> {
 impl<S: Simd> ExtractToken for i8x64<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -7975,7 +7975,7 @@ impl<S: Simd> crate::SimdSplit<S> for i8x64<S> {
 impl<S: Simd> ExtractToken for u8x64<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -8321,7 +8321,7 @@ impl<S: Simd> crate::SimdSplit<S> for u8x64<S> {
 impl<S: Simd> ExtractToken for mask8x64<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -8430,7 +8430,7 @@ impl<S: Simd> SimdMask<S> for mask8x64<S> {
 impl<S: Simd> ExtractToken for i16x32<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -8760,7 +8760,7 @@ impl<S: Simd> crate::SimdSplit<S> for i16x32<S> {
 impl<S: Simd> ExtractToken for u16x32<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -9090,7 +9090,7 @@ impl<S: Simd> crate::SimdSplit<S> for u16x32<S> {
 impl<S: Simd> ExtractToken for mask16x32<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -9199,7 +9199,7 @@ impl<S: Simd> SimdMask<S> for mask16x32<S> {
 impl<S: Simd> ExtractToken for i32x16<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -9525,7 +9525,7 @@ impl<S: Simd> crate::SimdSplit<S> for i32x16<S> {
 impl<S: Simd> ExtractToken for u32x16<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -9851,7 +9851,7 @@ impl<S: Simd> crate::SimdSplit<S> for u32x16<S> {
 impl<S: Simd> ExtractToken for mask32x16<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -9960,7 +9960,7 @@ impl<S: Simd> SimdMask<S> for mask32x16<S> {
 impl<S: Simd> ExtractToken for f64x8<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -10306,7 +10306,7 @@ impl<S: Simd> crate::SimdSplit<S> for f64x8<S> {
 impl<S: Simd> ExtractToken for i64x8<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -10616,7 +10616,7 @@ impl<S: Simd> crate::SimdSplit<S> for i64x8<S> {
 impl<S: Simd> ExtractToken for u64x8<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }
@@ -10926,7 +10926,7 @@ impl<S: Simd> crate::SimdSplit<S> for u64x8<S> {
 impl<S: Simd> ExtractToken for mask64x8<S> {
     type S = S;
     #[inline]
-    fn witness(&self) -> S {
+    fn token(&self) -> S {
         self.simd
     }
 }

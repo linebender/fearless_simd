@@ -35,7 +35,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 type S = S;
 
                 #[inline]
-                fn witness(&self) -> S {
+                fn token(&self) -> S {
                     self.simd
                 }
             }

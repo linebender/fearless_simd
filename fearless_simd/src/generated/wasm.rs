@@ -132,7 +132,7 @@ impl Seal for WasmSimd128 {}
 impl ExtractToken for WasmSimd128 {
     type S = Self;
     #[inline]
-    fn witness(&self) -> Self {
+    fn token(&self) -> Self {
         *self
     }
 }

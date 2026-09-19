@@ -82,7 +82,7 @@ fn simd_attribute_borrows_carriers<S: Simd>(simd: S) {
 
     #[simd]
     fn unsized_carrier<T: ExtractToken + ?Sized>(a: &T) -> T::S {
-        a.witness()
+        a.token()
     }
 
     let mut value = u32x8::splat(simd, 21);
@@ -107,7 +107,7 @@ fn simd_attribute_borrows_carriers<S: Simd>(simd: S) {
         core::mem::discriminant(&simd.level()),
         "a shared token reference should preserve the backend"
     );
-    let mut token = simd.witness();
+    let mut token = simd.token();
     assert_eq!(
         core::mem::discriminant(&token_mut(&mut token).level()),
         core::mem::discriminant(&simd.level()),
@@ -171,9 +171,9 @@ fn simd_attribute_extracts_owned_wrapper_once<S: Simd>(simd: S) {
         type S = S;
 
         #[inline]
-        fn witness(&self) -> S {
+        fn token(&self) -> S {
             self.extractions.set(self.extractions.get() + 1);
-            self.vector.witness()
+            self.vector.token()
         }
     }
 
@@ -185,7 +185,7 @@ fn simd_attribute_extracts_owned_wrapper_once<S: Simd>(simd: S) {
 
     impl<S: Simd> Wrapper<'_, S> {
         #[inline]
-        fn witness(&self) -> u32 {
+        fn token(&self) -> u32 {
             123
         }
     }
@@ -214,7 +214,7 @@ fn simd_attribute_extracts_owned_wrapper_once<S: Simd>(simd: S) {
         drops: &drops,
     };
     assert_eq!(
-        value.witness(),
+        value.token(),
         123,
         "the inherent method has different semantics"
     );
@@ -244,8 +244,8 @@ fn simd_attribute_returns_borrow_from_wrapper<S: Simd>(simd: S) {
         type S = S;
 
         #[inline]
-        fn witness(&self) -> S {
-            self.vector.witness()
+        fn token(&self) -> S {
+            self.vector.token()
         }
     }
 

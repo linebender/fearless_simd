@@ -45,7 +45,7 @@ impl Seal for Avx2 {}
 impl ExtractToken for Avx2 {
     type S = Self;
     #[inline]
-    fn witness(&self) -> Self {
+    fn token(&self) -> Self {
         *self
     }
 }

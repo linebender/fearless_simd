@@ -127,7 +127,7 @@ impl Seal for Fallback {}
 impl ExtractToken for Fallback {
     type S = Self;
     #[inline]
-    fn witness(&self) -> Self {
+    fn token(&self) -> Self {
         *self
     }
 }

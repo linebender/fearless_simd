@@ -55,7 +55,7 @@ impl Seal for Avx512 {}
 impl ExtractToken for Avx512 {
     type S = Self;
     #[inline]
-    fn witness(&self) -> Self {
+    fn token(&self) -> Self {
         *self
     }
 }

@@ -40,7 +40,7 @@ Conceptually, the macro expands the body to:
 
 ```rust,ignore
 fn double_u32s<S: Simd>(simd: S, values: &mut [u32]) {
-    ExtractToken::witness(&simd).vectorize(
+    ExtractToken::token(&simd).vectorize(
         #[inline(always)]
         || {
             // Original body.
@@ -86,8 +86,8 @@ impl<S: Simd> ExtractToken for AudioSamples<S> {
     type S = S;
 
     #[inline]
-    fn witness(&self) -> S {
-        self.0.witness()
+    fn token(&self) -> S {
+        self.0.token()
     }
 }
 
@@ -126,11 +126,11 @@ diagnose it.
 
 ## Execution boundaries and captures
 
-The macro calls `ExtractToken::witness(&first_argument)` exactly once, before
+The macro calls `ExtractToken::token(&first_argument)` exactly once, before
 entering the selected SIMD context, then forwards the original argument to the
-body. This borrows the carrier without copying it. Custom `witness()`
+body. This borrows the carrier without copying it. Custom `token()`
 implementations should be cheap and must not assume the caller already has the
-token's target features enabled. An inherent method named `witness` is ignored.
+token's target features enabled. An inherent method named `token` is ignored.
 
 Only work performed while the function body is executing is covered by the
 SIMD context. Code inside a returned future, closure, or lazy iterator runs

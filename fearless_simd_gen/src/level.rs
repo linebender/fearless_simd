@@ -334,7 +334,7 @@ pub(crate) trait Level {
                 type S = Self;
 
                 #[inline]
-                fn witness(&self) -> Self {
+                fn token(&self) -> Self {
                     *self
                 }
             }

@@ -35,8 +35,8 @@ use core::str::FromStr;
 ///     type S = S;
 ///
 ///     #[inline]
-///     fn witness(&self) -> S {
-///         self.0.witness()
+///     fn token(&self) -> S {
+///         self.0.token()
 ///     }
 /// }
 /// ```
@@ -49,15 +49,15 @@ pub trait ExtractToken {
     type S: Simd;
 
     /// Get the SIMD token associated with this value.
-    fn witness(&self) -> Self::S;
+    fn token(&self) -> Self::S;
 }
 
 impl<T: ExtractToken + ?Sized> ExtractToken for &T {
     type S = T::S;
 
     #[inline]
-    fn witness(&self) -> Self::S {
-        T::witness(*self)
+    fn token(&self) -> Self::S {
+        T::token(*self)
     }
 }
 
@@ -65,8 +65,8 @@ impl<T: ExtractToken + ?Sized> ExtractToken for &mut T {
     type S = T::S;
 
     #[inline]
-    fn witness(&self) -> Self::S {
-        T::witness(&**self)
+    fn token(&self) -> Self::S {
+        T::token(&**self)
     }
 }
 

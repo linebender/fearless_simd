@@ -9904,7 +9904,7 @@ pub trait SimdBase<S: Simd>:
     #[doc = r" If `OFFSET` is greater than or equal to `Self::LEN`, all lanes are filled with `padding`."]
     #[inline(always)]
     fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-        let padding = Self::splat(self.witness(), padding);
+        let padding = Self::splat(self.token(), padding);
         match Self::LEN.saturating_sub(OFFSET) {
             0 => padding.slide::<0>(self),
             1 => padding.slide::<1>(self),

@@ -414,7 +414,7 @@ fn mk_simd_base() -> TokenStream {
             /// If `OFFSET` is greater than or equal to `Self::LEN`, all lanes are filled with `padding`.
             #[inline(always)]
             fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
-                let padding = Self::splat(self.witness(), padding);
+                let padding = Self::splat(self.token(), padding);
                 match Self::LEN.saturating_sub(OFFSET) {
                     #(#shift_right_arms,)*
                     _ => unreachable!(),

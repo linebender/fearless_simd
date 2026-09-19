@@ -37,14 +37,14 @@ mod fearless_simd {
 
     pub trait ExtractToken {
         type S: Simd;
-        fn witness(&self) -> Self::S;
+        fn token(&self) -> Self::S;
     }
 
     impl<S: Simd + Copy> ExtractToken for S {
         type S = S;
 
         #[inline]
-        fn witness(&self) -> S {
+        fn token(&self) -> S {
             *self
         }
     }

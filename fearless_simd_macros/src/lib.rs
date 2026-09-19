@@ -118,10 +118,10 @@ fn expand(args: TokenStream2, item: TokenStream2) -> Result<TokenStream2> {
     }
     // Borrow the first argument only long enough to extract its token, before
     // forwarding the original value. Carriers need not be Copy. Use the trait
-    // explicitly so an inherent witness() method cannot change dispatch.
+    // explicitly so an inherent token() method cannot change dispatch.
     let carrier = &arguments[0];
-    let witness = quote! {
-        fearless_simd::ExtractToken::witness(&#carrier)
+    let token = quote! {
+        fearless_simd::ExtractToken::token(&#carrier)
     };
 
     // Inner function attributes are held in function.attrs by Syn. Leaving
@@ -136,7 +136,7 @@ fn expand(args: TokenStream2, item: TokenStream2) -> Result<TokenStream2> {
     // $crate. A lookalike `fearless_simd` module cannot spoof those proofs.
     let dispatch_call: syn::Expr = syn::parse_quote! {
         (fearless_simd::__fearless_simd_dispatch!(#(#argument_types => #helper_arguments),*)).call(
-            #witness, #(#arguments,)*
+            #token, #(#arguments,)*
             #[inline(always)]
             |#(#parameters),*| #closure_output { #use_carrier #(#original_statements)* }
         )
