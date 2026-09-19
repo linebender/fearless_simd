@@ -25,7 +25,7 @@ use fearless_simd_macros::simd;
 
 #[simd]
 fn double_u32s<S: Simd>(simd: S, values: &mut [u32]) {
-    let mut chunks = values.chunks_exact_mut(S::u32s::N);
+    let mut chunks = values.chunks_exact_mut(S::u32s::LEN);
     for chunk in &mut chunks {
         let value = S::u32s::from_slice(simd, chunk);
         (value * 2).store_slice(chunk);
