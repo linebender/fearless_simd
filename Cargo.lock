@@ -299,7 +299,7 @@ checksum = "da7c62ceae207dd37ea5b845da6a0696c799f85e97da1ab5b7910be3c1c80223"
 
 [[package]]
 name = "fearless_simd"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "libm",
 ]
@@ -325,7 +325,7 @@ dependencies = [
 
 [[package]]
 name = "fearless_simd_macros"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "proc-macro2",
  "quote",

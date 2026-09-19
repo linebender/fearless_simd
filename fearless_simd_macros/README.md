@@ -9,13 +9,13 @@ Add both packages from crates.io to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-fearless_simd = "1.0"
-fearless_simd_macros = "0.1"
+fearless_simd = "1.0.0-rc.2"
+fearless_simd_macros = "0.1.0-rc.1"
 ```
 
 The library must be in scope as `fearless_simd` in the module containing the
 annotated function. The dependency declaration above makes that name available
-automatically. `fearless_simd` v1.0 or later is required.
+automatically. `fearless_simd` 1.0.0-rc.2 or later is required.
 
 Apply `#[simd]` to a function whose first argument carries its SIMD token:
 
