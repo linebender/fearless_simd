@@ -34,11 +34,25 @@ mod fearless_simd {
             Level::Avx512(self)
         }
     }
+
+    pub trait ExtractToken {
+        type S: Simd;
+        fn token(&self) -> Self::S;
+    }
+
+    impl<S: Simd + Copy> ExtractToken for S {
+        type S = S;
+
+        #[inline]
+        fn token(&self) -> S {
+            *self
+        }
+    }
 }
 
 #[simd]
-fn counterfeit<S: fearless_simd::Simd>(simd: S, value: u32) -> u32 {
-    //~^ E0277
+//~^ E0277
+fn counterfeit<S: fearless_simd::Simd + Copy>(simd: S, value: u32) -> u32 {
     let _ = simd.level();
     value
 }

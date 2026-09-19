@@ -5,7 +5,7 @@ use fearless_simd_macros::simd;
 
 #[simd]
 fn at_token_is_not_supported<S: fearless_simd::Simd>(simd @ _: S) {
-    //~^ ERROR: the SIMD token parameter cannot use an `@` subpattern
+    //~^ ERROR: the SIMD token carrier parameter cannot use an `@` subpattern
     let _ = simd;
 }
 

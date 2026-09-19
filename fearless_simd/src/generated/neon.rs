@@ -37,6 +37,13 @@ impl Neon {
     }
 }
 impl Seal for Neon {}
+impl ExtractToken for Neon {
+    type S = Self;
+    #[inline]
+    fn token(&self) -> Self {
+        *self
+    }
+}
 impl ArchTypes for Neon {
     type f32x4 = crate::support::Aligned128<float32x4_t>;
     type i8x16 = crate::support::Aligned128<int8x16_t>;

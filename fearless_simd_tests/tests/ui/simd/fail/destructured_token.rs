@@ -5,7 +5,7 @@ use fearless_simd_macros::simd;
 
 #[simd]
 fn destructured_token_is_not_supported<S: fearless_simd::Simd>((simd,): (S,)) {
-    //~^ ERROR: the SIMD token parameter must be an identifier or `_`
+    //~^ ERROR: the SIMD token carrier parameter must be an identifier or `_`
     let _ = simd;
 }
 
