@@ -8,7 +8,7 @@ use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use quote::quote;
 use syn::fold::{self, Fold};
-use syn::{AttrStyle, Attribute, FnArg, ItemFn, Pat, Result};
+use syn::{Attribute, FnArg, ItemFn, Pat, Result};
 
 /// Run a SIMD-generic function body with the token's target features enabled.
 ///
@@ -186,10 +186,6 @@ fn reject_unsupported_signature(function: &ItemFn) -> Result<()> {
 
 fn reject_unsupported_attributes(attrs: &[Attribute]) -> Result<()> {
     for attr in attrs {
-        if !matches!(attr.style, AttrStyle::Outer) {
-            continue;
-        }
-
         let reason = if is_attribute(attr, "track_caller") {
             Some("`#[simd]` cannot preserve `#[track_caller]` through its closure")
         } else if is_attribute(attr, "naked") {

@@ -10,4 +10,11 @@ fn track_caller_is_not_supported<S: fearless_simd::Simd>(simd: S) {
     let _ = simd;
 }
 
+#[simd]
+fn inner_track_caller_is_not_supported<S: fearless_simd::Simd>(simd: S) {
+    #![track_caller]
+    //~^ ERROR: `#[simd]` cannot preserve `#[track_caller]` through its closure
+    let _ = simd;
+}
+
 fn main() {}
