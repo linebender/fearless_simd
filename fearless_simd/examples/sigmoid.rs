@@ -14,7 +14,7 @@
 use fearless_simd::{Level, dispatch, prelude::*};
 
 /// Applies the sigmoid function to the input and writes to the output
-#[inline(always)]
+#[inline(always)] // or #[simd], either works
 fn sigmoid<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) {
     let n = S::f32s::LEN; // CPU's native vector size
 

@@ -42,18 +42,26 @@ See https://linebender.org/blog/doc-include/ for related discussion. -->
 No matter what level of abstraction you're after, be it autovectorization and multiversioning, or portable SIMD, or safe access to raw
 intrinsics and nothing more, `fearless_simd` has you covered!
 
-Zero dependencies, safe public APIs, and [very little](https://shnatsel.github.io/safe-simd-in-rust-even-on-the-inside/) `unsafe` under the hood.
+The core crate has zero dependencies, safe public APIs, and
+[very little](https://shnatsel.github.io/safe-simd-in-rust-even-on-the-inside/)
+`unsafe` under the hood.
 
 ## Automatic vectorization
 
-Put the code to vectorize in an `#[inline(always)]` function generic over [`Simd`].
+The easiest way to define a SIMD-generic function is the
+[`#[simd]`](https://docs.rs/fearless_simd_macros/latest/fearless_simd_macros/attr.simd.html)
+attribute from the separately versioned `fearless_simd_macros` crate. The companion macro
+crate is optional: `fearless_simd` does not depend on it, so users of only the core API do not
+pay for its procedural-macro dependencies.
 
-This will generate several implementations for different SIMD levels and select the best one at runtime:
+[`dispatch!`] generates implementations for the available SIMD levels and selects the best one
+at runtime:
 
 ```rust
 use fearless_simd::{dispatch, Level, Simd};
+use fearless_simd_macros::simd;
 
-#[inline(always)]
+#[simd]
 fn double_u32s<S: Simd>(_: S, values: &mut [u32]) {
     for value in values {
         *value = *value * 2;
@@ -72,8 +80,9 @@ Use the vector types for explicit lane-wise operations while staying generic ove
 
 ```rust
 use fearless_simd::{dispatch, prelude::*, Level};
+use fearless_simd_macros::simd;
 
-#[inline(always)]
+#[simd]
 fn double_u32s<S: Simd>(simd: S, values: &mut [u32]) {
     let mut chunks = values.chunks_exact_mut(S::u32s::LEN); // the CPU's native SIMD width
     for chunk in &mut chunks {
@@ -132,18 +141,13 @@ You can also [mix and match](https://github.com/linebender/fearless_simd/blob/ma
 intrinsics with the other approaches, using high-level code most of the time and dropping down to
 hardware-specific intrinsics only when necessary.
 
-## Inlining
+### The `#[simd]` annotation
 
-Fearless SIMD relies heavily on Rust's inlining support to create functions which have the given target features enabled.
+Fearless SIMD requires functions that use SIMD to be annotated with the `#[simd]` attribute from the `fearless_simd_macros` crate. Without it the code will still compile, but run far slower, defeating the purpose of SIMD.
 
-As a rule of thumb:
+Use [`dispatch!`] when calling SIMD code from non-SIMD code.
 
-- All SIMD functions need `#[inline(always)]`.
-- Use [`dispatch`] when calling SIMD code from non-SIMD code.
-- Use [`vectorize()`][Simd::vectorize] when calling SIMD from SIMD if you don't want to force inlining.
-
-[The article describing the design](https://shnatsel.github.io/safe-simd-in-rust-even-on-the-inside/#the-abi-would-like-a-word) covers why this is the
-case. There's also Q&A on [Zulip](https://xi.zulipchat.com/#narrow/channel/514230-simd/topic/inlining/with/546913433).
+If you cannot use proc macros, [you can achieve the same effect manually](https://github.com/linebender/fearless_simd/blob/main/fearless_simd/MANUAL_INLINING.md), but it requires some care. The use of `#[simd]` is recommended as the more robust and ergonomic option.
 
 ## Instruction set support
 

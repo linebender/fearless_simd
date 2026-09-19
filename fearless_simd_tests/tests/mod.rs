@@ -15,6 +15,7 @@ use fearless_simd_dev_macros::simd_test;
 
 mod generics;
 mod harness;
+mod simd_macro;
 #[cfg(not(miri))] // too slow
 mod soundness;
 mod token_soundness;
