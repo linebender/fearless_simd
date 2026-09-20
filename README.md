@@ -29,6 +29,14 @@ attribute is provided by the separately versioned
 [`fearless_simd_macros` companion package](./fearless_simd_macros/README.md); the core package does
 not depend on it.
 
+Add the core library and optional macro to your `Cargo.toml`:
+
+```toml
+[dependencies]
+fearless_simd = "1.0"
+fearless_simd_macros = "0.1"
+```
+
 ## Motivation
 
 This crate provides a way to use SIMD safely, both via intrinsics and safe abstractions, while containing remarkably little `unsafe` code itself.
@@ -63,8 +71,10 @@ It benefited from conversations with Luca Versari, though he is not responsible 
 
 This version of Fearless SIMD has been verified to compile with **Rust 1.89** and later.
 
-Future versions of Fearless SIMD might increase the Rust version requirement.
-It will not be treated as a breaking change and as such can even happen with small patch releases.
+Future versions of Fearless SIMD might increase the Rust version requirement. This will be accompanied by a minor version bump.
+
+If you require a fixed MSRV, we recommend using Cargo's [MSRV-aware resolver](https://doc.rust-lang.org/edition-guide/rust-2024/cargo-resolver.html) which will not select a version that fails to build.
+We will provide [security backports](fearless_simd/SECURITY.md) to older Rust versions released within the last 3 years.
 
 ## Community
 
