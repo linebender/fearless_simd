@@ -8,6 +8,10 @@ This example demonstrates the common case: process data in chunks that are optim
 
 This example uses `SimdFloatElement::Native<S>` to process both `f32` and `f64` with the same generic function. It uses the host's native SIMD vectors for optimal performance regardless of the CPU.
 
+## gain_generic
+
+This example uses a helper generic over `SimdFloat` to apply gain to any kind of floating-point vector.
+
 ## sRGB
 
 The sRGB example demonstrates:
