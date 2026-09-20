@@ -143,9 +143,7 @@ hardware-specific intrinsics only when necessary.
 
 ### The `#[simd]` annotation
 
-Fearless SIMD requires functions that use SIMD to be annotated with the `#[simd]` attribute from the `fearless_simd_macros` crate. Without it the code will still compile, but run far slower, defeating the purpose of SIMD.
-
-Use [`dispatch!`] when calling SIMD code from non-SIMD code.
+Fearless SIMD requires functions that use SIMD to be annotated with the `#[simd]` attribute from the `fearless_simd_macros` crate. Without it the code will still compile, but may run much slower.
 
 If you cannot use proc macros, [you can achieve the same effect manually](https://github.com/linebender/fearless_simd/blob/main/fearless_simd/MANUAL_INLINING.md), but it requires some care. The use of `#[simd]` is recommended as the more robust and ergonomic option.
 
