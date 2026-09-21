@@ -110,7 +110,7 @@
 //!
 //! ## The `#[simd]` annotation
 //!
-//! Fearless SIMD requires functions that use SIMD to be annotated with the `#[simd]` attribute from the `fearless_simd_macros` crate. Without it the code will still compile, but may run much slower.
+//! It is recommended to annotate functions that use SIMD with the `#[simd]` attribute from the `fearless_simd_macros` crate. Without it the code will still compile, but requires special care to achieve full performance.
 //!
 //! If you cannot use proc macros, [you can achieve the same effect manually](https://github.com/linebender/fearless_simd/blob/main/fearless_simd/MANUAL_INLINING.md), but it requires some care. The use of `#[simd]` is recommended as the more robust and ergonomic option.
 //!
