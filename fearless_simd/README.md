@@ -14,14 +14,6 @@
 
 </div>
 
-Add the core library and optional `#[simd]` macro to your `Cargo.toml`:
-
-```toml
-[dependencies]
-fearless_simd = "1.0"
-fearless_simd_macros = "0.1"
-```
-
 <!-- We use cargo-rdme to update the README with the contents of lib.rs.
 To edit the following section, update it in lib.rs, then run:
 cargo rdme --workspace-project=fearless_simd
@@ -53,6 +45,16 @@ intrinsics and nothing more, `fearless_simd` has you covered!
 The core crate has zero dependencies, safe public APIs, and
 [very little](https://shnatsel.github.io/safe-simd-in-rust-even-on-the-inside/)
 `unsafe` under the hood.
+
+## Usage
+
+Add the core library and optional `#[simd]` macro to your `Cargo.toml`:
+
+```toml
+[dependencies]
+fearless_simd = "1.0"
+fearless_simd_macros = "0.1"
+```
 
 ## Automatic vectorization
 

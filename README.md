@@ -29,14 +29,6 @@ attribute is provided by the separately versioned
 [`fearless_simd_macros` companion package](./fearless_simd_macros/README.md); the core package does
 not depend on it.
 
-Add the core library and optional macro to your `Cargo.toml`:
-
-```toml
-[dependencies]
-fearless_simd = "1.0"
-fearless_simd_macros = "0.1"
-```
-
 ## Motivation
 
 This crate provides a way to use SIMD safely, both via intrinsics and safe abstractions, while containing remarkably little `unsafe` code itself.
