@@ -1921,7 +1921,7 @@ impl X86 {
                         }
                     });
                 }
-                "approximate_recip" => {
+                "approximate_recip" if vec_ty.scalar_bits == 32 => {
                     let intrinsic = intrinsic_ident(
                         "rcp14",
                         op_suffix(vec_ty.scalar, vec_ty.scalar_bits, true),
