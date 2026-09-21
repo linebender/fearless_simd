@@ -46,6 +46,16 @@ The core crate has zero dependencies, safe public APIs, and
 [very little](https://shnatsel.github.io/safe-simd-in-rust-even-on-the-inside/)
 `unsafe` under the hood.
 
+## Usage
+
+Add the core library and optional `#[simd]` macro to your `Cargo.toml`:
+
+```toml
+[dependencies]
+fearless_simd = "1.0"
+fearless_simd_macros = "0.1"
+```
+
 ## Automatic vectorization
 
 The easiest way to define a SIMD-generic function is the

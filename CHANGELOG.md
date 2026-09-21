@@ -6,15 +6,21 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 -->
 
-The latest published Fearless SIMD release is [0.7.0](#070-2026-08-11) which was released on 2026-08-11.
-You can find its changes [documented below](#070-2026-08-11).
+The latest published Fearless SIMD release is [1.0.0](#100-2026-09-21) which was released on 2026-09-21,
+alongside `fearless_simd_macros` 0.1.0.
+You can find their changes [documented below](#100-2026-09-21).
 
 ## [Unreleased]
 
 This release has an [MSRV][] of 1.89.
 
+## [1.0.0][] (2026-09-21)
+
+This release has an [MSRV][] of 1.89.
+
 ### Added
 
+- Added the optional `#[simd]` attribute in `fearless_simd_macros` 0.1.0 to annotate SIMD-generic functions. The first argument can be a SIMD token, vector, mask, reference, or user-defined wrapper implementing `ExtractToken`. The core library does not depend on the macro crate. ([#347][], [#383][] by [@Shnatsel][])
 - Added `Native<S>` to `SimdFloatElement` and `SimdIntElement` to select native-width vectors in scalar-generic code ([#378][] by [@Shnatsel][]). 
 - Added the public `ExtractToken` trait for SIMD tokens, vectors, masks, references, and user-defined wrappers.
 - Added `reverse` for all SIMD vector and mask types. ([#356][] by [@Shnatsel][])
@@ -407,8 +413,10 @@ No changelog was kept for this release.
 [#371]: https://github.com/linebender/fearless_simd/pull/371
 [#377]: https://github.com/linebender/fearless_simd/pull/377
 [#378]: https://github.com/linebender/fearless_simd/pull/378
+[#383]: https://github.com/linebender/fearless_simd/pull/383
 
-[Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/linebender/fearless_simd/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/linebender/fearless_simd/compare/v0.7.0...v1.0.0
 [0.7.0]: https://github.com/linebender/fearless_simd/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/linebender/fearless_simd/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/linebender/fearless_simd/compare/v0.4.1...v0.5.0
