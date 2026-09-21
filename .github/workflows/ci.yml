@@ -1,9 +1,4 @@
 env:
-  # We aim to always test with the latest stable Rust toolchain, however we pin to a specific
-  # version like 1.70. Note that we only specify MAJOR.MINOR and not PATCH so that bugfixes still
-  # come automatically. If the version specified here is no longer the latest stable version,
-  # then please feel free to submit a PR that adjusts it along with the potential clippy fixes.
-  RUST_STABLE_VER: "1.89" # In quotes because otherwise (e.g.) 1.70 would be interpreted as 1.7
   # The purpose of checking with the minimum supported Rust toolchain is to detect its staleness.
   # If the compilation fails, then the version specified here needs to be bumped up to reality.
   # Be sure to also update the rust-version property in the workspace Cargo.toml file,
@@ -16,7 +11,6 @@ env:
   FEATURES_DEPENDING_ON_STD: "std,default"
   # List of packages that can not target Wasm.
   NO_WASM_PKGS: "--exclude fearless_simd_gen"
-
 
 # Rationale
 #
@@ -36,8 +30,8 @@ env:
 # Using cargo-hack also allows us to more easily test the feature matrix of our packages.
 # We use --each-feature & --optional-deps which will run a separate check for every feature.
 #
-# The MSRV jobs run only cargo check because different clippy versions can disagree on goals and
-# running tests introduces dev dependencies which may require a higher MSRV than the bare package.
+# Clippy jobs run on MSRV to avoid newly added lints firing and breaking CI.
+# They also double as MSRV enforcement checks to save CI time and CI job slots.
 #
 # For no_std checks we target x86_64-unknown-none, because this target doesn't support std
 # and as such will error out if our dependency tree accidentally tries to use std.
@@ -80,7 +74,7 @@ jobs:
       - name: install stable toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ env.RUST_STABLE_VER }}
+          toolchain: stable
           components: rustfmt
 
       - name: cargo fmt
@@ -110,7 +104,7 @@ jobs:
       - name: Run cargo rdme (fearless_simd)
         run: cargo rdme --check --workspace-project=fearless_simd
 
-  clippy-stable:
+  clippy-msrv:
     name: cargo clippy
     runs-on: ${{ matrix.os }}
     strategy:
@@ -122,7 +116,7 @@ jobs:
       - name: install stable toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ env.RUST_STABLE_VER }}
+          toolchain: ${{ env.RUST_MIN_VER }}
           targets: x86_64-unknown-none
           components: clippy
 
@@ -149,7 +143,7 @@ jobs:
         run: cargo hack clippy --workspace --locked --optional-deps --each-feature --ignore-unknown-features --features std --tests --benches --examples -- -D warnings
 
 
-  clippy-stable-wasm:
+  clippy-msrv-wasm:
     name: cargo clippy (wasm32)
     runs-on: ubuntu-latest
     steps:
@@ -158,7 +152,7 @@ jobs:
       - name: install stable toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ env.RUST_STABLE_VER }}
+          toolchain: ${{ env.RUST_MIN_VER }}
           targets: wasm32-unknown-unknown
           components: clippy
 
@@ -191,7 +185,7 @@ jobs:
       - name: install stable toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ env.RUST_STABLE_VER }}
+          toolchain: stable
           components: rustfmt
 
       - name: restore cache
@@ -222,7 +216,7 @@ jobs:
       - name: install stable toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ env.RUST_STABLE_VER }}
+          toolchain: stable
           targets: ${{ matrix.platform.target }}
 
       - name: restore cache
@@ -259,7 +253,7 @@ jobs:
       - name: install stable toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ env.RUST_STABLE_VER }}
+          toolchain: stable
           targets: ${{ matrix.platform.target }}
 
       - name: restore cache
@@ -318,7 +312,7 @@ jobs:
       - name: install stable toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ env.RUST_STABLE_VER }}
+          toolchain: stable
           targets: ${{ matrix.platform.target }}
 
       - name: restore cache
@@ -375,7 +369,7 @@ jobs:
       - name: install stable toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ env.RUST_STABLE_VER }}
+          toolchain: stable
           targets: wasm32-unknown-unknown,wasm32-wasip1
 
       - name: restore cache
@@ -412,66 +406,6 @@ jobs:
             --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128,+relaxed-simd"' \
             --config 'target.wasm32-wasip1.rustdocflags = "-Ctarget-feature=+simd128,+relaxed-simd"' \
             --config 'target.wasm32-wasip1.runner = "wasmtime"'
-
-  check-msrv:
-    name: cargo check (msrv)
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: install msrv toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: ${{ env.RUST_MIN_VER }}
-          targets: x86_64-unknown-none,aarch64-unknown-none
-
-      - name: install cargo-hack
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-hack
-
-      - name: restore cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          save-if: ${{ github.event_name != 'merge_group' }}
-
-      - name: cargo check (no_std)
-        run: cargo hack check ${{ env.RUST_MIN_VER_PKGS }} --locked --optional-deps --each-feature --ignore-unknown-features --features libm --exclude-features ${{ env.FEATURES_DEPENDING_ON_STD }} --target x86_64-unknown-none
-
-      - name: cargo check (no_std aarch64)
-        run: cargo hack check ${{ env.RUST_MIN_VER_PKGS }} --locked --optional-deps --each-feature --ignore-unknown-features --features libm --exclude-features ${{ env.FEATURES_DEPENDING_ON_STD }} --target aarch64-unknown-none
-
-      - name: cargo check
-        run: cargo hack check ${{ env.RUST_MIN_VER_PKGS }} --locked --optional-deps --each-feature --ignore-unknown-features --features std
-
-
-  check-msrv-wasm:
-    name: cargo check (msrv) (wasm32)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: install msrv toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: ${{ env.RUST_MIN_VER }}
-          targets: wasm32-unknown-unknown
-
-      - name: install cargo-hack
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-hack
-
-      - name: restore cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          save-if: ${{ github.event_name != 'merge_group' }}
-
-      - name: cargo check
-        run: cargo hack check ${{ env.RUST_MIN_VER_PKGS }} --locked --target wasm32-unknown-unknown --optional-deps --each-feature --ignore-unknown-features --features std
 
   doc:
     name: cargo doc
