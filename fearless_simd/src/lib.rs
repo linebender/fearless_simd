@@ -237,10 +237,13 @@ mod generated;
 mod kernel_macros;
 mod macros;
 mod support;
+mod swizzle;
 mod traits;
 mod transmute;
 
 pub use generated::*;
+#[doc(hidden)]
+pub use swizzle::{PreparedSwizzle as __PreparedSwizzle, swizzle as __simd_swizzle};
 pub use traits::*;
 
 /// This prelude module re-exports every SIMD trait defined in this library. It's useful for accessing trait methods.

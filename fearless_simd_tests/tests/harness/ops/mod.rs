@@ -83,6 +83,7 @@ mod simd_ge;
 mod simd_gt;
 mod simd_le;
 mod simd_lt;
+mod simd_swizzle;
 mod slide;
 mod slide_within_blocks;
 mod splat;
