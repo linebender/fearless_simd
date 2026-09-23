@@ -6,9 +6,9 @@ use core::marker::PhantomData;
 use crate::{Simd, SimdBase};
 
 /// Rearrange a numeric SIMD vector's lanes using compile-time indices.
-/// 
+///
 /// For swizzles with indices not known at compile time see
-/// [swizzle_dyn](crate::SimdBase::swizzle_dyn).
+/// [`swizzle_dyn`](crate::SimdBase::swizzle_dyn).
 ///
 /// The result has the same type and width as the input. The indices must be a
 /// constant expression producing an array or slice of `usize`, with exactly one
