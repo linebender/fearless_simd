@@ -68,6 +68,7 @@ macro_rules! simd_swizzle {
 }
 
 /// Implementation detail of [`crate::simd_swizzle!`].
+/// Not part of the stable public API and may be changed at will.
 #[derive(Debug)]
 pub struct PreparedSwizzle<S: Simd, V: SimdBase<S>> {
     bytes: [u8; 64],
@@ -116,6 +117,7 @@ impl<S: Simd, V: SimdBase<S>> PreparedSwizzle<S, V> {
 }
 
 /// Apply a byte mask prepared by [`crate::simd_swizzle!`].
+/// Not part of the stable public API and may be changed at will.
 #[inline(always)]
 pub fn swizzle<S: Simd, V: SimdBase<S>>(value: V, indices: PreparedSwizzle<S, V>) -> V {
     let byte_len = V::LEN * size_of::<V::Element>();
