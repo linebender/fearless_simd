@@ -6,9 +6,10 @@ use quote::{format_ident, quote};
 
 use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
-    count_zeros_method, fallback_method, generic_block_combine, generic_block_split,
-    generic_mask_set, generic_op_name, integer_lane_mask_rotate, integer_lane_mask_splat_arg,
-    recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
+    concat_swizzle_dyn_precise_body, count_zeros_method, fallback_method, generic_block_combine,
+    generic_block_split, generic_mask_set, generic_op_name, integer_lane_mask_rotate,
+    integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body, reverse_method,
+    reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{
@@ -1070,7 +1071,7 @@ impl Level for WasmSimd128 {
                         }
                     }
                 }
-                256 => {
+                256 | 512 => {
                     let body = recursive_swizzle_dyn_precise_body(vec_ty, &quote! { self });
 
                     quote! {
@@ -1080,11 +1081,7 @@ impl Level for WasmSimd128 {
                         }
                     }
                 }
-                // We don't use the recursive decomposition for the 512-bit case
-                // because register spills get way too bad.
-                // We can only hope that the compiler will recognize the shuffle operation
-                // and express it in terms of 256-bit or 512-bit vectors.
-                _ => crate::mk_fallback::Fallback.make_method(op, vec_ty),
+                _ => unreachable!(),
             },
             OpSig::ConcatSwizzleDyn => {
                 let precise = generic_op_name("concat_swizzle_dyn_precise", vec_ty);
@@ -1151,9 +1148,17 @@ impl Level for WasmSimd128 {
                         }
                     }
                 }
-                // Register spills make a decomposed 512-bit implementation less attractive
-                // than leaving instruction selection to the scalar fallback.
-                _ => crate::mk_fallback::Fallback.make_method(op, vec_ty),
+                512 => {
+                    let body = concat_swizzle_dyn_precise_body(vec_ty, &quote! { self });
+
+                    quote! {
+                        #method_sig {
+                            #body
+                            Bytes::from_bytes(result_bytes)
+                        }
+                    }
+                }
+                _ => unreachable!(),
             },
             OpSig::Cvt {
                 target_ty,
