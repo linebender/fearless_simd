@@ -4498,7 +4498,7 @@ impl X86 {
         let bytes = bytes_ty.rust();
         let wrapper = bytes_ty.aligned_wrapper();
 
-        if *self == Self::Sse2 || (*self == Self::Sse4_2 && vec_ty.n_bits() == 512) {
+        if *self == Self::Sse2 {
             return fallback_method(op, vec_ty);
         }
 
@@ -4514,7 +4514,7 @@ impl X86 {
                     let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
                     let result_bytes = #bytes { val: #wrapper(result), simd: #token };
                 },
-                (Self::Sse4_2, 256) | (Self::Avx2, 512) => {
+                (Self::Sse4_2, 256 | 512) | (Self::Avx2, 512) => {
                     recursive_swizzle_dyn_precise_body(vec_ty, token)
                 }
                 (Self::Avx2, 256) => quote! {

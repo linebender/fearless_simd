@@ -113,6 +113,23 @@ fn swizzle_dyn_precise_generic_indices<S: Simd>(simd: S) {
 
 #[simd_test]
 #[ignore = "this test is slow"]
+fn swizzle_dyn_precise_u8x64_all_indices_in_every_lane<S: Simd>(simd: S) {
+    let bytes: [u8; 64] = core::array::from_fn(|i| u8::try_from(i + 1).unwrap());
+
+    for start in 0..=255u8 {
+        let indices = core::array::from_fn(|i| start.wrapping_add(u8::try_from(i).unwrap()));
+        let expected = expected_swizzle_precise(bytes, indices);
+
+        let value = u8x64::simd_from(simd, bytes);
+        let index_vec = u8x64::simd_from(simd, indices);
+        let result = value.swizzle_dyn_precise(index_vec);
+
+        assert_eq!(*result, expected, "starting index {start}");
+    }
+}
+
+#[simd_test]
+#[ignore = "this test is slow"]
 // run with: cargo test --release swizzle_dyn_precise_random_u8_all_widths -- --ignored
 fn swizzle_dyn_precise_random_u8_all_widths<S: Simd>(simd: S) {
     let mut rng = fastrand::Rng::with_seed(0x5eed_5eed_cafe_f00d);
