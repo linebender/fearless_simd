@@ -4575,7 +4575,7 @@ impl X86 {
         let bytes = bytes_ty.rust();
         let wrapper = bytes_ty.aligned_wrapper();
 
-        if *self == Self::Sse2 || (*self == Self::Sse4_2 && vec_ty.n_bits() == 512) {
+        if *self == Self::Sse2 {
             return fallback_method(op, vec_ty);
         }
 
@@ -4584,7 +4584,7 @@ impl X86 {
         // the lower-register-pressure precise formulation for relaxed 256-bit swizzles.
         if matches!(
             (*self, vec_ty.n_bits()),
-            (Self::Sse4_2, 128 | 256) | (Self::Avx2, 128 | 256 | 512)
+            (Self::Sse4_2 | Self::Avx2, 128 | 256 | 512)
         ) {
             let method_sig = op.simd_trait_method_sig(vec_ty);
             let precise = generic_op_name("concat_swizzle_dyn_precise", vec_ty);
@@ -4629,13 +4629,13 @@ impl X86 {
         let bytes = bytes_ty.rust();
         let wrapper = bytes_ty.aligned_wrapper();
 
-        if *self == Self::Sse2 || (*self == Self::Sse4_2 && vec_ty.n_bits() == 512) {
+        if *self == Self::Sse2 {
             return fallback_method(op, vec_ty);
         }
 
         if matches!(
             (*self, vec_ty.n_bits()),
-            (Self::Sse4_2, 128 | 256) | (Self::Avx2, 128)
+            (Self::Sse4_2, 128 | 256 | 512) | (Self::Avx2, 128)
         ) {
             let method_sig = op.simd_trait_method_sig(vec_ty);
             let body = concat_swizzle_dyn_precise_body(vec_ty, &quote! { self });
