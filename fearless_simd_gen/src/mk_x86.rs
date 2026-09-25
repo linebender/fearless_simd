@@ -4425,16 +4425,16 @@ impl X86 {
         let bytes = bytes_ty.rust();
         let wrapper = bytes_ty.aligned_wrapper();
 
-        if *self == Self::Sse2 || (*self == Self::Sse4_2 && vec_ty.n_bits() == 512) {
+        if *self == Self::Sse2 {
             return fallback_method(op, vec_ty);
         }
 
-        // Emulated double-native-width variants delegate to swizzle_dyn_precise
-        // because zeroes let us cheaply join the two halves, and on AVX2 zeroing is already very cheap
+        // Emulated wider variants delegate to swizzle_dyn_precise
+        // because zeroes let us cheaply join table parts, and on AVX2 zeroing is already very cheap
         // through a clever trick: https://shnatsel.github.io/improving-std-simd-swizzle-dyn/#optimizing-avx2
         if matches!(
             (*self, vec_ty.n_bits()),
-            (Self::Sse4_2, 256) | (Self::Avx2, 512)
+            (Self::Sse4_2, 256 | 512) | (Self::Avx2, 512)
         ) {
             let method_sig = op.simd_trait_method_sig(vec_ty);
             let precise = generic_op_name("swizzle_dyn_precise", vec_ty);

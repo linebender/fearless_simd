@@ -7451,14 +7451,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn swizzle_dyn_u8x64(self, a: u8x64<Self>, indices: u8x64<Self>) -> u8x64<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 64usize];
-        for lane in 0..64usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 64usize];
-        }
-        let result: u8x64<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
+        self.swizzle_dyn_precise_u8x64(a, indices)
     }
     #[inline(always)]
     fn swizzle_dyn_precise_u8x64(self, a: u8x64<Self>, indices: u8x64<Self>) -> u8x64<Self> {
