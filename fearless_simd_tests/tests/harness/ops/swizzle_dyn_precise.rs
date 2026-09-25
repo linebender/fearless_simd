@@ -112,7 +112,6 @@ fn swizzle_dyn_precise_generic_indices<S: Simd>(simd: S) {
 }
 
 #[simd_test]
-#[ignore = "this test is slow"]
 fn swizzle_dyn_precise_u8x64_all_indices_in_every_lane<S: Simd>(simd: S) {
     let bytes: [u8; 64] = core::array::from_fn(|i| u8::try_from(i + 1).unwrap());
 
