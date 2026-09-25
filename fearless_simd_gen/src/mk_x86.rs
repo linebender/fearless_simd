@@ -1086,6 +1086,66 @@ fn avx2_concat_swizzle_256_precise(
     }}
 }
 
+/// Select one 256-bit output half from a concatenated pair of 512-bit tables.
+///
+/// Zeroing shuffles select between the two input tables before blending between their halves.
+/// Sharing the selectors across both tables needs only three blends per output half, rather
+/// than the six needed when combining two independent 256-bit concat swizzles with OR.
+fn avx2_concat_swizzle_512_half_precise(
+    a: TokenStream,
+    b: TokenStream,
+    indices: TokenStream,
+) -> TokenStream {
+    quote! {{
+        let a = #a;
+        let b = #b;
+        let indices = #indices;
+
+        // Only indices 0..=63 leave the shuffle control's sign bit clear for a.
+        // XOR with 64 maps 64..=127 to 0..=63 for b while preserving the low six
+        // bits. Indices >= 128 zero both tables' shuffles, so OR combines them.
+        let table_bias = _mm256_set1_epi8(64);
+        let a_control = _mm256_adds_epu8(indices, table_bias);
+        let b_control = _mm256_adds_epu8(
+            _mm256_xor_si256(indices, table_bias),
+            table_bias,
+        );
+
+        // Move each byte's bit 5 or bit 4 into its sign bit for the blends.
+        // Bits crossing byte boundaries in these word shifts are ignored.
+        let select_high = _mm256_slli_epi16::<2>(indices);
+        let flip_high_lane = _mm256_set_m128i(
+            _mm_set1_epi8(i8::MIN),
+            _mm_setzero_si128(),
+        );
+        let select_remote = _mm256_xor_si256(
+            _mm256_slli_epi16::<3>(indices),
+            flip_high_lane,
+        );
+
+        let local_low = _mm256_or_si256(
+            _mm256_shuffle_epi8(a[0], a_control),
+            _mm256_shuffle_epi8(b[0], b_control),
+        );
+        let local_high = _mm256_or_si256(
+            _mm256_shuffle_epi8(a[1], a_control),
+            _mm256_shuffle_epi8(b[1], b_control),
+        );
+        let local = _mm256_blendv_epi8(local_low, local_high, select_high);
+
+        let remote_low = _mm256_or_si256(
+            _mm256_shuffle_epi8(_mm256_permute2x128_si256::<0x01>(a[0], a[0]), a_control),
+            _mm256_shuffle_epi8(_mm256_permute2x128_si256::<0x01>(b[0], b[0]), b_control),
+        );
+        let remote_high = _mm256_or_si256(
+            _mm256_shuffle_epi8(_mm256_permute2x128_si256::<0x01>(a[1], a[1]), a_control),
+            _mm256_shuffle_epi8(_mm256_permute2x128_si256::<0x01>(b[1], b[1]), b_control),
+        );
+        let remote = _mm256_blendv_epi8(remote_low, remote_high, select_high);
+        _mm256_blendv_epi8(local, remote, select_remote)
+    }}
+}
+
 fn avx512_index_vector(vec_ty: &VecType, indices: impl IntoIterator<Item = usize>) -> TokenStream {
     let indices: Vec<usize> = indices.into_iter().collect();
     let n_bits = vec_ty.n_bits();
@@ -4601,33 +4661,22 @@ impl X86 {
                     }
                 }
                 (Self::Avx2, 512) => {
-                    let low_from_a = avx2_concat_swizzle_256_precise(
-                        quote! { a_bytes[0] },
-                        quote! { a_bytes[1] },
+                    let result_low = avx2_concat_swizzle_512_half_precise(
+                        quote! { a_bytes },
+                        quote! { b_bytes },
                         quote! { indices_bytes[0] },
                     );
-                    let low_from_b = avx2_concat_swizzle_256_precise(
-                        quote! { b_bytes[0] },
-                        quote! { b_bytes[1] },
-                        quote! { _mm256_sub_epi8(indices_bytes[0], second_table_offset) },
-                    );
-                    let high_from_a = avx2_concat_swizzle_256_precise(
-                        quote! { a_bytes[0] },
-                        quote! { a_bytes[1] },
+                    let result_high = avx2_concat_swizzle_512_half_precise(
+                        quote! { a_bytes },
+                        quote! { b_bytes },
                         quote! { indices_bytes[1] },
-                    );
-                    let high_from_b = avx2_concat_swizzle_256_precise(
-                        quote! { b_bytes[0] },
-                        quote! { b_bytes[1] },
-                        quote! { _mm256_sub_epi8(indices_bytes[1], second_table_offset) },
                     );
                     quote! {
                         let a_bytes = Bytes::to_bytes(a).val.0;
                         let b_bytes = Bytes::to_bytes(b).val.0;
                         let indices_bytes = indices.val.0;
-                        let second_table_offset = _mm256_set1_epi8(64);
-                        let result_low = _mm256_or_si256(#low_from_a, #low_from_b);
-                        let result_high = _mm256_or_si256(#high_from_a, #high_from_b);
+                        let result_low = #result_low;
+                        let result_high = #result_high;
                         let result_bytes = #bytes {
                             val: #wrapper([result_low, result_high]),
                             simd: #token,

@@ -111,3 +111,42 @@ fn concat_swizzle_dyn_precise_f32x8_bytes<S: Simd>(simd: S) {
 
     assert_eq!(*result, expected);
 }
+
+#[ignore = "exhaustive test, takes a while"]
+#[simd_test]
+fn concat_swizzle_dyn_precise_u8x64_all_indices<S: Simd>(simd: S) {
+    let a_bytes = [
+        8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168,
+        176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 1, 9, 17, 25, 33, 41, 49, 57, 65, 73, 81,
+        89, 97, 105, 113, 121, 129, 137, 145, 153, 161, 169, 177, 185, 193, 201, 209, 217, 225,
+        233, 241, 249, 2,
+    ];
+    let b_bytes = [
+        10, 18, 26, 34, 42, 50, 58, 66, 74, 82, 90, 98, 106, 114, 122, 130, 138, 146, 154, 162,
+        170, 178, 186, 194, 202, 210, 218, 226, 234, 242, 250, 3, 11, 19, 27, 35, 43, 51, 59, 67,
+        75, 83, 91, 99, 107, 115, 123, 131, 139, 147, 155, 163, 171, 179, 187, 195, 203, 211, 219,
+        227, 235, 243, 251, 4,
+    ];
+    let a = u8x64::simd_from(simd, a_bytes);
+    let b = u8x64::simd_from(simd, b_bytes);
+
+    // Every output lane sees every byte index, with different neighboring indices.
+    for start in 0..=255_u8 {
+        let mut indices = [0; 64];
+        let mut expected = [0; 64];
+        for lane in 0..64 {
+            indices[lane] = start.wrapping_add((lane as u8).wrapping_mul(37));
+            let index = usize::from(indices[lane]);
+            expected[lane] = if index < 64 {
+                a_bytes[index]
+            } else if index < 128 {
+                b_bytes[index - 64]
+            } else {
+                0
+            };
+        }
+        let indices = u8x64::simd_from(simd, indices);
+
+        assert_eq!(*a.concat_swizzle_dyn_precise(b, indices), expected);
+    }
+}

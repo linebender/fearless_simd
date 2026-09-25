@@ -12594,103 +12594,96 @@ impl Simd for Avx2 {
                 let a_bytes = Bytes::to_bytes(a).val.0;
                 let b_bytes = Bytes::to_bytes(b).val.0;
                 let indices_bytes = indices.val.0;
-                let second_table_offset = _mm256_set1_epi8(64);
-                let result_low = _mm256_or_si256(
-                    {
-                        let a = a_bytes[0];
-                        let b = a_bytes[1];
-                        let indices = indices_bytes[0];
-                        let control = _mm256_adds_epu8(indices, _mm256_set1_epi8(0x40));
-                        let a_swapped = _mm256_permute2x128_si256::<0x01>(a, a);
-                        let b_swapped = _mm256_permute2x128_si256::<0x01>(b, b);
-                        let flip_high_lane =
-                            _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                        let select_remote =
-                            _mm256_xor_si256(_mm256_slli_epi16::<3>(control), flip_high_lane);
-                        let from_a = _mm256_blendv_epi8(
-                            _mm256_shuffle_epi8(a, control),
-                            _mm256_shuffle_epi8(a_swapped, control),
-                            select_remote,
-                        );
-                        let from_b = _mm256_blendv_epi8(
-                            _mm256_shuffle_epi8(b, control),
-                            _mm256_shuffle_epi8(b_swapped, control),
-                            select_remote,
-                        );
-                        _mm256_blendv_epi8(from_a, from_b, _mm256_slli_epi16::<2>(control))
-                    },
-                    {
-                        let a = b_bytes[0];
-                        let b = b_bytes[1];
-                        let indices = _mm256_sub_epi8(indices_bytes[0], second_table_offset);
-                        let control = _mm256_adds_epu8(indices, _mm256_set1_epi8(0x40));
-                        let a_swapped = _mm256_permute2x128_si256::<0x01>(a, a);
-                        let b_swapped = _mm256_permute2x128_si256::<0x01>(b, b);
-                        let flip_high_lane =
-                            _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                        let select_remote =
-                            _mm256_xor_si256(_mm256_slli_epi16::<3>(control), flip_high_lane);
-                        let from_a = _mm256_blendv_epi8(
-                            _mm256_shuffle_epi8(a, control),
-                            _mm256_shuffle_epi8(a_swapped, control),
-                            select_remote,
-                        );
-                        let from_b = _mm256_blendv_epi8(
-                            _mm256_shuffle_epi8(b, control),
-                            _mm256_shuffle_epi8(b_swapped, control),
-                            select_remote,
-                        );
-                        _mm256_blendv_epi8(from_a, from_b, _mm256_slli_epi16::<2>(control))
-                    },
-                );
-                let result_high = _mm256_or_si256(
-                    {
-                        let a = a_bytes[0];
-                        let b = a_bytes[1];
-                        let indices = indices_bytes[1];
-                        let control = _mm256_adds_epu8(indices, _mm256_set1_epi8(0x40));
-                        let a_swapped = _mm256_permute2x128_si256::<0x01>(a, a);
-                        let b_swapped = _mm256_permute2x128_si256::<0x01>(b, b);
-                        let flip_high_lane =
-                            _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                        let select_remote =
-                            _mm256_xor_si256(_mm256_slli_epi16::<3>(control), flip_high_lane);
-                        let from_a = _mm256_blendv_epi8(
-                            _mm256_shuffle_epi8(a, control),
-                            _mm256_shuffle_epi8(a_swapped, control),
-                            select_remote,
-                        );
-                        let from_b = _mm256_blendv_epi8(
-                            _mm256_shuffle_epi8(b, control),
-                            _mm256_shuffle_epi8(b_swapped, control),
-                            select_remote,
-                        );
-                        _mm256_blendv_epi8(from_a, from_b, _mm256_slli_epi16::<2>(control))
-                    },
-                    {
-                        let a = b_bytes[0];
-                        let b = b_bytes[1];
-                        let indices = _mm256_sub_epi8(indices_bytes[1], second_table_offset);
-                        let control = _mm256_adds_epu8(indices, _mm256_set1_epi8(0x40));
-                        let a_swapped = _mm256_permute2x128_si256::<0x01>(a, a);
-                        let b_swapped = _mm256_permute2x128_si256::<0x01>(b, b);
-                        let flip_high_lane =
-                            _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
-                        let select_remote =
-                            _mm256_xor_si256(_mm256_slli_epi16::<3>(control), flip_high_lane);
-                        let from_a = _mm256_blendv_epi8(
-                            _mm256_shuffle_epi8(a, control),
-                            _mm256_shuffle_epi8(a_swapped, control),
-                            select_remote,
-                        );
-                        let from_b = _mm256_blendv_epi8(
-                            _mm256_shuffle_epi8(b, control),
-                            _mm256_shuffle_epi8(b_swapped, control),
-                            select_remote,
-                        );
-                        _mm256_blendv_epi8(from_a, from_b, _mm256_slli_epi16::<2>(control))
-                    },
-                );
+                let result_low = {
+                    let a = a_bytes;
+                    let b = b_bytes;
+                    let indices = indices_bytes[0];
+                    let table_bias = _mm256_set1_epi8(64);
+                    let a_control = _mm256_adds_epu8(indices, table_bias);
+                    let b_control =
+                        _mm256_adds_epu8(_mm256_xor_si256(indices, table_bias), table_bias);
+                    let select_high = _mm256_slli_epi16::<2>(indices);
+                    let flip_high_lane =
+                        _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
+                    let select_remote =
+                        _mm256_xor_si256(_mm256_slli_epi16::<3>(indices), flip_high_lane);
+                    let local_low = _mm256_or_si256(
+                        _mm256_shuffle_epi8(a[0], a_control),
+                        _mm256_shuffle_epi8(b[0], b_control),
+                    );
+                    let local_high = _mm256_or_si256(
+                        _mm256_shuffle_epi8(a[1], a_control),
+                        _mm256_shuffle_epi8(b[1], b_control),
+                    );
+                    let local = _mm256_blendv_epi8(local_low, local_high, select_high);
+                    let remote_low = _mm256_or_si256(
+                        _mm256_shuffle_epi8(
+                            _mm256_permute2x128_si256::<0x01>(a[0], a[0]),
+                            a_control,
+                        ),
+                        _mm256_shuffle_epi8(
+                            _mm256_permute2x128_si256::<0x01>(b[0], b[0]),
+                            b_control,
+                        ),
+                    );
+                    let remote_high = _mm256_or_si256(
+                        _mm256_shuffle_epi8(
+                            _mm256_permute2x128_si256::<0x01>(a[1], a[1]),
+                            a_control,
+                        ),
+                        _mm256_shuffle_epi8(
+                            _mm256_permute2x128_si256::<0x01>(b[1], b[1]),
+                            b_control,
+                        ),
+                    );
+                    let remote = _mm256_blendv_epi8(remote_low, remote_high, select_high);
+                    _mm256_blendv_epi8(local, remote, select_remote)
+                };
+                let result_high = {
+                    let a = a_bytes;
+                    let b = b_bytes;
+                    let indices = indices_bytes[1];
+                    let table_bias = _mm256_set1_epi8(64);
+                    let a_control = _mm256_adds_epu8(indices, table_bias);
+                    let b_control =
+                        _mm256_adds_epu8(_mm256_xor_si256(indices, table_bias), table_bias);
+                    let select_high = _mm256_slli_epi16::<2>(indices);
+                    let flip_high_lane =
+                        _mm256_set_m128i(_mm_set1_epi8(i8::MIN), _mm_setzero_si128());
+                    let select_remote =
+                        _mm256_xor_si256(_mm256_slli_epi16::<3>(indices), flip_high_lane);
+                    let local_low = _mm256_or_si256(
+                        _mm256_shuffle_epi8(a[0], a_control),
+                        _mm256_shuffle_epi8(b[0], b_control),
+                    );
+                    let local_high = _mm256_or_si256(
+                        _mm256_shuffle_epi8(a[1], a_control),
+                        _mm256_shuffle_epi8(b[1], b_control),
+                    );
+                    let local = _mm256_blendv_epi8(local_low, local_high, select_high);
+                    let remote_low = _mm256_or_si256(
+                        _mm256_shuffle_epi8(
+                            _mm256_permute2x128_si256::<0x01>(a[0], a[0]),
+                            a_control,
+                        ),
+                        _mm256_shuffle_epi8(
+                            _mm256_permute2x128_si256::<0x01>(b[0], b[0]),
+                            b_control,
+                        ),
+                    );
+                    let remote_high = _mm256_or_si256(
+                        _mm256_shuffle_epi8(
+                            _mm256_permute2x128_si256::<0x01>(a[1], a[1]),
+                            a_control,
+                        ),
+                        _mm256_shuffle_epi8(
+                            _mm256_permute2x128_si256::<0x01>(b[1], b[1]),
+                            b_control,
+                        ),
+                    );
+                    let remote = _mm256_blendv_epi8(remote_low, remote_high, select_high);
+                    _mm256_blendv_epi8(local, remote, select_remote)
+                };
                 let result_bytes = u8x64 {
                     val: crate::support::Aligned512([result_low, result_high]),
                     simd: token,
