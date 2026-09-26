@@ -15,129 +15,14 @@ use quote::{format_ident, quote};
 #[derive(Clone, Copy)]
 pub(crate) struct Fallback;
 
-pub(crate) fn scalar_mul_add_precise_f32_body() -> TokenStream {
-    quote! {
-        // Every finite f32 product is exactly representable as f64. Recover the exact error
-        // of the widened addition with TwoSum, then turn the rounded f64 sum into a
-        // round-to-odd value before narrowing. This is the p=24, k=29 specialization of
-        // Boldo and Melquiond's Theorem 3, which proves that this final narrowing is
-        // equivalent to rounding the exact product-plus-add once to f32:
-        // https://guillaume.melquiond.fr/doc/08-tc.pdf
-        // The theorem's exponent-range condition also holds: every finite exact result is
-        // a multiple of 2^-298 with magnitude below 2^256, well inside binary64's normal range.
-        let product = (a as f64) * (b as f64);
-        let c = c as f64;
-        let mut sum = product + c;
-
-        if sum.is_finite() {
-            // Knuth's unconditional TwoSum; each arithmetic operation must round to binary64.
-            let virtual_sum = sum - product;
-            let residual =
-                (product - (sum - virtual_sum)) + (c - virtual_sum);
-            let sum_bits = sum.to_bits();
-
-            if residual != 0.0 && sum_bits & 1 == 0 {
-                let corrected_bits = if sum.is_sign_negative()
-                    == residual.is_sign_negative()
-                {
-                    sum_bits.wrapping_add(1)
-                } else {
-                    sum_bits.wrapping_sub(1)
-                };
-                sum = f64::from_bits(corrected_bits);
-            }
-        }
-
-        sum as f32
-    }
-}
-
-pub(crate) fn scalar_mul_add_precise_f32_helper() -> TokenStream {
-    let body = scalar_mul_add_precise_f32_body();
-    quote! {
-        #[inline(always)]
-        fn scalar_mul_add_precise_f32(a: f32, b: f32, c: f32) -> f32 {
-            #body
-        }
-    }
-}
-
 pub(crate) fn float_ext_prelude() -> TokenStream {
     quote! {
         #[cfg(all(feature = "libm", not(feature = "std")))]
-        #[allow(dead_code, reason = "Generated backends use different subsets of these helpers")]
-        trait FloatExt {
-            fn floor(self) -> Self;
-            fn ceil(self) -> Self;
-            fn round_ties_even(self) -> Self;
-            fn fract(self) -> Self;
-            fn sqrt(self) -> Self;
-            fn trunc(self) -> Self;
-            fn mul_add(self, a: Self, b: Self) -> Self;
-        }
-        #[cfg(all(feature = "libm", not(feature = "std")))]
-        impl FloatExt for f32 {
-            #[inline(always)]
-            fn floor(self) -> f32 {
-                libm::floorf(self)
-            }
-            #[inline(always)]
-            fn ceil(self) -> f32 {
-                libm::ceilf(self)
-            }
-            #[inline(always)]
-            fn round_ties_even(self) -> f32 {
-                libm::rintf(self)
-            }
-            #[inline(always)]
-            fn sqrt(self) -> f32 {
-                libm::sqrtf(self)
-            }
-            #[inline(always)]
-            fn fract(self) -> f32 {
-                self - self.trunc()
-            }
-            #[inline(always)]
-            fn trunc(self) -> f32 {
-                libm::truncf(self)
-            }
-            #[inline(always)]
-            fn mul_add(self, a: f32, b: f32) -> f32 {
-                libm::fmaf(self, a, b)
-            }
-        }
-
-        #[cfg(all(feature = "libm", not(feature = "std")))]
-        impl FloatExt for f64 {
-            #[inline(always)]
-            fn floor(self) -> f64 {
-                libm::floor(self)
-            }
-            #[inline(always)]
-            fn ceil(self) -> f64 {
-                libm::ceil(self)
-            }
-            #[inline(always)]
-            fn round_ties_even(self) -> f64 {
-                libm::rint(self)
-            }
-            #[inline(always)]
-            fn sqrt(self) -> f64 {
-                libm::sqrt(self)
-            }
-            #[inline(always)]
-            fn fract(self) -> f64 {
-                self - self.trunc()
-            }
-            #[inline(always)]
-            fn trunc(self) -> f64 {
-                libm::trunc(self)
-            }
-            #[inline(always)]
-            fn mul_add(self, a: f64, b: f64) -> f64 {
-                libm::fma(self, a, b)
-            }
-        }
+        #[allow(
+            unused_imports,
+            reason = "Generated backends use different subsets of these helpers"
+        )]
+        use crate::math::FloatExt as _;
     }
 }
 
@@ -202,12 +87,10 @@ impl Level for Fallback {
 
     fn make_module_prelude(&self) -> TokenStream {
         let float_ext = float_ext_prelude();
-        let scalar_mul_add_precise_f32 = scalar_mul_add_precise_f32_helper();
 
         quote! {
             use core::ops::*;
 
-            #scalar_mul_add_precise_f32
             #float_ext
         }
     }
@@ -423,23 +306,15 @@ impl Level for Fallback {
                             self.#mul_add_precise(a, b, -c)
                         }
                     }
-                } else if method == "mul_add_precise"
-                    && vec_ty.scalar == ScalarType::Float
-                    && vec_ty.scalar_bits == 32
-                {
-                    let items = make_list(
-                        (0..vec_ty.len)
-                            .map(|idx| {
-                                let a = lane(quote! { a }, vec_ty, idx);
-                                let b = lane(quote! { b }, vec_ty, idx);
-                                let c = lane(quote! { c }, vec_ty, idx);
-                                quote! { scalar_mul_add_precise_f32(#a, #b, #c) }
-                            })
-                            .collect::<Vec<_>>(),
-                    );
+                } else if method == "mul_add_precise" && vec_ty.scalar == ScalarType::Float {
+                    let math_op = match vec_ty.scalar_bits {
+                        32 => quote!(crate::math::mul_add_precise_f32x4),
+                        64 => quote!(crate::math::mul_add_precise_f64x2),
+                        _ => unreachable!("only f32 and f64 are supported"),
+                    };
                     quote! {
                         #method_sig {
-                            #items.simd_into(self)
+                            #math_op(self, a, b, c)
                         }
                     }
                 } else {
