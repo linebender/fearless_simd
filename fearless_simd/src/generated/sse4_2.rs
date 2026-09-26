@@ -1976,6 +1976,187 @@ impl Simd for Sse4_2 {
         kernel(self, a, b, c)
     }
     #[inline(always)]
+    fn compress_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                values: u8x16<Sse4_2>,
+                mask: mask8x16<Sse4_2>,
+            ) -> u8x16<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x16(mask) as u16;
+                let low_mask = (usize::from(mask_bits)) & 0xff;
+                let high_mask = (usize::from(mask_bits)) >> 8;
+                let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
+                let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let low_count = low_mask.count_ones() as usize;
+                let compacted = _mm_shuffle_epi8(values.into(), control);
+                let splice = crate::support::COMPACT_8_SPLICE_CONTROLS[low_count];
+                let splice = _mm_set_epi64x((splice >> 64) as i64, splice as i64);
+                let compressed = _mm_shuffle_epi8(compacted, splice);
+                compressed.simd_into(token)
+            }
+        );
+        kernel(self, values, mask)
+    }
+    #[inline(always)]
+    fn compress_merge_u8x16(
+        self,
+        values: u8x16<Self>,
+        mask: mask8x16<Self>,
+        merge: u8x16<Self>,
+    ) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                values: u8x16<Sse4_2>,
+                mask: mask8x16<Sse4_2>,
+                merge: u8x16<Sse4_2>,
+            ) -> u8x16<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x16(mask) as u16;
+                let low_mask = (usize::from(mask_bits)) & 0xff;
+                let high_mask = (usize::from(mask_bits)) >> 8;
+                let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
+                let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let low_count = low_mask.count_ones() as usize;
+                let compacted = _mm_shuffle_epi8(values.into(), control);
+                let splice = crate::support::COMPACT_8_SPLICE_CONTROLS[low_count];
+                let splice = _mm_set_epi64x((splice >> 64) as i64, splice as i64);
+                let compressed = _mm_shuffle_epi8(compacted, splice);
+                let count = mask_bits.count_ones() as usize;
+                let prefix = unsafe {
+                    _mm_load_si128(
+                        core::ptr::from_ref(&crate::support::COMPACT_PREFIX_MASKS[count])
+                            .cast::<__m128i>(),
+                    )
+                };
+                _mm_blendv_epi8(merge.into(), compressed, prefix).simd_into(token)
+            }
+        );
+        kernel(self, values, mask, merge)
+    }
+    #[inline(always)]
+    fn expand_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                values: u8x16<Sse4_2>,
+                mask: mask8x16<Sse4_2>,
+            ) -> u8x16<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x16(mask) as u16;
+                let low_mask = (usize::from(mask_bits)) & 0xff;
+                let high_mask = (usize::from(mask_bits)) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let expanded = _mm_shuffle_epi8(values.into(), control);
+                expanded.simd_into(token)
+            }
+        );
+        kernel(self, values, mask)
+    }
+    #[inline(always)]
+    fn expand_merge_u8x16(
+        self,
+        values: u8x16<Self>,
+        mask: mask8x16<Self>,
+        merge: u8x16<Self>,
+    ) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                values: u8x16<Sse4_2>,
+                mask: mask8x16<Sse4_2>,
+                merge: u8x16<Sse4_2>,
+            ) -> u8x16<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x16(mask) as u16;
+                let low_mask = (usize::from(mask_bits)) & 0xff;
+                let high_mask = (usize::from(mask_bits)) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let expanded = _mm_shuffle_epi8(values.into(), control);
+                _mm_blendv_epi8(merge.into(), expanded, mask.into()).simd_into(token)
+            }
+        );
+        kernel(self, values, mask, merge)
+    }
+    #[inline(always)]
+    fn load_expand_u8x16(self, source: &[u8; 16], mask: mask8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, source: &[u8; 16], mask: mask8x16<Sse4_2>) -> u8x16<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x16(mask) as u16;
+                let low_mask = (usize::from(mask_bits)) & 0xff;
+                let high_mask = (usize::from(mask_bits)) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let expanded = _mm_shuffle_epi8(
+                    unsafe { _mm_loadu_si128(source.as_ptr().cast::<__m128i>()) },
+                    control,
+                );
+                expanded.simd_into(token)
+            }
+        );
+        kernel(self, source, mask)
+    }
+    #[inline(always)]
+    fn load_expand_merge_u8x16(
+        self,
+        source: &[u8; 16],
+        mask: mask8x16<Self>,
+        merge: u8x16<Self>,
+    ) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                source: &[u8; 16],
+                mask: mask8x16<Sse4_2>,
+                merge: u8x16<Sse4_2>,
+            ) -> u8x16<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x16(mask) as u16;
+                let low_mask = (usize::from(mask_bits)) & 0xff;
+                let high_mask = (usize::from(mask_bits)) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let expanded = _mm_shuffle_epi8(
+                    unsafe { _mm_loadu_si128(source.as_ptr().cast::<__m128i>()) },
+                    control,
+                );
+                _mm_blendv_epi8(merge.into(), expanded, mask.into()).simd_into(token)
+            }
+        );
+        kernel(self, source, mask, merge)
+    }
+    #[inline(always)]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self> {
         u8x32 {
             val: crate::support::Aligned256([a.val.0, b.val.0]),
@@ -6923,6 +7104,371 @@ impl Simd for Sse4_2 {
         Bytes::from_bytes(result_bytes)
     }
     #[inline(always)]
+    fn compress_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                values: u8x32<Sse4_2>,
+                mask: mask8x32<Sse4_2>,
+            ) -> u8x32<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x32(mask);
+                let mut output = [0u8; 32];
+                let mut output_lane = 0;
+                let block_bits = (mask_bits & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
+                let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let low_count = low_mask.count_ones() as usize;
+                let compacted = _mm_shuffle_epi8(values.val.0[0], control);
+                let splice = crate::support::COMPACT_8_SPLICE_CONTROLS[low_count];
+                let splice = _mm_set_epi64x((splice >> 64) as i64, splice as i64);
+                let compressed = _mm_shuffle_epi8(compacted, splice);
+                unsafe {
+                    _mm_storeu_si128(
+                        output.as_mut_ptr().add(output_lane).cast::<__m128i>(),
+                        compressed,
+                    );
+                }
+                output_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 16 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
+                let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let low_count = low_mask.count_ones() as usize;
+                let compacted = _mm_shuffle_epi8(values.val.0[1], control);
+                let splice = crate::support::COMPACT_8_SPLICE_CONTROLS[low_count];
+                let splice = _mm_set_epi64x((splice >> 64) as i64, splice as i64);
+                let compressed = _mm_shuffle_epi8(compacted, splice);
+                unsafe {
+                    _mm_storeu_si128(
+                        output.as_mut_ptr().add(output_lane).cast::<__m128i>(),
+                        compressed,
+                    );
+                }
+                u8x32::simd_from(token, output)
+            }
+        );
+        kernel(self, values, mask)
+    }
+    #[inline(always)]
+    fn compress_merge_u8x32(
+        self,
+        values: u8x32<Self>,
+        mask: mask8x32<Self>,
+        merge: u8x32<Self>,
+    ) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                values: u8x32<Sse4_2>,
+                mask: mask8x32<Sse4_2>,
+                merge: u8x32<Sse4_2>,
+            ) -> u8x32<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x32(mask);
+                let mut output = [0u8; 32];
+                let mut output_lane = 0;
+                let block_bits = (mask_bits & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
+                let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let low_count = low_mask.count_ones() as usize;
+                let compacted = _mm_shuffle_epi8(values.val.0[0], control);
+                let splice = crate::support::COMPACT_8_SPLICE_CONTROLS[low_count];
+                let splice = _mm_set_epi64x((splice >> 64) as i64, splice as i64);
+                let compressed = _mm_shuffle_epi8(compacted, splice);
+                unsafe {
+                    _mm_storeu_si128(
+                        output.as_mut_ptr().add(output_lane).cast::<__m128i>(),
+                        compressed,
+                    );
+                }
+                output_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 16 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
+                let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let low_count = low_mask.count_ones() as usize;
+                let compacted = _mm_shuffle_epi8(values.val.0[1], control);
+                let splice = crate::support::COMPACT_8_SPLICE_CONTROLS[low_count];
+                let splice = _mm_set_epi64x((splice >> 64) as i64, splice as i64);
+                let compressed = _mm_shuffle_epi8(compacted, splice);
+                unsafe {
+                    _mm_storeu_si128(
+                        output.as_mut_ptr().add(output_lane).cast::<__m128i>(),
+                        compressed,
+                    );
+                }
+                output_lane += block_bits.count_ones() as usize;
+                let remaining = output_lane.saturating_sub(0).min(16);
+                let prefix = unsafe {
+                    _mm_load_si128(
+                        core::ptr::from_ref(&crate::support::COMPACT_PREFIX_MASKS[remaining])
+                            .cast::<__m128i>(),
+                    )
+                };
+                let compressed =
+                    unsafe { _mm_loadu_si128(output.as_ptr().add(0).cast::<__m128i>()) };
+                let blended = _mm_blendv_epi8(merge.val.0[0], compressed, prefix);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(0).cast::<__m128i>(), blended);
+                }
+                let remaining = output_lane.saturating_sub(16).min(16);
+                let prefix = unsafe {
+                    _mm_load_si128(
+                        core::ptr::from_ref(&crate::support::COMPACT_PREFIX_MASKS[remaining])
+                            .cast::<__m128i>(),
+                    )
+                };
+                let compressed =
+                    unsafe { _mm_loadu_si128(output.as_ptr().add(16).cast::<__m128i>()) };
+                let blended = _mm_blendv_epi8(merge.val.0[1], compressed, prefix);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(16).cast::<__m128i>(), blended);
+                }
+                u8x32::simd_from(token, output)
+            }
+        );
+        kernel(self, values, mask, merge)
+    }
+    #[inline(always)]
+    fn expand_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                values: u8x32<Sse4_2>,
+                mask: mask8x32<Sse4_2>,
+            ) -> u8x32<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x32(mask);
+                let input = <[u8; 32]>::from(values);
+                let mut output = [0u8; 32];
+                let mut input_lane = 0;
+                let block_bits = (mask_bits & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = expanded;
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(0).cast::<__m128i>(), result);
+                }
+                input_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 16 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = expanded;
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(16).cast::<__m128i>(), result);
+                }
+                u8x32::simd_from(token, output)
+            }
+        );
+        kernel(self, values, mask)
+    }
+    #[inline(always)]
+    fn expand_merge_u8x32(
+        self,
+        values: u8x32<Self>,
+        mask: mask8x32<Self>,
+        merge: u8x32<Self>,
+    ) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                values: u8x32<Sse4_2>,
+                mask: mask8x32<Sse4_2>,
+                merge: u8x32<Sse4_2>,
+            ) -> u8x32<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x32(mask);
+                let input = <[u8; 32]>::from(values);
+                let mut output = [0u8; 32];
+                let mut input_lane = 0;
+                let block_bits = (mask_bits & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = _mm_blendv_epi8(merge.val.0[0], expanded, mask.val.0[0]);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(0).cast::<__m128i>(), result);
+                }
+                input_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 16 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = _mm_blendv_epi8(merge.val.0[1], expanded, mask.val.0[1]);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(16).cast::<__m128i>(), result);
+                }
+                u8x32::simd_from(token, output)
+            }
+        );
+        kernel(self, values, mask, merge)
+    }
+    #[inline(always)]
+    fn load_expand_u8x32(self, source: &[u8; 32], mask: mask8x32<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, source: &[u8; 32], mask: mask8x32<Sse4_2>) -> u8x32<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x32(mask);
+                let input = *source;
+                let mut output = [0u8; 32];
+                let mut input_lane = 0;
+                let block_bits = (mask_bits & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = expanded;
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(0).cast::<__m128i>(), result);
+                }
+                input_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 16 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = expanded;
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(16).cast::<__m128i>(), result);
+                }
+                u8x32::simd_from(token, output)
+            }
+        );
+        kernel(self, source, mask)
+    }
+    #[inline(always)]
+    fn load_expand_merge_u8x32(
+        self,
+        source: &[u8; 32],
+        mask: mask8x32<Self>,
+        merge: u8x32<Self>,
+    ) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                source: &[u8; 32],
+                mask: mask8x32<Sse4_2>,
+                merge: u8x32<Sse4_2>,
+            ) -> u8x32<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x32(mask);
+                let input = *source;
+                let mut output = [0u8; 32];
+                let mut input_lane = 0;
+                let block_bits = (mask_bits & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = _mm_blendv_epi8(merge.val.0[0], expanded, mask.val.0[0]);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(0).cast::<__m128i>(), result);
+                }
+                input_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 16 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = _mm_blendv_epi8(merge.val.0[1], expanded, mask.val.0[1]);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(16).cast::<__m128i>(), result);
+                }
+                u8x32::simd_from(token, output)
+            }
+        );
+        kernel(self, source, mask, merge)
+    }
+    #[inline(always)]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self> {
         u8x64 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -7591,6 +8137,621 @@ impl Simd for Sse4_2 {
         }
         let result: u8x64<Self> = output.simd_into(self);
         Bytes::from_bytes(result)
+    }
+    #[inline(always)]
+    fn compress_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                values: u8x64<Sse4_2>,
+                mask: mask8x64<Sse4_2>,
+            ) -> u8x64<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x64(mask);
+                let mut output = [0u8; 64];
+                let mut output_lane = 0;
+                let block_bits = (mask_bits & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
+                let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let low_count = low_mask.count_ones() as usize;
+                let compacted = _mm_shuffle_epi8(values.val.0[0], control);
+                let splice = crate::support::COMPACT_8_SPLICE_CONTROLS[low_count];
+                let splice = _mm_set_epi64x((splice >> 64) as i64, splice as i64);
+                let compressed = _mm_shuffle_epi8(compacted, splice);
+                unsafe {
+                    _mm_storeu_si128(
+                        output.as_mut_ptr().add(output_lane).cast::<__m128i>(),
+                        compressed,
+                    );
+                }
+                output_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 16 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
+                let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let low_count = low_mask.count_ones() as usize;
+                let compacted = _mm_shuffle_epi8(values.val.0[1], control);
+                let splice = crate::support::COMPACT_8_SPLICE_CONTROLS[low_count];
+                let splice = _mm_set_epi64x((splice >> 64) as i64, splice as i64);
+                let compressed = _mm_shuffle_epi8(compacted, splice);
+                unsafe {
+                    _mm_storeu_si128(
+                        output.as_mut_ptr().add(output_lane).cast::<__m128i>(),
+                        compressed,
+                    );
+                }
+                output_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 32 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
+                let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let low_count = low_mask.count_ones() as usize;
+                let compacted = _mm_shuffle_epi8(values.val.0[2], control);
+                let splice = crate::support::COMPACT_8_SPLICE_CONTROLS[low_count];
+                let splice = _mm_set_epi64x((splice >> 64) as i64, splice as i64);
+                let compressed = _mm_shuffle_epi8(compacted, splice);
+                unsafe {
+                    _mm_storeu_si128(
+                        output.as_mut_ptr().add(output_lane).cast::<__m128i>(),
+                        compressed,
+                    );
+                }
+                output_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 48 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
+                let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let low_count = low_mask.count_ones() as usize;
+                let compacted = _mm_shuffle_epi8(values.val.0[3], control);
+                let splice = crate::support::COMPACT_8_SPLICE_CONTROLS[low_count];
+                let splice = _mm_set_epi64x((splice >> 64) as i64, splice as i64);
+                let compressed = _mm_shuffle_epi8(compacted, splice);
+                unsafe {
+                    _mm_storeu_si128(
+                        output.as_mut_ptr().add(output_lane).cast::<__m128i>(),
+                        compressed,
+                    );
+                }
+                u8x64::simd_from(token, output)
+            }
+        );
+        kernel(self, values, mask)
+    }
+    #[inline(always)]
+    fn compress_merge_u8x64(
+        self,
+        values: u8x64<Self>,
+        mask: mask8x64<Self>,
+        merge: u8x64<Self>,
+    ) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                values: u8x64<Sse4_2>,
+                mask: mask8x64<Sse4_2>,
+                merge: u8x64<Sse4_2>,
+            ) -> u8x64<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x64(mask);
+                let mut output = [0u8; 64];
+                let mut output_lane = 0;
+                let block_bits = (mask_bits & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
+                let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let low_count = low_mask.count_ones() as usize;
+                let compacted = _mm_shuffle_epi8(values.val.0[0], control);
+                let splice = crate::support::COMPACT_8_SPLICE_CONTROLS[low_count];
+                let splice = _mm_set_epi64x((splice >> 64) as i64, splice as i64);
+                let compressed = _mm_shuffle_epi8(compacted, splice);
+                unsafe {
+                    _mm_storeu_si128(
+                        output.as_mut_ptr().add(output_lane).cast::<__m128i>(),
+                        compressed,
+                    );
+                }
+                output_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 16 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
+                let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let low_count = low_mask.count_ones() as usize;
+                let compacted = _mm_shuffle_epi8(values.val.0[1], control);
+                let splice = crate::support::COMPACT_8_SPLICE_CONTROLS[low_count];
+                let splice = _mm_set_epi64x((splice >> 64) as i64, splice as i64);
+                let compressed = _mm_shuffle_epi8(compacted, splice);
+                unsafe {
+                    _mm_storeu_si128(
+                        output.as_mut_ptr().add(output_lane).cast::<__m128i>(),
+                        compressed,
+                    );
+                }
+                output_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 32 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
+                let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let low_count = low_mask.count_ones() as usize;
+                let compacted = _mm_shuffle_epi8(values.val.0[2], control);
+                let splice = crate::support::COMPACT_8_SPLICE_CONTROLS[low_count];
+                let splice = _mm_set_epi64x((splice >> 64) as i64, splice as i64);
+                let compressed = _mm_shuffle_epi8(compacted, splice);
+                unsafe {
+                    _mm_storeu_si128(
+                        output.as_mut_ptr().add(output_lane).cast::<__m128i>(),
+                        compressed,
+                    );
+                }
+                output_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 48 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
+                let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let low_count = low_mask.count_ones() as usize;
+                let compacted = _mm_shuffle_epi8(values.val.0[3], control);
+                let splice = crate::support::COMPACT_8_SPLICE_CONTROLS[low_count];
+                let splice = _mm_set_epi64x((splice >> 64) as i64, splice as i64);
+                let compressed = _mm_shuffle_epi8(compacted, splice);
+                unsafe {
+                    _mm_storeu_si128(
+                        output.as_mut_ptr().add(output_lane).cast::<__m128i>(),
+                        compressed,
+                    );
+                }
+                output_lane += block_bits.count_ones() as usize;
+                let remaining = output_lane.saturating_sub(0).min(16);
+                let prefix = unsafe {
+                    _mm_load_si128(
+                        core::ptr::from_ref(&crate::support::COMPACT_PREFIX_MASKS[remaining])
+                            .cast::<__m128i>(),
+                    )
+                };
+                let compressed =
+                    unsafe { _mm_loadu_si128(output.as_ptr().add(0).cast::<__m128i>()) };
+                let blended = _mm_blendv_epi8(merge.val.0[0], compressed, prefix);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(0).cast::<__m128i>(), blended);
+                }
+                let remaining = output_lane.saturating_sub(16).min(16);
+                let prefix = unsafe {
+                    _mm_load_si128(
+                        core::ptr::from_ref(&crate::support::COMPACT_PREFIX_MASKS[remaining])
+                            .cast::<__m128i>(),
+                    )
+                };
+                let compressed =
+                    unsafe { _mm_loadu_si128(output.as_ptr().add(16).cast::<__m128i>()) };
+                let blended = _mm_blendv_epi8(merge.val.0[1], compressed, prefix);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(16).cast::<__m128i>(), blended);
+                }
+                let remaining = output_lane.saturating_sub(32).min(16);
+                let prefix = unsafe {
+                    _mm_load_si128(
+                        core::ptr::from_ref(&crate::support::COMPACT_PREFIX_MASKS[remaining])
+                            .cast::<__m128i>(),
+                    )
+                };
+                let compressed =
+                    unsafe { _mm_loadu_si128(output.as_ptr().add(32).cast::<__m128i>()) };
+                let blended = _mm_blendv_epi8(merge.val.0[2], compressed, prefix);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(32).cast::<__m128i>(), blended);
+                }
+                let remaining = output_lane.saturating_sub(48).min(16);
+                let prefix = unsafe {
+                    _mm_load_si128(
+                        core::ptr::from_ref(&crate::support::COMPACT_PREFIX_MASKS[remaining])
+                            .cast::<__m128i>(),
+                    )
+                };
+                let compressed =
+                    unsafe { _mm_loadu_si128(output.as_ptr().add(48).cast::<__m128i>()) };
+                let blended = _mm_blendv_epi8(merge.val.0[3], compressed, prefix);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(48).cast::<__m128i>(), blended);
+                }
+                u8x64::simd_from(token, output)
+            }
+        );
+        kernel(self, values, mask, merge)
+    }
+    #[inline(always)]
+    fn expand_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                values: u8x64<Sse4_2>,
+                mask: mask8x64<Sse4_2>,
+            ) -> u8x64<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x64(mask);
+                let input = <[u8; 64]>::from(values);
+                let mut output = [0u8; 64];
+                let mut input_lane = 0;
+                let block_bits = (mask_bits & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = expanded;
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(0).cast::<__m128i>(), result);
+                }
+                input_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 16 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = expanded;
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(16).cast::<__m128i>(), result);
+                }
+                input_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 32 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = expanded;
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(32).cast::<__m128i>(), result);
+                }
+                input_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 48 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = expanded;
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(48).cast::<__m128i>(), result);
+                }
+                u8x64::simd_from(token, output)
+            }
+        );
+        kernel(self, values, mask)
+    }
+    #[inline(always)]
+    fn expand_merge_u8x64(
+        self,
+        values: u8x64<Self>,
+        mask: mask8x64<Self>,
+        merge: u8x64<Self>,
+    ) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                values: u8x64<Sse4_2>,
+                mask: mask8x64<Sse4_2>,
+                merge: u8x64<Sse4_2>,
+            ) -> u8x64<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x64(mask);
+                let input = <[u8; 64]>::from(values);
+                let mut output = [0u8; 64];
+                let mut input_lane = 0;
+                let block_bits = (mask_bits & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = _mm_blendv_epi8(merge.val.0[0], expanded, mask.val.0[0]);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(0).cast::<__m128i>(), result);
+                }
+                input_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 16 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = _mm_blendv_epi8(merge.val.0[1], expanded, mask.val.0[1]);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(16).cast::<__m128i>(), result);
+                }
+                input_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 32 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = _mm_blendv_epi8(merge.val.0[2], expanded, mask.val.0[2]);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(32).cast::<__m128i>(), result);
+                }
+                input_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 48 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = _mm_blendv_epi8(merge.val.0[3], expanded, mask.val.0[3]);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(48).cast::<__m128i>(), result);
+                }
+                u8x64::simd_from(token, output)
+            }
+        );
+        kernel(self, values, mask, merge)
+    }
+    #[inline(always)]
+    fn load_expand_u8x64(self, source: &[u8; 64], mask: mask8x64<Self>) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, source: &[u8; 64], mask: mask8x64<Sse4_2>) -> u8x64<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x64(mask);
+                let input = *source;
+                let mut output = [0u8; 64];
+                let mut input_lane = 0;
+                let block_bits = (mask_bits & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = expanded;
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(0).cast::<__m128i>(), result);
+                }
+                input_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 16 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = expanded;
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(16).cast::<__m128i>(), result);
+                }
+                input_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 32 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = expanded;
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(32).cast::<__m128i>(), result);
+                }
+                input_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 48 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = expanded;
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(48).cast::<__m128i>(), result);
+                }
+                u8x64::simd_from(token, output)
+            }
+        );
+        kernel(self, source, mask)
+    }
+    #[inline(always)]
+    fn load_expand_merge_u8x64(
+        self,
+        source: &[u8; 64],
+        mask: mask8x64<Self>,
+        merge: u8x64<Self>,
+    ) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                source: &[u8; 64],
+                mask: mask8x64<Sse4_2>,
+                merge: u8x64<Sse4_2>,
+            ) -> u8x64<Sse4_2> {
+                let mask_bits = token.to_bitmask_mask8x64(mask);
+                let input = *source;
+                let mut output = [0u8; 64];
+                let mut input_lane = 0;
+                let block_bits = (mask_bits & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = _mm_blendv_epi8(merge.val.0[0], expanded, mask.val.0[0]);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(0).cast::<__m128i>(), result);
+                }
+                input_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 16 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = _mm_blendv_epi8(merge.val.0[1], expanded, mask.val.0[1]);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(16).cast::<__m128i>(), result);
+                }
+                input_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 32 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = _mm_blendv_epi8(merge.val.0[2], expanded, mask.val.0[2]);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(32).cast::<__m128i>(), result);
+                }
+                input_lane += block_bits.count_ones() as usize;
+                let block_bits = (mask_bits >> 48 & 0xffff) as usize;
+                let low_mask = (block_bits) & 0xff;
+                let high_mask = (block_bits) >> 8;
+                let low_count = low_mask.count_ones() as u64;
+                let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
+                let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
+                let high_base = low_count * 0x0101_0101_0101_0101;
+                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
+                    | (high_control & 0x8080_8080_8080_8080);
+                let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
+                let packed =
+                    unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
+                let expanded = _mm_shuffle_epi8(packed, control);
+                let result = _mm_blendv_epi8(merge.val.0[3], expanded, mask.val.0[3]);
+                unsafe {
+                    _mm_storeu_si128(output.as_mut_ptr().add(48).cast::<__m128i>(), result);
+                }
+                u8x64::simd_from(token, output)
+            }
+        );
+        kernel(self, source, mask, merge)
     }
     #[inline(always)]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>) {

@@ -2136,6 +2136,75 @@ impl Simd for Sse2 {
         kernel(self, a, b, c)
     }
     #[inline(always)]
+    fn compress_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self> {
+        self.compress_merge_u8x16(values, mask, u8x16::splat(self, 0))
+    }
+    #[inline(always)]
+    fn compress_merge_u8x16(
+        self,
+        values: u8x16<Self>,
+        mask: mask8x16<Self>,
+        merge: u8x16<Self>,
+    ) -> u8x16<Self> {
+        let mask = self.to_bitmask_mask8x16(mask);
+        let mut merge_padded = [0u8; 16 + 1];
+        merge_padded[..16].copy_from_slice(&*merge);
+        let mut compacted = merge_padded;
+        let mut output_lane = 0;
+        for input_lane in 0..16 {
+            compacted[output_lane] = values[input_lane];
+            output_lane += ((mask >> input_lane) & 1) as usize;
+        }
+        compacted[output_lane] = merge_padded[output_lane];
+        let mut result = merge;
+        result.copy_from_slice(&compacted[..16]);
+        result
+    }
+    #[inline(always)]
+    fn expand_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self> {
+        self.expand_merge_u8x16(values, mask, u8x16::splat(self, 0))
+    }
+    #[inline(always)]
+    fn expand_merge_u8x16(
+        self,
+        values: u8x16<Self>,
+        mask: mask8x16<Self>,
+        merge: u8x16<Self>,
+    ) -> u8x16<Self> {
+        let mask = self.to_bitmask_mask8x16(mask);
+        let mut result = merge;
+        let mut input_lane = 0;
+        for output_lane in 0..16 {
+            let bit = ((mask >> output_lane) & 1) as u8;
+            let keep = 0u8.wrapping_sub(bit);
+            result[output_lane] = (values[input_lane] & keep) | (result[output_lane] & !keep);
+            input_lane += usize::from(bit);
+        }
+        result
+    }
+    #[inline(always)]
+    fn load_expand_u8x16(self, source: &[u8; 16], mask: mask8x16<Self>) -> u8x16<Self> {
+        self.load_expand_merge_u8x16(source, mask, u8x16::splat(self, 0))
+    }
+    #[inline(always)]
+    fn load_expand_merge_u8x16(
+        self,
+        source: &[u8; 16],
+        mask: mask8x16<Self>,
+        merge: u8x16<Self>,
+    ) -> u8x16<Self> {
+        let mask = self.to_bitmask_mask8x16(mask);
+        let mut result = merge;
+        let mut source_index = 0;
+        for output_lane in 0..16 {
+            let bit = ((mask >> output_lane) & 1) as u8;
+            let keep = 0u8.wrapping_sub(bit);
+            result[output_lane] = (source[source_index] & keep) | (result[output_lane] & !keep);
+            source_index += usize::from(bit);
+        }
+        result
+    }
+    #[inline(always)]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self> {
         u8x32 {
             val: crate::support::Aligned256([a.val.0, b.val.0]),
@@ -2324,25 +2393,22 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn from_bitmask_mask8x16(self, bits: u64) -> mask8x16<Self> {
-        let lanes: [i8; 16usize] = [
-            if bits & 1 != 0 { !0 } else { 0 },
-            if (bits >> 1usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 2usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 3usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 4usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 5usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 6usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 7usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 8usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 9usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 10usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 11usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 12usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 13usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 14usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 15usize) & 1 != 0 { !0 } else { 0 },
-        ];
-        lanes.simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, bits: u64) -> mask8x16<Sse2> {
+                {
+                    let bit_bytes = _mm_cvtsi32_si128(bits as i32);
+                    let bit_bytes = _mm_unpacklo_epi8(bit_bytes, bit_bytes);
+                    let bit_bytes = _mm_unpacklo_epi16(bit_bytes, bit_bytes);
+                    let bit_bytes = _mm_shuffle_epi32::<0b01_01_00_00>(bit_bytes);
+                    let bit_mask =
+                        _mm_setr_epi8(1, 2, 4, 8, 16, 32, 64, -128, 1, 2, 4, 8, 16, 32, 64, -128);
+                    _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
+                }
+                .simd_into(token)
+            }
+        );
+        kernel(self, bits)
     }
     #[inline(always)]
     fn to_bitmask_mask8x16(self, a: mask8x16<Self>) -> u64 {
@@ -7117,6 +7183,75 @@ impl Simd for Sse2 {
         Bytes::from_bytes(result)
     }
     #[inline(always)]
+    fn compress_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self> {
+        self.compress_merge_u8x32(values, mask, u8x32::splat(self, 0))
+    }
+    #[inline(always)]
+    fn compress_merge_u8x32(
+        self,
+        values: u8x32<Self>,
+        mask: mask8x32<Self>,
+        merge: u8x32<Self>,
+    ) -> u8x32<Self> {
+        let mask = self.to_bitmask_mask8x32(mask);
+        let mut merge_padded = [0u8; 32 + 1];
+        merge_padded[..32].copy_from_slice(&*merge);
+        let mut compacted = merge_padded;
+        let mut output_lane = 0;
+        for input_lane in 0..32 {
+            compacted[output_lane] = values[input_lane];
+            output_lane += ((mask >> input_lane) & 1) as usize;
+        }
+        compacted[output_lane] = merge_padded[output_lane];
+        let mut result = merge;
+        result.copy_from_slice(&compacted[..32]);
+        result
+    }
+    #[inline(always)]
+    fn expand_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self> {
+        self.expand_merge_u8x32(values, mask, u8x32::splat(self, 0))
+    }
+    #[inline(always)]
+    fn expand_merge_u8x32(
+        self,
+        values: u8x32<Self>,
+        mask: mask8x32<Self>,
+        merge: u8x32<Self>,
+    ) -> u8x32<Self> {
+        let mask = self.to_bitmask_mask8x32(mask);
+        let mut result = merge;
+        let mut input_lane = 0;
+        for output_lane in 0..32 {
+            let bit = ((mask >> output_lane) & 1) as u8;
+            let keep = 0u8.wrapping_sub(bit);
+            result[output_lane] = (values[input_lane] & keep) | (result[output_lane] & !keep);
+            input_lane += usize::from(bit);
+        }
+        result
+    }
+    #[inline(always)]
+    fn load_expand_u8x32(self, source: &[u8; 32], mask: mask8x32<Self>) -> u8x32<Self> {
+        self.load_expand_merge_u8x32(source, mask, u8x32::splat(self, 0))
+    }
+    #[inline(always)]
+    fn load_expand_merge_u8x32(
+        self,
+        source: &[u8; 32],
+        mask: mask8x32<Self>,
+        merge: u8x32<Self>,
+    ) -> u8x32<Self> {
+        let mask = self.to_bitmask_mask8x32(mask);
+        let mut result = merge;
+        let mut source_index = 0;
+        for output_lane in 0..32 {
+            let bit = ((mask >> output_lane) & 1) as u8;
+            let keep = 0u8.wrapping_sub(bit);
+            result[output_lane] = (source[source_index] & keep) | (result[output_lane] & !keep);
+            source_index += usize::from(bit);
+        }
+        result
+    }
+    #[inline(always)]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self> {
         u8x64 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -7785,6 +7920,75 @@ impl Simd for Sse2 {
         }
         let result: u8x64<Self> = output.simd_into(self);
         Bytes::from_bytes(result)
+    }
+    #[inline(always)]
+    fn compress_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self> {
+        self.compress_merge_u8x64(values, mask, u8x64::splat(self, 0))
+    }
+    #[inline(always)]
+    fn compress_merge_u8x64(
+        self,
+        values: u8x64<Self>,
+        mask: mask8x64<Self>,
+        merge: u8x64<Self>,
+    ) -> u8x64<Self> {
+        let mask = self.to_bitmask_mask8x64(mask);
+        let mut merge_padded = [0u8; 64 + 1];
+        merge_padded[..64].copy_from_slice(&*merge);
+        let mut compacted = merge_padded;
+        let mut output_lane = 0;
+        for input_lane in 0..64 {
+            compacted[output_lane] = values[input_lane];
+            output_lane += ((mask >> input_lane) & 1) as usize;
+        }
+        compacted[output_lane] = merge_padded[output_lane];
+        let mut result = merge;
+        result.copy_from_slice(&compacted[..64]);
+        result
+    }
+    #[inline(always)]
+    fn expand_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self> {
+        self.expand_merge_u8x64(values, mask, u8x64::splat(self, 0))
+    }
+    #[inline(always)]
+    fn expand_merge_u8x64(
+        self,
+        values: u8x64<Self>,
+        mask: mask8x64<Self>,
+        merge: u8x64<Self>,
+    ) -> u8x64<Self> {
+        let mask = self.to_bitmask_mask8x64(mask);
+        let mut result = merge;
+        let mut input_lane = 0;
+        for output_lane in 0..64 {
+            let bit = ((mask >> output_lane) & 1) as u8;
+            let keep = 0u8.wrapping_sub(bit);
+            result[output_lane] = (values[input_lane] & keep) | (result[output_lane] & !keep);
+            input_lane += usize::from(bit);
+        }
+        result
+    }
+    #[inline(always)]
+    fn load_expand_u8x64(self, source: &[u8; 64], mask: mask8x64<Self>) -> u8x64<Self> {
+        self.load_expand_merge_u8x64(source, mask, u8x64::splat(self, 0))
+    }
+    #[inline(always)]
+    fn load_expand_merge_u8x64(
+        self,
+        source: &[u8; 64],
+        mask: mask8x64<Self>,
+        merge: u8x64<Self>,
+    ) -> u8x64<Self> {
+        let mask = self.to_bitmask_mask8x64(mask);
+        let mut result = merge;
+        let mut source_index = 0;
+        for output_lane in 0..64 {
+            let bit = ((mask >> output_lane) & 1) as u8;
+            let keep = 0u8.wrapping_sub(bit);
+            result[output_lane] = (source[source_index] & keep) | (result[output_lane] & !keep);
+            source_index += usize::from(bit);
+        }
+        result
     }
     #[inline(always)]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>) {

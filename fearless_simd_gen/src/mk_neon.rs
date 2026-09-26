@@ -5,8 +5,8 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
-    count_zeros_method, fallback_method, generic_mask_set, generic_op_name,
-    integer_lane_mask_rotate, integer_lane_mask_splat_arg, reverse_method,
+    CompactOptions, composed_compact_op, count_zeros_method, fallback_method, generic_mask_set,
+    generic_op_name, integer_lane_mask_rotate, integer_lane_mask_splat_arg, reverse_method,
     reverse_vector_mask_method,
 };
 use crate::level::Level;
@@ -21,6 +21,62 @@ use crate::{
 pub(crate) struct Neon;
 
 impl Neon {
+    fn compact_merge_swizzle(
+        vec_ty: &VecType,
+        values: &TokenStream,
+        control: &TokenStream,
+        merge: &TokenStream,
+    ) -> TokenStream {
+        let vec = vec_ty.rust();
+        let wrapper = vec_ty.aligned_wrapper();
+        let arch_ty = Self.arch_ty(vec_ty);
+
+        let body = match vec_ty.n_bits() {
+            128 => quote! {
+                let result = vqtbx1q_u8(merge, values, control);
+            },
+            256 => quote! {
+                let result = uint8x16x2_t(
+                    vqtbx2q_u8(merge.0, values, control.0),
+                    vqtbx2q_u8(merge.1, values, control.1),
+                );
+            },
+            512 => quote! {
+                let result = uint8x16x4_t(
+                    vqtbx4q_u8(merge.0, values, control.0),
+                    vqtbx4q_u8(merge.1, values, control.1),
+                    vqtbx4q_u8(merge.2, values, control.2),
+                    vqtbx4q_u8(merge.3, values, control.3),
+                );
+            },
+            _ => unreachable!(),
+        };
+
+        quote! {
+            {
+                crate::kernel!(
+                    #[inline(always)]
+                    fn merge_swizzle(
+                        token: Neon,
+                        values: #vec<Neon>,
+                        control: #vec<Neon>,
+                        merge: #vec<Neon>,
+                    ) -> #vec<Neon> {
+                        let values: #arch_ty = values.into();
+                        let control: #arch_ty = control.into();
+                        let merge: #arch_ty = merge.into();
+                        #body
+                        #vec {
+                            val: #wrapper(result),
+                            simd: token,
+                        }
+                    }
+                );
+                merge_swizzle(self, #values, #control, #merge)
+            }
+        }
+    }
+
     fn handle_count_ones(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         let input = match vec_ty.scalar {
             ScalarType::Unsigned if vec_ty.scalar_bits == 8 => quote! { a.into() },
@@ -793,6 +849,17 @@ impl Level for Neon {
                         Bytes::from_bytes(#bytes { val: #wrapper(result), simd: #token })
                     }
                 })
+            }
+            OpSig::Compress { .. } | OpSig::Expand { .. } | OpSig::LoadExpand { .. } => {
+                composed_compact_op(
+                    op,
+                    vec_ty,
+                    CompactOptions {
+                        splice_wide_vectors: false,
+                        hardware_popcount: false,
+                        merge_swizzle: Some(Self::compact_merge_swizzle),
+                    },
+                )
             }
             OpSig::Cvt {
                 target_ty,
