@@ -16,7 +16,7 @@ use crate::{
 
 pub(crate) fn mk_simd_types() -> TokenStream {
     let mut result = quote! {
-        use crate::{Bytes, ExtractToken, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdMask, SimdCvtFloat, SimdCvtTruncate, SimdInterleaved, SimdWiden, SimdNarrow, seal::Seal};
+        use crate::{Bytes, ExtractToken, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdMask, SimdCvtFloat, SimdCvtTruncate, SimdInterleaved, SimdWiden, SimdNarrow, MaskWiden, MaskNarrow, seal::Seal};
     };
     for ty in SIMD_TYPES {
         let name = ty.rust();
@@ -44,6 +44,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
         if ty.scalar == ScalarType::Mask {
             let splat = Ident::new(&format!("splat_{}", ty.rust_name()), Span::call_site());
             let impl_block = simd_mask_impl(ty);
+            let conversions = mask_widen_narrow_impls(ty);
             let mask_from_array = format_ident!("{}_from_array", ty.rust_name());
             let mask_to_array = format_ident!("{}_to_array", ty.rust_name());
             result.extend(quote! {
@@ -98,6 +99,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 }
 
                 #impl_block
+                #conversions
             });
             continue;
         }
@@ -387,6 +389,39 @@ pub(crate) fn mk_simd_types() -> TokenStream {
         });
     }
     result
+}
+
+fn mask_widen_narrow_impls(ty: &VecType) -> TokenStream {
+    let name = ty.rust();
+    let widen = ty.widened().map(|target| {
+        let target = target.rust();
+        let method = generic_op_name("widen", ty);
+        quote! {
+            impl<S: Simd> MaskWiden<S> for #name<S> {
+                type Widened = #target<S>;
+
+                #[inline(always)]
+                fn widen(self) -> (Self::Widened, Self::Widened) {
+                    self.simd.#method(self)
+                }
+            }
+        }
+    });
+    let narrow = ty.narrowed().map(|target| {
+        let target = target.rust();
+        let method = generic_op_name("narrow", ty);
+        quote! {
+            impl<S: Simd> MaskNarrow<S> for #name<S> {
+                type Narrowed = #target<S>;
+
+                #[inline(always)]
+                fn narrow(self, high: Self) -> Self::Narrowed {
+                    self.simd.#method(self, high)
+                }
+            }
+        }
+    });
+    quote! { #widen #narrow }
 }
 
 fn simd_mask_impl(ty: &VecType) -> TokenStream {

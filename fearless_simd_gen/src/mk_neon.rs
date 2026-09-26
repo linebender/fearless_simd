@@ -351,7 +351,7 @@ impl Level for Neon {
                 }
 
                 let src_scalar = match vec_ty.scalar {
-                    ScalarType::Int => format!("s{}", vec_ty.scalar_bits),
+                    ScalarType::Int | ScalarType::Mask => format!("s{}", vec_ty.scalar_bits),
                     ScalarType::Unsigned => format!("u{}", vec_ty.scalar_bits),
                     _ => unreachable!(),
                 };
@@ -390,7 +390,7 @@ impl Level for Neon {
                 }
 
                 let prefix = match vec_ty.scalar {
-                    ScalarType::Int => "s",
+                    ScalarType::Int | ScalarType::Mask => "s",
                     ScalarType::Unsigned => "u",
                     _ => unreachable!(),
                 };

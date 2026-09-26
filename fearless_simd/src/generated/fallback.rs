@@ -2957,6 +2957,33 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn widen_mask8x16(self, a: mask8x16<Self>) -> (mask16x8<Self>, mask16x8<Self>) {
+        (
+            [
+                a.val.0[0usize] as i16,
+                a.val.0[1usize] as i16,
+                a.val.0[2usize] as i16,
+                a.val.0[3usize] as i16,
+                a.val.0[4usize] as i16,
+                a.val.0[5usize] as i16,
+                a.val.0[6usize] as i16,
+                a.val.0[7usize] as i16,
+            ]
+            .simd_into(self),
+            [
+                a.val.0[8usize] as i16,
+                a.val.0[9usize] as i16,
+                a.val.0[10usize] as i16,
+                a.val.0[11usize] as i16,
+                a.val.0[12usize] as i16,
+                a.val.0[13usize] as i16,
+                a.val.0[14usize] as i16,
+                a.val.0[15usize] as i16,
+            ]
+            .simd_into(self),
+        )
+    }
+    #[inline(always)]
     fn abs_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
         [
             i16::wrapping_abs(a[0usize]),
@@ -4466,6 +4493,47 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn widen_mask16x8(self, a: mask16x8<Self>) -> (mask32x4<Self>, mask32x4<Self>) {
+        (
+            [
+                a.val.0[0usize] as i32,
+                a.val.0[1usize] as i32,
+                a.val.0[2usize] as i32,
+                a.val.0[3usize] as i32,
+            ]
+            .simd_into(self),
+            [
+                a.val.0[4usize] as i32,
+                a.val.0[5usize] as i32,
+                a.val.0[6usize] as i32,
+                a.val.0[7usize] as i32,
+            ]
+            .simd_into(self),
+        )
+    }
+    #[inline(always)]
+    fn narrow_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask8x16<Self> {
+        [
+            a.val.0[0usize] as i8,
+            a.val.0[1usize] as i8,
+            a.val.0[2usize] as i8,
+            a.val.0[3usize] as i8,
+            a.val.0[4usize] as i8,
+            a.val.0[5usize] as i8,
+            a.val.0[6usize] as i8,
+            a.val.0[7usize] as i8,
+            b.val.0[0usize] as i8,
+            b.val.0[1usize] as i8,
+            b.val.0[2usize] as i8,
+            b.val.0[3usize] as i8,
+            b.val.0[4usize] as i8,
+            b.val.0[5usize] as i8,
+            b.val.0[6usize] as i8,
+            b.val.0[7usize] as i8,
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn abs_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
         [
             i32::wrapping_abs(a[0usize]),
@@ -5463,6 +5531,27 @@ impl Simd for Fallback {
         result[0..4usize].copy_from_slice(&a.val.0);
         result[4usize..8usize].copy_from_slice(&b.val.0);
         result.simd_into(self)
+    }
+    #[inline(always)]
+    fn widen_mask32x4(self, a: mask32x4<Self>) -> (mask64x2<Self>, mask64x2<Self>) {
+        (
+            [a.val.0[0usize] as i64, a.val.0[1usize] as i64].simd_into(self),
+            [a.val.0[2usize] as i64, a.val.0[3usize] as i64].simd_into(self),
+        )
+    }
+    #[inline(always)]
+    fn narrow_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask16x8<Self> {
+        [
+            a.val.0[0usize] as i16,
+            a.val.0[1usize] as i16,
+            a.val.0[2usize] as i16,
+            a.val.0[3usize] as i16,
+            b.val.0[0usize] as i16,
+            b.val.0[1usize] as i16,
+            b.val.0[2usize] as i16,
+            b.val.0[3usize] as i16,
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -6534,6 +6623,16 @@ impl Simd for Fallback {
         result[0..2usize].copy_from_slice(&a.val.0);
         result[2usize..4usize].copy_from_slice(&b.val.0);
         result.simd_into(self)
+    }
+    #[inline(always)]
+    fn narrow_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask32x4<Self> {
+        [
+            a.val.0[0usize] as i32,
+            a.val.0[1usize] as i32,
+            b.val.0[0usize] as i32,
+            b.val.0[1usize] as i32,
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {

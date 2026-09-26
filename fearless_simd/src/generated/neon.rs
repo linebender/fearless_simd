@@ -1664,6 +1664,19 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn widen_mask8x16(self, a: mask8x16<Self>) -> (mask16x8<Self>, mask16x8<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask8x16<Neon>) -> (mask16x8<Neon>, mask16x8<Neon>) {
+                (
+                    vmovl_s8(vget_low_s8(a.into())).simd_into(token),
+                    vmovl_s8(vget_high_s8(a.into())).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn abs_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2725,6 +2738,29 @@ impl Simd for Neon {
             val: crate::support::Aligned256(int16x8x2_t(a.val.0, b.val.0)),
             simd: self,
         }
+    }
+    #[inline(always)]
+    fn widen_mask16x8(self, a: mask16x8<Self>) -> (mask32x4<Self>, mask32x4<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask16x8<Neon>) -> (mask32x4<Neon>, mask32x4<Neon>) {
+                (
+                    vmovl_s16(vget_low_s16(a.into())).simd_into(token),
+                    vmovl_s16(vget_high_s16(a.into())).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask16x8<Neon>, b: mask16x8<Neon>) -> mask8x16<Neon> {
+                vcombine_s8(vmovn_s16(a.into()), vmovn_s16(b.into())).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn abs_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
@@ -3807,6 +3843,29 @@ impl Simd for Neon {
             val: crate::support::Aligned256(int32x4x2_t(a.val.0, b.val.0)),
             simd: self,
         }
+    }
+    #[inline(always)]
+    fn widen_mask32x4(self, a: mask32x4<Self>) -> (mask64x2<Self>, mask64x2<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask32x4<Neon>) -> (mask64x2<Neon>, mask64x2<Neon>) {
+                (
+                    vmovl_s32(vget_low_s32(a.into())).simd_into(token),
+                    vmovl_s32(vget_high_s32(a.into())).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask32x4<Neon>, b: mask32x4<Neon>) -> mask16x8<Neon> {
+                vcombine_s16(vmovn_s32(a.into()), vmovn_s32(b.into())).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -5291,6 +5350,16 @@ impl Simd for Neon {
             val: crate::support::Aligned256(int64x2x2_t(a.val.0, b.val.0)),
             simd: self,
         }
+    }
+    #[inline(always)]
+    fn narrow_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask64x2<Neon>, b: mask64x2<Neon>) -> mask32x4<Neon> {
+                vcombine_s32(vmovn_s64(a.into()), vmovn_s64(b.into())).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
