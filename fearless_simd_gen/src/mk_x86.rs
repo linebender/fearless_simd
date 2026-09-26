@@ -375,7 +375,7 @@ impl Level for X86 {
     }
 }
 
-fn mask_from_bitmask_bytes(vec_ty: &VecType) -> TokenStream {
+fn mask_from_bitmask_bytes(vec_ty: &VecType, has_pshufb: bool) -> TokenStream {
     let lane_count = vec_ty.len;
     let bit_mask_128 = mask_bit_pattern_128();
 
@@ -383,6 +383,21 @@ fn mask_from_bitmask_bytes(vec_ty: &VecType) -> TokenStream {
         return quote! {
             {
                 let bit_bytes = _mm_set1_epi8(bits as i8);
+                let bit_mask = #bit_mask_128;
+                _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
+            }
+        };
+    }
+
+    if lane_count == 16 && !has_pshufb {
+        // Without PSHUFB, broadcast byte 0 of the bits to the low 8 lanes and byte 1 to the high
+        // 8 lanes by unpacking each byte with itself twice and then duplicating dwords.
+        return quote! {
+            {
+                let bit_bytes = _mm_cvtsi32_si128(bits as i32);
+                let bit_bytes = _mm_unpacklo_epi8(bit_bytes, bit_bytes);
+                let bit_bytes = _mm_unpacklo_epi16(bit_bytes, bit_bytes);
+                let bit_bytes = _mm_shuffle_epi32::<0b01_01_00_00>(bit_bytes);
                 let bit_mask = #bit_mask_128;
                 _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
             }
@@ -1754,7 +1769,7 @@ impl X86 {
             };
         }
 
-        if *self == Self::Sse2 && matches!(vec_ty.scalar_bits, 8 | 64) {
+        if *self == Self::Sse2 && vec_ty.scalar_bits == 64 {
             return generic_mask_from_bitmask(op.simd_trait_method_sig(vec_ty), vec_ty);
         }
 
@@ -1772,7 +1787,7 @@ impl X86 {
 
         self.kernel_method(op, vec_ty, |token| match vec_ty.scalar_bits {
             8 => {
-                let bytes = mask_from_bitmask_bytes(vec_ty);
+                let bytes = mask_from_bitmask_bytes(vec_ty, *self != Self::Sse2);
                 quote! {
                     #bytes.simd_into(#token)
                 }

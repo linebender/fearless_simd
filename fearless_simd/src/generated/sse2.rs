@@ -2324,25 +2324,22 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn from_bitmask_mask8x16(self, bits: u64) -> mask8x16<Self> {
-        let lanes: [i8; 16usize] = [
-            if bits & 1 != 0 { !0 } else { 0 },
-            if (bits >> 1usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 2usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 3usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 4usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 5usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 6usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 7usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 8usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 9usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 10usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 11usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 12usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 13usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 14usize) & 1 != 0 { !0 } else { 0 },
-            if (bits >> 15usize) & 1 != 0 { !0 } else { 0 },
-        ];
-        lanes.simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, bits: u64) -> mask8x16<Sse2> {
+                {
+                    let bit_bytes = _mm_cvtsi32_si128(bits as i32);
+                    let bit_bytes = _mm_unpacklo_epi8(bit_bytes, bit_bytes);
+                    let bit_bytes = _mm_unpacklo_epi16(bit_bytes, bit_bytes);
+                    let bit_bytes = _mm_shuffle_epi32::<0b01_01_00_00>(bit_bytes);
+                    let bit_mask =
+                        _mm_setr_epi8(1, 2, 4, 8, 16, 32, 64, -128, 1, 2, 4, 8, 16, 32, 64, -128);
+                    _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
+                }
+                .simd_into(token)
+            }
+        );
+        kernel(self, bits)
     }
     #[inline(always)]
     fn to_bitmask_mask8x16(self, a: mask8x16<Self>) -> u64 {
