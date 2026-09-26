@@ -687,7 +687,7 @@ fn widen_mask8x64<S: Simd>(simd: S) {
             *selected,
             core::array::from_fn(|i| if low_bits & (1 << i) != 0 { 7 } else { 3 }),
         );
-        assert_eq!(low.narrow(high).to_bitmask(), bits & 0xffffffffffffffff);
+        assert_eq!(low.narrow(high).to_bitmask(), bits); // clippy complains about '& 0xffffffffffffffff'
     }
 
     for lane in 0..64 {
