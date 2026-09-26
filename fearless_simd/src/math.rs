@@ -119,7 +119,7 @@ pub(crate) fn mul_add_precise_f32x4<S: Simd>(
     let mut provisional = sum_low.narrow(sum_high);
     let abs_provisional_bits = provisional.bitcast::<i32x4<_>>() & 0x7fff_ffff;
     let at_most_min_normal = abs_provisional_bits.simd_lt(0x0080_0001);
-    let (subnormal_low, subnormal_high) = simd.widen_mask32x4(at_most_min_normal);
+    let (subnormal_low, subnormal_high) = at_most_min_normal.widen();
     let round_to_odd_low = midpoint_low | subnormal_low;
     let round_to_odd_high = midpoint_high | subnormal_high;
     let any_round_to_odd = (round_to_odd_low | round_to_odd_high).any_true();
