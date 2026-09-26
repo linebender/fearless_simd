@@ -588,8 +588,8 @@ impl Level for WasmSimd128 {
                 }
             }
             OpSig::Narrow { target_ty, mode }
-                if (vec_ty.scalar == ScalarType::Mask && mode != NarrowingMode::Wrap)
-                    || (vec_ty.scalar == ScalarType::Float && mode != NarrowingMode::Wrap) =>
+                if (vec_ty.scalar == ScalarType::Float || vec_ty.scalar == ScalarType::Mask)
+                    && mode != NarrowingMode::Wrap =>
             {
                 narrow_delegate_method(op, vec_ty, target_ty, "narrow")
             }
