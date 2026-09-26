@@ -18,6 +18,12 @@ pub fn baseline_sum() -> u64 {
     simd_backend::dispatch!(simd_backend::Level::baseline(), simd => sum(simd, 1, 2, 3))
 }
 
+// The swizzle expansion must resolve all helpers through the renamed dependency,
+// without requiring any SIMD traits in this scope.
+pub fn swizzle<S: simd_backend::Simd>(value: simd_backend::u32x4<S>) -> simd_backend::u32x4<S> {
+    simd_backend::simd_swizzle!(value, [2, 0, 3, 1])
+}
+
 #[simd]
 pub fn double<S: simd_backend::Simd>(value: simd_backend::u32x4<S>) -> simd_backend::u32x4<S> {
     value + value
