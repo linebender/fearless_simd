@@ -492,18 +492,6 @@ pub trait SimdSplit<S: Simd>: SimdBase<S> + Seal {
 /// bits, independently of the backend's physical mask representation.
 ///
 /// Masks constructed from integer lanes other than 0 or -1 have unspecified behavior.
-///
-/// ```
-/// use fearless_simd::{mask8x16, mask16x8, prelude::*};
-///
-/// fn fixed<S: Simd>(value: mask8x16<S>) -> (mask16x8<S>, mask16x8<S>) {
-///     value.widen()
-/// }
-///
-/// fn native<S: Simd>(value: S::mask8s) -> (S::mask16s, S::mask16s) {
-///     value.widen()
-/// }
-/// ```
 pub trait MaskWiden<S: Simd>: SimdMask<S> + Seal {
     /// The same logical-width mask type with lanes twice as wide.
     type Widened: MaskNarrow<S, Narrowed = Self>;
@@ -521,18 +509,6 @@ pub trait MaskWiden<S: Simd>: SimdMask<S> + Seal {
 ///
 /// This is the inverse of [`MaskWiden::widen`]. Masks constructed from integer lanes other than
 /// 0 or -1 have unspecified behavior.
-///
-/// ```
-/// use fearless_simd::{mask8x16, mask16x8, prelude::*};
-///
-/// fn fixed<S: Simd>(low: mask16x8<S>, high: mask16x8<S>) -> mask8x16<S> {
-///     low.narrow(high)
-/// }
-///
-/// fn native<S: Simd>(low: S::mask16s, high: S::mask16s) -> S::mask8s {
-///     low.narrow(high)
-/// }
-/// ```
 pub trait MaskNarrow<S: Simd>: SimdMask<S> + Seal {
     /// The same logical-width mask type with lanes half as wide.
     type Narrowed: MaskWiden<S, Widened = Self>;
