@@ -136,9 +136,8 @@ impl VecType {
     /// Returns the same-width vector produced by widening each lane of this vector.
     pub(crate) fn widened(&self) -> Option<Self> {
         let can_widen = match self.scalar {
-            ScalarType::Unsigned | ScalarType::Int => self.scalar_bits < 64,
+            ScalarType::Unsigned | ScalarType::Int | ScalarType::Mask => self.scalar_bits < 64,
             ScalarType::Float => self.scalar_bits == 32,
-            ScalarType::Mask => false,
         };
         if !can_widen {
             return None;
@@ -149,9 +148,8 @@ impl VecType {
     /// Returns the same-width vector produced by narrowing each lane of two vectors of this type.
     pub(crate) fn narrowed(&self) -> Option<Self> {
         let can_narrow = match self.scalar {
-            ScalarType::Unsigned | ScalarType::Int => self.scalar_bits > 8,
+            ScalarType::Unsigned | ScalarType::Int | ScalarType::Mask => self.scalar_bits > 8,
             ScalarType::Float => self.scalar_bits == 64,
-            ScalarType::Mask => false,
         };
         if !can_narrow {
             return None;

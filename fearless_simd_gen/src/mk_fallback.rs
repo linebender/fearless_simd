@@ -7,7 +7,7 @@ use crate::generic::{
     integer_lane_mask_rotate, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
-use crate::ops::{NarrowingMode, Op, OpSig, relaxed_narrow_method};
+use crate::ops::{NarrowingMode, Op, OpSig, narrow_delegate_method};
 use crate::types::{ScalarType, VecType};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -324,8 +324,11 @@ impl Level for Fallback {
                 }
             }
             OpSig::Narrow { target_ty, mode } => {
-                if mode == NarrowingMode::Relaxed {
-                    return relaxed_narrow_method(op, vec_ty, target_ty, "narrow");
+                if (vec_ty.scalar == ScalarType::Mask && mode != NarrowingMode::Wrap)
+                    || (vec_ty.scalar == ScalarType::Float && mode == NarrowingMode::Saturate)
+                    || mode == NarrowingMode::Relaxed
+                {
+                    return narrow_delegate_method(op, vec_ty, target_ty, "narrow");
                 }
 
                 let scalar = target_ty.scalar.rust(target_ty.scalar_bits);

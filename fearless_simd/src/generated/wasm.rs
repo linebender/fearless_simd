@@ -1477,6 +1477,13 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn widen_mask8x16(self, a: mask8x16<Self>) -> (mask16x8<Self>, mask16x8<Self>) {
+        (
+            i16x8_extend_low_i8x16(a.into()).simd_into(self),
+            i16x8_extend_high_i8x16(a.into()).simd_into(self),
+        )
+    }
+    #[inline(always)]
     fn abs_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
         i16x8_abs(a.into()).simd_into(self)
     }
@@ -2188,6 +2195,25 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn widen_mask16x8(self, a: mask16x8<Self>) -> (mask32x4<Self>, mask32x4<Self>) {
+        (
+            i32x4_extend_low_i16x8(a.into()).simd_into(self),
+            i32x4_extend_high_i16x8(a.into()).simd_into(self),
+        )
+    }
+    #[inline(always)]
+    fn narrow_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask8x16<Self> {
+        i8x16_narrow_i16x8(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask8x16<Self> {
+        self.narrow_mask16x8(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask8x16<Self> {
+        self.narrow_mask16x8(a, b)
+    }
+    #[inline(always)]
     fn abs_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
         i32x4_abs(a.into()).simd_into(self)
     }
@@ -2881,6 +2907,25 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256([a.val.0, b.val.0]),
             simd: self,
         }
+    }
+    #[inline(always)]
+    fn widen_mask32x4(self, a: mask32x4<Self>) -> (mask64x2<Self>, mask64x2<Self>) {
+        (
+            i64x2_extend_low_i32x4(a.into()).simd_into(self),
+            i64x2_extend_high_i32x4(a.into()).simd_into(self),
+        )
+    }
+    #[inline(always)]
+    fn narrow_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask16x8<Self> {
+        i16x8_narrow_i32x4(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask16x8<Self> {
+        self.narrow_mask32x4(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask16x8<Self> {
+        self.narrow_mask32x4(a, b)
     }
     #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -3898,6 +3943,22 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256([a.val.0, b.val.0]),
             simd: self,
         }
+    }
+    #[inline(always)]
+    fn narrow_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask32x4<Self> {
+        i8x16_shuffle::<0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27>(
+            a.into(),
+            b.into(),
+        )
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask32x4<Self> {
+        self.narrow_mask64x2(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask32x4<Self> {
+        self.narrow_mask64x2(a, b)
     }
     #[inline(always)]
     fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {

@@ -527,26 +527,24 @@ impl Op {
     }
 }
 
-pub(crate) fn relaxed_narrow_method(
+/// Delegate a narrowing mode to another mode. Only relaxed integer narrowing needs a
+/// range check; masks and floats have identical results for all three modes.
+pub(crate) fn narrow_delegate_method(
     op: Op,
     vec_ty: &VecType,
     target_ty: VecType,
     implementation: &'static str,
 ) -> TokenStream {
-    assert!(
-        matches!(
-            op.sig,
-            OpSig::Narrow {
-                mode: NarrowingMode::Relaxed,
-                ..
-            }
-        ),
-        "This method only handles Relaxed mode"
-    );
-
+    let mode = match op.sig {
+        OpSig::Narrow { mode, .. } => mode,
+        _ => unreachable!("narrow delegate requires a narrow operation"),
+    };
     let method_sig = op.simd_trait_method_sig(vec_ty);
     let implementation = generic_op_name(implementation, vec_ty);
-    let bounds_assertion = if vec_ty.scalar == ScalarType::Float {
+    let bounds_assertion = if mode != NarrowingMode::Relaxed
+        || vec_ty.scalar == ScalarType::Float
+        || vec_ty.scalar == ScalarType::Mask
+    {
         TokenStream::new()
     } else {
         let source_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
@@ -1549,45 +1547,6 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ));
     }
 
-    let is_f64 = ty.scalar == ScalarType::Float && ty.scalar_bits == 64;
-    if is_f64 {
-        let target_ty = ty.narrowed().expect("f64 vectors support narrowing");
-        ops.push(Op::new(
-            "narrow",
-            OpKind::OwnTrait,
-            OpSig::Narrow {
-                target_ty,
-                mode: NarrowingMode::Wrap,
-            },
-            "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\n\
-            Values are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity.\
-            This is the same as the `as` operator, and follows the IEEE 754 narrowing behavior in round-to-even mode.\n\n\
-            `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
-        ));
-        ops.push(Op::new(
-            "saturating_narrow",
-            OpKind::OwnTrait,
-            OpSig::Narrow {
-                target_ty,
-                mode: NarrowingMode::Saturate,
-            },
-            "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\n\
-            For floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n\
-            `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
-        ));
-        ops.push(Op::new(
-            "relaxed_narrow",
-            OpKind::OwnTrait,
-            OpSig::Narrow {
-                target_ty,
-                mode: NarrowingMode::Relaxed,
-            },
-            "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\n\
-            For floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n\
-            `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
-        ));
-    }
-
     if let Some(target_ty) = ty.widened() {
         let doc = if ty.scalar == ScalarType::Float {
             "Widen every `f32` lane exactly into two same-width `f64` vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."
@@ -1602,36 +1561,105 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ));
     }
 
-    if !is_f64 && let Some(target_ty) = ty.narrowed() {
-        ops.push(Op::new(
-                "narrow",
-                OpKind::OwnTrait,
-                OpSig::Narrow {
-                    target_ty,
-                    mode: NarrowingMode::Wrap,
-                },
-                "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
-            ));
-        ops.push(Op::new(
-                "saturating_narrow",
-                OpKind::OwnTrait,
-                OpSig::Narrow {
-                    target_ty,
-                    mode: NarrowingMode::Saturate,
-                },
-                "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
-            ));
-        ops.push(Op::new(
-                "relaxed_narrow",
-                OpKind::OwnTrait,
-                OpSig::Narrow {
-                    target_ty,
-                    mode: NarrowingMode::Relaxed,
-                },
-                "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\n\
-                Inputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n\
-                `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
-            ));
+    if let Some(target_ty) = ty.narrowed() {
+        match ty.scalar {
+            ScalarType::Int | ScalarType::Unsigned => {
+                ops.push(Op::new(
+                    "narrow",
+                    OpKind::OwnTrait,
+                    OpSig::Narrow {
+                        target_ty,
+                        mode: NarrowingMode::Wrap,
+                    },
+                    "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+                ));
+                ops.push(Op::new(
+                        "saturating_narrow",
+                        OpKind::OwnTrait,
+                        OpSig::Narrow {
+                            target_ty,
+                            mode: NarrowingMode::Saturate,
+                        },
+                        "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+                    ));
+                ops.push(Op::new(
+                        "relaxed_narrow",
+                        OpKind::OwnTrait,
+                        OpSig::Narrow {
+                            target_ty,
+                            mode: NarrowingMode::Relaxed,
+                        },
+                        "Narrow the lanes of two vectors using the cheapest operation for the active SIMD backend and concatenate them into one same-width vector.\n\n\
+                        Inputs must fit in the destination type; in debug mode this function will panic if any of the inputs do not fit. Out-of-range results in release builds produce arbitrary values (but remain memory-safe).\n\n\
+                        `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+                    ));
+            }
+            ScalarType::Mask => {
+                ops.push(Op::new(
+                    "narrow",
+                    OpKind::OwnTrait,
+                    OpSig::Narrow {
+                        target_ty,
+                        mode: NarrowingMode::Wrap,
+                    },
+                    "Concatenate two masks into one same-width vector.\n\n`{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+                ));
+                ops.push(Op::new(
+                        "saturating_narrow",
+                        OpKind::OwnTrait,
+                        OpSig::Narrow {
+                            target_ty,
+                            mode: NarrowingMode::Saturate,
+                        },
+                    "Concatenate two masks into one same-width vector.\n\n`{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`.",
+                    ));
+                ops.push(Op::new(
+                        "relaxed_narrow",
+                        OpKind::OwnTrait,
+                        OpSig::Narrow {
+                            target_ty,
+                            mode: NarrowingMode::Relaxed,
+                        },
+                        "Concatenate two masks into one same-width vector.\n\n`{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`.",
+                    ));
+            }
+            ScalarType::Float => {
+                ops.push(Op::new(
+                    "narrow",
+                    OpKind::OwnTrait,
+                    OpSig::Narrow {
+                        target_ty,
+                        mode: NarrowingMode::Wrap,
+                    },
+                    "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\n\
+                    Values are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity.\
+                    This is the same as the `as` operator, and follows the IEEE 754 narrowing behavior in round-to-even mode.\n\n\
+                    `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+                ));
+                ops.push(Op::new(
+                    "saturating_narrow",
+                    OpKind::OwnTrait,
+                    OpSig::Narrow {
+                        target_ty,
+                        mode: NarrowingMode::Saturate,
+                    },
+                    "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\n\
+                    For floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n\
+                    `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+                ));
+                ops.push(Op::new(
+                    "relaxed_narrow",
+                    OpKind::OwnTrait,
+                    OpSig::Narrow {
+                        target_ty,
+                        mode: NarrowingMode::Relaxed,
+                    },
+                    "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\n\
+                    For floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior.\n\n\
+                    `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+                ));
+            }
+        }
     }
 
     match (ty.scalar, ty.scalar_bits) {

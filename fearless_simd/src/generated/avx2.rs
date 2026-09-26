@@ -2138,6 +2138,20 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn widen_mask8x16(self, a: mask8x16<Self>) -> (mask16x8<Self>, mask16x8<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: mask8x16<Avx2>) -> (mask16x8<Avx2>, mask16x8<Avx2>) {
+                let raw = a.into();
+                (
+                    _mm_unpacklo_epi8(raw, raw).simd_into(token),
+                    _mm_unpackhi_epi8(raw, raw).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn abs_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3451,6 +3465,38 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn widen_mask16x8(self, a: mask16x8<Self>) -> (mask32x4<Self>, mask32x4<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: mask16x8<Avx2>) -> (mask32x4<Avx2>, mask32x4<Avx2>) {
+                let raw = a.into();
+                (
+                    _mm_unpacklo_epi16(raw, raw).simd_into(token),
+                    _mm_unpackhi_epi16(raw, raw).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: mask16x8<Avx2>, b: mask16x8<Avx2>) -> mask8x16<Avx2> {
+                _mm_packs_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask8x16<Self> {
+        self.narrow_mask16x8(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask8x16<Self> {
+        self.narrow_mask16x8(a, b)
+    }
+    #[inline(always)]
     fn abs_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4732,6 +4778,38 @@ impl Simd for Avx2 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn widen_mask32x4(self, a: mask32x4<Self>) -> (mask64x2<Self>, mask64x2<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: mask32x4<Avx2>) -> (mask64x2<Avx2>, mask64x2<Avx2>) {
+                let raw = a.into();
+                (
+                    _mm_unpacklo_epi32(raw, raw).simd_into(token),
+                    _mm_unpackhi_epi32(raw, raw).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: mask32x4<Avx2>, b: mask32x4<Avx2>) -> mask16x8<Avx2> {
+                _mm_packs_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask16x8<Self> {
+        self.narrow_mask32x4(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask16x8<Self> {
+        self.narrow_mask32x4(a, b)
     }
     #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -6529,6 +6607,28 @@ impl Simd for Avx2 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn narrow_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: mask64x2<Avx2>, b: mask64x2<Avx2>) -> mask32x4<Avx2> {
+                _mm_castps_si128(_mm_shuffle_ps::<0x88>(
+                    _mm_castsi128_ps(a.into()),
+                    _mm_castsi128_ps(b.into()),
+                ))
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask32x4<Self> {
+        self.narrow_mask64x2(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask32x4<Self> {
+        self.narrow_mask64x2(a, b)
     }
     #[inline(always)]
     fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
@@ -8380,6 +8480,20 @@ impl Simd for Avx2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widen_mask8x32(self, a: mask8x32<Self>) -> (mask16x16<Self>, mask16x16<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: mask8x32<Avx2>) -> (mask16x16<Avx2>, mask16x16<Avx2>) {
+                let raw = a.into();
+                (
+                    _mm256_cvtepi8_epi16(_mm256_castsi256_si128(raw)).simd_into(token),
+                    _mm256_cvtepi8_epi16(_mm256_extracti128_si256::<1>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn abs_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9599,6 +9713,39 @@ impl Simd for Avx2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widen_mask16x16(self, a: mask16x16<Self>) -> (mask32x8<Self>, mask32x8<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: mask16x16<Avx2>) -> (mask32x8<Avx2>, mask32x8<Avx2>) {
+                let raw = a.into();
+                (
+                    _mm256_cvtepi16_epi32(_mm256_castsi256_si128(raw)).simd_into(token),
+                    _mm256_cvtepi16_epi32(_mm256_extracti128_si256::<1>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: mask16x16<Avx2>, b: mask16x16<Avx2>) -> mask8x32<Avx2> {
+                _mm256_permute4x64_epi64::<0xd8>(_mm256_packs_epi16(a.into(), b.into()))
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask8x32<Self> {
+        self.narrow_mask16x16(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask8x32<Self> {
+        self.narrow_mask16x16(a, b)
+    }
+    #[inline(always)]
     fn abs_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10786,6 +10933,39 @@ impl Simd for Avx2 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn widen_mask32x8(self, a: mask32x8<Self>) -> (mask64x4<Self>, mask64x4<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: mask32x8<Avx2>) -> (mask64x4<Avx2>, mask64x4<Avx2>) {
+                let raw = a.into();
+                (
+                    _mm256_cvtepi32_epi64(_mm256_castsi256_si128(raw)).simd_into(token),
+                    _mm256_cvtepi32_epi64(_mm256_extracti128_si256::<1>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: mask32x8<Avx2>, b: mask32x8<Avx2>) -> mask16x16<Avx2> {
+                _mm256_permute4x64_epi64::<0xd8>(_mm256_packs_epi32(a.into(), b.into()))
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask16x16<Self> {
+        self.narrow_mask32x8(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask16x16<Self> {
+        self.narrow_mask32x8(a, b)
     }
     #[inline(always)]
     fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
@@ -12469,6 +12649,28 @@ impl Simd for Avx2 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: mask64x4<Avx2>, b: mask64x4<Avx2>) -> mask32x8<Avx2> {
+                _mm256_permute4x64_epi64::<0xd8>(_mm256_castps_si256(_mm256_shuffle_ps::<0x88>(
+                    _mm256_castsi256_ps(a.into()),
+                    _mm256_castsi256_ps(b.into()),
+                )))
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask32x8<Self> {
+        self.narrow_mask64x4(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask32x8<Self> {
+        self.narrow_mask64x4(a, b)
     }
     #[inline(always)]
     fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {

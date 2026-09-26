@@ -12,7 +12,7 @@ use crate::generic::{
 };
 use crate::level::Level;
 use crate::ops::{
-    NarrowingMode, Op, Quantifier, SaturatingOp, SlideGranularity, relaxed_narrow_method,
+    NarrowingMode, Op, Quantifier, SaturatingOp, SlideGranularity, narrow_delegate_method,
 };
 use crate::{
     arch::wasm::{self, simple_intrinsic},
@@ -570,7 +570,12 @@ impl Level for WasmSimd128 {
                 }
 
                 let target = format!("i{}x{}", target_ty.scalar_bits, target_ty.len);
-                let source = vec_ty.rust_name();
+                let source = if vec_ty.scalar == ScalarType::Mask {
+                    // Sign-extend mask types when widening
+                    vec_ty.cast(ScalarType::Int).rust_name()
+                } else {
+                    vec_ty.rust_name()
+                };
                 let low = Ident::new(&format!("{target}_extend_low_{source}"), Span::call_site());
                 let high = Ident::new(&format!("{target}_extend_high_{source}"), Span::call_site());
                 quote! {
@@ -582,26 +587,36 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
-            OpSig::Narrow { target_ty, mode } if vec_ty.scalar == ScalarType::Float => {
-                if mode == NarrowingMode::Relaxed {
-                    relaxed_narrow_method(op, vec_ty, target_ty, "narrow")
-                } else if mode == NarrowingMode::Saturate {
-                    let narrow = generic_op_name("narrow", vec_ty);
-                    quote! {
-                        #method_sig {
-                            self.#narrow(a, b)
-                        }
-                    }
-                } else {
-                    quote! {
-                        #method_sig {
-                            let low = f32x4_demote_f64x2_zero(a.into());
-                            let high = f32x4_demote_f64x2_zero(b.into());
-                            i64x2_shuffle::<0, 2>(low, high).simd_into(self)
-                        }
+            OpSig::Narrow { target_ty, mode }
+                if (vec_ty.scalar == ScalarType::Mask && mode != NarrowingMode::Wrap)
+                    || (vec_ty.scalar == ScalarType::Float && mode != NarrowingMode::Wrap) =>
+            {
+                narrow_delegate_method(op, vec_ty, target_ty, "narrow")
+            }
+            OpSig::Narrow { target_ty, mode: _ }
+                if vec_ty.scalar == ScalarType::Mask && target_ty.scalar_bits <= 16 =>
+            {
+                // Signed saturation preserves mask lanes (zero or all ones).
+                let narrow = Ident::new(
+                    &format!(
+                        "i{}x{}_narrow_i{}x{}",
+                        target_ty.scalar_bits, target_ty.len, vec_ty.scalar_bits, vec_ty.len
+                    ),
+                    Span::call_site(),
+                );
+                quote! {
+                    #method_sig {
+                        #narrow(a.into(), b.into()).simd_into(self)
                     }
                 }
             }
+            OpSig::Narrow { .. } if vec_ty.scalar == ScalarType::Float => quote! {
+                #method_sig {
+                    let low = f32x4_demote_f64x2_zero(a.into());
+                    let high = f32x4_demote_f64x2_zero(b.into());
+                    i64x2_shuffle::<0, 2>(low, high).simd_into(self)
+                }
+            },
             OpSig::Narrow { target_ty, mode } if target_ty.scalar_bits <= 16 => {
                 if mode == NarrowingMode::Relaxed {
                     let implementation = if vec_ty.scalar == ScalarType::Int {
@@ -609,7 +624,7 @@ impl Level for WasmSimd128 {
                     } else {
                         "narrow"
                     };
-                    return relaxed_narrow_method(op, vec_ty, target_ty, implementation);
+                    return narrow_delegate_method(op, vec_ty, target_ty, implementation);
                 }
 
                 let saturating = mode == NarrowingMode::Saturate;
@@ -681,7 +696,7 @@ impl Level for WasmSimd128 {
             OpSig::Narrow {
                 target_ty,
                 mode: NarrowingMode::Relaxed,
-            } => relaxed_narrow_method(op, vec_ty, target_ty, "narrow"),
+            } => narrow_delegate_method(op, vec_ty, target_ty, "narrow"),
             OpSig::Binary => {
                 let saturating_op = match method {
                     "saturating_add" => Some(SaturatingOp::Add),

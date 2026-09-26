@@ -714,6 +714,8 @@ pub trait Simd:
     fn all_false_mask8x16(self, a: mask8x16<Self>) -> bool;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x32<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_mask8x16(self, a: mask8x16<Self>) -> (mask16x8<Self>, mask16x8<Self>);
     #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
     fn abs_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
@@ -1070,6 +1072,14 @@ pub trait Simd:
     fn all_false_mask16x8(self, a: mask16x8<Self>) -> bool;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x16<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_mask16x8(self, a: mask16x8<Self>) -> (mask32x4<Self>, mask32x4<Self>);
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask8x16<Self>;
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    fn saturating_narrow_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask8x16<Self>;
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    fn relaxed_narrow_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask8x16<Self>;
     #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
     fn abs_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
@@ -1430,6 +1440,14 @@ pub trait Simd:
     fn all_false_mask32x4(self, a: mask32x4<Self>) -> bool;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x8<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_mask32x4(self, a: mask32x4<Self>) -> (mask64x2<Self>, mask64x2<Self>);
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask16x8<Self>;
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    fn saturating_narrow_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask16x8<Self>;
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    fn relaxed_narrow_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask16x8<Self>;
     #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
@@ -1956,6 +1974,12 @@ pub trait Simd:
     fn all_false_mask64x2(self, a: mask64x2<Self>) -> bool;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x4<Self>;
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask32x4<Self>;
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    fn saturating_narrow_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask32x4<Self>;
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    fn relaxed_narrow_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask32x4<Self>;
     #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
     #[inline(always)]
     fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
@@ -3136,6 +3160,17 @@ pub trait Simd:
     fn combine_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x64<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask8x32(self, a: mask8x32<Self>) -> (mask8x16<Self>, mask8x16<Self>);
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    #[inline(always)]
+    fn widen_mask8x32(self, a: mask8x32<Self>) -> (mask16x16<Self>, mask16x16<Self>) {
+        let (a0, a1) = self.split_mask8x32(a);
+        let (a00, a01) = self.widen_mask8x16(a0);
+        let (a10, a11) = self.widen_mask8x16(a1);
+        (
+            self.combine_mask16x8(a00, a01),
+            self.combine_mask16x8(a10, a11),
+        )
+    }
     #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
     #[inline(always)]
     fn abs_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
@@ -3976,6 +4011,44 @@ pub trait Simd:
     fn combine_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x32<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask16x16(self, a: mask16x16<Self>) -> (mask16x8<Self>, mask16x8<Self>);
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    #[inline(always)]
+    fn widen_mask16x16(self, a: mask16x16<Self>) -> (mask32x8<Self>, mask32x8<Self>) {
+        let (a0, a1) = self.split_mask16x16(a);
+        let (a00, a01) = self.widen_mask16x8(a0);
+        let (a10, a11) = self.widen_mask16x8(a1);
+        (
+            self.combine_mask32x4(a00, a01),
+            self.combine_mask32x4(a10, a11),
+        )
+    }
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    #[inline(always)]
+    fn narrow_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        let (b0, b1) = self.split_mask16x16(b);
+        self.combine_mask8x16(self.narrow_mask16x8(a0, a1), self.narrow_mask16x8(b0, b1))
+    }
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    #[inline(always)]
+    fn saturating_narrow_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        let (b0, b1) = self.split_mask16x16(b);
+        self.combine_mask8x16(
+            self.saturating_narrow_mask16x8(a0, a1),
+            self.saturating_narrow_mask16x8(b0, b1),
+        )
+    }
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    #[inline(always)]
+    fn relaxed_narrow_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        let (b0, b1) = self.split_mask16x16(b);
+        self.combine_mask8x16(
+            self.relaxed_narrow_mask16x8(a0, a1),
+            self.relaxed_narrow_mask16x8(b0, b1),
+        )
+    }
     #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
     #[inline(always)]
     fn abs_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
@@ -4820,6 +4893,44 @@ pub trait Simd:
     fn combine_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x16<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask32x8(self, a: mask32x8<Self>) -> (mask32x4<Self>, mask32x4<Self>);
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    #[inline(always)]
+    fn widen_mask32x8(self, a: mask32x8<Self>) -> (mask64x4<Self>, mask64x4<Self>) {
+        let (a0, a1) = self.split_mask32x8(a);
+        let (a00, a01) = self.widen_mask32x4(a0);
+        let (a10, a11) = self.widen_mask32x4(a1);
+        (
+            self.combine_mask64x2(a00, a01),
+            self.combine_mask64x2(a10, a11),
+        )
+    }
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    #[inline(always)]
+    fn narrow_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        let (b0, b1) = self.split_mask32x8(b);
+        self.combine_mask16x8(self.narrow_mask32x4(a0, a1), self.narrow_mask32x4(b0, b1))
+    }
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    #[inline(always)]
+    fn saturating_narrow_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        let (b0, b1) = self.split_mask32x8(b);
+        self.combine_mask16x8(
+            self.saturating_narrow_mask32x4(a0, a1),
+            self.saturating_narrow_mask32x4(b0, b1),
+        )
+    }
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    #[inline(always)]
+    fn relaxed_narrow_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        let (b0, b1) = self.split_mask32x8(b);
+        self.combine_mask16x8(
+            self.relaxed_narrow_mask32x4(a0, a1),
+            self.relaxed_narrow_mask32x4(b0, b1),
+        )
+    }
     #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
     #[inline(always)]
     fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
@@ -6084,6 +6195,33 @@ pub trait Simd:
     fn combine_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask64x4(self, a: mask64x4<Self>) -> (mask64x2<Self>, mask64x2<Self>);
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    #[inline(always)]
+    fn narrow_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        let (b0, b1) = self.split_mask64x4(b);
+        self.combine_mask32x4(self.narrow_mask64x2(a0, a1), self.narrow_mask64x2(b0, b1))
+    }
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    #[inline(always)]
+    fn saturating_narrow_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        let (b0, b1) = self.split_mask64x4(b);
+        self.combine_mask32x4(
+            self.saturating_narrow_mask64x2(a0, a1),
+            self.saturating_narrow_mask64x2(b0, b1),
+        )
+    }
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    #[inline(always)]
+    fn relaxed_narrow_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        let (b0, b1) = self.split_mask64x4(b);
+        self.combine_mask32x4(
+            self.relaxed_narrow_mask64x2(a0, a1),
+            self.relaxed_narrow_mask64x2(b0, b1),
+        )
+    }
     #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
     #[inline(always)]
     fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -7270,6 +7408,17 @@ pub trait Simd:
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask8x64(self, a: mask8x64<Self>) -> (mask8x32<Self>, mask8x32<Self>);
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    #[inline(always)]
+    fn widen_mask8x64(self, a: mask8x64<Self>) -> (mask16x32<Self>, mask16x32<Self>) {
+        let (a0, a1) = self.split_mask8x64(a);
+        let (a00, a01) = self.widen_mask8x32(a0);
+        let (a10, a11) = self.widen_mask8x32(a1);
+        (
+            self.combine_mask16x16(a00, a01),
+            self.combine_mask16x16(a10, a11),
+        )
+    }
     #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
     #[inline(always)]
     fn abs_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
@@ -8119,6 +8268,44 @@ pub trait Simd:
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask16x32(self, a: mask16x32<Self>) -> (mask16x16<Self>, mask16x16<Self>);
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    #[inline(always)]
+    fn widen_mask16x32(self, a: mask16x32<Self>) -> (mask32x16<Self>, mask32x16<Self>) {
+        let (a0, a1) = self.split_mask16x32(a);
+        let (a00, a01) = self.widen_mask16x16(a0);
+        let (a10, a11) = self.widen_mask16x16(a1);
+        (
+            self.combine_mask32x8(a00, a01),
+            self.combine_mask32x8(a10, a11),
+        )
+    }
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    #[inline(always)]
+    fn narrow_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        let (b0, b1) = self.split_mask16x32(b);
+        self.combine_mask8x32(self.narrow_mask16x16(a0, a1), self.narrow_mask16x16(b0, b1))
+    }
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    #[inline(always)]
+    fn saturating_narrow_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        let (b0, b1) = self.split_mask16x32(b);
+        self.combine_mask8x32(
+            self.saturating_narrow_mask16x16(a0, a1),
+            self.saturating_narrow_mask16x16(b0, b1),
+        )
+    }
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    #[inline(always)]
+    fn relaxed_narrow_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        let (b0, b1) = self.split_mask16x32(b);
+        self.combine_mask8x32(
+            self.relaxed_narrow_mask16x16(a0, a1),
+            self.relaxed_narrow_mask16x16(b0, b1),
+        )
+    }
     #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
     #[inline(always)]
     fn abs_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
@@ -8965,6 +9152,48 @@ pub trait Simd:
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask32x16(self, a: mask32x16<Self>) -> (mask32x8<Self>, mask32x8<Self>);
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    #[inline(always)]
+    fn widen_mask32x16(self, a: mask32x16<Self>) -> (mask64x8<Self>, mask64x8<Self>) {
+        let (a0, a1) = self.split_mask32x16(a);
+        let (a00, a01) = self.widen_mask32x8(a0);
+        let (a10, a11) = self.widen_mask32x8(a1);
+        (
+            self.combine_mask64x4(a00, a01),
+            self.combine_mask64x4(a10, a11),
+        )
+    }
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    #[inline(always)]
+    fn narrow_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        let (b0, b1) = self.split_mask32x16(b);
+        self.combine_mask16x16(self.narrow_mask32x8(a0, a1), self.narrow_mask32x8(b0, b1))
+    }
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    #[inline(always)]
+    fn saturating_narrow_mask32x16(
+        self,
+        a: mask32x16<Self>,
+        b: mask32x16<Self>,
+    ) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        let (b0, b1) = self.split_mask32x16(b);
+        self.combine_mask16x16(
+            self.saturating_narrow_mask32x8(a0, a1),
+            self.saturating_narrow_mask32x8(b0, b1),
+        )
+    }
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    #[inline(always)]
+    fn relaxed_narrow_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        let (b0, b1) = self.split_mask32x16(b);
+        self.combine_mask16x16(
+            self.relaxed_narrow_mask32x8(a0, a1),
+            self.relaxed_narrow_mask32x8(b0, b1),
+        )
+    }
     #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
     #[inline(always)]
     fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
@@ -10221,6 +10450,33 @@ pub trait Simd:
     }
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>);
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes."]
+    #[inline(always)]
+    fn narrow_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_mask64x8(b);
+        self.combine_mask32x8(self.narrow_mask64x4(a0, a1), self.narrow_mask64x4(b0, b1))
+    }
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    #[inline(always)]
+    fn saturating_narrow_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_mask64x8(b);
+        self.combine_mask32x8(
+            self.saturating_narrow_mask64x4(a0, a1),
+            self.saturating_narrow_mask64x4(b0, b1),
+        )
+    }
+    #[doc = "Concatenate two masks into one same-width vector.\n\n`a` provides the lower result lanes and `b` provides the upper result lanes.\n\nFor mask types, this is identical to `narrow`."]
+    #[inline(always)]
+    fn relaxed_narrow_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_mask64x8(b);
+        self.combine_mask32x8(
+            self.relaxed_narrow_mask64x4(a0, a1),
+            self.relaxed_narrow_mask64x4(b0, b1),
+        )
+    }
 }
 pub(crate) mod arch_types {
     use crate::transmute::SimdPod;

@@ -10,7 +10,7 @@ use crate::generic::{
     reverse_vector_mask_method,
 };
 use crate::level::Level;
-use crate::ops::{NarrowingMode, Op, SlideGranularity, relaxed_narrow_method};
+use crate::ops::{NarrowingMode, Op, SlideGranularity, narrow_delegate_method};
 use crate::{
     arch::neon::{self, cvt_intrinsic, simple_intrinsic, split_intrinsic},
     ops::OpSig,
@@ -351,7 +351,7 @@ impl Level for Neon {
                 }
 
                 let src_scalar = match vec_ty.scalar {
-                    ScalarType::Int => format!("s{}", vec_ty.scalar_bits),
+                    ScalarType::Int | ScalarType::Mask => format!("s{}", vec_ty.scalar_bits),
                     ScalarType::Unsigned => format!("u{}", vec_ty.scalar_bits),
                     _ => unreachable!(),
                 };
@@ -368,20 +368,14 @@ impl Level for Neon {
                 })
             }
             OpSig::Narrow { target_ty, mode } => {
-                if mode == NarrowingMode::Relaxed {
-                    return relaxed_narrow_method(op, vec_ty, target_ty, "narrow");
+                if (vec_ty.scalar == ScalarType::Mask && mode != NarrowingMode::Wrap)
+                    || (vec_ty.scalar == ScalarType::Float && mode == NarrowingMode::Saturate)
+                    || mode == NarrowingMode::Relaxed
+                {
+                    return narrow_delegate_method(op, vec_ty, target_ty, "narrow");
                 }
 
                 if vec_ty.scalar == ScalarType::Float {
-                    if mode == NarrowingMode::Saturate {
-                        let narrow = generic_op_name("narrow", vec_ty);
-                        return quote! {
-                            #method_sig {
-                                self.#narrow(a, b)
-                            }
-                        };
-                    }
-
                     return self.kernel_method(op, vec_ty, |token| {
                         quote! {
                             vcvt_high_f32_f64(vcvt_f32_f64(a.into()), b.into()).simd_into(#token)
@@ -390,7 +384,7 @@ impl Level for Neon {
                 }
 
                 let prefix = match vec_ty.scalar {
-                    ScalarType::Int => "s",
+                    ScalarType::Int | ScalarType::Mask => "s",
                     ScalarType::Unsigned => "u",
                     _ => unreachable!(),
                 };

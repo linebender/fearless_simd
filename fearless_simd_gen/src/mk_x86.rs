@@ -15,7 +15,7 @@ use crate::generic::{
 use crate::level::Level;
 use crate::ops::{
     ElementDirection, NarrowingMode, Op, OpSig, Quantifier, SaturatingOp, SlideGranularity,
-    relaxed_narrow_method,
+    narrow_delegate_method,
 };
 use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Literal, Span, TokenStream};
@@ -2091,6 +2091,23 @@ impl X86 {
     }
 
     fn handle_widen(&self, op: Op, vec_ty: &VecType, target_ty: VecType) -> TokenStream {
+        if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask {
+            // Same as "split"
+            let method_sig = op.simd_trait_method_sig(vec_ty);
+            let target_rust = target_ty.rust();
+            let target_len = target_ty.len;
+            let target_mask = avx512_mask_lane_bits(&target_ty);
+            return quote! {
+                #method_sig {
+                    let bits = u64::from(a.val);
+                    (
+                        #target_rust { val: (bits & #target_mask) as _, simd: self },
+                        #target_rust { val: ((bits >> #target_len) & #target_mask) as _, simd: self },
+                    )
+                }
+            };
+        }
+
         self.kernel_method(op, vec_ty, |token| {
             match (*self, vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits()) {
                 (_, ScalarType::Float, 32, 128) => quote! {
@@ -2173,7 +2190,8 @@ impl X86 {
                     ScalarType::Unsigned | ScalarType::Int,
                     8 | 16 | 32,
                     256,
-                ) => {
+                )
+                | (Self::Avx2, ScalarType::Mask, 8 | 16 | 32, 256) => {
                     let extend = extend_intrinsic(
                         vec_ty.scalar,
                         vec_ty.scalar_bits,
@@ -2203,6 +2221,20 @@ impl X86 {
                         )
                     }
                 }
+                (Self::Sse2 | Self::Sse4_2 | Self::Avx2, ScalarType::Mask, 8 | 16 | 32, 128) => {
+                    let unpack_low =
+                        unpack_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, true, vec_ty.n_bits());
+                    let unpack_high =
+                        unpack_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, false, vec_ty.n_bits());
+                    // Just duplicate each lane
+                    quote! {
+                        let raw = a.into();
+                        (
+                            #unpack_low(raw, raw).simd_into(#token),
+                            #unpack_high(raw, raw).simd_into(#token),
+                        )
+                    }
+                }
                 _ => unreachable!(),
             }
         })
@@ -2217,6 +2249,31 @@ impl X86 {
     ) -> TokenStream {
         use NarrowingMode::{Relaxed, Saturate, Wrap};
 
+        if (vec_ty.scalar == ScalarType::Mask && mode != Wrap)
+            || (vec_ty.scalar == ScalarType::Float && mode == Saturate)
+        {
+            return narrow_delegate_method(op, vec_ty, target_ty, "narrow");
+        }
+
+        // Same as "combine"
+        if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask {
+            let method_sig = op.simd_trait_method_sig(vec_ty);
+            let narrowed_rust = target_ty.rust();
+            let shift = vec_ty.len;
+            let lane_mask = avx512_mask_lane_bits(&target_ty);
+            let bits = if avx512_mask_register_bits(&target_ty) == 64 {
+                quote! { bits }
+            } else {
+                quote! { bits as _ }
+            };
+            return quote! {
+                #method_sig {
+                    let bits = (u64::from(a.val) | (u64::from(b.val) << #shift)) & #lane_mask;
+                    #narrowed_rust { val: #bits, simd: self }
+                }
+            };
+        }
+
         if mode == Relaxed {
             // SSE4.2 and AVX2 only have saturating narrowing instructions for i32 and i16
             let implementation = if *self != Self::Avx512
@@ -2228,7 +2285,7 @@ impl X86 {
                 // for everything else (SSE2, AVX-512, unsigned values) truncation is cheaper
                 "narrow"
             };
-            return relaxed_narrow_method(op, vec_ty, target_ty, implementation);
+            return narrow_delegate_method(op, vec_ty, target_ty, implementation);
         }
 
         // Restore sequential lane order after AVX2 pack instructions interleave results within
@@ -2273,17 +2330,28 @@ impl X86 {
             vec_ty.scalar_bits,
             vec_ty.n_bits(),
         ) {
-            (_, Saturate, ScalarType::Float, 64, 128 | 256 | 512) => {
-                // Saturating conversion for floats doesn't make sense, floats always follow IEEE rounding.
-                // Pass through to the regular conversion.
-                let method_sig = op.simd_trait_method_sig(vec_ty);
-                let narrow = generic_op_name("narrow", vec_ty);
-                quote! {
-                    #method_sig {
-                        self.#narrow(a, b)
-                    }
+            (Self::Sse2 | Self::Sse4_2 | Self::Avx2, Wrap, ScalarType::Mask, 64, 128 | 256) => self
+                .kernel_method(op, vec_ty, |token| {
+                    let low = compact_dwords(false, quote! { a.into() }, quote! { b.into() });
+                    quote! { #low.simd_into(#token) }
+                }),
+            (
+                Self::Sse2 | Self::Sse4_2 | Self::Avx2,
+                Wrap,
+                ScalarType::Mask,
+                16 | 32,
+                128 | 256,
+            ) => self.kernel_method(op, vec_ty, |token| {
+                // Mask values are all-zeroes or all-ones, so we can use a pack
+                // intrinsic of any narrower width.
+                let pack = pack_intrinsic(vec_ty.scalar_bits, true, vec_ty.n_bits());
+                let packed = quote! { #pack(a.into(), b.into()) };
+                if vec_ty.n_bits() == 256 {
+                    reorder_avx2(packed, token)
+                } else {
+                    quote! { #packed.simd_into(#token) }
                 }
-            }
+            }),
             (_, Wrap, ScalarType::Float, 64, 128) => self.kernel_method(op, vec_ty, |token| {
                 quote! {
                     let low = _mm_cvtpd_ps(a.into());

@@ -55,6 +55,7 @@ mod mul_add_precise;
 mod mul_sub;
 mod mul_sub_precise;
 mod narrow;
+mod narrow_mask;
 mod native_width;
 mod neg;
 mod not;

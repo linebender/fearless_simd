@@ -2281,6 +2281,20 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
+    fn widen_mask8x16(self, a: mask8x16<Self>) -> (mask16x8<Self>, mask16x8<Self>) {
+        let bits = u64::from(a.val);
+        (
+            mask16x8 {
+                val: (bits & 255u64) as _,
+                simd: self,
+            },
+            mask16x8 {
+                val: ((bits >> 8usize) & 255u64) as _,
+                simd: self,
+            },
+        )
+    }
+    #[inline(always)]
     fn abs_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3450,6 +3464,36 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
+    fn widen_mask16x8(self, a: mask16x8<Self>) -> (mask32x4<Self>, mask32x4<Self>) {
+        let bits = u64::from(a.val);
+        (
+            mask32x4 {
+                val: (bits & 15u64) as _,
+                simd: self,
+            },
+            mask32x4 {
+                val: ((bits >> 4usize) & 15u64) as _,
+                simd: self,
+            },
+        )
+    }
+    #[inline(always)]
+    fn narrow_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask8x16<Self> {
+        let bits = (u64::from(a.val) | (u64::from(b.val) << 8usize)) & 65535u64;
+        mask8x16 {
+            val: bits as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask8x16<Self> {
+        self.narrow_mask16x8(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask8x16<Self> {
+        self.narrow_mask16x8(a, b)
+    }
+    #[inline(always)]
     fn abs_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4615,6 +4659,36 @@ impl Simd for Avx512 {
             val: bits as _,
             simd: self,
         }
+    }
+    #[inline(always)]
+    fn widen_mask32x4(self, a: mask32x4<Self>) -> (mask64x2<Self>, mask64x2<Self>) {
+        let bits = u64::from(a.val);
+        (
+            mask64x2 {
+                val: (bits & 3u64) as _,
+                simd: self,
+            },
+            mask64x2 {
+                val: ((bits >> 2usize) & 3u64) as _,
+                simd: self,
+            },
+        )
+    }
+    #[inline(always)]
+    fn narrow_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask16x8<Self> {
+        let bits = (u64::from(a.val) | (u64::from(b.val) << 4usize)) & 255u64;
+        mask16x8 {
+            val: bits as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask16x8<Self> {
+        self.narrow_mask32x4(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask16x8<Self> {
+        self.narrow_mask32x4(a, b)
     }
     #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -6252,6 +6326,22 @@ impl Simd for Avx512 {
             val: bits as _,
             simd: self,
         }
+    }
+    #[inline(always)]
+    fn narrow_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask32x4<Self> {
+        let bits = (u64::from(a.val) | (u64::from(b.val) << 2usize)) & 15u64;
+        mask32x4 {
+            val: bits as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask32x4<Self> {
+        self.narrow_mask64x2(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask32x4<Self> {
+        self.narrow_mask64x2(a, b)
     }
     #[inline(always)]
     fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
@@ -8072,6 +8162,20 @@ impl Simd for Avx512 {
         )
     }
     #[inline(always)]
+    fn widen_mask8x32(self, a: mask8x32<Self>) -> (mask16x16<Self>, mask16x16<Self>) {
+        let bits = u64::from(a.val);
+        (
+            mask16x16 {
+                val: (bits & 65535u64) as _,
+                simd: self,
+            },
+            mask16x16 {
+                val: ((bits >> 16usize) & 65535u64) as _,
+                simd: self,
+            },
+        )
+    }
+    #[inline(always)]
     fn abs_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9203,6 +9307,36 @@ impl Simd for Avx512 {
         )
     }
     #[inline(always)]
+    fn widen_mask16x16(self, a: mask16x16<Self>) -> (mask32x8<Self>, mask32x8<Self>) {
+        let bits = u64::from(a.val);
+        (
+            mask32x8 {
+                val: (bits & 255u64) as _,
+                simd: self,
+            },
+            mask32x8 {
+                val: ((bits >> 8usize) & 255u64) as _,
+                simd: self,
+            },
+        )
+    }
+    #[inline(always)]
+    fn narrow_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask8x32<Self> {
+        let bits = (u64::from(a.val) | (u64::from(b.val) << 16usize)) & 4294967295u64;
+        mask8x32 {
+            val: bits as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask8x32<Self> {
+        self.narrow_mask16x16(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask8x32<Self> {
+        self.narrow_mask16x16(a, b)
+    }
+    #[inline(always)]
     fn abs_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10330,6 +10464,36 @@ impl Simd for Avx512 {
                 simd: self,
             },
         )
+    }
+    #[inline(always)]
+    fn widen_mask32x8(self, a: mask32x8<Self>) -> (mask64x4<Self>, mask64x4<Self>) {
+        let bits = u64::from(a.val);
+        (
+            mask64x4 {
+                val: (bits & 15u64) as _,
+                simd: self,
+            },
+            mask64x4 {
+                val: ((bits >> 4usize) & 15u64) as _,
+                simd: self,
+            },
+        )
+    }
+    #[inline(always)]
+    fn narrow_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask16x16<Self> {
+        let bits = (u64::from(a.val) | (u64::from(b.val) << 8usize)) & 65535u64;
+        mask16x16 {
+            val: bits as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask16x16<Self> {
+        self.narrow_mask32x8(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask16x16<Self> {
+        self.narrow_mask32x8(a, b)
     }
     #[inline(always)]
     fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
@@ -11933,6 +12097,22 @@ impl Simd for Avx512 {
                 simd: self,
             },
         )
+    }
+    #[inline(always)]
+    fn narrow_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask32x8<Self> {
+        let bits = (u64::from(a.val) | (u64::from(b.val) << 4usize)) & 255u64;
+        mask32x8 {
+            val: bits as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask32x8<Self> {
+        self.narrow_mask64x4(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask32x8<Self> {
+        self.narrow_mask64x4(a, b)
     }
     #[inline(always)]
     fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -13790,6 +13970,20 @@ impl Simd for Avx512 {
         )
     }
     #[inline(always)]
+    fn widen_mask8x64(self, a: mask8x64<Self>) -> (mask16x32<Self>, mask16x32<Self>) {
+        let bits = u64::from(a.val);
+        (
+            mask16x32 {
+                val: (bits & 4294967295u64) as _,
+                simd: self,
+            },
+            mask16x32 {
+                val: ((bits >> 32usize) & 4294967295u64) as _,
+                simd: self,
+            },
+        )
+    }
+    #[inline(always)]
     fn abs_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -14933,6 +15127,36 @@ impl Simd for Avx512 {
                 simd: self,
             },
         )
+    }
+    #[inline(always)]
+    fn widen_mask16x32(self, a: mask16x32<Self>) -> (mask32x16<Self>, mask32x16<Self>) {
+        let bits = u64::from(a.val);
+        (
+            mask32x16 {
+                val: (bits & 65535u64) as _,
+                simd: self,
+            },
+            mask32x16 {
+                val: ((bits >> 16usize) & 65535u64) as _,
+                simd: self,
+            },
+        )
+    }
+    #[inline(always)]
+    fn narrow_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask8x64<Self> {
+        let bits = (u64::from(a.val) | (u64::from(b.val) << 32usize)) & u64::MAX;
+        mask8x64 {
+            val: bits,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask8x64<Self> {
+        self.narrow_mask16x32(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask8x64<Self> {
+        self.narrow_mask16x32(a, b)
     }
     #[inline(always)]
     fn abs_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
@@ -16083,6 +16307,40 @@ impl Simd for Avx512 {
                 simd: self,
             },
         )
+    }
+    #[inline(always)]
+    fn widen_mask32x16(self, a: mask32x16<Self>) -> (mask64x8<Self>, mask64x8<Self>) {
+        let bits = u64::from(a.val);
+        (
+            mask64x8 {
+                val: (bits & 255u64) as _,
+                simd: self,
+            },
+            mask64x8 {
+                val: ((bits >> 8usize) & 255u64) as _,
+                simd: self,
+            },
+        )
+    }
+    #[inline(always)]
+    fn narrow_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask16x32<Self> {
+        let bits = (u64::from(a.val) | (u64::from(b.val) << 16usize)) & 4294967295u64;
+        mask16x32 {
+            val: bits as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask32x16(
+        self,
+        a: mask32x16<Self>,
+        b: mask32x16<Self>,
+    ) -> mask16x32<Self> {
+        self.narrow_mask32x16(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask16x32<Self> {
+        self.narrow_mask32x16(a, b)
     }
     #[inline(always)]
     fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
@@ -17695,6 +17953,22 @@ impl Simd for Avx512 {
                 simd: self,
             },
         )
+    }
+    #[inline(always)]
+    fn narrow_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask32x16<Self> {
+        let bits = (u64::from(a.val) | (u64::from(b.val) << 8usize)) & 65535u64;
+        mask32x16 {
+            val: bits as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn saturating_narrow_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask32x16<Self> {
+        self.narrow_mask64x8(a, b)
+    }
+    #[inline(always)]
+    fn relaxed_narrow_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask32x16<Self> {
+        self.narrow_mask64x8(a, b)
     }
 }
 impl<S: Simd> SimdFrom<__mmask16, S> for mask8x16<S> {
