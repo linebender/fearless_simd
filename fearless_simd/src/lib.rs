@@ -236,6 +236,7 @@ use libm as _;
 mod generated;
 mod kernel_macros;
 mod macros;
+mod math;
 mod support;
 mod traits;
 mod transmute;
