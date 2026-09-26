@@ -66,7 +66,7 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
     }
     let mut code = quote! {
         use core::fmt::Debug;
-        use crate::{seal::Seal, Level, ExtractToken, SimdElement, SimdIntElement, SimdFloatElement, SimdFrom, SimdInto, SimdCvtTruncate, SimdCvtFloat, SimdWiden, SimdNarrow, Select, Bytes};
+        use crate::{seal::Seal, Level, ExtractToken, SimdElement, SimdIntElement, SimdFloatElement, SimdFrom, SimdInto, SimdCvtTruncate, SimdCvtFloat, SimdWiden, SimdNarrow, MaskWiden, MaskNarrow, Select, Bytes};
         #imports
         /// The main SIMD trait, implemented by all SIMD token types.
         ///
@@ -142,13 +142,17 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
                 + SimdNarrow<Self, Narrowed = Self::i32s>
                 + core::ops::Neg<Output = Self::i64s>;
             /// A native-width SIMD mask with 8-bit lanes.
-            type mask8s: SimdMask<Self, Element = i8> + Select<Self::u8s> + Select<Self::i8s> + Select<Self::mask8s>;
+            type mask8s: SimdMask<Self, Element = i8> + Select<Self::u8s> + Select<Self::i8s> + Select<Self::mask8s>
+                + MaskWiden<Self, Widened = Self::mask16s>;
             /// A native-width SIMD mask with 16-bit lanes.
-            type mask16s: SimdMask<Self, Element = i16> + Select<Self::u16s> + Select<Self::i16s> + Select<Self::mask16s>;
+            type mask16s: SimdMask<Self, Element = i16> + Select<Self::u16s> + Select<Self::i16s> + Select<Self::mask16s>
+                + MaskNarrow<Self, Narrowed = Self::mask8s> + MaskWiden<Self, Widened = Self::mask32s>;
             /// A native-width SIMD mask with 32-bit lanes.
-            type mask32s: SimdMask<Self, Element = i32> + Select<Self::f32s> + Select<Self::u32s> + Select<Self::i32s> + Select<Self::mask32s>;
+            type mask32s: SimdMask<Self, Element = i32> + Select<Self::f32s> + Select<Self::u32s> + Select<Self::i32s> + Select<Self::mask32s>
+                + MaskNarrow<Self, Narrowed = Self::mask16s> + MaskWiden<Self, Widened = Self::mask64s>;
             /// A native-width SIMD mask with 64-bit lanes.
-            type mask64s: SimdMask<Self, Element = i64> + Select<Self::f64s> + Select<Self::u64s> + Select<Self::i64s> + Select<Self::mask64s>;
+            type mask64s: SimdMask<Self, Element = i64> + Select<Self::f64s> + Select<Self::u64s> + Select<Self::i64s> + Select<Self::mask64s>
+                + MaskNarrow<Self, Narrowed = Self::mask32s>;
 
             /// This SIMD token's feature level.
             fn level(self) -> Level;

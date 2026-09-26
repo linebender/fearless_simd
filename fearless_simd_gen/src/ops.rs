@@ -1589,7 +1589,9 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
     }
 
     if let Some(target_ty) = ty.widened() {
-        let doc = if ty.scalar == ScalarType::Float {
+        let doc = if ty.scalar == ScalarType::Mask {
+            "Widen each boolean lane into two masks of the same logical width, preserving its value.\n\nThe first result contains the lower lanes and the second contains the upper lanes. Masks constructed from integer lanes other than 0 or -1 have unspecified behavior."
+        } else if ty.scalar == ScalarType::Float {
             "Widen every `f32` lane exactly into two same-width `f64` vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."
         } else {
             "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."
@@ -1602,7 +1604,24 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ));
     }
 
-    if !is_f64 && let Some(target_ty) = ty.narrowed() {
+    if ty.scalar == ScalarType::Mask
+        && let Some(target_ty) = ty.narrowed()
+    {
+        ops.push(Op::new(
+            "narrow",
+            OpKind::OwnTrait,
+            OpSig::Narrow {
+                target_ty,
+                mode: NarrowingMode::Wrap,
+            },
+            "Narrow each boolean lane of two masks and concatenate them into one mask of the same logical width, preserving each value.\n\n`{arg0}` supplies the lower result lanes and `{arg1}` supplies the upper result lanes. Masks constructed from integer lanes other than 0 or -1 have unspecified behavior.",
+        ));
+    }
+
+    if !is_f64
+        && ty.scalar != ScalarType::Mask
+        && let Some(target_ty) = ty.narrowed()
+    {
         ops.push(Op::new(
                 "narrow",
                 OpKind::OwnTrait,

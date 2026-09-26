@@ -5,7 +5,7 @@
     missing_docs,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
-use crate::{Simd, SimdBase, SimdFloat, SimdInt, seal::Seal};
+use crate::{Simd, SimdBase, SimdFloat, SimdInt, SimdMask, seal::Seal};
 use core::error::Error;
 use core::fmt::{Binary, Debug, Display, LowerExp, UpperExp};
 use core::iter::{Product, Sum};
@@ -482,6 +482,39 @@ pub trait SimdSplit<S: Simd>: SimdBase<S> + Seal {
 
     /// Split this vector into left and right halves.
     fn split(self) -> (Self::Split, Self::Split);
+}
+
+/// Widening conversion of a SIMD mask, preserving each lane's boolean value.
+///
+/// The results have the same logical bit width as the input, with lanes twice as wide and half
+/// as many lanes. The first result contains the lower lanes and the second contains the upper
+/// lanes. This is supported for 8-, 16-, and 32-bit lanes at logical widths of 128, 256, and 512
+/// bits, independently of the backend's physical mask representation.
+///
+/// Masks constructed from integer lanes other than 0 or -1 have unspecified behavior.
+pub trait MaskWiden<S: Simd>: SimdMask<S> + Seal {
+    /// The same logical-width mask type with lanes twice as wide.
+    type Widened: MaskNarrow<S, Narrowed = Self>;
+
+    /// Widen each boolean lane, returning the lower and upper halves in that order.
+    fn widen(self) -> (Self::Widened, Self::Widened);
+}
+
+/// Narrowing conversion of two SIMD masks, preserving each lane's boolean value.
+///
+/// Both inputs have the same logical bit width as the result. The result has lanes half as
+/// wide and twice as many lanes: `self` supplies the lower lanes and `high` supplies the upper
+/// lanes. This is supported for 16-, 32-, and 64-bit lanes at logical widths of 128, 256, and 512
+/// bits, independently of the backend's physical mask representation.
+///
+/// This is the inverse of [`MaskWiden::widen`]. Masks constructed from integer lanes other than
+/// 0 or -1 have unspecified behavior.
+pub trait MaskNarrow<S: Simd>: SimdMask<S> + Seal {
+    /// The same logical-width mask type with lanes half as wide.
+    type Narrowed: MaskWiden<S, Widened = Self>;
+
+    /// Narrow each boolean lane and concatenate `self` followed by `high`.
+    fn narrow(self, high: Self) -> Self::Narrowed;
 }
 
 /// Widening conversion of a numeric SIMD vector.

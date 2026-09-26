@@ -1908,3 +1908,336 @@ fn widen_narrow_random<S: Simd>(simd: S) {
         }
     }
 }
+
+#[simd_test]
+fn narrow_mask16x8<S: Simd>(simd: S) {
+    for (low_bits, high_bits) in [
+        (0, 0),
+        (u64::MAX, u64::MAX),
+        (u64::MAX, 0),
+        (0, u64::MAX),
+        (0xd36a_59c2_8e17_b4a5, 0x69c3_a572_d81e_4b96),
+        (1, 1_u64 << 7),
+    ] {
+        let low = mask16x8::from_bitmask(simd, low_bits);
+        let high = mask16x8::from_bitmask(simd, high_bits);
+        let result: mask8x16<S> = low.narrow(high);
+        let expected = (low_bits & 0xff) | ((high_bits & 0xff) << 8);
+        assert_eq!(result.to_bitmask(), expected);
+        assert_eq!(
+            <[i8; 16]>::from(result),
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { -1 } else { 0 }),
+        );
+        let selected = result.select(i8x16::splat(simd, 7), i8x16::splat(simd, 3));
+        assert_eq!(
+            *selected,
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { 7 } else { 3 }),
+        );
+        let (roundtrip_low, roundtrip_high) = result.widen();
+        assert_eq!(roundtrip_low.to_bitmask(), low_bits & 0xff);
+        assert_eq!(roundtrip_high.to_bitmask(), high_bits & 0xff);
+    }
+
+    for lane in 0..8 {
+        let one = mask16x8::from_bitmask(simd, 1_u64 << lane);
+        let zero = mask16x8::splat(simd, false);
+        assert_eq!(one.narrow(zero).to_bitmask(), 1_u64 << lane);
+        assert_eq!(zero.narrow(one).to_bitmask(), 1_u64 << (lane + 8));
+    }
+}
+
+#[simd_test]
+fn narrow_mask32x4<S: Simd>(simd: S) {
+    for (low_bits, high_bits) in [
+        (0, 0),
+        (u64::MAX, u64::MAX),
+        (u64::MAX, 0),
+        (0, u64::MAX),
+        (0xd36a_59c2_8e17_b4a5, 0x69c3_a572_d81e_4b96),
+        (1, 1_u64 << 3),
+    ] {
+        let low = mask32x4::from_bitmask(simd, low_bits);
+        let high = mask32x4::from_bitmask(simd, high_bits);
+        let result: mask16x8<S> = low.narrow(high);
+        let expected = (low_bits & 0xf) | ((high_bits & 0xf) << 4);
+        assert_eq!(result.to_bitmask(), expected);
+        assert_eq!(
+            <[i16; 8]>::from(result),
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { -1 } else { 0 }),
+        );
+        let selected = result.select(i16x8::splat(simd, 7), i16x8::splat(simd, 3));
+        assert_eq!(
+            *selected,
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { 7 } else { 3 }),
+        );
+        let (roundtrip_low, roundtrip_high) = result.widen();
+        assert_eq!(roundtrip_low.to_bitmask(), low_bits & 0xf);
+        assert_eq!(roundtrip_high.to_bitmask(), high_bits & 0xf);
+    }
+
+    for lane in 0..4 {
+        let one = mask32x4::from_bitmask(simd, 1_u64 << lane);
+        let zero = mask32x4::splat(simd, false);
+        assert_eq!(one.narrow(zero).to_bitmask(), 1_u64 << lane);
+        assert_eq!(zero.narrow(one).to_bitmask(), 1_u64 << (lane + 4));
+    }
+}
+
+#[simd_test]
+fn narrow_mask64x2<S: Simd>(simd: S) {
+    for (low_bits, high_bits) in [
+        (0, 0),
+        (u64::MAX, u64::MAX),
+        (u64::MAX, 0),
+        (0, u64::MAX),
+        (0xd36a_59c2_8e17_b4a5, 0x69c3_a572_d81e_4b96),
+        (1, 1_u64 << 1),
+    ] {
+        let low = mask64x2::from_bitmask(simd, low_bits);
+        let high = mask64x2::from_bitmask(simd, high_bits);
+        let result: mask32x4<S> = low.narrow(high);
+        let expected = (low_bits & 0x3) | ((high_bits & 0x3) << 2);
+        assert_eq!(result.to_bitmask(), expected);
+        assert_eq!(
+            <[i32; 4]>::from(result),
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { -1 } else { 0 }),
+        );
+        let selected = result.select(i32x4::splat(simd, 7), i32x4::splat(simd, 3));
+        assert_eq!(
+            *selected,
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { 7 } else { 3 }),
+        );
+        let (roundtrip_low, roundtrip_high) = result.widen();
+        assert_eq!(roundtrip_low.to_bitmask(), low_bits & 0x3);
+        assert_eq!(roundtrip_high.to_bitmask(), high_bits & 0x3);
+    }
+
+    for lane in 0..2 {
+        let one = mask64x2::from_bitmask(simd, 1_u64 << lane);
+        let zero = mask64x2::splat(simd, false);
+        assert_eq!(one.narrow(zero).to_bitmask(), 1_u64 << lane);
+        assert_eq!(zero.narrow(one).to_bitmask(), 1_u64 << (lane + 2));
+    }
+}
+
+#[simd_test]
+fn narrow_mask16x16<S: Simd>(simd: S) {
+    for (low_bits, high_bits) in [
+        (0, 0),
+        (u64::MAX, u64::MAX),
+        (u64::MAX, 0),
+        (0, u64::MAX),
+        (0xd36a_59c2_8e17_b4a5, 0x69c3_a572_d81e_4b96),
+        (1, 1_u64 << 15),
+    ] {
+        let low = mask16x16::from_bitmask(simd, low_bits);
+        let high = mask16x16::from_bitmask(simd, high_bits);
+        let result: mask8x32<S> = low.narrow(high);
+        let expected = (low_bits & 0xffff) | ((high_bits & 0xffff) << 16);
+        assert_eq!(result.to_bitmask(), expected);
+        assert_eq!(
+            <[i8; 32]>::from(result),
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { -1 } else { 0 }),
+        );
+        let selected = result.select(i8x32::splat(simd, 7), i8x32::splat(simd, 3));
+        assert_eq!(
+            *selected,
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { 7 } else { 3 }),
+        );
+        let (roundtrip_low, roundtrip_high) = result.widen();
+        assert_eq!(roundtrip_low.to_bitmask(), low_bits & 0xffff);
+        assert_eq!(roundtrip_high.to_bitmask(), high_bits & 0xffff);
+    }
+
+    for lane in 0..16 {
+        let one = mask16x16::from_bitmask(simd, 1_u64 << lane);
+        let zero = mask16x16::splat(simd, false);
+        assert_eq!(one.narrow(zero).to_bitmask(), 1_u64 << lane);
+        assert_eq!(zero.narrow(one).to_bitmask(), 1_u64 << (lane + 16));
+    }
+}
+
+#[simd_test]
+fn narrow_mask32x8<S: Simd>(simd: S) {
+    for (low_bits, high_bits) in [
+        (0, 0),
+        (u64::MAX, u64::MAX),
+        (u64::MAX, 0),
+        (0, u64::MAX),
+        (0xd36a_59c2_8e17_b4a5, 0x69c3_a572_d81e_4b96),
+        (1, 1_u64 << 7),
+    ] {
+        let low = mask32x8::from_bitmask(simd, low_bits);
+        let high = mask32x8::from_bitmask(simd, high_bits);
+        let result: mask16x16<S> = low.narrow(high);
+        let expected = (low_bits & 0xff) | ((high_bits & 0xff) << 8);
+        assert_eq!(result.to_bitmask(), expected);
+        assert_eq!(
+            <[i16; 16]>::from(result),
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { -1 } else { 0 }),
+        );
+        let selected = result.select(i16x16::splat(simd, 7), i16x16::splat(simd, 3));
+        assert_eq!(
+            *selected,
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { 7 } else { 3 }),
+        );
+        let (roundtrip_low, roundtrip_high) = result.widen();
+        assert_eq!(roundtrip_low.to_bitmask(), low_bits & 0xff);
+        assert_eq!(roundtrip_high.to_bitmask(), high_bits & 0xff);
+    }
+
+    for lane in 0..8 {
+        let one = mask32x8::from_bitmask(simd, 1_u64 << lane);
+        let zero = mask32x8::splat(simd, false);
+        assert_eq!(one.narrow(zero).to_bitmask(), 1_u64 << lane);
+        assert_eq!(zero.narrow(one).to_bitmask(), 1_u64 << (lane + 8));
+    }
+}
+
+#[simd_test]
+fn narrow_mask64x4<S: Simd>(simd: S) {
+    for (low_bits, high_bits) in [
+        (0, 0),
+        (u64::MAX, u64::MAX),
+        (u64::MAX, 0),
+        (0, u64::MAX),
+        (0xd36a_59c2_8e17_b4a5, 0x69c3_a572_d81e_4b96),
+        (1, 1_u64 << 3),
+    ] {
+        let low = mask64x4::from_bitmask(simd, low_bits);
+        let high = mask64x4::from_bitmask(simd, high_bits);
+        let result: mask32x8<S> = low.narrow(high);
+        let expected = (low_bits & 0xf) | ((high_bits & 0xf) << 4);
+        assert_eq!(result.to_bitmask(), expected);
+        assert_eq!(
+            <[i32; 8]>::from(result),
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { -1 } else { 0 }),
+        );
+        let selected = result.select(i32x8::splat(simd, 7), i32x8::splat(simd, 3));
+        assert_eq!(
+            *selected,
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { 7 } else { 3 }),
+        );
+        let (roundtrip_low, roundtrip_high) = result.widen();
+        assert_eq!(roundtrip_low.to_bitmask(), low_bits & 0xf);
+        assert_eq!(roundtrip_high.to_bitmask(), high_bits & 0xf);
+    }
+
+    for lane in 0..4 {
+        let one = mask64x4::from_bitmask(simd, 1_u64 << lane);
+        let zero = mask64x4::splat(simd, false);
+        assert_eq!(one.narrow(zero).to_bitmask(), 1_u64 << lane);
+        assert_eq!(zero.narrow(one).to_bitmask(), 1_u64 << (lane + 4));
+    }
+}
+
+#[simd_test]
+fn narrow_mask16x32<S: Simd>(simd: S) {
+    for (low_bits, high_bits) in [
+        (0, 0),
+        (u64::MAX, u64::MAX),
+        (u64::MAX, 0),
+        (0, u64::MAX),
+        (0xd36a_59c2_8e17_b4a5, 0x69c3_a572_d81e_4b96),
+        (1, 1_u64 << 31),
+    ] {
+        let low = mask16x32::from_bitmask(simd, low_bits);
+        let high = mask16x32::from_bitmask(simd, high_bits);
+        let result: mask8x64<S> = low.narrow(high);
+        let expected = (low_bits & 0xffffffff) | ((high_bits & 0xffffffff) << 32);
+        assert_eq!(result.to_bitmask(), expected);
+        assert_eq!(
+            <[i8; 64]>::from(result),
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { -1 } else { 0 }),
+        );
+        let selected = result.select(i8x64::splat(simd, 7), i8x64::splat(simd, 3));
+        assert_eq!(
+            *selected,
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { 7 } else { 3 }),
+        );
+        let (roundtrip_low, roundtrip_high) = result.widen();
+        assert_eq!(roundtrip_low.to_bitmask(), low_bits & 0xffffffff);
+        assert_eq!(roundtrip_high.to_bitmask(), high_bits & 0xffffffff);
+    }
+
+    for lane in 0..32 {
+        let one = mask16x32::from_bitmask(simd, 1_u64 << lane);
+        let zero = mask16x32::splat(simd, false);
+        assert_eq!(one.narrow(zero).to_bitmask(), 1_u64 << lane);
+        assert_eq!(zero.narrow(one).to_bitmask(), 1_u64 << (lane + 32));
+    }
+}
+
+#[simd_test]
+fn narrow_mask32x16<S: Simd>(simd: S) {
+    for (low_bits, high_bits) in [
+        (0, 0),
+        (u64::MAX, u64::MAX),
+        (u64::MAX, 0),
+        (0, u64::MAX),
+        (0xd36a_59c2_8e17_b4a5, 0x69c3_a572_d81e_4b96),
+        (1, 1_u64 << 15),
+    ] {
+        let low = mask32x16::from_bitmask(simd, low_bits);
+        let high = mask32x16::from_bitmask(simd, high_bits);
+        let result: mask16x32<S> = low.narrow(high);
+        let expected = (low_bits & 0xffff) | ((high_bits & 0xffff) << 16);
+        assert_eq!(result.to_bitmask(), expected);
+        assert_eq!(
+            <[i16; 32]>::from(result),
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { -1 } else { 0 }),
+        );
+        let selected = result.select(i16x32::splat(simd, 7), i16x32::splat(simd, 3));
+        assert_eq!(
+            *selected,
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { 7 } else { 3 }),
+        );
+        let (roundtrip_low, roundtrip_high) = result.widen();
+        assert_eq!(roundtrip_low.to_bitmask(), low_bits & 0xffff);
+        assert_eq!(roundtrip_high.to_bitmask(), high_bits & 0xffff);
+    }
+
+    for lane in 0..16 {
+        let one = mask32x16::from_bitmask(simd, 1_u64 << lane);
+        let zero = mask32x16::splat(simd, false);
+        assert_eq!(one.narrow(zero).to_bitmask(), 1_u64 << lane);
+        assert_eq!(zero.narrow(one).to_bitmask(), 1_u64 << (lane + 16));
+    }
+}
+
+#[simd_test]
+fn narrow_mask64x8<S: Simd>(simd: S) {
+    for (low_bits, high_bits) in [
+        (0, 0),
+        (u64::MAX, u64::MAX),
+        (u64::MAX, 0),
+        (0, u64::MAX),
+        (0xd36a_59c2_8e17_b4a5, 0x69c3_a572_d81e_4b96),
+        (1, 1_u64 << 7),
+    ] {
+        let low = mask64x8::from_bitmask(simd, low_bits);
+        let high = mask64x8::from_bitmask(simd, high_bits);
+        let result: mask32x16<S> = low.narrow(high);
+        let expected = (low_bits & 0xff) | ((high_bits & 0xff) << 8);
+        assert_eq!(result.to_bitmask(), expected);
+        assert_eq!(
+            <[i32; 16]>::from(result),
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { -1 } else { 0 }),
+        );
+        let selected = result.select(i32x16::splat(simd, 7), i32x16::splat(simd, 3));
+        assert_eq!(
+            *selected,
+            core::array::from_fn(|i| if expected & (1 << i) != 0 { 7 } else { 3 }),
+        );
+        let (roundtrip_low, roundtrip_high) = result.widen();
+        assert_eq!(roundtrip_low.to_bitmask(), low_bits & 0xff);
+        assert_eq!(roundtrip_high.to_bitmask(), high_bits & 0xff);
+    }
+
+    for lane in 0..8 {
+        let one = mask64x8::from_bitmask(simd, 1_u64 << lane);
+        let zero = mask64x8::splat(simd, false);
+        assert_eq!(one.narrow(zero).to_bitmask(), 1_u64 << lane);
+        assert_eq!(zero.narrow(one).to_bitmask(), 1_u64 << (lane + 8));
+    }
+}

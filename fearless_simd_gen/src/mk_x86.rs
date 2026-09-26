@@ -2091,6 +2091,20 @@ impl X86 {
     }
 
     fn handle_widen(&self, op: Op, vec_ty: &VecType, target_ty: VecType) -> TokenStream {
+        if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask {
+            let method_sig = op.simd_trait_method_sig(vec_ty);
+            let shift = target_ty.len;
+            let lane_mask = avx512_mask_lane_bits(&target_ty);
+            let low = avx512_mask_value(&target_ty, quote! { bits & #lane_mask });
+            let high = avx512_mask_value(&target_ty, quote! { (bits >> #shift) & #lane_mask });
+            return quote! {
+                #method_sig {
+                    let bits = u64::from(a.val);
+                    (#low, #high)
+                }
+            };
+        }
+
         self.kernel_method(op, vec_ty, |token| {
             match (*self, vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits()) {
                 (_, ScalarType::Float, 32, 128) => quote! {
@@ -2168,9 +2182,24 @@ impl X86 {
                         )
                     }
                 }
+                (Self::Sse2 | Self::Sse4_2 | Self::Avx2, ScalarType::Mask, 8 | 16 | 32, 128) => {
+                    let unpack_low =
+                        unpack_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, true, vec_ty.n_bits());
+                    let unpack_high =
+                        unpack_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, false, vec_ty.n_bits());
+                    // Each mask lane is all zeroes or all ones, so duplicating it is
+                    // equivalent to sign extension without computing its sign separately.
+                    quote! {
+                        let raw = a.into();
+                        (
+                            #unpack_low(raw, raw).simd_into(#token),
+                            #unpack_high(raw, raw).simd_into(#token),
+                        )
+                    }
+                }
                 (
                     Self::Avx2 | Self::Avx512,
-                    ScalarType::Unsigned | ScalarType::Int,
+                    ScalarType::Unsigned | ScalarType::Int | ScalarType::Mask,
                     8 | 16 | 32,
                     256,
                 ) => {
@@ -2217,6 +2246,21 @@ impl X86 {
     ) -> TokenStream {
         use NarrowingMode::{Relaxed, Saturate, Wrap};
 
+        // AVX-512 packed masks need special handling
+        if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask {
+            let method_sig = op.simd_trait_method_sig(vec_ty);
+            let shift = vec_ty.len;
+            let lane_mask = avx512_mask_lane_bits(vec_ty);
+            let result = avx512_mask_value(&target_ty, quote! { low | (high << #shift) });
+            return quote! {
+                #method_sig {
+                    let low = u64::from(a.val) & #lane_mask;
+                    let high = u64::from(b.val) & #lane_mask;
+                    #result
+                }
+            };
+        }
+
         if mode == Relaxed {
             // SSE4.2 and AVX2 only have saturating narrowing instructions for i32 and i16
             let implementation = if *self != Self::Avx512
@@ -2230,6 +2274,13 @@ impl X86 {
             };
             return relaxed_narrow_method(op, vec_ty, target_ty, implementation);
         }
+
+        // Masks are always in relaxed mode since they are always either 0 or -1 and can't overflow
+        let mode = if vec_ty.scalar == ScalarType::Mask && vec_ty.scalar_bits <= 32 {
+            Saturate
+        } else {
+            mode
+        };
 
         // Restore sequential lane order after AVX2 pack instructions interleave results within
         // their two 128-bit lanes.
@@ -2348,12 +2399,13 @@ impl X86 {
             (
                 Self::Avx2,
                 mode,
-                scalar @ (ScalarType::Int | ScalarType::Unsigned),
+                scalar @ (ScalarType::Int | ScalarType::Unsigned | ScalarType::Mask),
                 scalar_bits @ (16 | 32),
                 256,
             ) => self.kernel_method(op, vec_ty, |token| {
                 // AVX2 has native instructions for narrowing 16 and 32-bit integers.
-                let signed_saturation = mode == Saturate && scalar == ScalarType::Int;
+                let signed_saturation =
+                    mode == Saturate && matches!(scalar, ScalarType::Int | ScalarType::Mask);
                 let pack = pack_intrinsic(scalar_bits, signed_saturation, 256);
                 let packed = if signed_saturation {
                     // AVX2 has a native signed integer narrowing instruction.
@@ -2381,14 +2433,19 @@ impl X86 {
                 };
                 reorder_avx2(packed, token)
             }),
-            (Self::Avx2, Wrap, ScalarType::Int | ScalarType::Unsigned, 64, 256) => self
-                .kernel_method(op, vec_ty, |token| {
-                    // Non-saturating narrowing is just a shuffle.
-                    let low = compact_dwords(false, quote! { a.into() }, quote! { b.into() });
-                    quote! {
-                        #low.simd_into(#token)
-                    }
-                }),
+            (
+                Self::Avx2,
+                Wrap,
+                ScalarType::Int | ScalarType::Unsigned | ScalarType::Mask,
+                64,
+                256,
+            ) => self.kernel_method(op, vec_ty, |token| {
+                // Non-saturating narrowing is just a shuffle.
+                let low = compact_dwords(false, quote! { a.into() }, quote! { b.into() });
+                quote! {
+                    #low.simd_into(#token)
+                }
+            }),
             (Self::Avx2, Saturate, ScalarType::Int, 64, 256) => {
                 self.kernel_method(op, vec_ty, |token| {
                     // Saturating narrowing needs to be emulated for lack of hardware instructions.
@@ -2456,12 +2513,16 @@ impl X86 {
                         ).simd_into(#token)
                     }
                 }),
-            (Self::Sse2 | Self::Sse4_2 | Self::Avx2, Saturate, ScalarType::Int, 16 | 32, 128) => {
-                self.kernel_method(op, vec_ty, |token| {
-                    let pack = pack_intrinsic(vec_ty.scalar_bits, true, vec_ty.n_bits());
-                    quote! { #pack(a.into(), b.into()).simd_into(#token) }
-                })
-            }
+            (
+                Self::Sse2 | Self::Sse4_2 | Self::Avx2,
+                Saturate,
+                ScalarType::Int | ScalarType::Mask,
+                16 | 32,
+                128,
+            ) => self.kernel_method(op, vec_ty, |token| {
+                let pack = pack_intrinsic(vec_ty.scalar_bits, true, vec_ty.n_bits());
+                quote! { #pack(a.into(), b.into()).simd_into(#token) }
+            }),
             (
                 Self::Sse4_2 | Self::Avx2,
                 Saturate,
@@ -2527,7 +2588,7 @@ impl X86 {
             (
                 Self::Sse2 | Self::Sse4_2 | Self::Avx2,
                 Wrap,
-                ScalarType::Int | ScalarType::Unsigned,
+                ScalarType::Int | ScalarType::Unsigned | ScalarType::Mask,
                 64,
                 128,
             ) => self.kernel_method(op, vec_ty, |token| {

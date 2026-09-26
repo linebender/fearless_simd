@@ -570,7 +570,11 @@ impl Level for WasmSimd128 {
                 }
 
                 let target = format!("i{}x{}", target_ty.scalar_bits, target_ty.len);
-                let source = vec_ty.rust_name();
+                let source = if vec_ty.scalar == ScalarType::Mask {
+                    vec_ty.cast(ScalarType::Int).rust_name()
+                } else {
+                    vec_ty.rust_name()
+                };
                 let low = Ident::new(&format!("{target}_extend_low_{source}"), Span::call_site());
                 let high = Ident::new(&format!("{target}_extend_high_{source}"), Span::call_site());
                 quote! {
@@ -612,8 +616,12 @@ impl Level for WasmSimd128 {
                     return relaxed_narrow_method(op, vec_ty, target_ty, implementation);
                 }
 
-                let saturating = mode == NarrowingMode::Saturate;
-                let target = if saturating {
+                // Signed saturation preserves both mask values, 0 and -1, directly.
+                let saturating =
+                    mode == NarrowingMode::Saturate || vec_ty.scalar == ScalarType::Mask;
+                let target = if vec_ty.scalar == ScalarType::Mask {
+                    target_ty.cast(ScalarType::Int).rust_name()
+                } else if saturating {
                     target_ty.rust_name()
                 } else {
                     format!("u{}x{}", target_ty.scalar_bits, target_ty.len)
