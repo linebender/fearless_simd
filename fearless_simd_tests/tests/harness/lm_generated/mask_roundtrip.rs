@@ -84,6 +84,95 @@ fn mask64x8_set_roundtrip<S: Simd>(simd: S) {
     assert_mask_set_roundtrip::<S, mask64x8<S>>(simd);
 }
 
+/// Check both conversions against independently constructed lane values and bits.
+fn assert_mask_vector_roundtrip<S: Simd, M: SimdMask<S>>(simd: S)
+where
+    M::Element: From<i8> + PartialEq + core::fmt::Debug,
+{
+    let lane_bits = u64::MAX >> (64 - M::LEN);
+    for bits in [
+        0,
+        1,
+        1 << (M::LEN - 1),
+        0x5555_5555_5555_5555 & lane_bits,
+        0xaaaa_aaaa_aaaa_aaaa & lane_bits,
+        lane_bits,
+    ] {
+        let vector = M::Ints::from_fn(simd, |i| {
+            if bits & (1 << i) != 0 {
+                (-1_i8).into()
+            } else {
+                0_i8.into()
+            }
+        });
+        assert_eq!(M::from_vector(vector).to_bitmask(), bits);
+        assert_eq!(
+            M::from_bitmask(simd, bits).to_vector().as_slice(),
+            vector.as_slice()
+        );
+    }
+}
+
+#[simd_test]
+fn mask8x16_vector_roundtrip<S: Simd>(simd: S) {
+    assert_mask_vector_roundtrip::<S, mask8x16<S>>(simd);
+}
+
+#[simd_test]
+fn mask16x8_vector_roundtrip<S: Simd>(simd: S) {
+    assert_mask_vector_roundtrip::<S, mask16x8<S>>(simd);
+}
+
+#[simd_test]
+fn mask32x4_vector_roundtrip<S: Simd>(simd: S) {
+    assert_mask_vector_roundtrip::<S, mask32x4<S>>(simd);
+}
+
+#[simd_test]
+fn mask64x2_vector_roundtrip<S: Simd>(simd: S) {
+    assert_mask_vector_roundtrip::<S, mask64x2<S>>(simd);
+}
+
+#[simd_test]
+fn mask8x32_vector_roundtrip<S: Simd>(simd: S) {
+    assert_mask_vector_roundtrip::<S, mask8x32<S>>(simd);
+}
+
+#[simd_test]
+fn mask16x16_vector_roundtrip<S: Simd>(simd: S) {
+    assert_mask_vector_roundtrip::<S, mask16x16<S>>(simd);
+}
+
+#[simd_test]
+fn mask32x8_vector_roundtrip<S: Simd>(simd: S) {
+    assert_mask_vector_roundtrip::<S, mask32x8<S>>(simd);
+}
+
+#[simd_test]
+fn mask64x4_vector_roundtrip<S: Simd>(simd: S) {
+    assert_mask_vector_roundtrip::<S, mask64x4<S>>(simd);
+}
+
+#[simd_test]
+fn mask8x64_vector_roundtrip<S: Simd>(simd: S) {
+    assert_mask_vector_roundtrip::<S, mask8x64<S>>(simd);
+}
+
+#[simd_test]
+fn mask16x32_vector_roundtrip<S: Simd>(simd: S) {
+    assert_mask_vector_roundtrip::<S, mask16x32<S>>(simd);
+}
+
+#[simd_test]
+fn mask32x16_vector_roundtrip<S: Simd>(simd: S) {
+    assert_mask_vector_roundtrip::<S, mask32x16<S>>(simd);
+}
+
+#[simd_test]
+fn mask64x8_vector_roundtrip<S: Simd>(simd: S) {
+    assert_mask_vector_roundtrip::<S, mask64x8<S>>(simd);
+}
+
 #[simd_test]
 fn mask8x16_to_bitmask_exhaustive<S: Simd>(simd: S) {
     for bits in 0..=0xffff_u64 {

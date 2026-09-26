@@ -159,20 +159,20 @@ pub trait Simd:
         + SimdNarrow<Self, Narrowed = Self::i32s>
         + core::ops::Neg<Output = Self::i64s>;
     #[doc = r" A native-width SIMD mask with 8-bit lanes."]
-    type mask8s: SimdMask<Self, Element = i8>
+    type mask8s: SimdMask<Self, Element = i8, Ints = Self::i8s>
         + Select<Self::u8s>
         + Select<Self::i8s>
         + Select<Self::mask8s>
         + MaskWiden<Self, Widened = Self::mask16s>;
     #[doc = r" A native-width SIMD mask with 16-bit lanes."]
-    type mask16s: SimdMask<Self, Element = i16>
+    type mask16s: SimdMask<Self, Element = i16, Ints = Self::i16s>
         + Select<Self::u16s>
         + Select<Self::i16s>
         + Select<Self::mask16s>
         + MaskNarrow<Self, Narrowed = Self::mask8s>
         + MaskWiden<Self, Widened = Self::mask32s>;
     #[doc = r" A native-width SIMD mask with 32-bit lanes."]
-    type mask32s: SimdMask<Self, Element = i32>
+    type mask32s: SimdMask<Self, Element = i32, Ints = Self::i32s>
         + Select<Self::f32s>
         + Select<Self::u32s>
         + Select<Self::i32s>
@@ -180,7 +180,7 @@ pub trait Simd:
         + MaskNarrow<Self, Narrowed = Self::mask16s>
         + MaskWiden<Self, Widened = Self::mask64s>;
     #[doc = r" A native-width SIMD mask with 64-bit lanes."]
-    type mask64s: SimdMask<Self, Element = i64>
+    type mask64s: SimdMask<Self, Element = i64, Ints = Self::i64s>
         + Select<Self::f64s>
         + Select<Self::u64s>
         + Select<Self::i64s>
@@ -694,6 +694,10 @@ pub trait Simd:
     fn from_bitmask_mask8x16(self, bits: u64) -> mask8x16<Self>;
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask8x16(self, a: mask8x16<Self>) -> u64;
+    #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
+    fn from_vector_mask8x16(self, vector: i8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
+    fn to_vector_mask8x16(self, a: mask8x16<Self>) -> i8x16<Self>;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask8x16(self, a: &mut mask8x16<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
@@ -1052,6 +1056,10 @@ pub trait Simd:
     fn from_bitmask_mask16x8(self, bits: u64) -> mask16x8<Self>;
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask16x8(self, a: mask16x8<Self>) -> u64;
+    #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
+    fn from_vector_mask16x8(self, vector: i16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
+    fn to_vector_mask16x8(self, a: mask16x8<Self>) -> i16x8<Self>;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask16x8(self, a: &mut mask16x8<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
@@ -1416,6 +1424,10 @@ pub trait Simd:
     fn from_bitmask_mask32x4(self, bits: u64) -> mask32x4<Self>;
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask32x4(self, a: mask32x4<Self>) -> u64;
+    #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
+    fn from_vector_mask32x4(self, vector: i32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
+    fn to_vector_mask32x4(self, a: mask32x4<Self>) -> i32x4<Self>;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask32x4(self, a: &mut mask32x4<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
@@ -1960,6 +1972,10 @@ pub trait Simd:
     fn from_bitmask_mask64x2(self, bits: u64) -> mask64x2<Self>;
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask64x2(self, a: mask64x2<Self>) -> u64;
+    #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
+    fn from_vector_mask64x2(self, vector: i64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
+    fn to_vector_mask64x2(self, a: mask64x2<Self>) -> i64x2<Self>;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask64x2(self, a: &mut mask64x2<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
@@ -3101,6 +3117,10 @@ pub trait Simd:
         let hi = self.to_bitmask_mask8x16(hi);
         lo | (hi << 16usize)
     }
+    #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
+    fn from_vector_mask8x32(self, vector: i8x32<Self>) -> mask8x32<Self>;
+    #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
+    fn to_vector_mask8x32(self, a: mask8x32<Self>) -> i8x32<Self>;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask8x32(self, a: &mut mask8x32<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
@@ -3952,6 +3972,10 @@ pub trait Simd:
         let hi = self.to_bitmask_mask16x8(hi);
         lo | (hi << 8usize)
     }
+    #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
+    fn from_vector_mask16x16(self, vector: i16x16<Self>) -> mask16x16<Self>;
+    #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
+    fn to_vector_mask16x16(self, a: mask16x16<Self>) -> i16x16<Self>;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask16x16(self, a: &mut mask16x16<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
@@ -4814,6 +4838,10 @@ pub trait Simd:
         let hi = self.to_bitmask_mask32x4(hi);
         lo | (hi << 4usize)
     }
+    #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
+    fn from_vector_mask32x8(self, vector: i32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
+    fn to_vector_mask32x8(self, a: mask32x8<Self>) -> i32x8<Self>;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask32x8(self, a: &mut mask32x8<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
@@ -6110,6 +6138,10 @@ pub trait Simd:
         let hi = self.to_bitmask_mask64x2(hi);
         lo | (hi << 2usize)
     }
+    #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
+    fn from_vector_mask64x4(self, vector: i64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
+    fn to_vector_mask64x4(self, a: mask64x4<Self>) -> i64x4<Self>;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask64x4(self, a: &mut mask64x4<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
@@ -7319,6 +7351,10 @@ pub trait Simd:
         let hi = self.to_bitmask_mask8x32(hi);
         lo | (hi << 32usize)
     }
+    #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
+    fn from_vector_mask8x64(self, vector: i8x64<Self>) -> mask8x64<Self>;
+    #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
+    fn to_vector_mask8x64(self, a: mask8x64<Self>) -> i8x64<Self>;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask8x64(self, a: &mut mask8x64<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
@@ -8176,6 +8212,10 @@ pub trait Simd:
         let hi = self.to_bitmask_mask16x16(hi);
         lo | (hi << 16usize)
     }
+    #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
+    fn from_vector_mask16x32(self, vector: i16x32<Self>) -> mask16x32<Self>;
+    #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
+    fn to_vector_mask16x32(self, a: mask16x32<Self>) -> i16x32<Self>;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask16x32(self, a: &mut mask16x32<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
@@ -9043,6 +9083,10 @@ pub trait Simd:
         let hi = self.to_bitmask_mask32x8(hi);
         lo | (hi << 8usize)
     }
+    #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
+    fn from_vector_mask32x16(self, vector: i32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
+    fn to_vector_mask32x16(self, a: mask32x16<Self>) -> i32x16<Self>;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask32x16(self, a: &mut mask32x16<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
@@ -10331,6 +10375,10 @@ pub trait Simd:
         let hi = self.to_bitmask_mask64x4(hi);
         lo | (hi << 4usize)
     }
+    #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
+    fn from_vector_mask64x8(self, vector: i64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
+    fn to_vector_mask64x8(self, a: mask64x8<Self>) -> i64x8<Self>;
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask64x8(self, a: &mut mask64x8<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
@@ -11194,6 +11242,8 @@ pub trait SimdMask<S: Simd>:
     #[doc = r" False lanes are encoded as all zeroes (integer value 0), and true lanes are encoded as all ones"]
     #[doc = r" (integer value -1)."]
     type Element: SimdElement;
+    #[doc = r" This mask's corresponding integer vector type."]
+    type Ints: SimdBase<S, Element = Self::Element, Mask = Self>;
     #[doc = r" This mask type's lane count."]
     const LEN: usize;
     #[doc = r" Create a SIMD mask with all lanes set to the given boolean value."]
@@ -11208,6 +11258,10 @@ pub trait SimdMask<S: Simd>:
     #[doc = r" Bit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above"]
     #[doc = r" [`Self::LEN`] are cleared."]
     fn to_bitmask(self) -> u64;
+    #[doc = r" Create a SIMD mask from signed integer mask lanes."]
+    fn from_vector(v: Self::Ints) -> Self;
+    #[doc = r" Convert this SIMD mask to signed integer mask lanes."]
+    fn to_vector(self) -> Self::Ints;
     #[doc = r" Test whether one logical lane is set."]
     #[doc = r""]
     #[doc = r" Panics if `index` is greater than or equal to the number of lanes in the mask."]
