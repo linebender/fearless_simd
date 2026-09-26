@@ -162,6 +162,16 @@ fn generic_saturating_narrow<S: Simd, V: SimdNarrow<S>>(low: V, high: V) -> V::N
     low.saturating_narrow(high)
 }
 
+// Vector conversion bounds also expose mask conversions and their exact result types.
+fn generic_widen_mask<S: Simd, V: SimdWiden<S>>(value: V) {
+    #![allow(unused_variables, reason = "compile-only test")]
+
+    let mask = V::Mask::splat(value.token(), true);
+
+    let (low, high) = value.widen();
+    let (mask_low, mask_high) = mask.widen();
+}
+
 // Ensure the native-width associated-type bounds expose every adjacent relationship without
 // additional where-clauses.
 fn generic_native_width_widen<S: Simd>(value: S::u8s) -> (S::u16s, S::u16s) {
