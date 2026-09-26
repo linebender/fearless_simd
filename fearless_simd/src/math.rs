@@ -245,9 +245,9 @@ pub(crate) fn mul_add_precise_f64x2<S: Simd>(
     let v_high_bits = v_high.bitcast::<u64x2<_>>();
     let special_fraction = (v_high_bits & 0x0007_ffff_ffff_ffff).simd_eq(0);
 
-    // Zero has the same fraction shape and may enter this rare path harmlessly:
-    // its exact residual is zero, so the correction mask stays false.
-    if special_fraction.any_true() {
+    // Zero has the same fraction shape but cannot need correction.
+    // Exclude both signs of zero to avoid unnecessary work for exact arithmetic.
+    if (special_fraction & !v_high.simd_eq(0.0)).any_true() {
         // Fast2Sum(product_low, sum_low), after the same magnitude sort.
         let product_low_larger = sum_low.abs().simd_lt(product_low.abs());
         let v_large = product_low_larger.select(product_low, sum_low);
