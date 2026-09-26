@@ -3,13 +3,14 @@
 
 //! SIMD math operators/kernels.
 
-use crate::{f32x4, f64x2, i32x4, i64x2, prelude::*, u64x2};
-
-#[cfg(all(feature = "libm", not(feature = "std")))]
-#[allow(
+#![allow(
     dead_code,
     reason = "Generated backends use different subsets of these helpers"
 )]
+
+use crate::{f32x4, f64x2, i32x4, i64x2, prelude::*, u64x2};
+
+#[cfg(all(feature = "libm", not(feature = "std")))]
 pub(crate) trait FloatExt {
     fn floor(self) -> Self;
     fn ceil(self) -> Self;
