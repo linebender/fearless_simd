@@ -317,7 +317,7 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::Unary => {
+        OpSig::Unary | OpSig::MaskToVector | OpSig::MaskFromVector => {
             let halves = if op.method == "reverse" {
                 quote! { self.#do_half(a1), self.#do_half(a0) }
             } else {
@@ -1101,6 +1101,27 @@ pub(crate) fn generic_mask_to_bitmask(method_sig: TokenStream, vec_ty: &VecType)
                 i += 1;
             }
             bits
+        }
+    }
+}
+
+/// Generic mask-from-vector operation for instruction sets where masks and integer vectors are the
+/// same underlying type.
+pub(crate) fn generic_mask_from_vector(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    let mask_ty_rust = vec_ty.cast(ScalarType::Mask).rust();
+    quote! {
+        #method_sig {
+            #mask_ty_rust {val: vector.val, simd: self }
+        }
+    }
+}
+/// Generic mask-to-vector operation for instruction sets where masks and integer vectors are the
+/// same underlying type.
+pub(crate) fn generic_mask_to_vector(method_sig: TokenStream, mask_ty: &VecType) -> TokenStream {
+    let vector_ty_rust = mask_ty.cast(ScalarType::Int).rust();
+    quote! {
+        #method_sig {
+            #vector_ty_rust {val: a.val, simd: self }
         }
     }
 }

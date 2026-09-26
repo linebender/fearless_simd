@@ -1190,6 +1190,7 @@ impl<S: Simd> Select<mask8x16<S>> for mask8x16<S> {
 }
 impl<S: Simd> SimdMask<S> for mask8x16<S> {
     type Element = i8;
+    type Ints = i8x16<S>;
     const LEN: usize = 16;
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
@@ -1202,6 +1203,14 @@ impl<S: Simd> SimdMask<S> for mask8x16<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask8x16(self)
+    }
+    #[inline(always)]
+    fn from_vector(vector: Self::Ints) -> Self {
+        vector.token().from_vector_mask8x16(vector)
+    }
+    #[inline(always)]
+    fn to_vector(self) -> Self::Ints {
+        self.simd.to_vector_mask8x16(self)
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
@@ -2034,6 +2043,7 @@ impl<S: Simd> Select<mask16x8<S>> for mask16x8<S> {
 }
 impl<S: Simd> SimdMask<S> for mask16x8<S> {
     type Element = i16;
+    type Ints = i16x8<S>;
     const LEN: usize = 8;
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
@@ -2046,6 +2056,14 @@ impl<S: Simd> SimdMask<S> for mask16x8<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask16x8(self)
+    }
+    #[inline(always)]
+    fn from_vector(vector: Self::Ints) -> Self {
+        vector.token().from_vector_mask16x8(vector)
+    }
+    #[inline(always)]
+    fn to_vector(self) -> Self::Ints {
+        self.simd.to_vector_mask16x8(self)
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
@@ -2885,6 +2903,7 @@ impl<S: Simd> Select<mask32x4<S>> for mask32x4<S> {
 }
 impl<S: Simd> SimdMask<S> for mask32x4<S> {
     type Element = i32;
+    type Ints = i32x4<S>;
     const LEN: usize = 4;
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
@@ -2897,6 +2916,14 @@ impl<S: Simd> SimdMask<S> for mask32x4<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask32x4(self)
+    }
+    #[inline(always)]
+    fn from_vector(vector: Self::Ints) -> Self {
+        vector.token().from_vector_mask32x4(vector)
+    }
+    #[inline(always)]
+    fn to_vector(self) -> Self::Ints {
+        self.simd.to_vector_mask32x4(self)
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
@@ -4153,6 +4180,7 @@ impl<S: Simd> Select<mask64x2<S>> for mask64x2<S> {
 }
 impl<S: Simd> SimdMask<S> for mask64x2<S> {
     type Element = i64;
+    type Ints = i64x2<S>;
     const LEN: usize = 2;
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
@@ -4165,6 +4193,14 @@ impl<S: Simd> SimdMask<S> for mask64x2<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask64x2(self)
+    }
+    #[inline(always)]
+    fn from_vector(vector: Self::Ints) -> Self {
+        vector.token().from_vector_mask64x2(vector)
+    }
+    #[inline(always)]
+    fn to_vector(self) -> Self::Ints {
+        self.simd.to_vector_mask64x2(self)
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
@@ -5435,6 +5471,7 @@ impl<S: Simd> Select<mask8x32<S>> for mask8x32<S> {
 }
 impl<S: Simd> SimdMask<S> for mask8x32<S> {
     type Element = i8;
+    type Ints = i8x32<S>;
     const LEN: usize = 32;
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
@@ -5447,6 +5484,14 @@ impl<S: Simd> SimdMask<S> for mask8x32<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask8x32(self)
+    }
+    #[inline(always)]
+    fn from_vector(vector: Self::Ints) -> Self {
+        vector.token().from_vector_mask8x32(vector)
+    }
+    #[inline(always)]
+    fn to_vector(self) -> Self::Ints {
+        self.simd.to_vector_mask8x32(self)
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
@@ -6287,6 +6332,7 @@ impl<S: Simd> Select<mask16x16<S>> for mask16x16<S> {
 }
 impl<S: Simd> SimdMask<S> for mask16x16<S> {
     type Element = i16;
+    type Ints = i16x16<S>;
     const LEN: usize = 16;
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
@@ -6299,6 +6345,14 @@ impl<S: Simd> SimdMask<S> for mask16x16<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask16x16(self)
+    }
+    #[inline(always)]
+    fn from_vector(vector: Self::Ints) -> Self {
+        vector.token().from_vector_mask16x16(vector)
+    }
+    #[inline(always)]
+    fn to_vector(self) -> Self::Ints {
+        self.simd.to_vector_mask16x16(self)
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
@@ -7152,6 +7206,7 @@ impl<S: Simd> Select<mask32x8<S>> for mask32x8<S> {
 }
 impl<S: Simd> SimdMask<S> for mask32x8<S> {
     type Element = i32;
+    type Ints = i32x8<S>;
     const LEN: usize = 8;
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
@@ -7164,6 +7219,14 @@ impl<S: Simd> SimdMask<S> for mask32x8<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask32x8(self)
+    }
+    #[inline(always)]
+    fn from_vector(vector: Self::Ints) -> Self {
+        vector.token().from_vector_mask32x8(vector)
+    }
+    #[inline(always)]
+    fn to_vector(self) -> Self::Ints {
+        self.simd.to_vector_mask32x8(self)
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
@@ -8405,6 +8468,7 @@ impl<S: Simd> Select<mask64x4<S>> for mask64x4<S> {
 }
 impl<S: Simd> SimdMask<S> for mask64x4<S> {
     type Element = i64;
+    type Ints = i64x4<S>;
     const LEN: usize = 4;
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
@@ -8417,6 +8481,14 @@ impl<S: Simd> SimdMask<S> for mask64x4<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask64x4(self)
+    }
+    #[inline(always)]
+    fn from_vector(vector: Self::Ints) -> Self {
+        vector.token().from_vector_mask64x4(vector)
+    }
+    #[inline(always)]
+    fn to_vector(self) -> Self::Ints {
+        self.simd.to_vector_mask64x4(self)
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
@@ -9742,6 +9814,7 @@ impl<S: Simd> Select<mask8x64<S>> for mask8x64<S> {
 }
 impl<S: Simd> SimdMask<S> for mask8x64<S> {
     type Element = i8;
+    type Ints = i8x64<S>;
     const LEN: usize = 64;
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
@@ -9754,6 +9827,14 @@ impl<S: Simd> SimdMask<S> for mask8x64<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask8x64(self)
+    }
+    #[inline(always)]
+    fn from_vector(vector: Self::Ints) -> Self {
+        vector.token().from_vector_mask8x64(vector)
+    }
+    #[inline(always)]
+    fn to_vector(self) -> Self::Ints {
+        self.simd.to_vector_mask8x64(self)
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
@@ -10614,6 +10695,7 @@ impl<S: Simd> Select<mask16x32<S>> for mask16x32<S> {
 }
 impl<S: Simd> SimdMask<S> for mask16x32<S> {
     type Element = i16;
+    type Ints = i16x32<S>;
     const LEN: usize = 32;
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
@@ -10626,6 +10708,14 @@ impl<S: Simd> SimdMask<S> for mask16x32<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask16x32(self)
+    }
+    #[inline(always)]
+    fn from_vector(vector: Self::Ints) -> Self {
+        vector.token().from_vector_mask16x32(vector)
+    }
+    #[inline(always)]
+    fn to_vector(self) -> Self::Ints {
+        self.simd.to_vector_mask16x32(self)
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
@@ -11485,6 +11575,7 @@ impl<S: Simd> Select<mask32x16<S>> for mask32x16<S> {
 }
 impl<S: Simd> SimdMask<S> for mask32x16<S> {
     type Element = i32;
+    type Ints = i32x16<S>;
     const LEN: usize = 16;
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
@@ -11497,6 +11588,14 @@ impl<S: Simd> SimdMask<S> for mask32x16<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask32x16(self)
+    }
+    #[inline(always)]
+    fn from_vector(vector: Self::Ints) -> Self {
+        vector.token().from_vector_mask32x16(vector)
+    }
+    #[inline(always)]
+    fn to_vector(self) -> Self::Ints {
+        self.simd.to_vector_mask32x16(self)
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
@@ -12756,6 +12855,7 @@ impl<S: Simd> Select<mask64x8<S>> for mask64x8<S> {
 }
 impl<S: Simd> SimdMask<S> for mask64x8<S> {
     type Element = i64;
+    type Ints = i64x8<S>;
     const LEN: usize = 8;
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
@@ -12768,6 +12868,14 @@ impl<S: Simd> SimdMask<S> for mask64x8<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask64x8(self)
+    }
+    #[inline(always)]
+    fn from_vector(vector: Self::Ints) -> Self {
+        vector.token().from_vector_mask64x8(vector)
+    }
+    #[inline(always)]
+    fn to_vector(self) -> Self::Ints {
+        self.simd.to_vector_mask64x8(self)
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
