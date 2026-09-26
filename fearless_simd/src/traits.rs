@@ -7,7 +7,7 @@
 )]
 use crate::{Simd, SimdBase, SimdFloat, SimdInt, seal::Seal};
 use core::error::Error;
-use core::fmt::{Binary, Debug, Display, UpperExp};
+use core::fmt::{Binary, Debug, Display, LowerExp, UpperExp};
 use core::iter::{Product, Sum};
 use core::ops::{
     Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Div, DivAssign,
@@ -183,6 +183,7 @@ pub trait SimdElement:
     + Debug
     + Display
     + FromStr
+    + LowerExp
     + UpperExp
     + PartialOrd
     + PartialEq
@@ -509,7 +510,7 @@ pub trait SimdSplit<S: Simd>: SimdBase<S> + Seal {
 ///     value.widen()
 /// }
 /// ```
-pub trait SimdWiden<S: Simd>: SimdBase<S> + Seal {
+pub trait SimdWiden<S: Simd>: Sized + Seal {
     /// The same-width vector type with lanes twice as wide.
     type Widened: SimdNarrow<S, Narrowed = Self>;
 
