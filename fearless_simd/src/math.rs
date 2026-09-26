@@ -22,62 +22,62 @@ pub(crate) trait FloatExt {
 #[cfg(all(feature = "libm", not(feature = "std")))]
 impl FloatExt for f32 {
     #[inline(always)]
-    fn floor(self) -> f32 {
+    fn floor(self) -> Self {
         libm::floorf(self)
     }
     #[inline(always)]
-    fn ceil(self) -> f32 {
+    fn ceil(self) -> Self {
         libm::ceilf(self)
     }
     #[inline(always)]
-    fn round_ties_even(self) -> f32 {
+    fn round_ties_even(self) -> Self {
         libm::rintf(self)
     }
     #[inline(always)]
-    fn sqrt(self) -> f32 {
+    fn sqrt(self) -> Self {
         libm::sqrtf(self)
     }
     #[inline(always)]
-    fn fract(self) -> f32 {
+    fn fract(self) -> Self {
         self - self.trunc()
     }
     #[inline(always)]
-    fn trunc(self) -> f32 {
+    fn trunc(self) -> Self {
         libm::truncf(self)
     }
     #[inline(always)]
-    fn mul_add(self, a: f32, b: f32) -> f32 {
+    fn mul_add(self, a: Self, b: Self) -> Self {
         libm::fmaf(self, a, b)
     }
 }
 #[cfg(all(feature = "libm", not(feature = "std")))]
 impl FloatExt for f64 {
     #[inline(always)]
-    fn floor(self) -> f64 {
+    fn floor(self) -> Self {
         libm::floor(self)
     }
     #[inline(always)]
-    fn ceil(self) -> f64 {
+    fn ceil(self) -> Self {
         libm::ceil(self)
     }
     #[inline(always)]
-    fn round_ties_even(self) -> f64 {
+    fn round_ties_even(self) -> Self {
         libm::rint(self)
     }
     #[inline(always)]
-    fn sqrt(self) -> f64 {
+    fn sqrt(self) -> Self {
         libm::sqrt(self)
     }
     #[inline(always)]
-    fn fract(self) -> f64 {
+    fn fract(self) -> Self {
         self - self.trunc()
     }
     #[inline(always)]
-    fn trunc(self) -> f64 {
+    fn trunc(self) -> Self {
         libm::trunc(self)
     }
     #[inline(always)]
-    fn mul_add(self, a: f64, b: f64) -> f64 {
+    fn mul_add(self, a: Self, b: Self) -> Self {
         libm::fma(self, a, b)
     }
 }

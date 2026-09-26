@@ -18,6 +18,10 @@ pub(crate) struct Fallback;
 pub(crate) fn float_ext_prelude() -> TokenStream {
     quote! {
         #[cfg(all(feature = "libm", not(feature = "std")))]
+        #[allow(
+            unused_imports,
+            reason = "Generated backends use different subsets of these helpers"
+        )]
         use crate::math::FloatExt as _;
     }
 }
