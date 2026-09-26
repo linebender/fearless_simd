@@ -2144,8 +2144,8 @@ impl Simd for Avx2 {
             fn kernel(token: Avx2, a: mask8x16<Avx2>) -> (mask16x8<Avx2>, mask16x8<Avx2>) {
                 let raw = a.into();
                 (
-                    _mm_cvtepi8_epi16(raw).simd_into(token),
-                    _mm_cvtepi8_epi16(_mm_srli_si128::<8>(raw)).simd_into(token),
+                    _mm_unpacklo_epi8(raw, raw).simd_into(token),
+                    _mm_unpackhi_epi8(raw, raw).simd_into(token),
                 )
             }
         );
@@ -3471,8 +3471,8 @@ impl Simd for Avx2 {
             fn kernel(token: Avx2, a: mask16x8<Avx2>) -> (mask32x4<Avx2>, mask32x4<Avx2>) {
                 let raw = a.into();
                 (
-                    _mm_cvtepi16_epi32(raw).simd_into(token),
-                    _mm_cvtepi16_epi32(_mm_srli_si128::<8>(raw)).simd_into(token),
+                    _mm_unpacklo_epi16(raw, raw).simd_into(token),
+                    _mm_unpackhi_epi16(raw, raw).simd_into(token),
                 )
             }
         );
@@ -4778,8 +4778,8 @@ impl Simd for Avx2 {
             fn kernel(token: Avx2, a: mask32x4<Avx2>) -> (mask64x2<Avx2>, mask64x2<Avx2>) {
                 let raw = a.into();
                 (
-                    _mm_cvtepi32_epi64(raw).simd_into(token),
-                    _mm_cvtepi32_epi64(_mm_srli_si128::<8>(raw)).simd_into(token),
+                    _mm_unpacklo_epi32(raw, raw).simd_into(token),
+                    _mm_unpackhi_epi32(raw, raw).simd_into(token),
                 )
             }
         );

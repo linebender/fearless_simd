@@ -2528,10 +2528,9 @@ impl Simd for Sse2 {
             #[inline(always)]
             fn kernel(token: Sse2, a: mask8x16<Sse2>) -> (mask16x8<Sse2>, mask16x8<Sse2>) {
                 let raw = a.into();
-                let sign = _mm_cmpgt_epi8(_mm_setzero_si128(), raw);
                 (
-                    _mm_unpacklo_epi8(raw, sign).simd_into(token),
-                    _mm_unpackhi_epi8(raw, sign).simd_into(token),
+                    _mm_unpacklo_epi8(raw, raw).simd_into(token),
+                    _mm_unpackhi_epi8(raw, raw).simd_into(token),
                 )
             }
         );
@@ -3933,10 +3932,9 @@ impl Simd for Sse2 {
             #[inline(always)]
             fn kernel(token: Sse2, a: mask16x8<Sse2>) -> (mask32x4<Sse2>, mask32x4<Sse2>) {
                 let raw = a.into();
-                let sign = _mm_srai_epi16::<15>(raw);
                 (
-                    _mm_unpacklo_epi16(raw, sign).simd_into(token),
-                    _mm_unpackhi_epi16(raw, sign).simd_into(token),
+                    _mm_unpacklo_epi16(raw, raw).simd_into(token),
+                    _mm_unpackhi_epi16(raw, raw).simd_into(token),
                 )
             }
         );
@@ -5326,10 +5324,9 @@ impl Simd for Sse2 {
             #[inline(always)]
             fn kernel(token: Sse2, a: mask32x4<Sse2>) -> (mask64x2<Sse2>, mask64x2<Sse2>) {
                 let raw = a.into();
-                let sign = _mm_srai_epi32::<31>(raw);
                 (
-                    _mm_unpacklo_epi32(raw, sign).simd_into(token),
-                    _mm_unpackhi_epi32(raw, sign).simd_into(token),
+                    _mm_unpacklo_epi32(raw, raw).simd_into(token),
+                    _mm_unpackhi_epi32(raw, raw).simd_into(token),
                 )
             }
         );

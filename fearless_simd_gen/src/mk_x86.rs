@@ -2142,12 +2142,7 @@ impl X86 {
                         )
                     }
                 }
-                (
-                    Self::Sse2,
-                    ScalarType::Int | ScalarType::Mask,
-                    scalar_bits @ (8 | 16 | 32),
-                    128,
-                ) => {
+                (Self::Sse2, ScalarType::Int, scalar_bits @ (8 | 16 | 32), 128) => {
                     let unpack_low =
                         unpack_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, true, vec_ty.n_bits());
                     let unpack_high =
@@ -2169,7 +2164,7 @@ impl X86 {
                 }
                 (
                     Self::Sse4_2 | Self::Avx2 | Self::Avx512,
-                    ScalarType::Unsigned | ScalarType::Int | ScalarType::Mask,
+                    ScalarType::Unsigned | ScalarType::Int,
                     8 | 16 | 32,
                     128,
                 ) => {
@@ -2184,6 +2179,21 @@ impl X86 {
                         (
                             #extend(raw).simd_into(#token),
                             #extend(_mm_srli_si128::<8>(raw)).simd_into(#token),
+                        )
+                    }
+                }
+                (Self::Sse2 | Self::Sse4_2 | Self::Avx2, ScalarType::Mask, 8 | 16 | 32, 128) => {
+                    let unpack_low =
+                        unpack_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, true, vec_ty.n_bits());
+                    let unpack_high =
+                        unpack_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, false, vec_ty.n_bits());
+                    // Each mask lane is all zeroes or all ones, so duplicating it is
+                    // equivalent to sign extension without computing its sign separately.
+                    quote! {
+                        let raw = a.into();
+                        (
+                            #unpack_low(raw, raw).simd_into(#token),
+                            #unpack_high(raw, raw).simd_into(#token),
                         )
                     }
                 }
