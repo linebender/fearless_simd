@@ -4794,7 +4794,6 @@ impl X86 {
                 let cmple = float_compare_method("simd_le", vec_ty);
                 let cmpord = float_compare_method("ord", vec_ty);
                 let set1_float = set1_intrinsic(vec_ty);
-                let set1_int = set1_intrinsic(&target_ty);
                 let movemask = simple_intrinsic("movemask", vec_ty);
                 let all_ones = match (vec_ty.n_bits(), vec_ty.scalar_bits) {
                     (128, 32) => quote! { 0b1111 },
@@ -4809,8 +4808,8 @@ impl X86 {
                     vec_ty.scalar_bits,
                     vec_ty.n_bits(),
                 );
-                let blend = intrinsic_ident("blendv", "epi8", vec_ty.n_bits());
                 let and = intrinsic_ident("and", coarse_type(&target_ty), vec_ty.n_bits());
+                let or = intrinsic_ident("or", coarse_type(&target_ty), vec_ty.n_bits());
                 let xor = intrinsic_ident("xor", coarse_type(&target_ty), vec_ty.n_bits());
                 let andnot = simple_intrinsic("andnot", vec_ty);
                 let add_int = simple_sign_unaware_intrinsic("add", &target_ty);
@@ -4874,9 +4873,10 @@ impl X86 {
                                 let excess = #sub_float(a, #set1_float(2147483648.0));
                                 let excess_converted = #convert(#andnot(in_range, excess));
 
-                                // Clamp to u32::MAX.
                                 converted = #add_int(converted, excess_converted);
-                                converted = #blend(converted, #set1_int(u32::MAX.cast_signed()), exceeds_unsigned_range);
+                                // The comparison mask is all ones for overflow, so OR saturates
+                                // those lanes to u32::MAX and preserves every other lane.
+                                converted = #or(converted, exceeds_unsigned_range);
                             }
 
                             converted.simd_into(#token)

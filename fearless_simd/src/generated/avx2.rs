@@ -700,11 +700,7 @@ impl Simd for Avx2 {
                     let excess = _mm_sub_ps(a, _mm_set1_ps(2147483648.0));
                     let excess_converted = _mm_cvttps_epi32(_mm_andnot_ps(in_range, excess));
                     converted = _mm_add_epi32(converted, excess_converted);
-                    converted = _mm_blendv_epi8(
-                        converted,
-                        _mm_set1_epi32(u32::MAX.cast_signed()),
-                        exceeds_unsigned_range,
-                    );
+                    converted = _mm_or_si128(converted, exceeds_unsigned_range);
                 }
                 converted.simd_into(token)
             }
@@ -7074,11 +7070,7 @@ impl Simd for Avx2 {
                     let excess = _mm256_sub_ps(a, _mm256_set1_ps(2147483648.0));
                     let excess_converted = _mm256_cvttps_epi32(_mm256_andnot_ps(in_range, excess));
                     converted = _mm256_add_epi32(converted, excess_converted);
-                    converted = _mm256_blendv_epi8(
-                        converted,
-                        _mm256_set1_epi32(u32::MAX.cast_signed()),
-                        exceeds_unsigned_range,
-                    );
+                    converted = _mm256_or_si256(converted, exceeds_unsigned_range);
                 }
                 converted.simd_into(token)
             }
