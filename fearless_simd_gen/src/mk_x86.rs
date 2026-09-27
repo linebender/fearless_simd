@@ -4458,9 +4458,7 @@ impl X86 {
             conversion,
             (Self::Sse2, _, _, 64, 128, _)
                 | (Self::Sse4_2, Float, Int | Unsigned, 64, 128, _)
-                | (Self::Sse2, _, _, 32, 128, Precise)
                 | (Self::Sse2, Unsigned, _, 32, 128, _)
-                | (Self::Sse2, _, Unsigned, 32, 128, _)
         ) {
             // These conversions have no hardware support, or their native implementation is
             // slower than the scalar fallback.
