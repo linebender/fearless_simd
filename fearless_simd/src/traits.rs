@@ -543,7 +543,9 @@ pub trait MaskNarrow<S: Simd>: SimdMask<S> + Seal {
 ///     value.widen()
 /// }
 /// ```
-pub trait SimdWiden<S: Simd>: SimdBase<S> + Seal {
+pub trait SimdWiden<S: Simd>:
+    SimdBase<S, Mask: MaskWiden<S, Widened = <Self::Widened as SimdBase<S>>::Mask>> + Seal
+{
     /// The same-width vector type with lanes twice as wide.
     type Widened: SimdNarrow<S, Narrowed = Self>;
 
@@ -579,7 +581,9 @@ pub trait SimdWiden<S: Simd>: SimdBase<S> + Seal {
 ///     low.saturating_narrow(high)
 /// }
 /// ```
-pub trait SimdNarrow<S: Simd>: SimdBase<S> + Seal {
+pub trait SimdNarrow<S: Simd>:
+    SimdBase<S, Mask: MaskNarrow<S, Narrowed = <Self::Narrowed as SimdBase<S>>::Mask>> + Seal
+{
     /// The same-width vector type with lanes half as wide.
     type Narrowed: SimdWiden<S, Widened = Self>;
 
