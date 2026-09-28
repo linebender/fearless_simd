@@ -680,23 +680,43 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
-        [
-            a[0usize] as u32,
-            a[1usize] as u32,
-            a[2usize] as u32,
-            a[3usize] as u32,
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f32x4<Sse2>) -> u32x4<Sse2> {
+                let mut converted = _mm_cvttps_epi32(a.into());
+                let in_range = _mm_cmplt_ps(a.into(), _mm_set1_ps(2147483648.0));
+                let all_in_range = _mm_movemask_ps(in_range) == 0b1111;
+                if !all_in_range {
+                    let excess = _mm_sub_ps(a.into(), _mm_set1_ps(2147483648.0));
+                    let excess_converted = _mm_cvttps_epi32(_mm_andnot_ps(in_range, excess));
+                    converted = _mm_add_epi32(converted, excess_converted);
+                }
+                converted.simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_u32_precise_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
-        [
-            a[0usize] as u32,
-            a[1usize] as u32,
-            a[2usize] as u32,
-            a[3usize] as u32,
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f32x4<Sse2>) -> u32x4<Sse2> {
+                let a = _mm_max_ps(a.into(), _mm_setzero_ps());
+                let mut converted = _mm_cvttps_epi32(a);
+                let in_range = _mm_cmplt_ps(a, _mm_set1_ps(2147483648.0));
+                let all_in_range = _mm_movemask_ps(in_range) == 0b1111;
+                if !all_in_range {
+                    let exceeds_unsigned_range =
+                        _mm_castps_si128(_mm_cmplt_ps(_mm_set1_ps(4294967040.0), a));
+                    let excess = _mm_sub_ps(a, _mm_set1_ps(2147483648.0));
+                    let excess_converted = _mm_cvttps_epi32(_mm_andnot_ps(in_range, excess));
+                    converted = _mm_add_epi32(converted, excess_converted);
+                    converted = _mm_or_si128(converted, exceeds_unsigned_range);
+                }
+                converted.simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
@@ -710,13 +730,19 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn cvt_i32_precise_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
-        [
-            a[0usize] as i32,
-            a[1usize] as i32,
-            a[2usize] as i32,
-            a[3usize] as i32,
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f32x4<Sse2>) -> i32x4<Sse2> {
+                let a = a.into();
+                let converted = _mm_cvttps_epi32(a);
+                let positive_overflow =
+                    _mm_castps_si128(_mm_cmple_ps(_mm_set1_ps(2147483648.0), a));
+                let converted = _mm_xor_si128(converted, positive_overflow);
+                let is_not_nan = _mm_castps_si128(_mm_cmpord_ps(a, a));
+                _mm_and_si128(converted, is_not_nan).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn abs_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
