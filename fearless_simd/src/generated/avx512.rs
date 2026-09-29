@@ -819,6 +819,83 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn is_nan_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> mask32x4<Avx512> {
+                mask32x4 {
+                    val: _mm_fpclass_ps_mask::<129i32>(a.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_infinite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> mask32x4<Avx512> {
+                mask32x4 {
+                    val: _mm_fpclass_ps_mask::<24i32>(a.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_finite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> mask32x4<Avx512> {
+                !(mask32x4 {
+                    val: _mm_fpclass_ps_mask::<153i32>(a.into()),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_subnormal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> mask32x4<Avx512> {
+                mask32x4 {
+                    val: _mm_fpclass_ps_mask::<129i32>(_mm_xor_ps(
+                        a.into(),
+                        _mm_set1_ps(f32::INFINITY),
+                    )),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_normal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> mask32x4<Avx512> {
+                !(mask32x4 {
+                    val: _mm_fpclass_ps_mask::<191i32>(a.into()),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_sign_positive_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
+        let i: i32x4<Self> = a.bitcast();
+        (i & i32::MIN).simd_eq(0)
+    }
+    #[inline(always)]
+    fn is_sign_negative_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
+        !a.is_sign_positive()
+    }
+    #[inline(always)]
     fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5088,6 +5165,83 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn is_nan_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> mask64x2<Avx512> {
+                mask64x2 {
+                    val: _mm_fpclass_pd_mask::<129i32>(a.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_infinite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> mask64x2<Avx512> {
+                mask64x2 {
+                    val: _mm_fpclass_pd_mask::<24i32>(a.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_finite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> mask64x2<Avx512> {
+                !(mask64x2 {
+                    val: _mm_fpclass_pd_mask::<153i32>(a.into()),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_subnormal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> mask64x2<Avx512> {
+                mask64x2 {
+                    val: _mm_fpclass_pd_mask::<129i32>(_mm_xor_pd(
+                        a.into(),
+                        _mm_set1_pd(f64::INFINITY),
+                    )),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_normal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> mask64x2<Avx512> {
+                !(mask64x2 {
+                    val: _mm_fpclass_pd_mask::<191i32>(a.into()),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_sign_positive_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
+        let i: i64x2<Self> = a.bitcast();
+        (i & i64::MIN).simd_eq(0)
+    }
+    #[inline(always)]
+    fn is_sign_negative_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
+        !a.is_sign_positive()
+    }
+    #[inline(always)]
     fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6755,6 +6909,83 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_nan_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> mask32x8<Avx512> {
+                mask32x8 {
+                    val: _mm256_fpclass_ps_mask::<129i32>(a.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_infinite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> mask32x8<Avx512> {
+                mask32x8 {
+                    val: _mm256_fpclass_ps_mask::<24i32>(a.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_finite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> mask32x8<Avx512> {
+                !(mask32x8 {
+                    val: _mm256_fpclass_ps_mask::<153i32>(a.into()),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_subnormal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> mask32x8<Avx512> {
+                mask32x8 {
+                    val: _mm256_fpclass_ps_mask::<129i32>(_mm256_xor_ps(
+                        a.into(),
+                        _mm256_set1_ps(f32::INFINITY),
+                    )),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_normal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> mask32x8<Avx512> {
+                !(mask32x8 {
+                    val: _mm256_fpclass_ps_mask::<191i32>(a.into()),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_sign_positive_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
+        let i: i32x8<Self> = a.bitcast();
+        (i & i32::MIN).simd_eq(0)
+    }
+    #[inline(always)]
+    fn is_sign_negative_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
+        !a.is_sign_positive()
     }
     #[inline(always)]
     fn select_f32x8(self, a: mask32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
@@ -10875,6 +11106,83 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn is_nan_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> mask64x4<Avx512> {
+                mask64x4 {
+                    val: _mm256_fpclass_pd_mask::<129i32>(a.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_infinite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> mask64x4<Avx512> {
+                mask64x4 {
+                    val: _mm256_fpclass_pd_mask::<24i32>(a.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_finite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> mask64x4<Avx512> {
+                !(mask64x4 {
+                    val: _mm256_fpclass_pd_mask::<153i32>(a.into()),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_subnormal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> mask64x4<Avx512> {
+                mask64x4 {
+                    val: _mm256_fpclass_pd_mask::<129i32>(_mm256_xor_pd(
+                        a.into(),
+                        _mm256_set1_pd(f64::INFINITY),
+                    )),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_normal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> mask64x4<Avx512> {
+                !(mask64x4 {
+                    val: _mm256_fpclass_pd_mask::<191i32>(a.into()),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_sign_positive_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
+        let i: i64x4<Self> = a.bitcast();
+        (i & i64::MIN).simd_eq(0)
+    }
+    #[inline(always)]
+    fn is_sign_negative_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
+        !a.is_sign_positive()
+    }
+    #[inline(always)]
     fn select_f64x4(self, a: mask64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12540,6 +12848,83 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_nan_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>) -> mask32x16<Avx512> {
+                mask32x16 {
+                    val: _mm512_fpclass_ps_mask::<129i32>(a.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_infinite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>) -> mask32x16<Avx512> {
+                mask32x16 {
+                    val: _mm512_fpclass_ps_mask::<24i32>(a.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_finite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>) -> mask32x16<Avx512> {
+                !(mask32x16 {
+                    val: _mm512_fpclass_ps_mask::<153i32>(a.into()),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_subnormal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>) -> mask32x16<Avx512> {
+                mask32x16 {
+                    val: _mm512_fpclass_ps_mask::<129i32>(_mm512_xor_ps(
+                        a.into(),
+                        _mm512_set1_ps(f32::INFINITY),
+                    )),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_normal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>) -> mask32x16<Avx512> {
+                !(mask32x16 {
+                    val: _mm512_fpclass_ps_mask::<191i32>(a.into()),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_sign_positive_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
+        let i: i32x16<Self> = a.bitcast();
+        (i & i32::MIN).simd_eq(0)
+    }
+    #[inline(always)]
+    fn is_sign_negative_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
+        !a.is_sign_positive()
     }
     #[inline(always)]
     fn select_f32x16(self, a: mask32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
@@ -16718,6 +17103,83 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_nan_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>) -> mask64x8<Avx512> {
+                mask64x8 {
+                    val: _mm512_fpclass_pd_mask::<129i32>(a.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_infinite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>) -> mask64x8<Avx512> {
+                mask64x8 {
+                    val: _mm512_fpclass_pd_mask::<24i32>(a.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_finite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>) -> mask64x8<Avx512> {
+                !(mask64x8 {
+                    val: _mm512_fpclass_pd_mask::<153i32>(a.into()),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_subnormal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>) -> mask64x8<Avx512> {
+                mask64x8 {
+                    val: _mm512_fpclass_pd_mask::<129i32>(_mm512_xor_pd(
+                        a.into(),
+                        _mm512_set1_pd(f64::INFINITY),
+                    )),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_normal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>) -> mask64x8<Avx512> {
+                !(mask64x8 {
+                    val: _mm512_fpclass_pd_mask::<191i32>(a.into()),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn is_sign_positive_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
+        let i: i64x8<Self> = a.bitcast();
+        (i & i64::MIN).simd_eq(0)
+    }
+    #[inline(always)]
+    fn is_sign_negative_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
+        !a.is_sign_positive()
     }
     #[inline(always)]
     fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {

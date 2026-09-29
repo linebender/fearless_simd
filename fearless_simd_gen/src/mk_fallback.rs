@@ -3,8 +3,8 @@
 
 use crate::arch::fallback;
 use crate::generic::{
-    generic_mask_from_bitmask, generic_mask_set, generic_mask_to_bitmask, generic_op_name,
-    integer_lane_mask_rotate, integer_lane_mask_splat_arg,
+    generic_classify, generic_mask_from_bitmask, generic_mask_set, generic_mask_to_bitmask,
+    generic_op_name, integer_lane_mask_rotate, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{NarrowingMode, Op, OpSig, relaxed_narrow_method};
@@ -642,6 +642,7 @@ impl Level for Fallback {
             OpSig::MaskFromBitmask => generic_mask_from_bitmask(method_sig, vec_ty),
             OpSig::MaskToBitmask => generic_mask_to_bitmask(method_sig, vec_ty),
             OpSig::MaskSet => generic_mask_set(method_sig, vec_ty),
+            OpSig::UnaryClassify => generic_classify(method_sig, method, vec_ty),
             OpSig::LoadInterleaved {
                 block_size,
                 block_count,

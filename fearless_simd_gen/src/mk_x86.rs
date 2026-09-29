@@ -8,9 +8,9 @@ use crate::arch::x86::{
 };
 use crate::generic::{
     concat_swizzle_dyn_precise_body, count_zeros_method, fallback_method, generic_block_combine,
-    generic_block_split, generic_mask_from_bitmask, generic_mask_set, generic_op_name,
-    integer_lane_mask_rotate, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
-    reverse_method, reverse_vector_mask_method,
+    generic_block_split, generic_classify, generic_mask_from_bitmask, generic_mask_set,
+    generic_op_name, integer_lane_mask_rotate, integer_lane_mask_splat_arg,
+    recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{
@@ -343,6 +343,7 @@ impl Level for X86 {
                 self.handle_avx512_mask_set(method_sig, vec_ty)
             }
             OpSig::MaskSet => generic_mask_set(method_sig, vec_ty),
+            OpSig::UnaryClassify => self.handle_unary_to_mask(op, method_sig, vec_ty),
             OpSig::LoadInterleaved {
                 block_size,
                 block_count,
@@ -5001,6 +5002,70 @@ impl X86 {
         };
 
         self.kernel_method(method_op, vec_ty, |_| quote! { #movemask as u32 #op })
+    }
+
+    pub(crate) fn handle_unary_to_mask(
+        &self,
+        op: Op,
+        method_sig: TokenStream,
+        vec_ty: &VecType,
+    ) -> TokenStream {
+        if *self == Self::Avx512 {
+            // FPCLASS combines the selected categories into a compact lane mask.
+            // Include both quiet and signaling NaNs, and both signs of zero/infinity.
+            let classification = match op.method {
+                "is_nan" => Some((0x81_i32, false)),
+                "is_infinite" => Some((0x18_i32, false)),
+                "is_finite" => Some((0x99_i32, true)),
+                "is_subnormal" => Some((0x81_i32, false)),
+                "is_normal" => Some((0xBF_i32, true)),
+                _ => None,
+            };
+            if let Some((predicate, invert)) = classification {
+                let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
+                let intrinsic =
+                    intrinsic_ident("fpclass", &format!("{suffix}_mask"), vec_ty.n_bits());
+                return self.kernel_method(op, vec_ty, |token| {
+                    let input = if op.method == "is_subnormal" {
+                        // Direct FPCLASS subnormal detection depends on MXCSR.DAZ.
+                        // In "flush subnormals to zero" mode this will always report false.
+                        // So we have a custom implementation, so that input subnormals
+                        // still could be detected and e.g. warned about even with DAZ/FTZ.
+                        //
+                        // Flip the exponent bits: subnormals become NaNs,
+                        // zeros become infinities, and all other inputs become non-NaNs.
+                        // Testing for either NaN kind is then independent of DAZ/FTZ.
+                        let xor = simple_intrinsic("xor", vec_ty);
+                        let set1 = set1_intrinsic(vec_ty);
+                        let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                        quote! { #xor(a.into(), #set1(#scalar::INFINITY)) }
+                    } else {
+                        quote! { a.into() }
+                    };
+                    let result = avx512_mask_register_value_with_simd(
+                        &vec_ty.mask_ty(),
+                        quote! { #intrinsic::<#predicate>(#input) },
+                        quote! { #token },
+                    );
+                    if invert {
+                        // Mask NOT also clears unused bits in 2- and 4-lane masks.
+                        quote! { !(#result) }
+                    } else {
+                        result
+                    }
+                });
+            }
+        }
+
+        match op.method {
+            "is_nan" | "is_infinite" | "is_finite" | "is_subnormal" | "is_normal"
+            | "is_sign_positive" | "is_sign_negative" => {
+                generic_classify(method_sig, op.method, vec_ty)
+            }
+            _ => {
+                unimplemented!()
+            }
+        }
     }
 
     pub(crate) fn handle_load_interleaved(
