@@ -5743,19 +5743,24 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn simd_lt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
-        [
-            -(i64::lt(&a[0usize], &b[0usize]) as i64),
-            -(i64::lt(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> mask64x2<Avx2> {
+                _mm_cmpgt_epi64(b.into(), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_le_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
-        [
-            -(i64::le(&a[0usize], &b[0usize]) as i64),
-            -(i64::le(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> mask64x2<Avx2> {
+                _mm_xor_si128(_mm_cmpgt_epi64(a.into(), b.into()), _mm_set1_epi64x(-1))
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_low_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -6231,19 +6236,38 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn simd_lt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        [
-            -(u64::lt(&a[0usize], &b[0usize]) as i64),
-            -(u64::lt(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> mask64x2<Avx2> {
+                {
+                    let sign_bit = _mm_set1_epi64x(0x8000000000000000u64.cast_signed());
+                    let lhs_signed = _mm_xor_si128(b.into(), sign_bit);
+                    let rhs_signed = _mm_xor_si128(a.into(), sign_bit);
+                    _mm_cmpgt_epi64(lhs_signed, rhs_signed)
+                }
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_le_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        [
-            -(u64::le(&a[0usize], &b[0usize]) as i64),
-            -(u64::le(&a[1usize], &b[1usize]) as i64),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> mask64x2<Avx2> {
+                _mm_xor_si128(
+                    {
+                        let sign_bit = _mm_set1_epi64x(0x8000000000000000u64.cast_signed());
+                        let lhs_signed = _mm_xor_si128(a.into(), sign_bit);
+                        let rhs_signed = _mm_xor_si128(b.into(), sign_bit);
+                        _mm_cmpgt_epi64(lhs_signed, rhs_signed)
+                    },
+                    _mm_set1_epi64x(-1),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_low_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -11862,23 +11886,27 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn simd_lt_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
-        [
-            -(i64::lt(&a[0usize], &b[0usize]) as i64),
-            -(i64::lt(&a[1usize], &b[1usize]) as i64),
-            -(i64::lt(&a[2usize], &b[2usize]) as i64),
-            -(i64::lt(&a[3usize], &b[3usize]) as i64),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> mask64x4<Avx2> {
+                _mm256_cmpgt_epi64(b.into(), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_le_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
-        [
-            -(i64::le(&a[0usize], &b[0usize]) as i64),
-            -(i64::le(&a[1usize], &b[1usize]) as i64),
-            -(i64::le(&a[2usize], &b[2usize]) as i64),
-            -(i64::le(&a[3usize], &b[3usize]) as i64),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> mask64x4<Avx2> {
+                _mm256_xor_si256(
+                    _mm256_cmpgt_epi64(a.into(), b.into()),
+                    _mm256_set1_epi64x(-1),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_low_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
@@ -12321,23 +12349,38 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn simd_lt_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
-        [
-            -(u64::lt(&a[0usize], &b[0usize]) as i64),
-            -(u64::lt(&a[1usize], &b[1usize]) as i64),
-            -(u64::lt(&a[2usize], &b[2usize]) as i64),
-            -(u64::lt(&a[3usize], &b[3usize]) as i64),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> mask64x4<Avx2> {
+                {
+                    let sign_bit = _mm256_set1_epi64x(0x8000000000000000u64.cast_signed());
+                    let lhs_signed = _mm256_xor_si256(b.into(), sign_bit);
+                    let rhs_signed = _mm256_xor_si256(a.into(), sign_bit);
+                    _mm256_cmpgt_epi64(lhs_signed, rhs_signed)
+                }
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_le_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
-        [
-            -(u64::le(&a[0usize], &b[0usize]) as i64),
-            -(u64::le(&a[1usize], &b[1usize]) as i64),
-            -(u64::le(&a[2usize], &b[2usize]) as i64),
-            -(u64::le(&a[3usize], &b[3usize]) as i64),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> mask64x4<Avx2> {
+                _mm256_xor_si256(
+                    {
+                        let sign_bit = _mm256_set1_epi64x(0x8000000000000000u64.cast_signed());
+                        let lhs_signed = _mm256_xor_si256(a.into(), sign_bit);
+                        let rhs_signed = _mm256_xor_si256(b.into(), sign_bit);
+                        _mm256_cmpgt_epi64(lhs_signed, rhs_signed)
+                    },
+                    _mm256_set1_epi64x(-1),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_low_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {

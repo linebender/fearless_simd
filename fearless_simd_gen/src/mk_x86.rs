@@ -728,12 +728,12 @@ fn sse2_not_mask_expr(mask: TokenStream) -> TokenStream {
     }
 }
 
-/// Build a signed or unsigned integer `>` comparison using SSE2 operations.
+/// Build a signed or unsigned integer `>` comparison using packed signed comparisons.
 ///
-/// SSE2 only provides signed greater-than comparisons for these integer lane
-/// widths. Unsigned comparisons are lowered by flipping the sign bit in both
-/// operands, which preserves unsigned ordering when interpreted as signed.
-fn sse2_cmpgt_expr(vec_ty: &VecType, lhs: TokenStream, rhs: TokenStream) -> TokenStream {
+/// 64-bit lanes require SSE4.2, and 256-bit vectors require AVX2. Unsigned
+/// comparisons flip the sign bit in both operands, which preserves unsigned
+/// ordering when interpreted as signed.
+fn int_cmpgt_expr(vec_ty: &VecType, lhs: TokenStream, rhs: TokenStream) -> TokenStream {
     let gt = simple_sign_unaware_intrinsic("cmpgt", vec_ty);
     if vec_ty.scalar != ScalarType::Unsigned {
         return quote! { #gt(#lhs, #rhs) };
@@ -745,6 +745,7 @@ fn sse2_cmpgt_expr(vec_ty: &VecType, lhs: TokenStream, rhs: TokenStream) -> Toke
         8 => quote! { 0x80u8 },
         16 => quote! { 0x8000u16 },
         32 => quote! { 0x80000000u32 },
+        64 => quote! { 0x8000000000000000u64 },
         _ => unimplemented!(),
     };
 
@@ -777,14 +778,14 @@ fn sse2_int_compare_expr(method: &str, vec_ty: &VecType) -> TokenStream {
             let eq = simple_sign_unaware_intrinsic("cmpeq", vec_ty);
             quote! { #eq(a.into(), b.into()) }
         }
-        "simd_lt" => sse2_cmpgt_expr(vec_ty, quote! { b.into() }, quote! { a.into() }),
-        "simd_gt" => sse2_cmpgt_expr(vec_ty, quote! { a.into() }, quote! { b.into() }),
+        "simd_lt" => int_cmpgt_expr(vec_ty, quote! { b.into() }, quote! { a.into() }),
+        "simd_gt" => int_cmpgt_expr(vec_ty, quote! { a.into() }, quote! { b.into() }),
         "simd_le" => {
-            let gt = sse2_cmpgt_expr(vec_ty, quote! { a.into() }, quote! { b.into() });
+            let gt = int_cmpgt_expr(vec_ty, quote! { a.into() }, quote! { b.into() });
             sse2_not_mask_expr(gt)
         }
         "simd_ge" => {
-            let gt = sse2_cmpgt_expr(vec_ty, quote! { b.into() }, quote! { a.into() });
+            let gt = int_cmpgt_expr(vec_ty, quote! { b.into() }, quote! { a.into() });
             sse2_not_mask_expr(gt)
         }
         _ => unreachable!(),
@@ -838,7 +839,7 @@ fn sse2_min_max_native_expr(
             quote! { #intrinsic(#a, #b) }
         }
         ("min" | "max", ScalarType::Int | ScalarType::Unsigned, 8 | 16 | 32) => {
-            let gt = sse2_cmpgt_expr(vec_ty, quote! { a }, quote! { b });
+            let gt = int_cmpgt_expr(vec_ty, quote! { a }, quote! { b });
             let select = if method == "max" {
                 sse2_select_expr(vec_ty, quote! { gt }, quote! { a }, quote! { b })
             } else {
@@ -1872,7 +1873,24 @@ impl X86 {
             && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
             && method != "simd_eq"
         {
-            return fallback_method(op, vec_ty);
+            // SSE4.2 and AVX2 have packed signed 64-bit greater-than, but no
+            // packed 64-bit min/max to reuse for the inclusive comparisons.
+            let (lhs, rhs) = match method {
+                "simd_lt" | "simd_ge" => (quote! { b.into() }, quote! { a.into() }),
+                "simd_gt" | "simd_le" => (quote! { a.into() }, quote! { b.into() }),
+                _ => unreachable!(),
+            };
+            let gt = int_cmpgt_expr(vec_ty, lhs, rhs);
+            let expr = if matches!(method, "simd_le" | "simd_ge") {
+                let set1 = set1_intrinsic(vec_ty);
+                let xor = intrinsic_ident("xor", coarse_type(vec_ty), vec_ty.n_bits());
+                quote! { #xor(#gt, #set1(-1)) }
+            } else {
+                gt
+            };
+            return self.kernel_method(op, vec_ty, |token| {
+                quote! { #expr.simd_into(#token) }
+            });
         }
 
         let args = [quote! { a.into() }, quote! { b.into() }];
