@@ -4,48 +4,38 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
+const I8_MIN: i8 = i8::MIN;
+const I8_MAX: i8 = i8::MAX;
+const U8_MIN: u8 = u8::MIN;
+const U8_MAX: u8 = u8::MAX;
+
+const I16_MIN: i16 = i16::MIN;
+const I16_MAX: i16 = i16::MAX;
+const U16_MIN: u16 = u16::MIN;
+const U16_MAX: u16 = u16::MAX;
+
+const I32_MIN: i32 = i32::MIN;
+const I32_MAX: i32 = i32::MAX;
+const U32_MIN: u32 = u32::MIN;
+const U32_MAX: u32 = u32::MAX;
+
+const I64_MIN: i64 = i64::MIN;
+const I64_MAX: i64 = i64::MAX;
+const U64_MIN: u64 = u64::MIN;
+const U64_MAX: u64 = u64::MAX;
+
 #[simd_test]
 fn simd_ne_i8x16<S: Simd>(simd: S) {
     let a = i8x16::from_slice(
         simd,
         &[
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
+            I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1,
         ],
     );
     let b = i8x16::from_slice(
         simd,
         &[
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
+            I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0,
         ],
     );
     assert_eq!(
@@ -57,10 +47,10 @@ fn simd_ne_i8x16<S: Simd>(simd: S) {
         [-1, 0, -1, -1, -1, 0, -1, -1, -1, 0, -1, -1, -1, 0, -1, -1]
     );
     assert_eq!(<[i8; 16]>::from(a.simd_ne(a)), [0; 16]);
-    let min = i8x16::from_slice(simd, &[i8::MIN; 16]);
-    let max = i8x16::from_slice(simd, &[i8::MAX; 16]);
-    assert_eq!(<[i8; 16]>::from(min.simd_ne(i8::MIN)), [0; 16]);
-    assert_eq!(<[i8; 16]>::from(max.simd_ne(i8::MIN)), [-1; 16]);
+    let min = i8x16::from_slice(simd, &[I8_MIN; 16]);
+    let max = i8x16::from_slice(simd, &[I8_MAX; 16]);
+    assert_eq!(<[i8; 16]>::from(min.simd_ne(I8_MIN)), [0; 16]);
+    assert_eq!(<[i8; 16]>::from(max.simd_ne(I8_MIN)), [-1; 16]);
 }
 
 #[simd_test]
@@ -68,43 +58,13 @@ fn simd_ne_u8x16<S: Simd>(simd: S) {
     let a = u8x16::from_slice(
         simd,
         &[
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
+            U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1,
         ],
     );
     let b = u8x16::from_slice(
         simd,
         &[
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
+            U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0,
         ],
     );
     assert_eq!(
@@ -116,10 +76,10 @@ fn simd_ne_u8x16<S: Simd>(simd: S) {
         [-1, 0, -1, -1, -1, 0, -1, -1, -1, 0, -1, -1, -1, 0, -1, -1]
     );
     assert_eq!(<[i8; 16]>::from(a.simd_ne(a)), [0; 16]);
-    let min = u8x16::from_slice(simd, &[u8::MIN; 16]);
-    let max = u8x16::from_slice(simd, &[u8::MAX; 16]);
-    assert_eq!(<[i8; 16]>::from(min.simd_ne(u8::MIN)), [0; 16]);
-    assert_eq!(<[i8; 16]>::from(max.simd_ne(u8::MIN)), [-1; 16]);
+    let min = u8x16::from_slice(simd, &[U8_MIN; 16]);
+    let max = u8x16::from_slice(simd, &[U8_MAX; 16]);
+    assert_eq!(<[i8; 16]>::from(min.simd_ne(U8_MIN)), [0; 16]);
+    assert_eq!(<[i8; 16]>::from(max.simd_ne(U8_MIN)), [-1; 16]);
 }
 
 #[simd_test]
@@ -145,8 +105,8 @@ fn simd_ne_mask8x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_ne_i16x8<S: Simd>(simd: S) {
-    let a = i16x8::from_slice(simd, &[i16::MIN, i16::MAX, 0, 1, i16::MIN, i16::MAX, 0, 1]);
-    let b = i16x8::from_slice(simd, &[i16::MAX, i16::MAX, 1, 0, i16::MAX, i16::MAX, 1, 0]);
+    let a = i16x8::from_slice(simd, &[I16_MIN, I16_MAX, 0, 1, I16_MIN, I16_MAX, 0, 1]);
+    let b = i16x8::from_slice(simd, &[I16_MAX, I16_MAX, 1, 0, I16_MAX, I16_MAX, 1, 0]);
     assert_eq!(
         <[i16; 8]>::from(a.simd_ne(b)),
         [-1, 0, -1, -1, -1, 0, -1, -1]
@@ -156,16 +116,16 @@ fn simd_ne_i16x8<S: Simd>(simd: S) {
         [-1, 0, -1, -1, -1, 0, -1, -1]
     );
     assert_eq!(<[i16; 8]>::from(a.simd_ne(a)), [0; 8]);
-    let min = i16x8::from_slice(simd, &[i16::MIN; 8]);
-    let max = i16x8::from_slice(simd, &[i16::MAX; 8]);
-    assert_eq!(<[i16; 8]>::from(min.simd_ne(i16::MIN)), [0; 8]);
-    assert_eq!(<[i16; 8]>::from(max.simd_ne(i16::MIN)), [-1; 8]);
+    let min = i16x8::from_slice(simd, &[I16_MIN; 8]);
+    let max = i16x8::from_slice(simd, &[I16_MAX; 8]);
+    assert_eq!(<[i16; 8]>::from(min.simd_ne(I16_MIN)), [0; 8]);
+    assert_eq!(<[i16; 8]>::from(max.simd_ne(I16_MIN)), [-1; 8]);
 }
 
 #[simd_test]
 fn simd_ne_u16x8<S: Simd>(simd: S) {
-    let a = u16x8::from_slice(simd, &[u16::MIN, u16::MAX, 0, 1, u16::MIN, u16::MAX, 0, 1]);
-    let b = u16x8::from_slice(simd, &[u16::MAX, u16::MAX, 1, 0, u16::MAX, u16::MAX, 1, 0]);
+    let a = u16x8::from_slice(simd, &[U16_MIN, U16_MAX, 0, 1, U16_MIN, U16_MAX, 0, 1]);
+    let b = u16x8::from_slice(simd, &[U16_MAX, U16_MAX, 1, 0, U16_MAX, U16_MAX, 1, 0]);
     assert_eq!(
         <[i16; 8]>::from(a.simd_ne(b)),
         [-1, 0, -1, -1, -1, 0, -1, -1]
@@ -175,10 +135,10 @@ fn simd_ne_u16x8<S: Simd>(simd: S) {
         [-1, 0, -1, -1, -1, 0, -1, -1]
     );
     assert_eq!(<[i16; 8]>::from(a.simd_ne(a)), [0; 8]);
-    let min = u16x8::from_slice(simd, &[u16::MIN; 8]);
-    let max = u16x8::from_slice(simd, &[u16::MAX; 8]);
-    assert_eq!(<[i16; 8]>::from(min.simd_ne(u16::MIN)), [0; 8]);
-    assert_eq!(<[i16; 8]>::from(max.simd_ne(u16::MIN)), [-1; 8]);
+    let min = u16x8::from_slice(simd, &[U16_MIN; 8]);
+    let max = u16x8::from_slice(simd, &[U16_MAX; 8]);
+    assert_eq!(<[i16; 8]>::from(min.simd_ne(U16_MIN)), [0; 8]);
+    assert_eq!(<[i16; 8]>::from(max.simd_ne(U16_MIN)), [-1; 8]);
 }
 
 #[simd_test]
@@ -198,28 +158,28 @@ fn simd_ne_mask16x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_ne_i32x4<S: Simd>(simd: S) {
-    let a = i32x4::from_slice(simd, &[i32::MIN, i32::MAX, 0, 1]);
-    let b = i32x4::from_slice(simd, &[i32::MAX, i32::MAX, 1, 0]);
+    let a = i32x4::from_slice(simd, &[I32_MIN, I32_MAX, 0, 1]);
+    let b = i32x4::from_slice(simd, &[I32_MAX, I32_MAX, 1, 0]);
     assert_eq!(<[i32; 4]>::from(a.simd_ne(b)), [-1, 0, -1, -1]);
     assert_eq!(<[i32; 4]>::from(simd.simd_ne_i32x4(a, b)), [-1, 0, -1, -1]);
     assert_eq!(<[i32; 4]>::from(a.simd_ne(a)), [0; 4]);
-    let min = i32x4::from_slice(simd, &[i32::MIN; 4]);
-    let max = i32x4::from_slice(simd, &[i32::MAX; 4]);
-    assert_eq!(<[i32; 4]>::from(min.simd_ne(i32::MIN)), [0; 4]);
-    assert_eq!(<[i32; 4]>::from(max.simd_ne(i32::MIN)), [-1; 4]);
+    let min = i32x4::from_slice(simd, &[I32_MIN; 4]);
+    let max = i32x4::from_slice(simd, &[I32_MAX; 4]);
+    assert_eq!(<[i32; 4]>::from(min.simd_ne(I32_MIN)), [0; 4]);
+    assert_eq!(<[i32; 4]>::from(max.simd_ne(I32_MIN)), [-1; 4]);
 }
 
 #[simd_test]
 fn simd_ne_u32x4<S: Simd>(simd: S) {
-    let a = u32x4::from_slice(simd, &[u32::MIN, u32::MAX, 0, 1]);
-    let b = u32x4::from_slice(simd, &[u32::MAX, u32::MAX, 1, 0]);
+    let a = u32x4::from_slice(simd, &[U32_MIN, U32_MAX, 0, 1]);
+    let b = u32x4::from_slice(simd, &[U32_MAX, U32_MAX, 1, 0]);
     assert_eq!(<[i32; 4]>::from(a.simd_ne(b)), [-1, 0, -1, -1]);
     assert_eq!(<[i32; 4]>::from(simd.simd_ne_u32x4(a, b)), [-1, 0, -1, -1]);
     assert_eq!(<[i32; 4]>::from(a.simd_ne(a)), [0; 4]);
-    let min = u32x4::from_slice(simd, &[u32::MIN; 4]);
-    let max = u32x4::from_slice(simd, &[u32::MAX; 4]);
-    assert_eq!(<[i32; 4]>::from(min.simd_ne(u32::MIN)), [0; 4]);
-    assert_eq!(<[i32; 4]>::from(max.simd_ne(u32::MIN)), [-1; 4]);
+    let min = u32x4::from_slice(simd, &[U32_MIN; 4]);
+    let max = u32x4::from_slice(simd, &[U32_MAX; 4]);
+    assert_eq!(<[i32; 4]>::from(min.simd_ne(U32_MIN)), [0; 4]);
+    assert_eq!(<[i32; 4]>::from(max.simd_ne(U32_MIN)), [-1; 4]);
 }
 
 #[simd_test]
@@ -236,28 +196,28 @@ fn simd_ne_mask32x4<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_ne_i64x2<S: Simd>(simd: S) {
-    let a = i64x2::from_slice(simd, &[i64::MIN, i64::MAX]);
-    let b = i64x2::from_slice(simd, &[i64::MAX, i64::MAX]);
+    let a = i64x2::from_slice(simd, &[I64_MIN, I64_MAX]);
+    let b = i64x2::from_slice(simd, &[I64_MAX, I64_MAX]);
     assert_eq!(<[i64; 2]>::from(a.simd_ne(b)), [-1, 0]);
     assert_eq!(<[i64; 2]>::from(simd.simd_ne_i64x2(a, b)), [-1, 0]);
     assert_eq!(<[i64; 2]>::from(a.simd_ne(a)), [0; 2]);
-    let min = i64x2::from_slice(simd, &[i64::MIN; 2]);
-    let max = i64x2::from_slice(simd, &[i64::MAX; 2]);
-    assert_eq!(<[i64; 2]>::from(min.simd_ne(i64::MIN)), [0; 2]);
-    assert_eq!(<[i64; 2]>::from(max.simd_ne(i64::MIN)), [-1; 2]);
+    let min = i64x2::from_slice(simd, &[I64_MIN; 2]);
+    let max = i64x2::from_slice(simd, &[I64_MAX; 2]);
+    assert_eq!(<[i64; 2]>::from(min.simd_ne(I64_MIN)), [0; 2]);
+    assert_eq!(<[i64; 2]>::from(max.simd_ne(I64_MIN)), [-1; 2]);
 }
 
 #[simd_test]
 fn simd_ne_u64x2<S: Simd>(simd: S) {
-    let a = u64x2::from_slice(simd, &[u64::MIN, u64::MAX]);
-    let b = u64x2::from_slice(simd, &[u64::MAX, u64::MAX]);
+    let a = u64x2::from_slice(simd, &[U64_MIN, U64_MAX]);
+    let b = u64x2::from_slice(simd, &[U64_MAX, U64_MAX]);
     assert_eq!(<[i64; 2]>::from(a.simd_ne(b)), [-1, 0]);
     assert_eq!(<[i64; 2]>::from(simd.simd_ne_u64x2(a, b)), [-1, 0]);
     assert_eq!(<[i64; 2]>::from(a.simd_ne(a)), [0; 2]);
-    let min = u64x2::from_slice(simd, &[u64::MIN; 2]);
-    let max = u64x2::from_slice(simd, &[u64::MAX; 2]);
-    assert_eq!(<[i64; 2]>::from(min.simd_ne(u64::MIN)), [0; 2]);
-    assert_eq!(<[i64; 2]>::from(max.simd_ne(u64::MIN)), [-1; 2]);
+    let min = u64x2::from_slice(simd, &[U64_MIN; 2]);
+    let max = u64x2::from_slice(simd, &[U64_MAX; 2]);
+    assert_eq!(<[i64; 2]>::from(min.simd_ne(U64_MIN)), [0; 2]);
+    assert_eq!(<[i64; 2]>::from(max.simd_ne(U64_MIN)), [-1; 2]);
 }
 
 #[simd_test]
@@ -333,75 +293,15 @@ fn simd_ne_i8x32<S: Simd>(simd: S) {
     let a = i8x32::from_slice(
         simd,
         &[
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
+            I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1,
+            I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1,
         ],
     );
     let b = i8x32::from_slice(
         simd,
         &[
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
+            I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0,
+            I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0,
         ],
     );
     assert_eq!(
@@ -419,10 +319,10 @@ fn simd_ne_i8x32<S: Simd>(simd: S) {
         ]
     );
     assert_eq!(<[i8; 32]>::from(a.simd_ne(a)), [0; 32]);
-    let min = i8x32::from_slice(simd, &[i8::MIN; 32]);
-    let max = i8x32::from_slice(simd, &[i8::MAX; 32]);
-    assert_eq!(<[i8; 32]>::from(min.simd_ne(i8::MIN)), [0; 32]);
-    assert_eq!(<[i8; 32]>::from(max.simd_ne(i8::MIN)), [-1; 32]);
+    let min = i8x32::from_slice(simd, &[I8_MIN; 32]);
+    let max = i8x32::from_slice(simd, &[I8_MAX; 32]);
+    assert_eq!(<[i8; 32]>::from(min.simd_ne(I8_MIN)), [0; 32]);
+    assert_eq!(<[i8; 32]>::from(max.simd_ne(I8_MIN)), [-1; 32]);
 }
 
 #[simd_test]
@@ -430,75 +330,15 @@ fn simd_ne_u8x32<S: Simd>(simd: S) {
     let a = u8x32::from_slice(
         simd,
         &[
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
+            U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1,
+            U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1,
         ],
     );
     let b = u8x32::from_slice(
         simd,
         &[
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
+            U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0,
+            U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0,
         ],
     );
     assert_eq!(
@@ -516,10 +356,10 @@ fn simd_ne_u8x32<S: Simd>(simd: S) {
         ]
     );
     assert_eq!(<[i8; 32]>::from(a.simd_ne(a)), [0; 32]);
-    let min = u8x32::from_slice(simd, &[u8::MIN; 32]);
-    let max = u8x32::from_slice(simd, &[u8::MAX; 32]);
-    assert_eq!(<[i8; 32]>::from(min.simd_ne(u8::MIN)), [0; 32]);
-    assert_eq!(<[i8; 32]>::from(max.simd_ne(u8::MIN)), [-1; 32]);
+    let min = u8x32::from_slice(simd, &[U8_MIN; 32]);
+    let max = u8x32::from_slice(simd, &[U8_MAX; 32]);
+    assert_eq!(<[i8; 32]>::from(min.simd_ne(U8_MIN)), [0; 32]);
+    assert_eq!(<[i8; 32]>::from(max.simd_ne(U8_MIN)), [-1; 32]);
 }
 
 #[simd_test]
@@ -557,43 +397,15 @@ fn simd_ne_i16x16<S: Simd>(simd: S) {
     let a = i16x16::from_slice(
         simd,
         &[
-            i16::MIN,
-            i16::MAX,
-            0,
-            1,
-            i16::MIN,
-            i16::MAX,
-            0,
-            1,
-            i16::MIN,
-            i16::MAX,
-            0,
-            1,
-            i16::MIN,
-            i16::MAX,
-            0,
-            1,
+            I16_MIN, I16_MAX, 0, 1, I16_MIN, I16_MAX, 0, 1, I16_MIN, I16_MAX, 0, 1, I16_MIN,
+            I16_MAX, 0, 1,
         ],
     );
     let b = i16x16::from_slice(
         simd,
         &[
-            i16::MAX,
-            i16::MAX,
-            1,
-            0,
-            i16::MAX,
-            i16::MAX,
-            1,
-            0,
-            i16::MAX,
-            i16::MAX,
-            1,
-            0,
-            i16::MAX,
-            i16::MAX,
-            1,
-            0,
+            I16_MAX, I16_MAX, 1, 0, I16_MAX, I16_MAX, 1, 0, I16_MAX, I16_MAX, 1, 0, I16_MAX,
+            I16_MAX, 1, 0,
         ],
     );
     assert_eq!(
@@ -605,10 +417,10 @@ fn simd_ne_i16x16<S: Simd>(simd: S) {
         [-1, 0, -1, -1, -1, 0, -1, -1, -1, 0, -1, -1, -1, 0, -1, -1]
     );
     assert_eq!(<[i16; 16]>::from(a.simd_ne(a)), [0; 16]);
-    let min = i16x16::from_slice(simd, &[i16::MIN; 16]);
-    let max = i16x16::from_slice(simd, &[i16::MAX; 16]);
-    assert_eq!(<[i16; 16]>::from(min.simd_ne(i16::MIN)), [0; 16]);
-    assert_eq!(<[i16; 16]>::from(max.simd_ne(i16::MIN)), [-1; 16]);
+    let min = i16x16::from_slice(simd, &[I16_MIN; 16]);
+    let max = i16x16::from_slice(simd, &[I16_MAX; 16]);
+    assert_eq!(<[i16; 16]>::from(min.simd_ne(I16_MIN)), [0; 16]);
+    assert_eq!(<[i16; 16]>::from(max.simd_ne(I16_MIN)), [-1; 16]);
 }
 
 #[simd_test]
@@ -616,43 +428,15 @@ fn simd_ne_u16x16<S: Simd>(simd: S) {
     let a = u16x16::from_slice(
         simd,
         &[
-            u16::MIN,
-            u16::MAX,
-            0,
-            1,
-            u16::MIN,
-            u16::MAX,
-            0,
-            1,
-            u16::MIN,
-            u16::MAX,
-            0,
-            1,
-            u16::MIN,
-            u16::MAX,
-            0,
-            1,
+            U16_MIN, U16_MAX, 0, 1, U16_MIN, U16_MAX, 0, 1, U16_MIN, U16_MAX, 0, 1, U16_MIN,
+            U16_MAX, 0, 1,
         ],
     );
     let b = u16x16::from_slice(
         simd,
         &[
-            u16::MAX,
-            u16::MAX,
-            1,
-            0,
-            u16::MAX,
-            u16::MAX,
-            1,
-            0,
-            u16::MAX,
-            u16::MAX,
-            1,
-            0,
-            u16::MAX,
-            u16::MAX,
-            1,
-            0,
+            U16_MAX, U16_MAX, 1, 0, U16_MAX, U16_MAX, 1, 0, U16_MAX, U16_MAX, 1, 0, U16_MAX,
+            U16_MAX, 1, 0,
         ],
     );
     assert_eq!(
@@ -664,10 +448,10 @@ fn simd_ne_u16x16<S: Simd>(simd: S) {
         [-1, 0, -1, -1, -1, 0, -1, -1, -1, 0, -1, -1, -1, 0, -1, -1]
     );
     assert_eq!(<[i16; 16]>::from(a.simd_ne(a)), [0; 16]);
-    let min = u16x16::from_slice(simd, &[u16::MIN; 16]);
-    let max = u16x16::from_slice(simd, &[u16::MAX; 16]);
-    assert_eq!(<[i16; 16]>::from(min.simd_ne(u16::MIN)), [0; 16]);
-    assert_eq!(<[i16; 16]>::from(max.simd_ne(u16::MIN)), [-1; 16]);
+    let min = u16x16::from_slice(simd, &[U16_MIN; 16]);
+    let max = u16x16::from_slice(simd, &[U16_MAX; 16]);
+    assert_eq!(<[i16; 16]>::from(min.simd_ne(U16_MIN)), [0; 16]);
+    assert_eq!(<[i16; 16]>::from(max.simd_ne(U16_MIN)), [-1; 16]);
 }
 
 #[simd_test]
@@ -693,8 +477,8 @@ fn simd_ne_mask16x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_ne_i32x8<S: Simd>(simd: S) {
-    let a = i32x8::from_slice(simd, &[i32::MIN, i32::MAX, 0, 1, i32::MIN, i32::MAX, 0, 1]);
-    let b = i32x8::from_slice(simd, &[i32::MAX, i32::MAX, 1, 0, i32::MAX, i32::MAX, 1, 0]);
+    let a = i32x8::from_slice(simd, &[I32_MIN, I32_MAX, 0, 1, I32_MIN, I32_MAX, 0, 1]);
+    let b = i32x8::from_slice(simd, &[I32_MAX, I32_MAX, 1, 0, I32_MAX, I32_MAX, 1, 0]);
     assert_eq!(
         <[i32; 8]>::from(a.simd_ne(b)),
         [-1, 0, -1, -1, -1, 0, -1, -1]
@@ -704,16 +488,16 @@ fn simd_ne_i32x8<S: Simd>(simd: S) {
         [-1, 0, -1, -1, -1, 0, -1, -1]
     );
     assert_eq!(<[i32; 8]>::from(a.simd_ne(a)), [0; 8]);
-    let min = i32x8::from_slice(simd, &[i32::MIN; 8]);
-    let max = i32x8::from_slice(simd, &[i32::MAX; 8]);
-    assert_eq!(<[i32; 8]>::from(min.simd_ne(i32::MIN)), [0; 8]);
-    assert_eq!(<[i32; 8]>::from(max.simd_ne(i32::MIN)), [-1; 8]);
+    let min = i32x8::from_slice(simd, &[I32_MIN; 8]);
+    let max = i32x8::from_slice(simd, &[I32_MAX; 8]);
+    assert_eq!(<[i32; 8]>::from(min.simd_ne(I32_MIN)), [0; 8]);
+    assert_eq!(<[i32; 8]>::from(max.simd_ne(I32_MIN)), [-1; 8]);
 }
 
 #[simd_test]
 fn simd_ne_u32x8<S: Simd>(simd: S) {
-    let a = u32x8::from_slice(simd, &[u32::MIN, u32::MAX, 0, 1, u32::MIN, u32::MAX, 0, 1]);
-    let b = u32x8::from_slice(simd, &[u32::MAX, u32::MAX, 1, 0, u32::MAX, u32::MAX, 1, 0]);
+    let a = u32x8::from_slice(simd, &[U32_MIN, U32_MAX, 0, 1, U32_MIN, U32_MAX, 0, 1]);
+    let b = u32x8::from_slice(simd, &[U32_MAX, U32_MAX, 1, 0, U32_MAX, U32_MAX, 1, 0]);
     assert_eq!(
         <[i32; 8]>::from(a.simd_ne(b)),
         [-1, 0, -1, -1, -1, 0, -1, -1]
@@ -723,10 +507,10 @@ fn simd_ne_u32x8<S: Simd>(simd: S) {
         [-1, 0, -1, -1, -1, 0, -1, -1]
     );
     assert_eq!(<[i32; 8]>::from(a.simd_ne(a)), [0; 8]);
-    let min = u32x8::from_slice(simd, &[u32::MIN; 8]);
-    let max = u32x8::from_slice(simd, &[u32::MAX; 8]);
-    assert_eq!(<[i32; 8]>::from(min.simd_ne(u32::MIN)), [0; 8]);
-    assert_eq!(<[i32; 8]>::from(max.simd_ne(u32::MIN)), [-1; 8]);
+    let min = u32x8::from_slice(simd, &[U32_MIN; 8]);
+    let max = u32x8::from_slice(simd, &[U32_MAX; 8]);
+    assert_eq!(<[i32; 8]>::from(min.simd_ne(U32_MIN)), [0; 8]);
+    assert_eq!(<[i32; 8]>::from(max.simd_ne(U32_MIN)), [-1; 8]);
 }
 
 #[simd_test]
@@ -746,28 +530,28 @@ fn simd_ne_mask32x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_ne_i64x4<S: Simd>(simd: S) {
-    let a = i64x4::from_slice(simd, &[i64::MIN, i64::MAX, 0, 1]);
-    let b = i64x4::from_slice(simd, &[i64::MAX, i64::MAX, 1, 0]);
+    let a = i64x4::from_slice(simd, &[I64_MIN, I64_MAX, 0, 1]);
+    let b = i64x4::from_slice(simd, &[I64_MAX, I64_MAX, 1, 0]);
     assert_eq!(<[i64; 4]>::from(a.simd_ne(b)), [-1, 0, -1, -1]);
     assert_eq!(<[i64; 4]>::from(simd.simd_ne_i64x4(a, b)), [-1, 0, -1, -1]);
     assert_eq!(<[i64; 4]>::from(a.simd_ne(a)), [0; 4]);
-    let min = i64x4::from_slice(simd, &[i64::MIN; 4]);
-    let max = i64x4::from_slice(simd, &[i64::MAX; 4]);
-    assert_eq!(<[i64; 4]>::from(min.simd_ne(i64::MIN)), [0; 4]);
-    assert_eq!(<[i64; 4]>::from(max.simd_ne(i64::MIN)), [-1; 4]);
+    let min = i64x4::from_slice(simd, &[I64_MIN; 4]);
+    let max = i64x4::from_slice(simd, &[I64_MAX; 4]);
+    assert_eq!(<[i64; 4]>::from(min.simd_ne(I64_MIN)), [0; 4]);
+    assert_eq!(<[i64; 4]>::from(max.simd_ne(I64_MIN)), [-1; 4]);
 }
 
 #[simd_test]
 fn simd_ne_u64x4<S: Simd>(simd: S) {
-    let a = u64x4::from_slice(simd, &[u64::MIN, u64::MAX, 0, 1]);
-    let b = u64x4::from_slice(simd, &[u64::MAX, u64::MAX, 1, 0]);
+    let a = u64x4::from_slice(simd, &[U64_MIN, U64_MAX, 0, 1]);
+    let b = u64x4::from_slice(simd, &[U64_MAX, U64_MAX, 1, 0]);
     assert_eq!(<[i64; 4]>::from(a.simd_ne(b)), [-1, 0, -1, -1]);
     assert_eq!(<[i64; 4]>::from(simd.simd_ne_u64x4(a, b)), [-1, 0, -1, -1]);
     assert_eq!(<[i64; 4]>::from(a.simd_ne(a)), [0; 4]);
-    let min = u64x4::from_slice(simd, &[u64::MIN; 4]);
-    let max = u64x4::from_slice(simd, &[u64::MAX; 4]);
-    assert_eq!(<[i64; 4]>::from(min.simd_ne(u64::MIN)), [0; 4]);
-    assert_eq!(<[i64; 4]>::from(max.simd_ne(u64::MIN)), [-1; 4]);
+    let min = u64x4::from_slice(simd, &[U64_MIN; 4]);
+    let max = u64x4::from_slice(simd, &[U64_MAX; 4]);
+    assert_eq!(<[i64; 4]>::from(min.simd_ne(U64_MIN)), [0; 4]);
+    assert_eq!(<[i64; 4]>::from(max.simd_ne(U64_MIN)), [-1; 4]);
 }
 
 #[simd_test]
@@ -879,139 +663,19 @@ fn simd_ne_i8x64<S: Simd>(simd: S) {
     let a = i8x64::from_slice(
         simd,
         &[
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
-            i8::MIN,
-            i8::MAX,
-            0,
-            1,
+            I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1,
+            I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1,
+            I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1,
+            I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1, I8_MIN, I8_MAX, 0, 1,
         ],
     );
     let b = i8x64::from_slice(
         simd,
         &[
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
-            i8::MAX,
-            i8::MAX,
-            1,
-            0,
+            I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0,
+            I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0,
+            I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0,
+            I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0, I8_MAX, I8_MAX, 1, 0,
         ],
     );
     assert_eq!(
@@ -1031,10 +695,10 @@ fn simd_ne_i8x64<S: Simd>(simd: S) {
         ]
     );
     assert_eq!(<[i8; 64]>::from(a.simd_ne(a)), [0; 64]);
-    let min = i8x64::from_slice(simd, &[i8::MIN; 64]);
-    let max = i8x64::from_slice(simd, &[i8::MAX; 64]);
-    assert_eq!(<[i8; 64]>::from(min.simd_ne(i8::MIN)), [0; 64]);
-    assert_eq!(<[i8; 64]>::from(max.simd_ne(i8::MIN)), [-1; 64]);
+    let min = i8x64::from_slice(simd, &[I8_MIN; 64]);
+    let max = i8x64::from_slice(simd, &[I8_MAX; 64]);
+    assert_eq!(<[i8; 64]>::from(min.simd_ne(I8_MIN)), [0; 64]);
+    assert_eq!(<[i8; 64]>::from(max.simd_ne(I8_MIN)), [-1; 64]);
 }
 
 #[simd_test]
@@ -1042,139 +706,19 @@ fn simd_ne_u8x64<S: Simd>(simd: S) {
     let a = u8x64::from_slice(
         simd,
         &[
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
-            u8::MIN,
-            u8::MAX,
-            0,
-            1,
+            U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1,
+            U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1,
+            U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1,
+            U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1, U8_MIN, U8_MAX, 0, 1,
         ],
     );
     let b = u8x64::from_slice(
         simd,
         &[
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
-            u8::MAX,
-            u8::MAX,
-            1,
-            0,
+            U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0,
+            U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0,
+            U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0,
+            U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0, U8_MAX, U8_MAX, 1, 0,
         ],
     );
     assert_eq!(
@@ -1194,10 +738,10 @@ fn simd_ne_u8x64<S: Simd>(simd: S) {
         ]
     );
     assert_eq!(<[i8; 64]>::from(a.simd_ne(a)), [0; 64]);
-    let min = u8x64::from_slice(simd, &[u8::MIN; 64]);
-    let max = u8x64::from_slice(simd, &[u8::MAX; 64]);
-    assert_eq!(<[i8; 64]>::from(min.simd_ne(u8::MIN)), [0; 64]);
-    assert_eq!(<[i8; 64]>::from(max.simd_ne(u8::MIN)), [-1; 64]);
+    let min = u8x64::from_slice(simd, &[U8_MIN; 64]);
+    let max = u8x64::from_slice(simd, &[U8_MAX; 64]);
+    assert_eq!(<[i8; 64]>::from(min.simd_ne(U8_MIN)), [0; 64]);
+    assert_eq!(<[i8; 64]>::from(max.simd_ne(U8_MIN)), [-1; 64]);
 }
 
 #[simd_test]
@@ -1238,75 +782,17 @@ fn simd_ne_i16x32<S: Simd>(simd: S) {
     let a = i16x32::from_slice(
         simd,
         &[
-            i16::MIN,
-            i16::MAX,
-            0,
-            1,
-            i16::MIN,
-            i16::MAX,
-            0,
-            1,
-            i16::MIN,
-            i16::MAX,
-            0,
-            1,
-            i16::MIN,
-            i16::MAX,
-            0,
-            1,
-            i16::MIN,
-            i16::MAX,
-            0,
-            1,
-            i16::MIN,
-            i16::MAX,
-            0,
-            1,
-            i16::MIN,
-            i16::MAX,
-            0,
-            1,
-            i16::MIN,
-            i16::MAX,
-            0,
-            1,
+            I16_MIN, I16_MAX, 0, 1, I16_MIN, I16_MAX, 0, 1, I16_MIN, I16_MAX, 0, 1, I16_MIN,
+            I16_MAX, 0, 1, I16_MIN, I16_MAX, 0, 1, I16_MIN, I16_MAX, 0, 1, I16_MIN, I16_MAX, 0, 1,
+            I16_MIN, I16_MAX, 0, 1,
         ],
     );
     let b = i16x32::from_slice(
         simd,
         &[
-            i16::MAX,
-            i16::MAX,
-            1,
-            0,
-            i16::MAX,
-            i16::MAX,
-            1,
-            0,
-            i16::MAX,
-            i16::MAX,
-            1,
-            0,
-            i16::MAX,
-            i16::MAX,
-            1,
-            0,
-            i16::MAX,
-            i16::MAX,
-            1,
-            0,
-            i16::MAX,
-            i16::MAX,
-            1,
-            0,
-            i16::MAX,
-            i16::MAX,
-            1,
-            0,
-            i16::MAX,
-            i16::MAX,
-            1,
-            0,
+            I16_MAX, I16_MAX, 1, 0, I16_MAX, I16_MAX, 1, 0, I16_MAX, I16_MAX, 1, 0, I16_MAX,
+            I16_MAX, 1, 0, I16_MAX, I16_MAX, 1, 0, I16_MAX, I16_MAX, 1, 0, I16_MAX, I16_MAX, 1, 0,
+            I16_MAX, I16_MAX, 1, 0,
         ],
     );
     assert_eq!(
@@ -1324,10 +810,10 @@ fn simd_ne_i16x32<S: Simd>(simd: S) {
         ]
     );
     assert_eq!(<[i16; 32]>::from(a.simd_ne(a)), [0; 32]);
-    let min = i16x32::from_slice(simd, &[i16::MIN; 32]);
-    let max = i16x32::from_slice(simd, &[i16::MAX; 32]);
-    assert_eq!(<[i16; 32]>::from(min.simd_ne(i16::MIN)), [0; 32]);
-    assert_eq!(<[i16; 32]>::from(max.simd_ne(i16::MIN)), [-1; 32]);
+    let min = i16x32::from_slice(simd, &[I16_MIN; 32]);
+    let max = i16x32::from_slice(simd, &[I16_MAX; 32]);
+    assert_eq!(<[i16; 32]>::from(min.simd_ne(I16_MIN)), [0; 32]);
+    assert_eq!(<[i16; 32]>::from(max.simd_ne(I16_MIN)), [-1; 32]);
 }
 
 #[simd_test]
@@ -1335,75 +821,17 @@ fn simd_ne_u16x32<S: Simd>(simd: S) {
     let a = u16x32::from_slice(
         simd,
         &[
-            u16::MIN,
-            u16::MAX,
-            0,
-            1,
-            u16::MIN,
-            u16::MAX,
-            0,
-            1,
-            u16::MIN,
-            u16::MAX,
-            0,
-            1,
-            u16::MIN,
-            u16::MAX,
-            0,
-            1,
-            u16::MIN,
-            u16::MAX,
-            0,
-            1,
-            u16::MIN,
-            u16::MAX,
-            0,
-            1,
-            u16::MIN,
-            u16::MAX,
-            0,
-            1,
-            u16::MIN,
-            u16::MAX,
-            0,
-            1,
+            U16_MIN, U16_MAX, 0, 1, U16_MIN, U16_MAX, 0, 1, U16_MIN, U16_MAX, 0, 1, U16_MIN,
+            U16_MAX, 0, 1, U16_MIN, U16_MAX, 0, 1, U16_MIN, U16_MAX, 0, 1, U16_MIN, U16_MAX, 0, 1,
+            U16_MIN, U16_MAX, 0, 1,
         ],
     );
     let b = u16x32::from_slice(
         simd,
         &[
-            u16::MAX,
-            u16::MAX,
-            1,
-            0,
-            u16::MAX,
-            u16::MAX,
-            1,
-            0,
-            u16::MAX,
-            u16::MAX,
-            1,
-            0,
-            u16::MAX,
-            u16::MAX,
-            1,
-            0,
-            u16::MAX,
-            u16::MAX,
-            1,
-            0,
-            u16::MAX,
-            u16::MAX,
-            1,
-            0,
-            u16::MAX,
-            u16::MAX,
-            1,
-            0,
-            u16::MAX,
-            u16::MAX,
-            1,
-            0,
+            U16_MAX, U16_MAX, 1, 0, U16_MAX, U16_MAX, 1, 0, U16_MAX, U16_MAX, 1, 0, U16_MAX,
+            U16_MAX, 1, 0, U16_MAX, U16_MAX, 1, 0, U16_MAX, U16_MAX, 1, 0, U16_MAX, U16_MAX, 1, 0,
+            U16_MAX, U16_MAX, 1, 0,
         ],
     );
     assert_eq!(
@@ -1421,10 +849,10 @@ fn simd_ne_u16x32<S: Simd>(simd: S) {
         ]
     );
     assert_eq!(<[i16; 32]>::from(a.simd_ne(a)), [0; 32]);
-    let min = u16x32::from_slice(simd, &[u16::MIN; 32]);
-    let max = u16x32::from_slice(simd, &[u16::MAX; 32]);
-    assert_eq!(<[i16; 32]>::from(min.simd_ne(u16::MIN)), [0; 32]);
-    assert_eq!(<[i16; 32]>::from(max.simd_ne(u16::MIN)), [-1; 32]);
+    let min = u16x32::from_slice(simd, &[U16_MIN; 32]);
+    let max = u16x32::from_slice(simd, &[U16_MAX; 32]);
+    assert_eq!(<[i16; 32]>::from(min.simd_ne(U16_MIN)), [0; 32]);
+    assert_eq!(<[i16; 32]>::from(max.simd_ne(U16_MIN)), [-1; 32]);
 }
 
 #[simd_test]
@@ -1462,43 +890,15 @@ fn simd_ne_i32x16<S: Simd>(simd: S) {
     let a = i32x16::from_slice(
         simd,
         &[
-            i32::MIN,
-            i32::MAX,
-            0,
-            1,
-            i32::MIN,
-            i32::MAX,
-            0,
-            1,
-            i32::MIN,
-            i32::MAX,
-            0,
-            1,
-            i32::MIN,
-            i32::MAX,
-            0,
-            1,
+            I32_MIN, I32_MAX, 0, 1, I32_MIN, I32_MAX, 0, 1, I32_MIN, I32_MAX, 0, 1, I32_MIN,
+            I32_MAX, 0, 1,
         ],
     );
     let b = i32x16::from_slice(
         simd,
         &[
-            i32::MAX,
-            i32::MAX,
-            1,
-            0,
-            i32::MAX,
-            i32::MAX,
-            1,
-            0,
-            i32::MAX,
-            i32::MAX,
-            1,
-            0,
-            i32::MAX,
-            i32::MAX,
-            1,
-            0,
+            I32_MAX, I32_MAX, 1, 0, I32_MAX, I32_MAX, 1, 0, I32_MAX, I32_MAX, 1, 0, I32_MAX,
+            I32_MAX, 1, 0,
         ],
     );
     assert_eq!(
@@ -1510,10 +910,10 @@ fn simd_ne_i32x16<S: Simd>(simd: S) {
         [-1, 0, -1, -1, -1, 0, -1, -1, -1, 0, -1, -1, -1, 0, -1, -1]
     );
     assert_eq!(<[i32; 16]>::from(a.simd_ne(a)), [0; 16]);
-    let min = i32x16::from_slice(simd, &[i32::MIN; 16]);
-    let max = i32x16::from_slice(simd, &[i32::MAX; 16]);
-    assert_eq!(<[i32; 16]>::from(min.simd_ne(i32::MIN)), [0; 16]);
-    assert_eq!(<[i32; 16]>::from(max.simd_ne(i32::MIN)), [-1; 16]);
+    let min = i32x16::from_slice(simd, &[I32_MIN; 16]);
+    let max = i32x16::from_slice(simd, &[I32_MAX; 16]);
+    assert_eq!(<[i32; 16]>::from(min.simd_ne(I32_MIN)), [0; 16]);
+    assert_eq!(<[i32; 16]>::from(max.simd_ne(I32_MIN)), [-1; 16]);
 }
 
 #[simd_test]
@@ -1521,43 +921,15 @@ fn simd_ne_u32x16<S: Simd>(simd: S) {
     let a = u32x16::from_slice(
         simd,
         &[
-            u32::MIN,
-            u32::MAX,
-            0,
-            1,
-            u32::MIN,
-            u32::MAX,
-            0,
-            1,
-            u32::MIN,
-            u32::MAX,
-            0,
-            1,
-            u32::MIN,
-            u32::MAX,
-            0,
-            1,
+            U32_MIN, U32_MAX, 0, 1, U32_MIN, U32_MAX, 0, 1, U32_MIN, U32_MAX, 0, 1, U32_MIN,
+            U32_MAX, 0, 1,
         ],
     );
     let b = u32x16::from_slice(
         simd,
         &[
-            u32::MAX,
-            u32::MAX,
-            1,
-            0,
-            u32::MAX,
-            u32::MAX,
-            1,
-            0,
-            u32::MAX,
-            u32::MAX,
-            1,
-            0,
-            u32::MAX,
-            u32::MAX,
-            1,
-            0,
+            U32_MAX, U32_MAX, 1, 0, U32_MAX, U32_MAX, 1, 0, U32_MAX, U32_MAX, 1, 0, U32_MAX,
+            U32_MAX, 1, 0,
         ],
     );
     assert_eq!(
@@ -1569,10 +941,10 @@ fn simd_ne_u32x16<S: Simd>(simd: S) {
         [-1, 0, -1, -1, -1, 0, -1, -1, -1, 0, -1, -1, -1, 0, -1, -1]
     );
     assert_eq!(<[i32; 16]>::from(a.simd_ne(a)), [0; 16]);
-    let min = u32x16::from_slice(simd, &[u32::MIN; 16]);
-    let max = u32x16::from_slice(simd, &[u32::MAX; 16]);
-    assert_eq!(<[i32; 16]>::from(min.simd_ne(u32::MIN)), [0; 16]);
-    assert_eq!(<[i32; 16]>::from(max.simd_ne(u32::MIN)), [-1; 16]);
+    let min = u32x16::from_slice(simd, &[U32_MIN; 16]);
+    let max = u32x16::from_slice(simd, &[U32_MAX; 16]);
+    assert_eq!(<[i32; 16]>::from(min.simd_ne(U32_MIN)), [0; 16]);
+    assert_eq!(<[i32; 16]>::from(max.simd_ne(U32_MIN)), [-1; 16]);
 }
 
 #[simd_test]
@@ -1598,8 +970,8 @@ fn simd_ne_mask32x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_ne_i64x8<S: Simd>(simd: S) {
-    let a = i64x8::from_slice(simd, &[i64::MIN, i64::MAX, 0, 1, i64::MIN, i64::MAX, 0, 1]);
-    let b = i64x8::from_slice(simd, &[i64::MAX, i64::MAX, 1, 0, i64::MAX, i64::MAX, 1, 0]);
+    let a = i64x8::from_slice(simd, &[I64_MIN, I64_MAX, 0, 1, I64_MIN, I64_MAX, 0, 1]);
+    let b = i64x8::from_slice(simd, &[I64_MAX, I64_MAX, 1, 0, I64_MAX, I64_MAX, 1, 0]);
     assert_eq!(
         <[i64; 8]>::from(a.simd_ne(b)),
         [-1, 0, -1, -1, -1, 0, -1, -1]
@@ -1609,16 +981,16 @@ fn simd_ne_i64x8<S: Simd>(simd: S) {
         [-1, 0, -1, -1, -1, 0, -1, -1]
     );
     assert_eq!(<[i64; 8]>::from(a.simd_ne(a)), [0; 8]);
-    let min = i64x8::from_slice(simd, &[i64::MIN; 8]);
-    let max = i64x8::from_slice(simd, &[i64::MAX; 8]);
-    assert_eq!(<[i64; 8]>::from(min.simd_ne(i64::MIN)), [0; 8]);
-    assert_eq!(<[i64; 8]>::from(max.simd_ne(i64::MIN)), [-1; 8]);
+    let min = i64x8::from_slice(simd, &[I64_MIN; 8]);
+    let max = i64x8::from_slice(simd, &[I64_MAX; 8]);
+    assert_eq!(<[i64; 8]>::from(min.simd_ne(I64_MIN)), [0; 8]);
+    assert_eq!(<[i64; 8]>::from(max.simd_ne(I64_MIN)), [-1; 8]);
 }
 
 #[simd_test]
 fn simd_ne_u64x8<S: Simd>(simd: S) {
-    let a = u64x8::from_slice(simd, &[u64::MIN, u64::MAX, 0, 1, u64::MIN, u64::MAX, 0, 1]);
-    let b = u64x8::from_slice(simd, &[u64::MAX, u64::MAX, 1, 0, u64::MAX, u64::MAX, 1, 0]);
+    let a = u64x8::from_slice(simd, &[U64_MIN, U64_MAX, 0, 1, U64_MIN, U64_MAX, 0, 1]);
+    let b = u64x8::from_slice(simd, &[U64_MAX, U64_MAX, 1, 0, U64_MAX, U64_MAX, 1, 0]);
     assert_eq!(
         <[i64; 8]>::from(a.simd_ne(b)),
         [-1, 0, -1, -1, -1, 0, -1, -1]
@@ -1628,10 +1000,10 @@ fn simd_ne_u64x8<S: Simd>(simd: S) {
         [-1, 0, -1, -1, -1, 0, -1, -1]
     );
     assert_eq!(<[i64; 8]>::from(a.simd_ne(a)), [0; 8]);
-    let min = u64x8::from_slice(simd, &[u64::MIN; 8]);
-    let max = u64x8::from_slice(simd, &[u64::MAX; 8]);
-    assert_eq!(<[i64; 8]>::from(min.simd_ne(u64::MIN)), [0; 8]);
-    assert_eq!(<[i64; 8]>::from(max.simd_ne(u64::MIN)), [-1; 8]);
+    let min = u64x8::from_slice(simd, &[U64_MIN; 8]);
+    let max = u64x8::from_slice(simd, &[U64_MAX; 8]);
+    assert_eq!(<[i64; 8]>::from(min.simd_ne(U64_MIN)), [0; 8]);
+    assert_eq!(<[i64; 8]>::from(max.simd_ne(U64_MIN)), [-1; 8]);
 }
 
 #[simd_test]
