@@ -139,6 +139,7 @@ pub(crate) trait Level {
             for op in ops_for_type(vec_ty) {
                 // Unsigned absolute value uses the identity default at every width.
                 if (op.method == "abs" && vec_ty.scalar == ScalarType::Unsigned)
+                    || op.method == "simd_ne"
                     || op.sig.should_route_swizzle_through_bytes(vec_ty)
                     || op.reversed_compare_method().is_some()
                     || self.should_use_generic_op(&op, vec_ty)
