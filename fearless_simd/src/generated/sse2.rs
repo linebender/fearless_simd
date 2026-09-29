@@ -6015,11 +6015,17 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn shr_i64x2(self, a: i64x2<Self>, shift: u32) -> i64x2<Self> {
-        [
-            i64::wrapping_shr(a[0usize], shift),
-            i64::wrapping_shr(a[1usize], shift),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i64x2<Sse2>, shift: u32) -> i64x2<Sse2> {
+                let value = a.into();
+                let count = _mm_cvtsi32_si128(shift.cast_signed());
+                let shifted_bias = _mm_srl_epi64(_mm_set1_epi64x(i64::MIN), count);
+                let shifted = _mm_srl_epi64(value, count);
+                _mm_sub_epi64(_mm_xor_si128(shifted, shifted_bias), shifted_bias).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {

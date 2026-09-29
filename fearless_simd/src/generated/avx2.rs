@@ -5662,11 +5662,17 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shr_i64x2(self, a: i64x2<Self>, shift: u32) -> i64x2<Self> {
-        [
-            i64::wrapping_shr(a[0usize], shift),
-            i64::wrapping_shr(a[1usize], shift),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, shift: u32) -> i64x2<Avx2> {
+                let value = a.into();
+                let count = _mm_cvtsi32_si128(shift.cast_signed());
+                let shifted_bias = _mm_srl_epi64(_mm_set1_epi64x(i64::MIN), count);
+                let shifted = _mm_srl_epi64(value, count);
+                _mm_sub_epi64(_mm_xor_si128(shifted, shifted_bias), shifted_bias).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -11903,13 +11909,18 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shr_i64x4(self, a: i64x4<Self>, shift: u32) -> i64x4<Self> {
-        [
-            i64::wrapping_shr(a[0usize], shift),
-            i64::wrapping_shr(a[1usize], shift),
-            i64::wrapping_shr(a[2usize], shift),
-            i64::wrapping_shr(a[3usize], shift),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, shift: u32) -> i64x4<Avx2> {
+                let value = a.into();
+                let count = _mm_cvtsi32_si128(shift.cast_signed());
+                let shifted_bias = _mm256_srl_epi64(_mm256_set1_epi64x(i64::MIN), count);
+                let shifted = _mm256_srl_epi64(value, count);
+                _mm256_sub_epi64(_mm256_xor_si256(shifted, shifted_bias), shifted_bias)
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {

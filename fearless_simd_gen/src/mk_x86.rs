@@ -3287,7 +3287,23 @@ impl X86 {
             && vec_ty.scalar == ScalarType::Int
             && vec_ty.scalar_bits == 64
         {
-            return fallback_method(op, vec_ty);
+            // Before AVX-512, reconstruct arithmetic right shift from logical shifts:
+            // for counts in 0..=63, ((a >> count) ^ (MIN >> count)) - (MIN >> count)
+            // sign-extends each lane. The same formulation works starting with SSE2.
+            // Out-of-range counts remain implementation-defined, as for other shifts.
+            let set1 = set1_intrinsic(vec_ty);
+            let srl = intrinsic_ident("srl", "epi64", vec_ty.n_bits());
+            let xor = intrinsic_ident("xor", coarse_type(vec_ty), vec_ty.n_bits());
+            let sub = intrinsic_ident("sub", "epi64", vec_ty.n_bits());
+            return self.kernel_method(op, vec_ty, |token| {
+                quote! {
+                    let value = a.into();
+                    let count = _mm_cvtsi32_si128(shift.cast_signed());
+                    let shifted_bias = #srl(#set1(i64::MIN), count);
+                    let shifted = #srl(value, count);
+                    #sub(#xor(shifted, shifted_bias), shifted_bias).simd_into(#token)
+                }
+            });
         }
 
         if vec_ty.scalar_bits == 8 {
