@@ -502,7 +502,7 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn is_nan_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
-        !a.simd_eq(a)
+        a.simd_ne(a)
     }
     #[inline(always)]
     fn is_infinite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
@@ -515,7 +515,7 @@ impl Simd for Neon {
     #[inline(always)]
     fn is_subnormal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
         let i: i32x4<Self> = a.bitcast();
-        (i & 0x7F80_0000_i32).simd_eq(0) & !(i & 0x007F_FFFF_i32).simd_eq(0)
+        (i & 0x7F80_0000_i32).simd_eq(0) & (i & 0x007F_FFFF_i32).simd_ne(0)
     }
     #[inline(always)]
     fn is_normal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
@@ -4283,7 +4283,7 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn is_nan_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
-        !a.simd_eq(a)
+        a.simd_ne(a)
     }
     #[inline(always)]
     fn is_infinite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
@@ -4296,7 +4296,7 @@ impl Simd for Neon {
     #[inline(always)]
     fn is_subnormal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
         let i: i64x2<Self> = a.bitcast();
-        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & !(i & 0x000F_FFFF_FFFF_FFFF_i64).simd_eq(0)
+        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & (i & 0x000F_FFFF_FFFF_FFFF_i64).simd_ne(0)
     }
     #[inline(always)]
     fn is_normal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
@@ -5464,7 +5464,7 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn is_nan_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
-        !a.simd_eq(a)
+        a.simd_ne(a)
     }
     #[inline(always)]
     fn is_infinite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
@@ -5477,7 +5477,7 @@ impl Simd for Neon {
     #[inline(always)]
     fn is_subnormal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
         let i: i32x8<Self> = a.bitcast();
-        (i & 0x7F80_0000_i32).simd_eq(0) & !(i & 0x007F_FFFF_i32).simd_eq(0)
+        (i & 0x7F80_0000_i32).simd_eq(0) & (i & 0x007F_FFFF_i32).simd_ne(0)
     }
     #[inline(always)]
     fn is_normal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
@@ -6209,7 +6209,7 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn is_nan_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
-        !a.simd_eq(a)
+        a.simd_ne(a)
     }
     #[inline(always)]
     fn is_infinite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
@@ -6222,7 +6222,7 @@ impl Simd for Neon {
     #[inline(always)]
     fn is_subnormal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
         let i: i64x4<Self> = a.bitcast();
-        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & !(i & 0x000F_FFFF_FFFF_FFFF_i64).simd_eq(0)
+        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & (i & 0x000F_FFFF_FFFF_FFFF_i64).simd_ne(0)
     }
     #[inline(always)]
     fn is_normal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
@@ -6514,7 +6514,7 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn is_nan_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
-        !a.simd_eq(a)
+        a.simd_ne(a)
     }
     #[inline(always)]
     fn is_infinite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
@@ -6527,7 +6527,7 @@ impl Simd for Neon {
     #[inline(always)]
     fn is_subnormal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
         let i: i32x16<Self> = a.bitcast();
-        (i & 0x7F80_0000_i32).simd_eq(0) & !(i & 0x007F_FFFF_i32).simd_eq(0)
+        (i & 0x7F80_0000_i32).simd_eq(0) & (i & 0x007F_FFFF_i32).simd_ne(0)
     }
     #[inline(always)]
     fn is_normal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
@@ -7312,7 +7312,7 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn is_nan_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
-        !a.simd_eq(a)
+        a.simd_ne(a)
     }
     #[inline(always)]
     fn is_infinite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
@@ -7325,7 +7325,7 @@ impl Simd for Neon {
     #[inline(always)]
     fn is_subnormal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
         let i: i64x8<Self> = a.bitcast();
-        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & !(i & 0x000F_FFFF_FFFF_FFFF_i64).simd_eq(0)
+        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & (i & 0x000F_FFFF_FFFF_FFFF_i64).simd_ne(0)
     }
     #[inline(always)]
     fn is_normal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {

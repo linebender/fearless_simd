@@ -16,7 +16,7 @@ This release has an [MSRV][] of 1.89.
 
 ### Added
 
-- Added lane-wise `simd_ne` for all numeric vector and mask types. Floating-point inequality follows Rust's `!=` semantics, including NaN and signed zero.
+- Added lane-wise `simd_ne` for all vector and mask types.
 
 ## [1.0.0][] (2026-09-21)
 

@@ -5,6 +5,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
+    generic::generic_op,
     ops::{Op, ops_for_type},
     types::{SIMD_TYPES, ScalarType, VecType, type_imports},
 };
@@ -59,6 +60,12 @@ pub(crate) trait Level {
     /// Determine whether an operation should defer to the generic split/combine implementation.
     fn should_use_generic_op(&self, op: &Op, vec_ty: &VecType) -> bool {
         op.sig.should_use_generic_op(vec_ty, self.native_width())
+    }
+
+    /// Whether this backend overrides equality-mask inversion with native inequality.
+    /// Wider vectors still use the generic split/combine implementation.
+    fn has_native_simd_ne(&self, _vec_ty: &VecType) -> bool {
+        false
     }
 
     fn token(&self) -> Ident {
@@ -137,6 +144,16 @@ pub(crate) trait Level {
         let mut methods = vec![];
         for vec_ty in SIMD_TYPES {
             for op in ops_for_type(vec_ty) {
+                if op.method == "simd_ne" && self.has_native_simd_ne(vec_ty) {
+                    // Recurse through native inequality for wide vectors, rather than
+                    // inheriting the default that negates a (possibly wide) equality.
+                    methods.push(if self.should_use_generic_op(&op, vec_ty) {
+                        generic_op(&op, vec_ty)
+                    } else {
+                        self.make_method(op, vec_ty)
+                    });
+                    continue;
+                }
                 // Unsigned absolute value uses the identity default at every width.
                 if (op.method == "abs" && vec_ty.scalar == ScalarType::Unsigned)
                     || op.method == "simd_ne"

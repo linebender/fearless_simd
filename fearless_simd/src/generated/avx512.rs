@@ -659,6 +659,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> mask32x4<Avx512> {
+                mask32x4 {
+                    val: _mm_cmp_ps_mask::<4i32>(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1367,6 +1380,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> mask8x16<Avx512> {
+                mask8x16 {
+                    val: _mm_cmpneq_epi8_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2011,6 +2037,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> mask8x16<Avx512> {
+                mask8x16 {
+                    val: _mm_cmpneq_epu8_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2326,6 +2365,13 @@ impl Simd for Avx512 {
     fn simd_eq_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
         mask8x16 {
             val: (!u64::from(a.val ^ b.val) & 65535u64) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn simd_ne_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
+        mask8x16 {
+            val: (u64::from(a.val ^ b.val) & 65535u64) as _,
             simd: self,
         }
     }
@@ -2648,6 +2694,19 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> mask16x8<Avx512> {
                 mask16x8 {
                     val: _mm_cmpeq_epi16_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn simd_ne_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> mask16x8<Avx512> {
+                mask16x8 {
+                    val: _mm_cmpneq_epi16_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -3171,6 +3230,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> mask16x8<Avx512> {
+                mask16x8 {
+                    val: _mm_cmpneq_epu16_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3513,6 +3585,13 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
+    fn simd_ne_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
+        mask16x8 {
+            val: (u64::from(a.val ^ b.val) & 255u64) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn any_true_mask16x8(self, a: mask16x8<Self>) -> bool {
         let bits = u64::from((a).val) & 255u64;
         bits != 0
@@ -3841,6 +3920,19 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> mask32x4<Avx512> {
                 mask32x4 {
                     val: _mm_cmpeq_epi32_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn simd_ne_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> mask32x4<Avx512> {
+                mask32x4 {
+                    val: _mm_cmpneq_epi32_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -4352,6 +4444,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> mask32x4<Avx512> {
+                mask32x4 {
+                    val: _mm_cmpneq_epu32_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4703,6 +4808,13 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
+    fn simd_ne_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
+        mask32x4 {
+            val: (u64::from(a.val ^ b.val) & 15u64) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn any_true_mask32x4(self, a: mask32x4<Self>) -> bool {
         let bits = u64::from((a).val) & 15u64;
         bits != 0
@@ -4998,6 +5110,19 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> mask64x2<Avx512> {
                 mask64x2 {
                     val: _mm_cmp_pd_mask::<0i32>(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn simd_ne_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> mask64x2<Avx512> {
+                mask64x2 {
+                    val: _mm_cmp_pd_mask::<4i32>(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -5645,6 +5770,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x2<Avx512>, b: i64x2<Avx512>) -> mask64x2<Avx512> {
+                mask64x2 {
+                    val: _mm_cmpneq_epi64_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6110,6 +6248,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x2<Avx512>, b: u64x2<Avx512>) -> mask64x2<Avx512> {
+                mask64x2 {
+                    val: _mm_cmpneq_epu64_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6440,6 +6591,13 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
+    fn simd_ne_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
+        mask64x2 {
+            val: (u64::from(a.val ^ b.val) & 3u64) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn any_true_mask64x2(self, a: mask64x2<Self>) -> bool {
         let bits = u64::from((a).val) & 3u64;
         bits != 0
@@ -6690,6 +6848,19 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> mask32x8<Avx512> {
                 mask32x8 {
                     val: _mm256_cmp_ps_mask::<0i32>(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn simd_ne_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> mask32x8<Avx512> {
+                mask32x8 {
+                    val: _mm256_cmp_ps_mask::<4i32>(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -7384,6 +7555,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> mask8x32<Avx512> {
+                mask8x32 {
+                    val: _mm256_cmpneq_epi8_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -8001,6 +8185,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> mask8x32<Avx512> {
+                mask8x32 {
+                    val: _mm256_cmpneq_epu8_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -8330,6 +8527,13 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
+    fn simd_ne_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
+        mask8x32 {
+            val: (u64::from(a.val ^ b.val) & 4294967295u64) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn any_true_mask8x32(self, a: mask8x32<Self>) -> bool {
         let bits = u64::from((a).val) & 4294967295u64;
         bits != 0
@@ -8632,6 +8836,19 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> mask16x16<Avx512> {
                 mask16x16 {
                     val: _mm256_cmpeq_epi16_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn simd_ne_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> mask16x16<Avx512> {
+                mask16x16 {
+                    val: _mm256_cmpneq_epi16_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -9129,6 +9346,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> mask16x16<Avx512> {
+                mask16x16 {
+                    val: _mm256_cmpneq_epu16_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9475,6 +9705,13 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
+    fn simd_ne_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
+        mask16x16 {
+            val: (u64::from(a.val ^ b.val) & 65535u64) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn any_true_mask16x16(self, a: mask16x16<Self>) -> bool {
         let bits = u64::from((a).val) & 65535u64;
         bits != 0
@@ -9802,6 +10039,19 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> mask32x8<Avx512> {
                 mask32x8 {
                     val: _mm256_cmpeq_epi32_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn simd_ne_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> mask32x8<Avx512> {
+                mask32x8 {
+                    val: _mm256_cmpneq_epi32_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -10292,6 +10542,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> mask32x8<Avx512> {
+                mask32x8 {
+                    val: _mm256_cmpneq_epu32_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10627,6 +10890,13 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
+    fn simd_ne_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
+        mask32x8 {
+            val: (u64::from(a.val ^ b.val) & 255u64) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn any_true_mask32x8(self, a: mask32x8<Self>) -> bool {
         let bits = u64::from((a).val) & 255u64;
         bits != 0
@@ -10905,6 +11175,19 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> mask64x4<Avx512> {
                 mask64x4 {
                     val: _mm256_cmp_pd_mask::<0i32>(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn simd_ne_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> mask64x4<Avx512> {
+                mask64x4 {
+                    val: _mm256_cmp_pd_mask::<4i32>(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -11559,6 +11842,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x4<Avx512>, b: i64x4<Avx512>) -> mask64x4<Avx512> {
+                mask64x4 {
+                    val: _mm256_cmpneq_epi64_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12012,6 +12308,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x4<Avx512>, b: u64x4<Avx512>) -> mask64x4<Avx512> {
+                mask64x4 {
+                    val: _mm256_cmpneq_epu64_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12330,6 +12639,13 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
+    fn simd_ne_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
+        mask64x4 {
+            val: (u64::from(a.val ^ b.val) & 15u64) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn any_true_mask64x4(self, a: mask64x4<Self>) -> bool {
         let bits = u64::from((a).val) & 15u64;
         bits != 0
@@ -12597,6 +12913,19 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> mask32x16<Avx512> {
                 mask32x16 {
                     val: _mm512_cmp_ps_mask::<0i32>(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn simd_ne_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> mask32x16<Avx512> {
+                mask32x16 {
+                    val: _mm512_cmp_ps_mask::<4i32>(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -13318,6 +13647,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> mask8x64<Avx512> {
+                mask8x64 {
+                    val: _mm512_cmpneq_epi8_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -13944,6 +14286,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> mask8x64<Avx512> {
+                mask8x64 {
+                    val: _mm512_cmpneq_epu8_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -14279,6 +14634,13 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
+    fn simd_ne_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
+        mask8x64 {
+            val: u64::from(a.val ^ b.val) & u64::MAX,
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn any_true_mask8x64(self, a: mask8x64<Self>) -> bool {
         let bits = u64::from((a).val) & u64::MAX;
         bits != 0
@@ -14576,6 +14938,19 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> mask16x32<Avx512> {
                 mask16x32 {
                     val: _mm512_cmpeq_epi16_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn simd_ne_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> mask16x32<Avx512> {
+                mask16x32 {
+                    val: _mm512_cmpneq_epi16_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -15084,6 +15459,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> mask16x32<Avx512> {
+                mask16x32 {
+                    val: _mm512_cmpneq_epu16_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -15438,6 +15826,13 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
+    fn simd_ne_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
+        mask16x32 {
+            val: (u64::from(a.val ^ b.val) & 4294967295u64) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn any_true_mask16x32(self, a: mask16x32<Self>) -> bool {
         let bits = u64::from((a).val) & 4294967295u64;
         bits != 0
@@ -15760,6 +16155,19 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> mask32x16<Avx512> {
                 mask32x16 {
                     val: _mm512_cmpeq_epi32_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn simd_ne_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> mask32x16<Avx512> {
+                mask32x16 {
+                    val: _mm512_cmpneq_epi32_mask(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -16265,6 +16673,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> mask32x16<Avx512> {
+                mask32x16 {
+                    val: _mm512_cmpneq_epu32_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -16611,6 +17032,13 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
+    fn simd_ne_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
+        mask32x16 {
+            val: (u64::from(a.val ^ b.val) & 65535u64) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
     fn any_true_mask32x16(self, a: mask32x16<Self>) -> bool {
         let bits = u64::from((a).val) & 65535u64;
         bits != 0
@@ -16884,6 +17312,19 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> mask64x8<Avx512> {
                 mask64x8 {
                     val: _mm512_cmp_pd_mask::<0i32>(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn simd_ne_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> mask64x8<Avx512> {
+                mask64x8 {
+                    val: _mm512_cmp_pd_mask::<4i32>(a.into(), b.into()),
                     simd: token,
                 }
             }
@@ -17551,6 +17992,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x8<Avx512>, b: i64x8<Avx512>) -> mask64x8<Avx512> {
+                mask64x8 {
+                    val: _mm512_cmpneq_epi64_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -18013,6 +18467,19 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn simd_ne_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x8<Avx512>, b: u64x8<Avx512>) -> mask64x8<Avx512> {
+                mask64x8 {
+                    val: _mm512_cmpneq_epu64_mask(a.into(), b.into()),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn simd_lt_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -18319,6 +18786,13 @@ impl Simd for Avx512 {
     fn simd_eq_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
         mask64x8 {
             val: (!u64::from(a.val ^ b.val) & 255u64) as _,
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn simd_ne_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
+        mask64x8 {
+            val: (u64::from(a.val ^ b.val) & 255u64) as _,
             simd: self,
         }
     }
