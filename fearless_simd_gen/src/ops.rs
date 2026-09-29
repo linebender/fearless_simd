@@ -1061,13 +1061,15 @@ const FLOAT_OPS: &[Op] = &[
         "is_sign_positive",
         OpKind::VecTraitMethod,
         OpSig::UnaryClassify,
-        "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity.",
+        "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity.\n\n\
+        NaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_positive`] for details.",
     ),
     Op::new(
         "is_sign_negative",
         OpKind::VecTraitMethod,
         OpSig::UnaryClassify,
-        "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity.",
+        "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity.\n\n\
+        NaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_negative`] for details.",
     ),
     Op::new(
         "select",

@@ -386,9 +386,9 @@ pub trait Simd:
     fn is_subnormal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
     fn is_normal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity."]
+    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_positive`] for details."]
     fn is_sign_positive_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity."]
+    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_negative`] for details."]
     fn is_sign_negative_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
@@ -1613,9 +1613,9 @@ pub trait Simd:
     fn is_subnormal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
     fn is_normal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
-    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity."]
+    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_positive`] for details."]
     fn is_sign_positive_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
-    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity."]
+    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_negative`] for details."]
     fn is_sign_negative_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
@@ -2380,9 +2380,9 @@ pub trait Simd:
     fn is_subnormal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
     fn is_normal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity."]
+    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_positive`] for details."]
     fn is_sign_positive_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity."]
+    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_negative`] for details."]
     fn is_sign_negative_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
@@ -5305,9 +5305,9 @@ pub trait Simd:
     fn is_subnormal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
     fn is_normal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
-    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity."]
+    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_positive`] for details."]
     fn is_sign_positive_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
-    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity."]
+    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_negative`] for details."]
     fn is_sign_negative_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
@@ -6604,9 +6604,9 @@ pub trait Simd:
     fn is_subnormal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
     fn is_normal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity."]
+    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_positive`] for details."]
     fn is_sign_positive_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity."]
+    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_negative`] for details."]
     fn is_sign_negative_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
@@ -9532,9 +9532,9 @@ pub trait Simd:
     fn is_subnormal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
     fn is_normal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
-    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity."]
+    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_positive`] for details."]
     fn is_sign_positive_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
-    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity."]
+    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_negative`] for details."]
     fn is_sign_negative_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
@@ -11121,9 +11121,9 @@ pub trait SimdFloat<S: Simd>:
     fn is_subnormal(self) -> Self::Mask;
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
     fn is_normal(self) -> Self::Mask;
-    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity."]
+    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_positive`] for details."]
     fn is_sign_positive(self) -> Self::Mask;
-    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity."]
+    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_negative`] for details."]
     fn is_sign_negative(self) -> Self::Mask;
 }
 #[doc = r" Functionality implemented by (signed and unsigned) integer SIMD vectors."]
