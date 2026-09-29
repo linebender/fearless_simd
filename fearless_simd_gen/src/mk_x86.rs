@@ -5031,7 +5031,8 @@ impl X86 {
                     let input = if op.method == "is_subnormal" {
                         // Direct FPCLASS subnormal detection depends on MXCSR.DAZ.
                         // In "flush subnormals to zero" mode this will always report false.
-                        // So we have a custom implementation, so that subnormal still could be
+                        // So we have a custom implementation, so that input subnormals
+                        // still could be detected and e.g. warned about even with DAZ/FTZ.
                         //
                         // Flip the exponent bits: subnormals become NaNs,
                         // zeros become infinities, and all other inputs become non-NaNs.
