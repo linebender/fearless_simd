@@ -1048,7 +1048,8 @@ const FLOAT_OPS: &[Op] = &[
         "is_subnormal",
         OpKind::VecTraitMethod,
         OpSig::UnaryClassify,
-        "Return a mask indicating which elements are subnormal.",
+        "Return a mask indicating which elements are subnormal.\n\n\
+        On AVX-512, this follows the MXCSR denormals-are-zero (DAZ) setting: if DAZ is enabled, subnormal elements return `false`.",
     ),
     Op::new(
         "is_normal",

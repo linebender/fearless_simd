@@ -5012,6 +5012,38 @@ impl X86 {
         method_sig: TokenStream,
         vec_ty: &VecType,
     ) -> TokenStream {
+        if *self == Self::Avx512 {
+            // FPCLASS combines the selected categories into a compact lane mask.
+            // Include both quiet and signaling NaNs, and both signs of zero/infinity.
+            let classification = match op.method {
+                "is_nan" => Some((0x81_i32, false)),
+                "is_infinite" => Some((0x18_i32, false)),
+                "is_finite" => Some((0x99_i32, true)),
+                // FPCLASS treats subnormals as zero when MXCSR.DAZ is enabled.
+                "is_subnormal" => Some((0x20_i32, false)),
+                "is_normal" => Some((0xBF_i32, true)),
+                _ => None,
+            };
+            if let Some((predicate, invert)) = classification {
+                let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
+                let intrinsic =
+                    intrinsic_ident("fpclass", &format!("{suffix}_mask"), vec_ty.n_bits());
+                return self.kernel_method(op, vec_ty, |token| {
+                    let result = avx512_mask_register_value_with_simd(
+                        &vec_ty.mask_ty(),
+                        quote! { #intrinsic::<#predicate>(a.into()) },
+                        quote! { #token },
+                    );
+                    if invert {
+                        // Mask NOT also clears unused bits in 2- and 4-lane masks.
+                        quote! { !(#result) }
+                    } else {
+                        result
+                    }
+                });
+            }
+        }
+
         match op.method {
             "is_nan" | "is_infinite" | "is_finite" | "is_subnormal" | "is_normal"
             | "is_sign_positive" | "is_sign_negative" => {
