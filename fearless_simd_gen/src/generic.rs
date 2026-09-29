@@ -750,21 +750,21 @@ pub(crate) fn generic_classify(
             // so we can't use floating-point operations here
             quote! {
                 let i: #int_vec_ident<Self> = a.bitcast();
-                i.bitand(#exp_mask).simd_eq(0) & !i.bitand(#mant_mask).simd_eq(0)
+                (i & #exp_mask).simd_eq(0) & !(i & #mant_mask).simd_eq(0)
             }
         }
         "is_normal" => {
             // Same reason as above.
             quote! {
                 let i: #int_vec_ident<Self> = a.bitcast();
-                let exp = i.bitand(#exp_mask);
+                let exp = i & #exp_mask;
                 !(exp.simd_eq(0) | exp.simd_eq(#exp_mask))
             }
         }
         "is_sign_positive" => {
             quote! {
                 let i: #int_vec_ident<Self> = a.bitcast();
-                i.bitand(#int_scalar::MIN).simd_eq(0)
+                (i & #int_scalar::MIN).simd_eq(0)
             }
         }
         "is_sign_negative" => {

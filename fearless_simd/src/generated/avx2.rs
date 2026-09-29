@@ -560,18 +560,18 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn is_subnormal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
         let i: i32x4<Self> = a.bitcast();
-        i.bitand(0x7F80_0000_i32).simd_eq(0) & !i.bitand(0x007F_FFFF_i32).simd_eq(0)
+        (i & 0x7F80_0000_i32).simd_eq(0) & !(i & 0x007F_FFFF_i32).simd_eq(0)
     }
     #[inline(always)]
     fn is_normal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
         let i: i32x4<Self> = a.bitcast();
-        let exp = i.bitand(0x7F80_0000_i32);
+        let exp = i & 0x7F80_0000_i32;
         !(exp.simd_eq(0) | exp.simd_eq(0x7F80_0000_i32))
     }
     #[inline(always)]
     fn is_sign_positive_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
         let i: i32x4<Self> = a.bitcast();
-        i.bitand(i32::MIN).simd_eq(0)
+        (i & i32::MIN).simd_eq(0)
     }
     #[inline(always)]
     fn is_sign_negative_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
@@ -5240,19 +5240,18 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn is_subnormal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
         let i: i64x2<Self> = a.bitcast();
-        i.bitand(0x7FF0_0000_0000_0000_i64).simd_eq(0)
-            & !i.bitand(0x000F_FFFF_FFFF_FFFF_i64).simd_eq(0)
+        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & !(i & 0x000F_FFFF_FFFF_FFFF_i64).simd_eq(0)
     }
     #[inline(always)]
     fn is_normal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
         let i: i64x2<Self> = a.bitcast();
-        let exp = i.bitand(0x7FF0_0000_0000_0000_i64);
+        let exp = i & 0x7FF0_0000_0000_0000_i64;
         !(exp.simd_eq(0) | exp.simd_eq(0x7FF0_0000_0000_0000_i64))
     }
     #[inline(always)]
     fn is_sign_positive_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
         let i: i64x2<Self> = a.bitcast();
-        i.bitand(i64::MIN).simd_eq(0)
+        (i & i64::MIN).simd_eq(0)
     }
     #[inline(always)]
     fn is_sign_negative_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
@@ -7070,18 +7069,18 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn is_subnormal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
         let i: i32x8<Self> = a.bitcast();
-        i.bitand(0x7F80_0000_i32).simd_eq(0) & !i.bitand(0x007F_FFFF_i32).simd_eq(0)
+        (i & 0x7F80_0000_i32).simd_eq(0) & !(i & 0x007F_FFFF_i32).simd_eq(0)
     }
     #[inline(always)]
     fn is_normal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
         let i: i32x8<Self> = a.bitcast();
-        let exp = i.bitand(0x7F80_0000_i32);
+        let exp = i & 0x7F80_0000_i32;
         !(exp.simd_eq(0) | exp.simd_eq(0x7F80_0000_i32))
     }
     #[inline(always)]
     fn is_sign_positive_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
         let i: i32x8<Self> = a.bitcast();
-        i.bitand(i32::MIN).simd_eq(0)
+        (i & i32::MIN).simd_eq(0)
     }
     #[inline(always)]
     fn is_sign_negative_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
@@ -11411,19 +11410,18 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn is_subnormal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
         let i: i64x4<Self> = a.bitcast();
-        i.bitand(0x7FF0_0000_0000_0000_i64).simd_eq(0)
-            & !i.bitand(0x000F_FFFF_FFFF_FFFF_i64).simd_eq(0)
+        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & !(i & 0x000F_FFFF_FFFF_FFFF_i64).simd_eq(0)
     }
     #[inline(always)]
     fn is_normal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
         let i: i64x4<Self> = a.bitcast();
-        let exp = i.bitand(0x7FF0_0000_0000_0000_i64);
+        let exp = i & 0x7FF0_0000_0000_0000_i64;
         !(exp.simd_eq(0) | exp.simd_eq(0x7FF0_0000_0000_0000_i64))
     }
     #[inline(always)]
     fn is_sign_positive_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
         let i: i64x4<Self> = a.bitcast();
-        i.bitand(i64::MIN).simd_eq(0)
+        (i & i64::MIN).simd_eq(0)
     }
     #[inline(always)]
     fn is_sign_negative_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
@@ -12785,18 +12783,18 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn is_subnormal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
         let i: i32x16<Self> = a.bitcast();
-        i.bitand(0x7F80_0000_i32).simd_eq(0) & !i.bitand(0x007F_FFFF_i32).simd_eq(0)
+        (i & 0x7F80_0000_i32).simd_eq(0) & !(i & 0x007F_FFFF_i32).simd_eq(0)
     }
     #[inline(always)]
     fn is_normal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
         let i: i32x16<Self> = a.bitcast();
-        let exp = i.bitand(0x7F80_0000_i32);
+        let exp = i & 0x7F80_0000_i32;
         !(exp.simd_eq(0) | exp.simd_eq(0x7F80_0000_i32))
     }
     #[inline(always)]
     fn is_sign_positive_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
         let i: i32x16<Self> = a.bitcast();
-        i.bitand(i32::MIN).simd_eq(0)
+        (i & i32::MIN).simd_eq(0)
     }
     #[inline(always)]
     fn is_sign_negative_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
@@ -13423,19 +13421,18 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn is_subnormal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
         let i: i64x8<Self> = a.bitcast();
-        i.bitand(0x7FF0_0000_0000_0000_i64).simd_eq(0)
-            & !i.bitand(0x000F_FFFF_FFFF_FFFF_i64).simd_eq(0)
+        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & !(i & 0x000F_FFFF_FFFF_FFFF_i64).simd_eq(0)
     }
     #[inline(always)]
     fn is_normal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
         let i: i64x8<Self> = a.bitcast();
-        let exp = i.bitand(0x7FF0_0000_0000_0000_i64);
+        let exp = i & 0x7FF0_0000_0000_0000_i64;
         !(exp.simd_eq(0) | exp.simd_eq(0x7FF0_0000_0000_0000_i64))
     }
     #[inline(always)]
     fn is_sign_positive_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
         let i: i64x8<Self> = a.bitcast();
-        i.bitand(i64::MIN).simd_eq(0)
+        (i & i64::MIN).simd_eq(0)
     }
     #[inline(always)]
     fn is_sign_negative_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
