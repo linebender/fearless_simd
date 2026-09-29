@@ -758,7 +758,7 @@ pub(crate) fn generic_classify(
             quote! {
                 let i: #int_vec_ident<Self> = a.bitcast();
                 let exp = i & #exp_mask;
-                !(exp.simd_eq(0) | exp.simd_eq(#exp_mask))
+                exp.simd_ne(0) & exp.simd_ne(#exp_mask)
             }
         }
         "is_sign_positive" => {
