@@ -740,7 +740,7 @@ pub(crate) fn generic_classify(
             quote! { !a.simd_eq(a) }
         }
         "is_infinite" => {
-            quote! { a.simd_eq(#scalar::INFINITY) | a.simd_eq(#scalar::NEG_INFINITY) }
+            quote! { a.abs().simd_eq(#scalar::INFINITY) }
         }
         "is_finite" => {
             quote! { a.abs().simd_lt(#scalar::INFINITY) }

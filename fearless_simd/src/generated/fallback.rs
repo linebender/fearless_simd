@@ -428,7 +428,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn is_infinite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
-        a.simd_eq(f32::INFINITY) | a.simd_eq(f32::NEG_INFINITY)
+        a.abs().simd_eq(f32::INFINITY)
     }
     #[inline(always)]
     fn is_finite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
@@ -5716,7 +5716,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn is_infinite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
-        a.simd_eq(f64::INFINITY) | a.simd_eq(f64::NEG_INFINITY)
+        a.abs().simd_eq(f64::INFINITY)
     }
     #[inline(always)]
     fn is_finite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
@@ -6611,7 +6611,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn is_infinite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
-        a.simd_eq(f32::INFINITY) | a.simd_eq(f32::NEG_INFINITY)
+        a.abs().simd_eq(f32::INFINITY)
     }
     #[inline(always)]
     fn is_finite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
@@ -7032,7 +7032,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn is_infinite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
-        a.simd_eq(f64::INFINITY) | a.simd_eq(f64::NEG_INFINITY)
+        a.abs().simd_eq(f64::INFINITY)
     }
     #[inline(always)]
     fn is_finite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
@@ -7186,7 +7186,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn is_infinite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
-        a.simd_eq(f32::INFINITY) | a.simd_eq(f32::NEG_INFINITY)
+        a.abs().simd_eq(f32::INFINITY)
     }
     #[inline(always)]
     fn is_finite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
@@ -7537,7 +7537,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn is_infinite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
-        a.simd_eq(f64::INFINITY) | a.simd_eq(f64::NEG_INFINITY)
+        a.abs().simd_eq(f64::INFINITY)
     }
     #[inline(always)]
     fn is_finite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
