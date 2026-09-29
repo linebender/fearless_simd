@@ -136,6 +136,8 @@ pub(crate) enum OpSig {
     MaskToBitmask,
     /// Takes a mutable mask vector, a lane index, and a boolean, and updates the lane in place.
     MaskSet,
+    /// Takes a single argument of the vector type, and returns the associated mask type.
+    UnaryClassify,
     /// Takes an argument of an array of a certain scalar type, with the length (`block_size` * `block_count`) / [scalar
     /// type's byte size]. Returns `block_count` vectors whose width is `block_size`.
     ///
@@ -373,6 +375,10 @@ impl Op {
                 vec![quote! { &mut #vec }, quote! { usize }, quote! { bool }],
                 quote! { () },
             ),
+            OpSig::UnaryClassify => {
+                let result = vec_ty.mask_ty().rust();
+                (vec![vec], quote! { #result<#simd_ty> })
+            }
             OpSig::Shift => (vec![vec.clone(), quote! { u32 }], vec),
             OpSig::Ternary => (vec![vec.clone(), vec.clone(), vec.clone()], vec),
             OpSig::Select => {
@@ -470,6 +476,10 @@ impl Op {
                 let arg1 = &arg_names[1];
                 let arg2 = &arg_names[2];
                 quote! { (#arg0, #arg1: impl SimdInto<Self, S>, #arg2: impl SimdInto<Self, S>) -> Self }
+            }
+            OpSig::UnaryClassify => {
+                let arg0 = &arg_names[0];
+                quote! { (#arg0) -> Self::Mask }
             }
             // select is currently done by trait, but maybe we'll implement for
             // masks.
@@ -1015,6 +1025,48 @@ const FLOAT_OPS: &[Op] = &[
         OpKind::VecTraitMethod,
         OpSig::Unary,
         "Return the integer part of each element, rounding towards zero.",
+    ),
+    Op::new(
+        "is_nan",
+        OpKind::VecTraitMethod,
+        OpSig::UnaryClassify,
+        "Return a mask indicating which elements are NaN.",
+    ),
+    Op::new(
+        "is_infinite",
+        OpKind::VecTraitMethod,
+        OpSig::UnaryClassify,
+        "Return a mask indicating which elements are positive or negative infinite.",
+    ),
+    Op::new(
+        "is_finite",
+        OpKind::VecTraitMethod,
+        OpSig::UnaryClassify,
+        "Return a mask indicating which elements are neither infinite nor NaN.",
+    ),
+    Op::new(
+        "is_subnormal",
+        OpKind::VecTraitMethod,
+        OpSig::UnaryClassify,
+        "Return a mask indicating which elements are subnormal.",
+    ),
+    Op::new(
+        "is_normal",
+        OpKind::VecTraitMethod,
+        OpSig::UnaryClassify,
+        "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN.",
+    ),
+    Op::new(
+        "is_sign_positive",
+        OpKind::VecTraitMethod,
+        OpSig::UnaryClassify,
+        "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity.",
+    ),
+    Op::new(
+        "is_sign_negative",
+        OpKind::VecTraitMethod,
+        OpSig::UnaryClassify,
+        "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity.",
     ),
     Op::new(
         "select",
@@ -1796,6 +1848,7 @@ impl OpSig {
                 | Self::LoadInterleaved { .. }
                 | Self::StoreInterleaved { .. }
                 | Self::MaskSet
+                | Self::UnaryClassify
                 | Self::RotateElements { .. }
                 | Self::SwizzleDyn
                 | Self::SwizzleDynPrecise
@@ -1845,7 +1898,8 @@ impl OpSig {
             | Self::Cvt { .. }
             | Self::Widen { .. }
             | Self::MaskReduce { .. }
-            | Self::MaskToBitmask => &["a"],
+            | Self::MaskToBitmask
+            | Self::UnaryClassify => &["a"],
             Self::SwizzleDynWithinBlocks | Self::SwizzleDyn | Self::SwizzleDynPrecise => {
                 &["a", "indices"]
             }
@@ -1878,7 +1932,8 @@ impl OpSig {
             | Self::Reduce { .. }
             | Self::RotateElements { .. }
             | Self::Cvt { .. }
-            | Self::MaskReduce { .. } => &["self"],
+            | Self::MaskReduce { .. }
+            | Self::UnaryClassify => &["self"],
             Self::Widen { .. } => &[],
             Self::Narrow { .. } => &[],
             Self::SwizzleDynWithinBlocks | Self::SwizzleDyn | Self::SwizzleDynPrecise => {
@@ -1909,7 +1964,7 @@ impl OpSig {
                 let arg1 = &arg_names[1];
                 quote! { #arg1 }
             }
-            Self::Unary | Self::Reduce { .. } | Self::MaskReduce { .. } => {
+            Self::Unary | Self::Reduce { .. } | Self::MaskReduce { .. } | Self::UnaryClassify => {
                 let arg0 = &arg_names[0];
                 quote! { #arg0 }
             }

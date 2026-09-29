@@ -35,6 +35,7 @@ mod cvt_u64_precise;
 mod deinterleave;
 mod div;
 mod floor;
+mod fp_classify;
 mod fract;
 mod from_bitmask;
 mod from_bytes;

@@ -328,6 +328,34 @@ impl<S: Simd> crate::SimdFloat<S> for f32x4<S> {
     fn trunc(self) -> Self {
         self.simd.trunc_f32x4(self)
     }
+    #[inline(always)]
+    fn is_nan(self) -> Self::Mask {
+        self.simd.is_nan_f32x4(self)
+    }
+    #[inline(always)]
+    fn is_infinite(self) -> Self::Mask {
+        self.simd.is_infinite_f32x4(self)
+    }
+    #[inline(always)]
+    fn is_finite(self) -> Self::Mask {
+        self.simd.is_finite_f32x4(self)
+    }
+    #[inline(always)]
+    fn is_subnormal(self) -> Self::Mask {
+        self.simd.is_subnormal_f32x4(self)
+    }
+    #[inline(always)]
+    fn is_normal(self) -> Self::Mask {
+        self.simd.is_normal_f32x4(self)
+    }
+    #[inline(always)]
+    fn is_sign_positive(self) -> Self::Mask {
+        self.simd.is_sign_positive_f32x4(self)
+    }
+    #[inline(always)]
+    fn is_sign_negative(self) -> Self::Mask {
+        self.simd.is_sign_negative_f32x4(self)
+    }
 }
 impl<S: Simd> SimdCvtFloat<u32x4<S>> for f32x4<S> {
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
@@ -3077,6 +3105,34 @@ impl<S: Simd> crate::SimdFloat<S> for f64x2<S> {
     fn trunc(self) -> Self {
         self.simd.trunc_f64x2(self)
     }
+    #[inline(always)]
+    fn is_nan(self) -> Self::Mask {
+        self.simd.is_nan_f64x2(self)
+    }
+    #[inline(always)]
+    fn is_infinite(self) -> Self::Mask {
+        self.simd.is_infinite_f64x2(self)
+    }
+    #[inline(always)]
+    fn is_finite(self) -> Self::Mask {
+        self.simd.is_finite_f64x2(self)
+    }
+    #[inline(always)]
+    fn is_subnormal(self) -> Self::Mask {
+        self.simd.is_subnormal_f64x2(self)
+    }
+    #[inline(always)]
+    fn is_normal(self) -> Self::Mask {
+        self.simd.is_normal_f64x2(self)
+    }
+    #[inline(always)]
+    fn is_sign_positive(self) -> Self::Mask {
+        self.simd.is_sign_positive_f64x2(self)
+    }
+    #[inline(always)]
+    fn is_sign_negative(self) -> Self::Mask {
+        self.simd.is_sign_negative_f64x2(self)
+    }
 }
 impl<S: Simd> SimdCvtFloat<u64x2<S>> for f64x2<S> {
     #[doc = "Convert each unsigned 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
@@ -4239,6 +4295,34 @@ impl<S: Simd> crate::SimdFloat<S> for f32x8<S> {
     #[inline(always)]
     fn trunc(self) -> Self {
         self.simd.trunc_f32x8(self)
+    }
+    #[inline(always)]
+    fn is_nan(self) -> Self::Mask {
+        self.simd.is_nan_f32x8(self)
+    }
+    #[inline(always)]
+    fn is_infinite(self) -> Self::Mask {
+        self.simd.is_infinite_f32x8(self)
+    }
+    #[inline(always)]
+    fn is_finite(self) -> Self::Mask {
+        self.simd.is_finite_f32x8(self)
+    }
+    #[inline(always)]
+    fn is_subnormal(self) -> Self::Mask {
+        self.simd.is_subnormal_f32x8(self)
+    }
+    #[inline(always)]
+    fn is_normal(self) -> Self::Mask {
+        self.simd.is_normal_f32x8(self)
+    }
+    #[inline(always)]
+    fn is_sign_positive(self) -> Self::Mask {
+        self.simd.is_sign_positive_f32x8(self)
+    }
+    #[inline(always)]
+    fn is_sign_negative(self) -> Self::Mask {
+        self.simd.is_sign_negative_f32x8(self)
     }
 }
 impl<S: Simd> SimdCvtFloat<u32x8<S>> for f32x8<S> {
@@ -7028,6 +7112,34 @@ impl<S: Simd> crate::SimdFloat<S> for f64x4<S> {
     fn trunc(self) -> Self {
         self.simd.trunc_f64x4(self)
     }
+    #[inline(always)]
+    fn is_nan(self) -> Self::Mask {
+        self.simd.is_nan_f64x4(self)
+    }
+    #[inline(always)]
+    fn is_infinite(self) -> Self::Mask {
+        self.simd.is_infinite_f64x4(self)
+    }
+    #[inline(always)]
+    fn is_finite(self) -> Self::Mask {
+        self.simd.is_finite_f64x4(self)
+    }
+    #[inline(always)]
+    fn is_subnormal(self) -> Self::Mask {
+        self.simd.is_subnormal_f64x4(self)
+    }
+    #[inline(always)]
+    fn is_normal(self) -> Self::Mask {
+        self.simd.is_normal_f64x4(self)
+    }
+    #[inline(always)]
+    fn is_sign_positive(self) -> Self::Mask {
+        self.simd.is_sign_positive_f64x4(self)
+    }
+    #[inline(always)]
+    fn is_sign_negative(self) -> Self::Mask {
+        self.simd.is_sign_negative_f64x4(self)
+    }
 }
 impl<S: Simd> SimdCvtFloat<u64x4<S>> for f64x4<S> {
     #[doc = "Convert each unsigned 64-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
@@ -8185,6 +8297,34 @@ impl<S: Simd> crate::SimdFloat<S> for f32x16<S> {
     #[inline(always)]
     fn trunc(self) -> Self {
         self.simd.trunc_f32x16(self)
+    }
+    #[inline(always)]
+    fn is_nan(self) -> Self::Mask {
+        self.simd.is_nan_f32x16(self)
+    }
+    #[inline(always)]
+    fn is_infinite(self) -> Self::Mask {
+        self.simd.is_infinite_f32x16(self)
+    }
+    #[inline(always)]
+    fn is_finite(self) -> Self::Mask {
+        self.simd.is_finite_f32x16(self)
+    }
+    #[inline(always)]
+    fn is_subnormal(self) -> Self::Mask {
+        self.simd.is_subnormal_f32x16(self)
+    }
+    #[inline(always)]
+    fn is_normal(self) -> Self::Mask {
+        self.simd.is_normal_f32x16(self)
+    }
+    #[inline(always)]
+    fn is_sign_positive(self) -> Self::Mask {
+        self.simd.is_sign_positive_f32x16(self)
+    }
+    #[inline(always)]
+    fn is_sign_negative(self) -> Self::Mask {
+        self.simd.is_sign_negative_f32x16(self)
     }
 }
 impl<S: Simd> SimdCvtFloat<u32x16<S>> for f32x16<S> {
@@ -11057,6 +11197,34 @@ impl<S: Simd> crate::SimdFloat<S> for f64x8<S> {
     #[inline(always)]
     fn trunc(self) -> Self {
         self.simd.trunc_f64x8(self)
+    }
+    #[inline(always)]
+    fn is_nan(self) -> Self::Mask {
+        self.simd.is_nan_f64x8(self)
+    }
+    #[inline(always)]
+    fn is_infinite(self) -> Self::Mask {
+        self.simd.is_infinite_f64x8(self)
+    }
+    #[inline(always)]
+    fn is_finite(self) -> Self::Mask {
+        self.simd.is_finite_f64x8(self)
+    }
+    #[inline(always)]
+    fn is_subnormal(self) -> Self::Mask {
+        self.simd.is_subnormal_f64x8(self)
+    }
+    #[inline(always)]
+    fn is_normal(self) -> Self::Mask {
+        self.simd.is_normal_f64x8(self)
+    }
+    #[inline(always)]
+    fn is_sign_positive(self) -> Self::Mask {
+        self.simd.is_sign_positive_f64x8(self)
+    }
+    #[inline(always)]
+    fn is_sign_negative(self) -> Self::Mask {
+        self.simd.is_sign_negative_f64x8(self)
     }
 }
 impl<S: Simd> SimdCvtFloat<u64x8<S>> for f64x8<S> {

@@ -5,7 +5,7 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
-    count_zeros_method, fallback_method, generic_mask_set, generic_op_name,
+    count_zeros_method, fallback_method, generic_classify, generic_mask_set, generic_op_name,
     integer_lane_mask_rotate, integer_lane_mask_splat_arg, reverse_method,
     reverse_vector_mask_method,
 };
@@ -840,6 +840,7 @@ impl Level for Neon {
             OpSig::MaskFromBitmask => self.handle_mask_from_bitmask(op, vec_ty),
             OpSig::MaskToBitmask => self.handle_mask_to_bitmask(op, vec_ty),
             OpSig::MaskSet => generic_mask_set(method_sig, vec_ty),
+            OpSig::UnaryClassify => generic_classify(method_sig, method, vec_ty),
             OpSig::Interleave => {
                 let zip_low = generic_op_name("zip_low", vec_ty);
                 let zip_high = generic_op_name("zip_high", vec_ty);

@@ -8,9 +8,9 @@ use crate::arch::x86::{
 };
 use crate::generic::{
     concat_swizzle_dyn_precise_body, count_zeros_method, fallback_method, generic_block_combine,
-    generic_block_split, generic_mask_from_bitmask, generic_mask_set, generic_op_name,
-    integer_lane_mask_rotate, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
-    reverse_method, reverse_vector_mask_method,
+    generic_block_split, generic_classify, generic_mask_from_bitmask, generic_mask_set,
+    generic_op_name, integer_lane_mask_rotate, integer_lane_mask_splat_arg,
+    recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{
@@ -343,6 +343,7 @@ impl Level for X86 {
                 self.handle_avx512_mask_set(method_sig, vec_ty)
             }
             OpSig::MaskSet => generic_mask_set(method_sig, vec_ty),
+            OpSig::UnaryClassify => self.handle_unary_to_mask(op, method_sig, vec_ty),
             OpSig::LoadInterleaved {
                 block_size,
                 block_count,
@@ -5003,6 +5004,23 @@ impl X86 {
         };
 
         self.kernel_method(method_op, vec_ty, |_| quote! { #movemask as u32 #op })
+    }
+
+    pub(crate) fn handle_unary_to_mask(
+        &self,
+        op: Op,
+        method_sig: TokenStream,
+        vec_ty: &VecType,
+    ) -> TokenStream {
+        match op.method {
+            "is_nan" | "is_infinite" | "is_finite" | "is_subnormal" | "is_normal"
+            | "is_sign_positive" | "is_sign_negative" => {
+                generic_classify(method_sig, op.method, vec_ty)
+            }
+            _ => {
+                unimplemented!()
+            }
+        }
     }
 
     pub(crate) fn handle_load_interleaved(

@@ -515,6 +515,11 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
         OpSig::MaskSet => {
             panic!("Mask set must operate on the full mask vector")
         }
+        OpSig::UnaryClassify => {
+            panic!(
+                "Unary to mask operations are generally implemented in terms other operations and do not need to split."
+            )
+        }
         OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } => {
             panic!("Interleaved memory operations must operate on full 128-bit vectors")
         }
@@ -703,6 +708,74 @@ pub(crate) fn generic_mask_set(method_sig: TokenStream, vec_ty: &VecType) -> Tok
             let mut lanes: [#scalar; #len] = (*a).into();
             lanes[index] = if value { !0 } else { 0 };
             *a = lanes.simd_into(self);
+        }
+    }
+}
+
+pub(crate) fn generic_classify(
+    method_sig: TokenStream,
+    method: &str,
+    vec_ty: &VecType,
+) -> TokenStream {
+    assert_eq!(vec_ty.scalar, ScalarType::Float);
+
+    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+
+    let int_vec_ty = VecType::new(ScalarType::Int, vec_ty.scalar_bits, vec_ty.len);
+    let int_vec_ident = int_vec_ty.rust();
+    let int_scalar = int_vec_ty.scalar.rust(int_vec_ty.scalar_bits);
+    let exp_mask = match vec_ty.scalar_bits {
+        32 => quote! { 0x7F80_0000_i32 },
+        64 => quote! { 0x7FF0_0000_0000_0000_i64 },
+        _ => unimplemented!(),
+    };
+    let mant_mask = match vec_ty.scalar_bits {
+        32 => quote! { 0x007F_FFFF_i32 },
+        64 => quote! { 0x000F_FFFF_FFFF_FFFF_i64 },
+        _ => unimplemented!(),
+    };
+
+    let result = match method {
+        "is_nan" => {
+            quote! { !a.simd_eq(a) }
+        }
+        "is_infinite" => {
+            quote! { a.simd_eq(#scalar::INFINITY) | a.simd_eq(#scalar::NEG_INFINITY) }
+        }
+        "is_finite" => {
+            quote! { a.abs().simd_lt(#scalar::INFINITY) }
+        }
+        "is_subnormal" => {
+            // On some architectures, subnormals may be flushed to zero,
+            // so we can't use floating-point operations here
+            quote! {
+                let i: #int_vec_ident<Self> = a.bitcast();
+                i.bitand(#exp_mask).simd_eq(0) & !i.bitand(#mant_mask).simd_eq(0)
+            }
+        }
+        "is_normal" => {
+            // Same reason as above.
+            quote! {
+                let i: #int_vec_ident<Self> = a.bitcast();
+                let exp = i.bitand(#exp_mask);
+                !(exp.simd_eq(0) | exp.simd_eq(#exp_mask))
+            }
+        }
+        "is_sign_positive" => {
+            quote! {
+                let i: #int_vec_ident<Self> = a.bitcast();
+                i.bitand(#int_scalar::MIN).simd_eq(0)
+            }
+        }
+        "is_sign_negative" => {
+            quote! { !a.is_sign_positive() }
+        }
+        _ => panic!("unsupported floating point classification method: {method}"),
+    };
+
+    quote! {
+        #method_sig {
+            #result
         }
     }
 }

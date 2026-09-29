@@ -376,6 +376,20 @@ pub trait Simd:
     fn fract_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return a mask indicating which elements are NaN."]
+    fn is_nan_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Return a mask indicating which elements are positive or negative infinite."]
+    fn is_infinite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
+    fn is_finite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Return a mask indicating which elements are subnormal."]
+    fn is_subnormal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
+    fn is_normal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity."]
+    fn is_sign_positive_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity."]
+    fn is_sign_negative_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
@@ -1589,6 +1603,20 @@ pub trait Simd:
     fn fract_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return a mask indicating which elements are NaN."]
+    fn is_nan_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Return a mask indicating which elements are positive or negative infinite."]
+    fn is_infinite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
+    fn is_finite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Return a mask indicating which elements are subnormal."]
+    fn is_subnormal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
+    fn is_normal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity."]
+    fn is_sign_positive_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity."]
+    fn is_sign_negative_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
@@ -2342,6 +2370,20 @@ pub trait Simd:
         let (a0, a1) = self.split_f32x8(a);
         self.combine_f32x4(self.trunc_f32x4(a0), self.trunc_f32x4(a1))
     }
+    #[doc = "Return a mask indicating which elements are NaN."]
+    fn is_nan_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Return a mask indicating which elements are positive or negative infinite."]
+    fn is_infinite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
+    fn is_finite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Return a mask indicating which elements are subnormal."]
+    fn is_subnormal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
+    fn is_normal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity."]
+    fn is_sign_positive_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity."]
+    fn is_sign_negative_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_f32x8(self, a: mask32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
@@ -5253,6 +5295,20 @@ pub trait Simd:
         let (a0, a1) = self.split_f64x4(a);
         self.combine_f64x2(self.trunc_f64x2(a0), self.trunc_f64x2(a1))
     }
+    #[doc = "Return a mask indicating which elements are NaN."]
+    fn is_nan_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Return a mask indicating which elements are positive or negative infinite."]
+    fn is_infinite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
+    fn is_finite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Return a mask indicating which elements are subnormal."]
+    fn is_subnormal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
+    fn is_normal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity."]
+    fn is_sign_positive_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity."]
+    fn is_sign_negative_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_f64x4(self, a: mask64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
@@ -6538,6 +6594,20 @@ pub trait Simd:
         let (a0, a1) = self.split_f32x16(a);
         self.combine_f32x8(self.trunc_f32x8(a0), self.trunc_f32x8(a1))
     }
+    #[doc = "Return a mask indicating which elements are NaN."]
+    fn is_nan_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Return a mask indicating which elements are positive or negative infinite."]
+    fn is_infinite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
+    fn is_finite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Return a mask indicating which elements are subnormal."]
+    fn is_subnormal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
+    fn is_normal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity."]
+    fn is_sign_positive_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity."]
+    fn is_sign_negative_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_f32x16(self, a: mask32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
@@ -9452,6 +9522,20 @@ pub trait Simd:
         let (a0, a1) = self.split_f64x8(a);
         self.combine_f64x4(self.trunc_f64x4(a0), self.trunc_f64x4(a1))
     }
+    #[doc = "Return a mask indicating which elements are NaN."]
+    fn is_nan_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Return a mask indicating which elements are positive or negative infinite."]
+    fn is_infinite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
+    fn is_finite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Return a mask indicating which elements are subnormal."]
+    fn is_subnormal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
+    fn is_normal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity."]
+    fn is_sign_positive_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity."]
+    fn is_sign_negative_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
@@ -11027,6 +11111,20 @@ pub trait SimdFloat<S: Simd>:
     fn fract(self) -> Self;
     #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc(self) -> Self;
+    #[doc = "Return a mask indicating which elements are NaN."]
+    fn is_nan(self) -> Self::Mask;
+    #[doc = "Return a mask indicating which elements are positive or negative infinite."]
+    fn is_infinite(self) -> Self::Mask;
+    #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
+    fn is_finite(self) -> Self::Mask;
+    #[doc = "Return a mask indicating which elements are subnormal."]
+    fn is_subnormal(self) -> Self::Mask;
+    #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
+    fn is_normal(self) -> Self::Mask;
+    #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity."]
+    fn is_sign_positive(self) -> Self::Mask;
+    #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity."]
+    fn is_sign_negative(self) -> Self::Mask;
 }
 #[doc = r" Functionality implemented by (signed and unsigned) integer SIMD vectors."]
 pub trait SimdInt<S: Simd>:
