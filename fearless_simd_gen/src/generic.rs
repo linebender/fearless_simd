@@ -815,8 +815,7 @@ pub(crate) fn generic_to_degrees_radians(
 
     quote! {
         #method_sig {
-            const FACTOR: #scalar = #factor_expr;
-            a * FACTOR
+            a * const { #factor_expr }
         }
     }
 }

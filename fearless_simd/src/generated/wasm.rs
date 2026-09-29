@@ -361,13 +361,11 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn to_degrees_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        const FACTOR: f32 = f32::to_degrees(1.0);
-        a * FACTOR
+        a * const { f32::to_degrees(1.0) }
     }
     #[inline(always)]
     fn to_radians_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        const FACTOR: f32 = f32::to_radians(1.0);
-        a * FACTOR
+        a * const { f32::to_radians(1.0) }
     }
     #[inline(always)]
     fn is_nan_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
@@ -3136,13 +3134,11 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn to_degrees_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        const FACTOR: f64 = f64::to_degrees(1.0);
-        a * FACTOR
+        a * const { f64::to_degrees(1.0) }
     }
     #[inline(always)]
     fn to_radians_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        const FACTOR: f64 = f64::to_radians(1.0);
-        a * FACTOR
+        a * const { f64::to_radians(1.0) }
     }
     #[inline(always)]
     fn is_nan_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
