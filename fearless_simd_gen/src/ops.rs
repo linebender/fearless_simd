@@ -1049,7 +1049,7 @@ const FLOAT_OPS: &[Op] = &[
         OpKind::VecTraitMethod,
         OpSig::UnaryClassify,
         "Return a mask indicating which elements are subnormal.\n\n\
-        On AVX-512, this follows the MXCSR denormals-are-zero (DAZ) setting: if DAZ is enabled, subnormal elements return `false`.",
+        This classifies the stored bit pattern, even when floating-point operations treat subnormals as zero.",
     ),
     Op::new(
         "is_normal",

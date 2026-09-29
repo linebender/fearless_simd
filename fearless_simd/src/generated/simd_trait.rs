@@ -382,7 +382,7 @@ pub trait Simd:
     fn is_infinite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
     #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
     fn is_finite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Return a mask indicating which elements are subnormal.\n\nOn AVX-512, this follows the MXCSR denormals-are-zero (DAZ) setting: if DAZ is enabled, subnormal elements return `false`."]
+    #[doc = "Return a mask indicating which elements are subnormal.\n\nThis classifies the stored bit pattern, even when floating-point operations treat subnormals as zero."]
     fn is_subnormal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
     fn is_normal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
@@ -1609,7 +1609,7 @@ pub trait Simd:
     fn is_infinite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
     #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
     fn is_finite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
-    #[doc = "Return a mask indicating which elements are subnormal.\n\nOn AVX-512, this follows the MXCSR denormals-are-zero (DAZ) setting: if DAZ is enabled, subnormal elements return `false`."]
+    #[doc = "Return a mask indicating which elements are subnormal.\n\nThis classifies the stored bit pattern, even when floating-point operations treat subnormals as zero."]
     fn is_subnormal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
     fn is_normal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
@@ -2376,7 +2376,7 @@ pub trait Simd:
     fn is_infinite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
     #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
     fn is_finite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Return a mask indicating which elements are subnormal.\n\nOn AVX-512, this follows the MXCSR denormals-are-zero (DAZ) setting: if DAZ is enabled, subnormal elements return `false`."]
+    #[doc = "Return a mask indicating which elements are subnormal.\n\nThis classifies the stored bit pattern, even when floating-point operations treat subnormals as zero."]
     fn is_subnormal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
     fn is_normal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
@@ -5301,7 +5301,7 @@ pub trait Simd:
     fn is_infinite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
     #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
     fn is_finite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
-    #[doc = "Return a mask indicating which elements are subnormal.\n\nOn AVX-512, this follows the MXCSR denormals-are-zero (DAZ) setting: if DAZ is enabled, subnormal elements return `false`."]
+    #[doc = "Return a mask indicating which elements are subnormal.\n\nThis classifies the stored bit pattern, even when floating-point operations treat subnormals as zero."]
     fn is_subnormal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
     fn is_normal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
@@ -6600,7 +6600,7 @@ pub trait Simd:
     fn is_infinite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
     #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
     fn is_finite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Return a mask indicating which elements are subnormal.\n\nOn AVX-512, this follows the MXCSR denormals-are-zero (DAZ) setting: if DAZ is enabled, subnormal elements return `false`."]
+    #[doc = "Return a mask indicating which elements are subnormal.\n\nThis classifies the stored bit pattern, even when floating-point operations treat subnormals as zero."]
     fn is_subnormal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
     fn is_normal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
@@ -9528,7 +9528,7 @@ pub trait Simd:
     fn is_infinite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
     #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
     fn is_finite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
-    #[doc = "Return a mask indicating which elements are subnormal.\n\nOn AVX-512, this follows the MXCSR denormals-are-zero (DAZ) setting: if DAZ is enabled, subnormal elements return `false`."]
+    #[doc = "Return a mask indicating which elements are subnormal.\n\nThis classifies the stored bit pattern, even when floating-point operations treat subnormals as zero."]
     fn is_subnormal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
     fn is_normal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
@@ -11117,7 +11117,7 @@ pub trait SimdFloat<S: Simd>:
     fn is_infinite(self) -> Self::Mask;
     #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
     fn is_finite(self) -> Self::Mask;
-    #[doc = "Return a mask indicating which elements are subnormal.\n\nOn AVX-512, this follows the MXCSR denormals-are-zero (DAZ) setting: if DAZ is enabled, subnormal elements return `false`."]
+    #[doc = "Return a mask indicating which elements are subnormal.\n\nThis classifies the stored bit pattern, even when floating-point operations treat subnormals as zero."]
     fn is_subnormal(self) -> Self::Mask;
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
     fn is_normal(self) -> Self::Mask;

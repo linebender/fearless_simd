@@ -5019,8 +5019,7 @@ impl X86 {
                 "is_nan" => Some((0x81_i32, false)),
                 "is_infinite" => Some((0x18_i32, false)),
                 "is_finite" => Some((0x99_i32, true)),
-                // FPCLASS treats subnormals as zero when MXCSR.DAZ is enabled.
-                "is_subnormal" => Some((0x20_i32, false)),
+                "is_subnormal" => Some((0x81_i32, false)),
                 "is_normal" => Some((0xBF_i32, true)),
                 _ => None,
             };
@@ -5029,9 +5028,24 @@ impl X86 {
                 let intrinsic =
                     intrinsic_ident("fpclass", &format!("{suffix}_mask"), vec_ty.n_bits());
                 return self.kernel_method(op, vec_ty, |token| {
+                    let input = if op.method == "is_subnormal" {
+                        // Direct FPCLASS subnormal detection depends on MXCSR.DAZ.
+                        // In "flush subnormals to zero" mode this will always report false.
+                        // So we have a custom implementation, so that subnormal still could be
+                        //
+                        // Flip the exponent bits: subnormals become NaNs,
+                        // zeros become infinities, and all other inputs become non-NaNs.
+                        // Testing for either NaN kind is then independent of DAZ/FTZ.
+                        let xor = simple_intrinsic("xor", vec_ty);
+                        let set1 = set1_intrinsic(vec_ty);
+                        let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                        quote! { #xor(a.into(), #set1(#scalar::INFINITY)) }
+                    } else {
+                        quote! { a.into() }
+                    };
                     let result = avx512_mask_register_value_with_simd(
                         &vec_ty.mask_ty(),
-                        quote! { #intrinsic::<#predicate>(a.into()) },
+                        quote! { #intrinsic::<#predicate>(#input) },
                         quote! { #token },
                     );
                     if invert {

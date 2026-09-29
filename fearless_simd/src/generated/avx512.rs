@@ -863,7 +863,10 @@ impl Simd for Avx512 {
             #[inline(always)]
             fn kernel(token: Avx512, a: f32x4<Avx512>) -> mask32x4<Avx512> {
                 mask32x4 {
-                    val: _mm_fpclass_ps_mask::<32i32>(a.into()),
+                    val: _mm_fpclass_ps_mask::<129i32>(_mm_xor_ps(
+                        a.into(),
+                        _mm_set1_ps(f32::INFINITY),
+                    )),
                     simd: token,
                 }
             }
@@ -5206,7 +5209,10 @@ impl Simd for Avx512 {
             #[inline(always)]
             fn kernel(token: Avx512, a: f64x2<Avx512>) -> mask64x2<Avx512> {
                 mask64x2 {
-                    val: _mm_fpclass_pd_mask::<32i32>(a.into()),
+                    val: _mm_fpclass_pd_mask::<129i32>(_mm_xor_pd(
+                        a.into(),
+                        _mm_set1_pd(f64::INFINITY),
+                    )),
                     simd: token,
                 }
             }
@@ -6949,7 +6955,10 @@ impl Simd for Avx512 {
             #[inline(always)]
             fn kernel(token: Avx512, a: f32x8<Avx512>) -> mask32x8<Avx512> {
                 mask32x8 {
-                    val: _mm256_fpclass_ps_mask::<32i32>(a.into()),
+                    val: _mm256_fpclass_ps_mask::<129i32>(_mm256_xor_ps(
+                        a.into(),
+                        _mm256_set1_ps(f32::INFINITY),
+                    )),
                     simd: token,
                 }
             }
@@ -11141,7 +11150,10 @@ impl Simd for Avx512 {
             #[inline(always)]
             fn kernel(token: Avx512, a: f64x4<Avx512>) -> mask64x4<Avx512> {
                 mask64x4 {
-                    val: _mm256_fpclass_pd_mask::<32i32>(a.into()),
+                    val: _mm256_fpclass_pd_mask::<129i32>(_mm256_xor_pd(
+                        a.into(),
+                        _mm256_set1_pd(f64::INFINITY),
+                    )),
                     simd: token,
                 }
             }
@@ -12882,7 +12894,10 @@ impl Simd for Avx512 {
             #[inline(always)]
             fn kernel(token: Avx512, a: f32x16<Avx512>) -> mask32x16<Avx512> {
                 mask32x16 {
-                    val: _mm512_fpclass_ps_mask::<32i32>(a.into()),
+                    val: _mm512_fpclass_ps_mask::<129i32>(_mm512_xor_ps(
+                        a.into(),
+                        _mm512_set1_ps(f32::INFINITY),
+                    )),
                     simd: token,
                 }
             }
@@ -17134,7 +17149,10 @@ impl Simd for Avx512 {
             #[inline(always)]
             fn kernel(token: Avx512, a: f64x8<Avx512>) -> mask64x8<Avx512> {
                 mask64x8 {
-                    val: _mm512_fpclass_pd_mask::<32i32>(a.into()),
+                    val: _mm512_fpclass_pd_mask::<129i32>(_mm512_xor_pd(
+                        a.into(),
+                        _mm512_set1_pd(f64::INFINITY),
+                    )),
                     simd: token,
                 }
             }
