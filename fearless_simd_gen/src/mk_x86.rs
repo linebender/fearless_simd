@@ -2851,163 +2851,184 @@ impl X86 {
     }
 
     pub(crate) fn handle_binary(&self, op: Op, method: &str, vec_ty: &VecType) -> TokenStream {
-        let method_sig = op.simd_trait_method_sig(vec_ty);
-
-        if let Some(saturating_op) = match method {
-            "saturating_add" => Some(SaturatingOp::Add),
-            "saturating_sub" => Some(SaturatingOp::Sub),
-            _ => None,
-        } {
-            return self.handle_saturating_add_sub(op, saturating_op, vec_ty);
-        }
-
-        if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask {
-            let lane_mask = avx512_mask_lane_bits(vec_ty);
-            let a_bits = avx512_mask_bits_expr(quote! { a });
-            let b_bits = avx512_mask_bits_expr(quote! { b });
-            let expr = match method {
-                "and" => quote! { (#a_bits & #b_bits) & #lane_mask },
-                "or" => quote! { (#a_bits | #b_bits) & #lane_mask },
-                "xor" => quote! { (#a_bits ^ #b_bits) & #lane_mask },
-                _ => unreachable!(),
-            };
-            let result = avx512_mask_value(vec_ty, expr);
-            return quote! {
-                #method_sig {
-                    #result
-                }
-            };
-        }
-
-        if *self == Self::Avx512
-            && vec_ty.scalar == ScalarType::Float
-            && matches!(method, "min_precise" | "max_precise")
-        {
-            let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, true);
-            let range = intrinsic_ident("range", suffix, vec_ty.n_bits());
-            let imm = if method == "max_precise" {
-                0b0101
-            } else {
-                0b0100
-            };
-            return self.kernel_method(op, vec_ty, |token| {
-                quote! {
-                    #range::<#imm>(a.into(), b.into()).simd_into(#token)
-                }
-            });
-        }
-
-        if *self == Self::Sse2
-            && vec_ty.scalar == ScalarType::Float
-            && matches!(method, "min_precise" | "max_precise")
-        {
-            let intrinsic = simple_intrinsic(
-                if method == "max_precise" {
-                    "max"
-                } else {
-                    "min"
-                },
-                vec_ty,
-            );
-            let cmpunord = float_compare_method("unord", vec_ty);
-            return self.kernel_method(op, vec_ty, |token| {
-                let expr = sse2_select_expr(
-                    vec_ty,
-                    quote! { b_is_nan },
-                    quote! { a },
-                    quote! { intermediate },
-                );
-                quote! {
-                    let a = a.into();
-                    let b = b.into();
-                    let intermediate = #intrinsic(a, b);
-                    let b_is_nan = #cmpunord(b, b);
-                    #expr.simd_into(#token)
-                }
-            });
-        }
-
-        if *self != Self::Avx512
-            && vec_ty.scalar_bits == 64
-            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
-            && method == "mul"
-        {
-            // Multiplication modulo 2^64 is sign-independent. Split each lane into
-            // 32-bit halves: a*b = lo*lo + ((hi*lo + lo*hi) << 32) modulo 2^64.
-            // The hi*hi term vanishes, so three unsigned 32x32 -> 64 multiplies
-            // suffice. This formulation also works unchanged on SSE2.
-            let bits = vec_ty.n_bits();
-            let mul = intrinsic_ident("mul", "epu32", bits);
-            // Put the high dwords in the even positions consumed by `mul_epu32`.
-            // Shuffles avoid contending with multiplies for the shift execution
-            // port on older Intel CPUs, and avoid SSE's extra register copies.
-            let shuffle = intrinsic_ident("shuffle", "epi32", bits);
-            let slli = intrinsic_ident("slli", "epi64", bits);
-            let add = intrinsic_ident("add", "epi64", bits);
-            return self.kernel_method(op, vec_ty, |token| {
-                quote! {
-                    let a = a.into();
-                    let b = b.into();
-                    let a_high = #shuffle::<0xf5>(a);
-                    let b_high = #shuffle::<0xf5>(b);
-                    let cross = #add(#mul(a_high, b), #mul(a, b_high));
-                    let low = #mul(a, b);
-                    #add(low, #slli::<32>(cross)).simd_into(#token)
-                }
-            });
-        }
-
-        if *self != Self::Avx512
-            && vec_ty.scalar_bits == 64
-            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
-            && matches!(method, "min" | "max")
-        {
-            if *self == Self::Sse2 {
-                return fallback_method(op, vec_ty);
-            }
-
-            let (lhs, rhs) = if method == "min" {
-                (quote! { a }, quote! { b })
-            } else {
-                (quote! { b }, quote! { a })
-            };
-            let cmp = int_cmpgt_expr(vec_ty, lhs, rhs);
-            let bits = vec_ty.n_bits();
-            let to_float = cast_ident(vec_ty.scalar, ScalarType::Float, 64, 64, bits);
-            let to_int = cast_ident(ScalarType::Float, vec_ty.scalar, 64, 64, bits);
-            let blend = intrinsic_ident("blendv", "pd", bits);
-            return self.kernel_method(op, vec_ty, |token| {
-                quote! {
-                    let a = a.into();
-                    let b = b.into();
-                    let mask = #cmp;
-                    // Blend whole 64-bit lanes. These casts only reinterpret bits;
-                    // the floating-point blend performs no floating-point arithmetic.
-                    let result = #blend(#to_float(a), #to_float(b), #to_float(mask));
-                    #to_int(result).simd_into(#token)
-                }
-            });
-        }
-
-        if *self == Self::Sse2
-            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
-            && matches!(method, "min" | "max")
-        {
-            let expr = sse2_min_max_expr(method, vec_ty);
-            return self.kernel_method(op, vec_ty, |token| {
-                quote! { #expr.simd_into(#token) }
-            });
-        }
-
-        if *self == Self::Sse2
-            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
-            && method == "mul"
-            && vec_ty.scalar_bits == 32
-        {
-            return fallback_method(op, vec_ty);
-        }
-
         match method {
+            "saturating_add" => self.handle_saturating_add_sub(op, SaturatingOp::Add, vec_ty),
+            "saturating_sub" => self.handle_saturating_add_sub(op, SaturatingOp::Sub, vec_ty),
+            "and" | "or" | "xor" if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask => {
+                let method_sig = op.simd_trait_method_sig(vec_ty);
+                let lane_mask = avx512_mask_lane_bits(vec_ty);
+                let a_bits = avx512_mask_bits_expr(quote! { a });
+                let b_bits = avx512_mask_bits_expr(quote! { b });
+                let expr = match method {
+                    "and" => quote! { (#a_bits & #b_bits) & #lane_mask },
+                    "or" => quote! { (#a_bits | #b_bits) & #lane_mask },
+                    "xor" => quote! { (#a_bits ^ #b_bits) & #lane_mask },
+                    _ => unreachable!(),
+                };
+                let result = avx512_mask_value(vec_ty, expr);
+                quote! {
+                    #method_sig {
+                        #result
+                    }
+                }
+            }
+            "min_precise" | "max_precise"
+                if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Float =>
+            {
+                let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, true);
+                let range = intrinsic_ident("range", suffix, vec_ty.n_bits());
+                let imm = if method == "max_precise" {
+                    0b0101
+                } else {
+                    0b0100
+                };
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        #range::<#imm>(a.into(), b.into()).simd_into(#token)
+                    }
+                })
+            }
+            "min_precise" | "max_precise"
+                if *self == Self::Sse2 && vec_ty.scalar == ScalarType::Float =>
+            {
+                let intrinsic = simple_intrinsic(
+                    if method == "max_precise" {
+                        "max"
+                    } else {
+                        "min"
+                    },
+                    vec_ty,
+                );
+                let cmpunord = float_compare_method("unord", vec_ty);
+                self.kernel_method(op, vec_ty, |token| {
+                    let expr = sse2_select_expr(
+                        vec_ty,
+                        quote! { b_is_nan },
+                        quote! { a },
+                        quote! { intermediate },
+                    );
+                    quote! {
+                        let a = a.into();
+                        let b = b.into();
+                        let intermediate = #intrinsic(a, b);
+                        let b_is_nan = #cmpunord(b, b);
+                        #expr.simd_into(#token)
+                    }
+                })
+            }
+            "min" | "max"
+                if *self == Self::Sse2
+                    && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) =>
+            {
+                if vec_ty.scalar_bits == 64 {
+                    fallback_method(op, vec_ty)
+                } else {
+                    let expr = sse2_min_max_expr(method, vec_ty);
+                    self.kernel_method(op, vec_ty, |token| {
+                        quote! { #expr.simd_into(#token) }
+                    })
+                }
+            }
+            "min" | "max"
+                if *self != Self::Avx512
+                    && vec_ty.scalar_bits == 64
+                    && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) =>
+            {
+                let (lhs, rhs) = if method == "min" {
+                    (quote! { a }, quote! { b })
+                } else {
+                    (quote! { b }, quote! { a })
+                };
+                let cmp = int_cmpgt_expr(vec_ty, lhs, rhs);
+                let bits = vec_ty.n_bits();
+                let to_float = cast_ident(vec_ty.scalar, ScalarType::Float, 64, 64, bits);
+                let to_int = cast_ident(ScalarType::Float, vec_ty.scalar, 64, 64, bits);
+                let blend = intrinsic_ident("blendv", "pd", bits);
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        let a = a.into();
+                        let b = b.into();
+                        let mask = #cmp;
+                        // Blend whole 64-bit lanes. These casts only reinterpret bits;
+                        // the floating-point blend performs no floating-point arithmetic.
+                        let result = #blend(#to_float(a), #to_float(b), #to_float(mask));
+                        #to_int(result).simd_into(#token)
+                    }
+                })
+            }
+            "mul"
+                if *self != Self::Avx512
+                    && vec_ty.scalar_bits == 64
+                    && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) =>
+            {
+                // Multiplication modulo 2^64 is sign-independent. Split each lane into
+                // 32-bit halves: a*b = lo*lo + ((hi*lo + lo*hi) << 32) modulo 2^64.
+                // The hi*hi term vanishes, so three unsigned 32x32 -> 64 multiplies
+                // suffice. This formulation also works unchanged on SSE2.
+                let bits = vec_ty.n_bits();
+                let mul = intrinsic_ident("mul", "epu32", bits);
+                // Put the high dwords in the even positions consumed by `mul_epu32`.
+                // Shuffles avoid contending with multiplies for the shift execution
+                // port on older Intel CPUs, and avoid SSE's extra register copies.
+                let shuffle = intrinsic_ident("shuffle", "epi32", bits);
+                let slli = intrinsic_ident("slli", "epi64", bits);
+                let add = intrinsic_ident("add", "epi64", bits);
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        let a = a.into();
+                        let b = b.into();
+                        let a_high = #shuffle::<0xf5>(a);
+                        let b_high = #shuffle::<0xf5>(b);
+                        let cross = #add(#mul(a_high, b), #mul(a, b_high));
+                        let low = #mul(a, b);
+                        #add(low, #slli::<32>(cross)).simd_into(#token)
+                    }
+                })
+            }
+            "mul"
+                if *self == Self::Sse2
+                    && vec_ty.scalar_bits == 32
+                    && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) =>
+            {
+                fallback_method(op, vec_ty)
+            }
+            "mul" if vec_ty.scalar_bits == 8 => {
+                self.kernel_method(op, vec_ty, |token| {
+                    // https://stackoverflow.com/questions/8193601/sse-multiplication-16-x-uint8-t
+                    let mullo = intrinsic_ident("mullo", "epi16", vec_ty.n_bits());
+                    let set1 = intrinsic_ident("set1", "epi16", vec_ty.n_bits());
+                    let and = intrinsic_ident("and", coarse_type(vec_ty), vec_ty.n_bits());
+                    let or = intrinsic_ident("or", coarse_type(vec_ty), vec_ty.n_bits());
+                    let slli = intrinsic_ident("slli", "epi16", vec_ty.n_bits());
+                    if *self == Self::Sse2 {
+                        let srli = intrinsic_ident("srli", "epi16", vec_ty.n_bits());
+                        quote! {
+                            let dst_even = #mullo(a.into(), b.into());
+                            let dst_odd = #mullo(#srli::<8>(a.into()), #srli::<8>(b.into()));
+
+                            #or(#slli(dst_odd, 8), #and(dst_even, #set1(0xFF))).simd_into(#token)
+                        }
+                    } else {
+                        // LLVM's byte-multiplication lowering uses PMADDUBSW to calculate the
+                        // odd byte of every i16 lane. The cleared adjacent byte means there is
+                        // only one product per lane, so the saturating add cannot saturate.
+                        // LLVM only uses this for 128-bit vectors while we apply it everywhere.
+                        // Both llvm-mca and hardware benchmarks show this is beneficial.
+                        let andnot =
+                            intrinsic_ident("andnot", coarse_type(vec_ty), vec_ty.n_bits());
+                        let maddubs = intrinsic_ident("maddubs", "epi16", vec_ty.n_bits());
+                        quote! {
+                            let a = a.into();
+                            let b = b.into();
+                            let low_mask = #set1(0xFF);
+                            let dst_even = #mullo(a, b);
+                            let dst_odd = #maddubs(a, #andnot(low_mask, b));
+
+                            #or(#slli(dst_odd, 8), #and(dst_even, low_mask)).simd_into(#token)
+                        }
+                    }
+                })
+            }
             "shrv"
                 if *self == Self::Avx2
                     && vec_ty.scalar == ScalarType::Int
@@ -3053,61 +3074,24 @@ impl X86 {
                 // x86 only has lane-wise variable shifts for wider lanes starting at AVX2.
                 fallback_method(op, vec_ty)
             }
-            _ => self.kernel_method(op, vec_ty, |token| match method {
-                "mul" if vec_ty.scalar_bits == 8 => {
-                    // https://stackoverflow.com/questions/8193601/sse-multiplication-16-x-uint8-t
-                    let mullo = intrinsic_ident("mullo", "epi16", vec_ty.n_bits());
-                    let set1 = intrinsic_ident("set1", "epi16", vec_ty.n_bits());
-                    let and = intrinsic_ident("and", coarse_type(vec_ty), vec_ty.n_bits());
-                    let or = intrinsic_ident("or", coarse_type(vec_ty), vec_ty.n_bits());
-                    let slli = intrinsic_ident("slli", "epi16", vec_ty.n_bits());
-                    if *self == Self::Sse2 {
-                        let srli = intrinsic_ident("srli", "epi16", vec_ty.n_bits());
-                        quote! {
-                            let dst_even = #mullo(a.into(), b.into());
-                            let dst_odd = #mullo(#srli::<8>(a.into()), #srli::<8>(b.into()));
-
-                            #or(#slli(dst_odd, 8), #and(dst_even, #set1(0xFF))).simd_into(#token)
-                        }
-                    } else {
-                        // LLVM's byte-multiplication lowering uses PMADDUBSW to calculate the
-                        // odd byte of every i16 lane. The cleared adjacent byte means there is
-                        // only one product per lane, so the saturating add cannot saturate.
-                        // LLVM only uses this for 128-bit vectors while we apply it everywhere.
-                        // Both llvm-mca and hardware benchmarks show this is beneficial.
-                        let andnot =
-                            intrinsic_ident("andnot", coarse_type(vec_ty), vec_ty.n_bits());
-                        let maddubs = intrinsic_ident("maddubs", "epi16", vec_ty.n_bits());
-                        quote! {
-                            let a = a.into();
-                            let b = b.into();
-                            let low_mask = #set1(0xFF);
-                            let dst_even = #mullo(a, b);
-                            let dst_odd = #maddubs(a, #andnot(low_mask, b));
-
-                            #or(#slli(dst_odd, 8), #and(dst_even, low_mask)).simd_into(#token)
-                        }
-                    }
+            "shlv" | "shrv" => self.kernel_method(op, vec_ty, |token| {
+                let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
+                let name = match (method, vec_ty.scalar) {
+                    ("shrv", ScalarType::Int) => "srav",
+                    ("shrv", _) => "srlv",
+                    ("shlv", _) => "sllv",
+                    _ => unreachable!(),
+                };
+                let intrinsic = intrinsic_ident(name, suffix, vec_ty.n_bits());
+                quote! {
+                    #intrinsic(a.into(), b.into()).simd_into(#token)
                 }
-                "shlv" | "shrv" => {
-                    let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
-                    let name = match (method, vec_ty.scalar) {
-                        ("shrv", ScalarType::Int) => "srav",
-                        ("shrv", _) => "srlv",
-                        ("shlv", _) => "sllv",
-                        _ => unreachable!(),
-                    };
-                    let intrinsic = intrinsic_ident(name, suffix, vec_ty.n_bits());
-                    quote! {
-                        #intrinsic(a.into(), b.into()).simd_into(#token)
-                    }
-                }
-                _ => {
-                    let args = [quote! { a.into() }, quote! { b.into() }];
-                    let expr = x86::expr(method, vec_ty, &args);
-                    quote! {
-                        #expr.simd_into(#token)
-                    }
+            }),
+            _ => self.kernel_method(op, vec_ty, |token| {
+                let args = [quote! { a.into() }, quote! { b.into() }];
+                let expr = x86::expr(method, vec_ty, &args);
+                quote! {
+                    #expr.simd_into(#token)
                 }
             }),
         }
