@@ -5621,19 +5621,39 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        [
-            i64::max(a[0usize], b[0usize]),
-            i64::max(a[1usize], b[1usize]),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i64x2<Sse4_2>, b: i64x2<Sse4_2>) -> i64x2<Sse4_2> {
+                let a = a.into();
+                let b = b.into();
+                let mask = _mm_cmpgt_epi64(b, a);
+                let result = _mm_blendv_pd(
+                    _mm_castsi128_pd(a),
+                    _mm_castsi128_pd(b),
+                    _mm_castsi128_pd(mask),
+                );
+                _mm_castpd_si128(result).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        [
-            i64::min(a[0usize], b[0usize]),
-            i64::min(a[1usize], b[1usize]),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i64x2<Sse4_2>, b: i64x2<Sse4_2>) -> i64x2<Sse4_2> {
+                let a = a.into();
+                let b = b.into();
+                let mask = _mm_cmpgt_epi64(a, b);
+                let result = _mm_blendv_pd(
+                    _mm_castsi128_pd(a),
+                    _mm_castsi128_pd(b),
+                    _mm_castsi128_pd(mask),
+                );
+                _mm_castpd_si128(result).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
@@ -6117,19 +6137,49 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        [
-            u64::max(a[0usize], b[0usize]),
-            u64::max(a[1usize], b[1usize]),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u64x2<Sse4_2>, b: u64x2<Sse4_2>) -> u64x2<Sse4_2> {
+                let a = a.into();
+                let b = b.into();
+                let mask = {
+                    let sign_bit = _mm_set1_epi64x(0x8000000000000000u64.cast_signed());
+                    let lhs_signed = _mm_xor_si128(b, sign_bit);
+                    let rhs_signed = _mm_xor_si128(a, sign_bit);
+                    _mm_cmpgt_epi64(lhs_signed, rhs_signed)
+                };
+                let result = _mm_blendv_pd(
+                    _mm_castsi128_pd(a),
+                    _mm_castsi128_pd(b),
+                    _mm_castsi128_pd(mask),
+                );
+                _mm_castpd_si128(result).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        [
-            u64::min(a[0usize], b[0usize]),
-            u64::min(a[1usize], b[1usize]),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u64x2<Sse4_2>, b: u64x2<Sse4_2>) -> u64x2<Sse4_2> {
+                let a = a.into();
+                let b = b.into();
+                let mask = {
+                    let sign_bit = _mm_set1_epi64x(0x8000000000000000u64.cast_signed());
+                    let lhs_signed = _mm_xor_si128(a, sign_bit);
+                    let rhs_signed = _mm_xor_si128(b, sign_bit);
+                    _mm_cmpgt_epi64(lhs_signed, rhs_signed)
+                };
+                let result = _mm_blendv_pd(
+                    _mm_castsi128_pd(a),
+                    _mm_castsi128_pd(b),
+                    _mm_castsi128_pd(mask),
+                );
+                _mm_castpd_si128(result).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {

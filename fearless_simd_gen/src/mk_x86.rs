@@ -2930,9 +2930,41 @@ impl X86 {
         if *self != Self::Avx512
             && vec_ty.scalar_bits == 64
             && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
-            && matches!(method, "mul" | "min" | "max")
+            && method == "mul"
         {
             return fallback_method(op, vec_ty);
+        }
+
+        if *self != Self::Avx512
+            && vec_ty.scalar_bits == 64
+            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
+            && matches!(method, "min" | "max")
+        {
+            if *self == Self::Sse2 {
+                return fallback_method(op, vec_ty);
+            }
+
+            let (lhs, rhs) = if method == "min" {
+                (quote! { a }, quote! { b })
+            } else {
+                (quote! { b }, quote! { a })
+            };
+            let cmp = int_cmpgt_expr(vec_ty, lhs, rhs);
+            let bits = vec_ty.n_bits();
+            let to_float = cast_ident(vec_ty.scalar, ScalarType::Float, 64, 64, bits);
+            let to_int = cast_ident(ScalarType::Float, vec_ty.scalar, 64, 64, bits);
+            let blend = intrinsic_ident("blendv", "pd", bits);
+            return self.kernel_method(op, vec_ty, |token| {
+                quote! {
+                    let a = a.into();
+                    let b = b.into();
+                    let mask = #cmp;
+                    // Blend whole 64-bit lanes. These casts only reinterpret bits;
+                    // the floating-point blend performs no floating-point arithmetic.
+                    let result = #blend(#to_float(a), #to_float(b), #to_float(mask));
+                    #to_int(result).simd_into(#token)
+                }
+            });
         }
 
         if *self == Self::Sse2
