@@ -5592,11 +5592,19 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn mul_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        [
-            i64::wrapping_mul(a[0usize], b[0usize]),
-            i64::wrapping_mul(a[1usize], b[1usize]),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i64x2<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let a_high = _mm_shuffle_epi32::<0xf5>(a);
+                let b_high = _mm_shuffle_epi32::<0xf5>(b);
+                let cross = _mm_add_epi64(_mm_mul_epu32(a_high, b), _mm_mul_epu32(a, b_high));
+                let low = _mm_mul_epu32(a, b);
+                _mm_add_epi64(low, _mm_slli_epi64::<32>(cross)).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -6108,11 +6116,19 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn mul_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        [
-            u64::wrapping_mul(a[0usize], b[0usize]),
-            u64::wrapping_mul(a[1usize], b[1usize]),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x2<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let a_high = _mm_shuffle_epi32::<0xf5>(a);
+                let b_high = _mm_shuffle_epi32::<0xf5>(b);
+                let cross = _mm_add_epi64(_mm_mul_epu32(a_high, b), _mm_mul_epu32(a, b_high));
+                let low = _mm_mul_epu32(a, b);
+                _mm_add_epi64(low, _mm_slli_epi64::<32>(cross)).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -11816,13 +11832,20 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn mul_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
-        [
-            i64::wrapping_mul(a[0usize], b[0usize]),
-            i64::wrapping_mul(a[1usize], b[1usize]),
-            i64::wrapping_mul(a[2usize], b[2usize]),
-            i64::wrapping_mul(a[3usize], b[3usize]),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i64x4<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let a_high = _mm256_shuffle_epi32::<0xf5>(a);
+                let b_high = _mm256_shuffle_epi32::<0xf5>(b);
+                let cross =
+                    _mm256_add_epi64(_mm256_mul_epu32(a_high, b), _mm256_mul_epu32(a, b_high));
+                let low = _mm256_mul_epu32(a, b);
+                _mm256_add_epi64(low, _mm256_slli_epi64::<32>(cross)).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
@@ -12301,13 +12324,20 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn mul_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
-        [
-            u64::wrapping_mul(a[0usize], b[0usize]),
-            u64::wrapping_mul(a[1usize], b[1usize]),
-            u64::wrapping_mul(a[2usize], b[2usize]),
-            u64::wrapping_mul(a[3usize], b[3usize]),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u64x4<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let a_high = _mm256_shuffle_epi32::<0xf5>(a);
+                let b_high = _mm256_shuffle_epi32::<0xf5>(b);
+                let cross =
+                    _mm256_add_epi64(_mm256_mul_epu32(a_high, b), _mm256_mul_epu32(a, b_high));
+                let low = _mm256_mul_epu32(a, b);
+                _mm256_add_epi64(low, _mm256_slli_epi64::<32>(cross)).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {

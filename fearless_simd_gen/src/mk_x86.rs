@@ -2932,7 +2932,29 @@ impl X86 {
             && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
             && method == "mul"
         {
-            return fallback_method(op, vec_ty);
+            // Multiplication modulo 2^64 is sign-independent. Split each lane into
+            // 32-bit halves: a*b = lo*lo + ((hi*lo + lo*hi) << 32) modulo 2^64.
+            // The hi*hi term vanishes, so three unsigned 32x32 -> 64 multiplies
+            // suffice. This formulation also works unchanged on SSE2.
+            let bits = vec_ty.n_bits();
+            let mul = intrinsic_ident("mul", "epu32", bits);
+            // Put the high dwords in the even positions consumed by `mul_epu32`.
+            // Shuffles avoid contending with multiplies for the shift execution
+            // port on older Intel CPUs, and avoid SSE's extra register copies.
+            let shuffle = intrinsic_ident("shuffle", "epi32", bits);
+            let slli = intrinsic_ident("slli", "epi64", bits);
+            let add = intrinsic_ident("add", "epi64", bits);
+            return self.kernel_method(op, vec_ty, |token| {
+                quote! {
+                    let a = a.into();
+                    let b = b.into();
+                    let a_high = #shuffle::<0xf5>(a);
+                    let b_high = #shuffle::<0xf5>(b);
+                    let cross = #add(#mul(a_high, b), #mul(a, b_high));
+                    let low = #mul(a, b);
+                    #add(low, #slli::<32>(cross)).simd_into(#token)
+                }
+            });
         }
 
         if *self != Self::Avx512
