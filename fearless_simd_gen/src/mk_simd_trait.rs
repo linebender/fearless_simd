@@ -552,10 +552,12 @@ fn mk_simd_mask() -> TokenStream {
             ///
             /// False lanes are encoded as all zeroes (integer value 0), and true lanes are encoded as all ones
             /// (integer value -1).
-            type Element: SimdElement;
+            type Element: SimdIntElement<Mask = Self::Element>
+                + core::ops::Neg<Output = Self::Element>;
 
             /// This mask's corresponding integer vector type.
-            type Ints: SimdBase<S, Element = Self::Element, Mask = Self>;
+            type Ints: SimdInt<S, Element = Self::Element, Mask = Self>
+                + core::ops::Neg<Output = Self::Ints>;
 
             /// This mask type's lane count.
             const LEN: usize;
