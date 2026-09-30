@@ -523,6 +523,11 @@ impl Simd for Sse4_2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn round_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
+        let bias = self.splat_f32x4(const { f32::next_down(0.5) });
+        (a + self.copysign_f32x4(bias, a)).trunc()
+    }
+    #[inline(always)]
     fn fract_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
         a - self.trunc_f32x4(a)
     }
@@ -5179,6 +5184,11 @@ impl Simd for Sse4_2 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn round_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
+        let bias = self.splat_f64x2(const { f64::next_down(0.5) });
+        (a + self.copysign_f64x2(bias, a)).trunc()
     }
     #[inline(always)]
     fn fract_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {

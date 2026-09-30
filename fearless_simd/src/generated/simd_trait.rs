@@ -370,8 +370,10 @@ pub trait Simd:
     fn floor_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Return the smallest integer greater than or equal to each element, that is, round towards positive infinity."]
     fn ceil_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
+    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer."]
     fn round_ties_even_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Round each element to the nearest integer, with ties rounding away from zero.\n\n## Performance considerations\n\nOnly `AArch64` has native instructions for this operation. `round` has to be emulated on all other platforms which is around 2-4x slower than `round_ties_even`. Prefer using [`round_ties_even`](SimdFloat::round_ties_even) if possible."]
+    fn round_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `a - a.trunc()`."]
     fn fract_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Return the integer part of each element, rounding towards zero."]
@@ -1597,8 +1599,10 @@ pub trait Simd:
     fn floor_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Return the smallest integer greater than or equal to each element, that is, round towards positive infinity."]
     fn ceil_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
+    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer."]
     fn round_ties_even_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Round each element to the nearest integer, with ties rounding away from zero.\n\n## Performance considerations\n\nOnly `AArch64` has native instructions for this operation. `round` has to be emulated on all other platforms which is around 2-4x slower than `round_ties_even`. Prefer using [`round_ties_even`](SimdFloat::round_ties_even) if possible."]
+    fn round_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `a - a.trunc()`."]
     fn fract_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Return the integer part of each element, rounding towards zero."]
@@ -2349,7 +2353,7 @@ pub trait Simd:
         let (a0, a1) = self.split_f32x8(a);
         self.combine_f32x4(self.ceil_f32x4(a0), self.ceil_f32x4(a1))
     }
-    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
+    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer."]
     #[inline(always)]
     fn round_ties_even_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
@@ -2357,6 +2361,12 @@ pub trait Simd:
             self.round_ties_even_f32x4(a0),
             self.round_ties_even_f32x4(a1),
         )
+    }
+    #[doc = "Round each element to the nearest integer, with ties rounding away from zero.\n\n## Performance considerations\n\nOnly `AArch64` has native instructions for this operation. `round` has to be emulated on all other platforms which is around 2-4x slower than `round_ties_even`. Prefer using [`round_ties_even`](SimdFloat::round_ties_even) if possible."]
+    #[inline(always)]
+    fn round_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f32x4(self.round_f32x4(a0), self.round_f32x4(a1))
     }
     #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `a - a.trunc()`."]
     #[inline(always)]
@@ -5274,7 +5284,7 @@ pub trait Simd:
         let (a0, a1) = self.split_f64x4(a);
         self.combine_f64x2(self.ceil_f64x2(a0), self.ceil_f64x2(a1))
     }
-    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
+    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer."]
     #[inline(always)]
     fn round_ties_even_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
         let (a0, a1) = self.split_f64x4(a);
@@ -5282,6 +5292,12 @@ pub trait Simd:
             self.round_ties_even_f64x2(a0),
             self.round_ties_even_f64x2(a1),
         )
+    }
+    #[doc = "Round each element to the nearest integer, with ties rounding away from zero.\n\n## Performance considerations\n\nOnly `AArch64` has native instructions for this operation. `round` has to be emulated on all other platforms which is around 2-4x slower than `round_ties_even`. Prefer using [`round_ties_even`](SimdFloat::round_ties_even) if possible."]
+    #[inline(always)]
+    fn round_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_f64x2(self.round_f64x2(a0), self.round_f64x2(a1))
     }
     #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `a - a.trunc()`."]
     #[inline(always)]
@@ -6573,7 +6589,7 @@ pub trait Simd:
         let (a0, a1) = self.split_f32x16(a);
         self.combine_f32x8(self.ceil_f32x8(a0), self.ceil_f32x8(a1))
     }
-    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
+    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer."]
     #[inline(always)]
     fn round_ties_even_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
@@ -6581,6 +6597,12 @@ pub trait Simd:
             self.round_ties_even_f32x8(a0),
             self.round_ties_even_f32x8(a1),
         )
+    }
+    #[doc = "Round each element to the nearest integer, with ties rounding away from zero.\n\n## Performance considerations\n\nOnly `AArch64` has native instructions for this operation. `round` has to be emulated on all other platforms which is around 2-4x slower than `round_ties_even`. Prefer using [`round_ties_even`](SimdFloat::round_ties_even) if possible."]
+    #[inline(always)]
+    fn round_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f32x8(self.round_f32x8(a0), self.round_f32x8(a1))
     }
     #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `a - a.trunc()`."]
     #[inline(always)]
@@ -9501,7 +9523,7 @@ pub trait Simd:
         let (a0, a1) = self.split_f64x8(a);
         self.combine_f64x4(self.ceil_f64x4(a0), self.ceil_f64x4(a1))
     }
-    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
+    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer."]
     #[inline(always)]
     fn round_ties_even_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_f64x8(a);
@@ -9509,6 +9531,12 @@ pub trait Simd:
             self.round_ties_even_f64x4(a0),
             self.round_ties_even_f64x4(a1),
         )
+    }
+    #[doc = "Round each element to the nearest integer, with ties rounding away from zero.\n\n## Performance considerations\n\nOnly `AArch64` has native instructions for this operation. `round` has to be emulated on all other platforms which is around 2-4x slower than `round_ties_even`. Prefer using [`round_ties_even`](SimdFloat::round_ties_even) if possible."]
+    #[inline(always)]
+    fn round_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f64x4(self.round_f64x4(a0), self.round_f64x4(a1))
     }
     #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `a - a.trunc()`."]
     #[inline(always)]
@@ -11105,8 +11133,10 @@ pub trait SimdFloat<S: Simd>:
     fn floor(self) -> Self;
     #[doc = "Return the smallest integer greater than or equal to each element, that is, round towards positive infinity."]
     fn ceil(self) -> Self;
-    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
+    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer."]
     fn round_ties_even(self) -> Self;
+    #[doc = "Round each element to the nearest integer, with ties rounding away from zero.\n\n## Performance considerations\n\nOnly `AArch64` has native instructions for this operation. `round` has to be emulated on all other platforms which is around 2-4x slower than `round_ties_even`. Prefer using [`round_ties_even`](SimdFloat::round_ties_even) if possible."]
+    fn round(self) -> Self;
     #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `self - self.trunc()`."]
     fn fract(self) -> Self;
     #[doc = "Return the integer part of each element, rounding towards zero."]

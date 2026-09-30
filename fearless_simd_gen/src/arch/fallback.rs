@@ -25,6 +25,7 @@ pub(crate) fn translate_op(op: &str, is_float: bool) -> Option<&'static str> {
         "floor" => "floor",
         "ceil" => "ceil",
         "round_ties_even" => "round_ties_even",
+        "round" => "round",
         "fract" => "fract",
         "trunc" => "trunc",
         "sqrt" => "sqrt",

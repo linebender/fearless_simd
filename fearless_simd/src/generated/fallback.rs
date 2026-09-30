@@ -403,6 +403,16 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn round_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
+        [
+            f32::round(a[0usize]),
+            f32::round(a[1usize]),
+            f32::round(a[2usize]),
+            f32::round(a[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn fract_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
         [
             f32::fract(a[0usize]),
@@ -5701,6 +5711,10 @@ impl Simd for Fallback {
             f64::round_ties_even(a[1usize]),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn round_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
+        [f64::round(a[0usize]), f64::round(a[1usize])].simd_into(self)
     }
     #[inline(always)]
     fn fract_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {

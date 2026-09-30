@@ -481,6 +481,16 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
+    fn round_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> f32x4<Neon> {
+                vrndaq_f32(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn fract_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4257,6 +4267,16 @@ impl Simd for Neon {
             #[inline(always)]
             fn kernel(token: Neon, a: f64x2<Neon>) -> f64x2<Neon> {
                 vrndnq_f64(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn round_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> f64x2<Neon> {
+                vrndaq_f64(a.into()).simd_into(token)
             }
         );
         kernel(self, a)

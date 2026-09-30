@@ -15,6 +15,7 @@ pub(crate) trait FloatExt {
     fn floor(self) -> Self;
     fn ceil(self) -> Self;
     fn round_ties_even(self) -> Self;
+    fn round(self) -> Self;
     fn fract(self) -> Self;
     fn sqrt(self) -> Self;
     fn trunc(self) -> Self;
@@ -33,6 +34,10 @@ impl FloatExt for f32 {
     #[inline(always)]
     fn round_ties_even(self) -> Self {
         libm::rintf(self)
+    }
+    #[inline(always)]
+    fn round(self) -> Self {
+        libm::roundf(self)
     }
     #[inline(always)]
     fn sqrt(self) -> Self {
@@ -64,6 +69,10 @@ impl FloatExt for f64 {
     #[inline(always)]
     fn round_ties_even(self) -> Self {
         libm::rint(self)
+    }
+    #[inline(always)]
+    fn round(self) -> Self {
+        libm::round(self)
     }
     #[inline(always)]
     fn sqrt(self) -> Self {
