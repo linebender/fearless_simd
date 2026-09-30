@@ -1546,8 +1546,7 @@ impl Simd for Sse4_2 {
                 let high_mask = (usize::from(mask_bits)) >> 8;
                 let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
                 let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control | 0x0808_0808_0808_0808;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let low_count = low_mask.count_ones() as usize;
                 let compacted = _mm_shuffle_epi8(values.into(), control);
@@ -1579,8 +1578,7 @@ impl Simd for Sse4_2 {
                 let high_mask = (usize::from(mask_bits)) >> 8;
                 let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
                 let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control | 0x0808_0808_0808_0808;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let low_count = low_mask.count_ones() as usize;
                 let compacted = _mm_shuffle_epi8(values.into(), control);
@@ -1615,8 +1613,7 @@ impl Simd for Sse4_2 {
                 let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
                 let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
                 let high_base = low_count * 0x0101_0101_0101_0101;
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control + high_base;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let expanded = _mm_shuffle_epi8(values.into(), control);
                 expanded.simd_into(token)
@@ -1646,8 +1643,7 @@ impl Simd for Sse4_2 {
                 let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
                 let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
                 let high_base = low_count * 0x0101_0101_0101_0101;
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control + high_base;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let expanded = _mm_shuffle_epi8(values.into(), control);
                 _mm_blendv_epi8(merge.into(), expanded, mask.into()).simd_into(token)
@@ -7443,8 +7439,7 @@ impl Simd for Sse4_2 {
                 let high_mask = (block_bits) >> 8;
                 let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
                 let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control | 0x0808_0808_0808_0808;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let low_count = low_mask.count_ones() as usize;
                 let compacted = _mm_shuffle_epi8(values.val.0[0], control);
@@ -7463,8 +7458,7 @@ impl Simd for Sse4_2 {
                 let high_mask = (block_bits) >> 8;
                 let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
                 let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control | 0x0808_0808_0808_0808;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let low_count = low_mask.count_ones() as usize;
                 let compacted = _mm_shuffle_epi8(values.val.0[1], control);
@@ -7505,8 +7499,7 @@ impl Simd for Sse4_2 {
                 let high_mask = (block_bits) >> 8;
                 let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
                 let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control | 0x0808_0808_0808_0808;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let low_count = low_mask.count_ones() as usize;
                 let compacted = _mm_shuffle_epi8(values.val.0[0], control);
@@ -7525,8 +7518,7 @@ impl Simd for Sse4_2 {
                 let high_mask = (block_bits) >> 8;
                 let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
                 let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control | 0x0808_0808_0808_0808;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let low_count = low_mask.count_ones() as usize;
                 let compacted = _mm_shuffle_epi8(values.val.0[1], control);
@@ -7591,8 +7583,7 @@ impl Simd for Sse4_2 {
                 let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
                 let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
                 let high_base = low_count * 0x0101_0101_0101_0101;
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control + high_base;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let packed =
                     unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
@@ -7609,8 +7600,7 @@ impl Simd for Sse4_2 {
                 let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
                 let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
                 let high_base = low_count * 0x0101_0101_0101_0101;
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control + high_base;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let packed =
                     unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
@@ -7650,8 +7640,7 @@ impl Simd for Sse4_2 {
                 let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
                 let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
                 let high_base = low_count * 0x0101_0101_0101_0101;
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control + high_base;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let packed =
                     unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
@@ -7668,8 +7657,7 @@ impl Simd for Sse4_2 {
                 let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
                 let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
                 let high_base = low_count * 0x0101_0101_0101_0101;
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control + high_base;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let packed =
                     unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
@@ -8873,8 +8861,7 @@ impl Simd for Sse4_2 {
                 let high_mask = (block_bits) >> 8;
                 let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
                 let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control | 0x0808_0808_0808_0808;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let low_count = low_mask.count_ones() as usize;
                 let compacted = _mm_shuffle_epi8(values.val.0[0], control);
@@ -8893,8 +8880,7 @@ impl Simd for Sse4_2 {
                 let high_mask = (block_bits) >> 8;
                 let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
                 let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control | 0x0808_0808_0808_0808;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let low_count = low_mask.count_ones() as usize;
                 let compacted = _mm_shuffle_epi8(values.val.0[1], control);
@@ -8913,8 +8899,7 @@ impl Simd for Sse4_2 {
                 let high_mask = (block_bits) >> 8;
                 let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
                 let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control | 0x0808_0808_0808_0808;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let low_count = low_mask.count_ones() as usize;
                 let compacted = _mm_shuffle_epi8(values.val.0[2], control);
@@ -8933,8 +8918,7 @@ impl Simd for Sse4_2 {
                 let high_mask = (block_bits) >> 8;
                 let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
                 let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control | 0x0808_0808_0808_0808;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let low_count = low_mask.count_ones() as usize;
                 let compacted = _mm_shuffle_epi8(values.val.0[3], control);
@@ -8975,8 +8959,7 @@ impl Simd for Sse4_2 {
                 let high_mask = (block_bits) >> 8;
                 let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
                 let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control | 0x0808_0808_0808_0808;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let low_count = low_mask.count_ones() as usize;
                 let compacted = _mm_shuffle_epi8(values.val.0[0], control);
@@ -8995,8 +8978,7 @@ impl Simd for Sse4_2 {
                 let high_mask = (block_bits) >> 8;
                 let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
                 let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control | 0x0808_0808_0808_0808;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let low_count = low_mask.count_ones() as usize;
                 let compacted = _mm_shuffle_epi8(values.val.0[1], control);
@@ -9015,8 +8997,7 @@ impl Simd for Sse4_2 {
                 let high_mask = (block_bits) >> 8;
                 let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
                 let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control | 0x0808_0808_0808_0808;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let low_count = low_mask.count_ones() as usize;
                 let compacted = _mm_shuffle_epi8(values.val.0[2], control);
@@ -9035,8 +9016,7 @@ impl Simd for Sse4_2 {
                 let high_mask = (block_bits) >> 8;
                 let low_control = crate::support::COMPRESS_8_CONTROLS[low_mask];
                 let high_control = crate::support::COMPRESS_8_CONTROLS[high_mask];
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + 0x0808_0808_0808_0808)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control | 0x0808_0808_0808_0808;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let low_count = low_mask.count_ones() as usize;
                 let compacted = _mm_shuffle_epi8(values.val.0[3], control);
@@ -9127,8 +9107,7 @@ impl Simd for Sse4_2 {
                 let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
                 let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
                 let high_base = low_count * 0x0101_0101_0101_0101;
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control + high_base;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let packed =
                     unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
@@ -9145,8 +9124,7 @@ impl Simd for Sse4_2 {
                 let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
                 let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
                 let high_base = low_count * 0x0101_0101_0101_0101;
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control + high_base;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let packed =
                     unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
@@ -9163,8 +9141,7 @@ impl Simd for Sse4_2 {
                 let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
                 let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
                 let high_base = low_count * 0x0101_0101_0101_0101;
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control + high_base;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let packed =
                     unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
@@ -9181,8 +9158,7 @@ impl Simd for Sse4_2 {
                 let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
                 let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
                 let high_base = low_count * 0x0101_0101_0101_0101;
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control + high_base;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let packed =
                     unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
@@ -9222,8 +9198,7 @@ impl Simd for Sse4_2 {
                 let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
                 let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
                 let high_base = low_count * 0x0101_0101_0101_0101;
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control + high_base;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let packed =
                     unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
@@ -9240,8 +9215,7 @@ impl Simd for Sse4_2 {
                 let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
                 let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
                 let high_base = low_count * 0x0101_0101_0101_0101;
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control + high_base;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let packed =
                     unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
@@ -9258,8 +9232,7 @@ impl Simd for Sse4_2 {
                 let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
                 let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
                 let high_base = low_count * 0x0101_0101_0101_0101;
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control + high_base;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let packed =
                     unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };
@@ -9276,8 +9249,7 @@ impl Simd for Sse4_2 {
                 let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
                 let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
                 let high_base = low_count * 0x0101_0101_0101_0101;
-                let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
-                    | (high_control & 0x8080_8080_8080_8080);
+                let high_control = high_control + high_base;
                 let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
                 let packed =
                     unsafe { _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>()) };

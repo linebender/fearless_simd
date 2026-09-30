@@ -1265,9 +1265,9 @@ fn compact_16_control(block_bits: TokenStream, suffix: &str) -> (TokenStream, Id
         let #high_mask = (#block_bits) >> 8;
         let #low_control = crate::support::COMPRESS_8_CONTROLS[#low_mask];
         let #high_control = crate::support::COMPRESS_8_CONTROLS[#high_mask];
-        let #high_control = ((#high_control & 0x7f7f_7f7f_7f7f_7f7f)
-            + 0x0808_0808_0808_0808)
-            | (#high_control & 0x8080_8080_8080_8080);
+        // Selected indices are 0..=7; setting bit 3 offsets them by eight.
+        // Inactive indices retain their high bit and still zero the shuffled byte.
+        let #high_control = #high_control | 0x0808_0808_0808_0808;
         let #control = _mm_set_epi64x(#high_control.cast_signed(), #low_control.cast_signed());
         let #low_count = #low_mask.count_ones() as usize;
     };
@@ -1283,8 +1283,9 @@ fn expand_16_control(block_bits: TokenStream) -> TokenStream {
         let low_control = crate::support::EXPAND_8_CONTROLS[low_mask];
         let high_control = crate::support::EXPAND_8_CONTROLS[high_mask];
         let high_base = low_count * 0x0101_0101_0101_0101;
-        let high_control = ((high_control & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
-            | (high_control & 0x8080_8080_8080_8080);
+        // Inactive controls are 0x80; adding at most eight cannot carry between
+        // bytes or clear the zeroing bit. Selected controls remain in 0..=15.
+        let high_control = high_control + high_base;
         let control = _mm_set_epi64x(high_control.cast_signed(), low_control.cast_signed());
     }
 }

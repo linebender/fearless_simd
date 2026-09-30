@@ -65,10 +65,18 @@ pub(crate) fn cross_block_slide_blocks_at<const N: usize, Block: Copy>(
 }
 
 const fn compact_control_table(expand: bool) -> [u64; 256] {
-    let mut table = [u64::MAX; 256];
+    // Expansion adds a lane offset to each byte of the packed control. Use 0x80
+    // for inactive lanes so these additions preserve the zeroing bit without
+    // carrying into adjacent bytes. Every supported shuffle treats it as zero.
+    let empty = if expand {
+        0x8080_8080_8080_8080
+    } else {
+        u64::MAX
+    };
+    let mut table = [empty; 256];
     let mut mask = 0_usize;
     while mask < table.len() {
-        let mut control = u64::MAX;
+        let mut control = empty;
         let mut selected = 0_usize;
         let mut lane = 0_usize;
         while lane < 8 {

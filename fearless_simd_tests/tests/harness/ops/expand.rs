@@ -49,3 +49,34 @@ fn expand_all_widths<S: Simd>(simd: S) {
     check_width!(u8x32, mask8x32, 32, expand_u8x32, expand_merge_u8x32);
     check_width!(u8x64, mask8x64, 64, expand_u8x64, expand_merge_u8x64);
 }
+
+#[simd_test]
+fn expand_u8x16_exhaustive_masks<S: Simd>(simd: S) {
+    let values = [
+        0, 255, 128, 1, 127, 254, 2, 253, 3, 252, 4, 251, 5, 250, 6, 249,
+    ];
+    let merge = [
+        101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
+    ];
+    let values_vec = u8x16::simd_from(simd, values);
+    let merge_vec = u8x16::simd_from(simd, merge);
+    for bits in 0..=u16::MAX {
+        let mask = mask8x16::from_bitmask(simd, u64::from(bits));
+        let mut expected = [0; 16];
+        let mut expected_merge = merge;
+        let mut selected = 0;
+        for lane in 0..16 {
+            if bits & (1 << lane) != 0 {
+                expected[lane] = values[selected];
+                expected_merge[lane] = values[selected];
+                selected += 1;
+            }
+        }
+        assert_eq!(*values_vec.expand(mask), expected, "mask {bits:#06x}");
+        assert_eq!(
+            *values_vec.expand_merge(mask, merge_vec),
+            expected_merge,
+            "mask {bits:#06x}"
+        );
+    }
+}
