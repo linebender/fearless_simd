@@ -1232,8 +1232,7 @@ impl Simd for Neon {
             let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
             let packed = crate::support::COMPRESS_8_CONTROLS[block_mask];
             let base = (block * 8) as u64 * 0x0101_0101_0101_0101;
-            let adjusted =
-                ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base) | (packed & 0x8080_8080_8080_8080);
+            let adjusted = packed | base;
             let adjusted = adjusted.to_le_bytes();
             let write_len = core::cmp::min(8, 16 - output_lane);
             control[output_lane..output_lane + write_len].copy_from_slice(&adjusted[..write_len]);
@@ -1256,8 +1255,7 @@ impl Simd for Neon {
             let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
             let packed = crate::support::COMPRESS_8_CONTROLS[block_mask];
             let base = (block * 8) as u64 * 0x0101_0101_0101_0101;
-            let adjusted =
-                ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base) | (packed & 0x8080_8080_8080_8080);
+            let adjusted = packed | base;
             let adjusted = adjusted.to_le_bytes();
             let write_len = core::cmp::min(8, 16 - output_lane);
             control[output_lane..output_lane + write_len].copy_from_slice(&adjusted[..write_len]);
@@ -1295,8 +1293,7 @@ impl Simd for Neon {
             let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
             let packed = crate::support::EXPAND_8_CONTROLS[block_mask];
             let base = input_lane as u64 * 0x0101_0101_0101_0101;
-            let adjusted =
-                ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base) | (packed & 0x8080_8080_8080_8080);
+            let adjusted = packed + base;
             let output_lane = block * 8;
             control[output_lane..output_lane + 8].copy_from_slice(&adjusted.to_le_bytes());
             input_lane += crate::support::COMPACT_8_COUNTS[block_mask] as usize;
@@ -1318,8 +1315,7 @@ impl Simd for Neon {
             let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
             let packed = crate::support::EXPAND_8_CONTROLS[block_mask];
             let base = input_lane as u64 * 0x0101_0101_0101_0101;
-            let adjusted =
-                ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base) | (packed & 0x8080_8080_8080_8080);
+            let adjusted = packed + base;
             let output_lane = block * 8;
             control[output_lane..output_lane + 8].copy_from_slice(&adjusted.to_le_bytes());
             input_lane += crate::support::COMPACT_8_COUNTS[block_mask] as usize;
@@ -6354,8 +6350,7 @@ impl Simd for Neon {
             let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
             let packed = crate::support::COMPRESS_8_CONTROLS[block_mask];
             let base = (block * 8) as u64 * 0x0101_0101_0101_0101;
-            let adjusted =
-                ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base) | (packed & 0x8080_8080_8080_8080);
+            let adjusted = packed | base;
             let adjusted = adjusted.to_le_bytes();
             let write_len = core::cmp::min(8, 32 - output_lane);
             control[output_lane..output_lane + write_len].copy_from_slice(&adjusted[..write_len]);
@@ -6378,8 +6373,7 @@ impl Simd for Neon {
             let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
             let packed = crate::support::COMPRESS_8_CONTROLS[block_mask];
             let base = (block * 8) as u64 * 0x0101_0101_0101_0101;
-            let adjusted =
-                ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base) | (packed & 0x8080_8080_8080_8080);
+            let adjusted = packed | base;
             let adjusted = adjusted.to_le_bytes();
             let write_len = core::cmp::min(8, 32 - output_lane);
             control[output_lane..output_lane + write_len].copy_from_slice(&adjusted[..write_len]);
@@ -6420,8 +6414,7 @@ impl Simd for Neon {
             let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
             let packed = crate::support::EXPAND_8_CONTROLS[block_mask];
             let base = input_lane as u64 * 0x0101_0101_0101_0101;
-            let adjusted =
-                ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base) | (packed & 0x8080_8080_8080_8080);
+            let adjusted = packed + base;
             let output_lane = block * 8;
             control[output_lane..output_lane + 8].copy_from_slice(&adjusted.to_le_bytes());
             input_lane += crate::support::COMPACT_8_COUNTS[block_mask] as usize;
@@ -6443,8 +6436,7 @@ impl Simd for Neon {
             let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
             let packed = crate::support::EXPAND_8_CONTROLS[block_mask];
             let base = input_lane as u64 * 0x0101_0101_0101_0101;
-            let adjusted =
-                ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base) | (packed & 0x8080_8080_8080_8080);
+            let adjusted = packed + base;
             let output_lane = block * 8;
             control[output_lane..output_lane + 8].copy_from_slice(&adjusted.to_le_bytes());
             input_lane += crate::support::COMPACT_8_COUNTS[block_mask] as usize;
@@ -8010,8 +8002,7 @@ impl Simd for Neon {
             let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
             let packed = crate::support::COMPRESS_8_CONTROLS[block_mask];
             let base = (block * 8) as u64 * 0x0101_0101_0101_0101;
-            let adjusted =
-                ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base) | (packed & 0x8080_8080_8080_8080);
+            let adjusted = packed | base;
             let adjusted = adjusted.to_le_bytes();
             let write_len = core::cmp::min(8, 64 - output_lane);
             control[output_lane..output_lane + write_len].copy_from_slice(&adjusted[..write_len]);
@@ -8034,8 +8025,7 @@ impl Simd for Neon {
             let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
             let packed = crate::support::COMPRESS_8_CONTROLS[block_mask];
             let base = (block * 8) as u64 * 0x0101_0101_0101_0101;
-            let adjusted =
-                ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base) | (packed & 0x8080_8080_8080_8080);
+            let adjusted = packed | base;
             let adjusted = adjusted.to_le_bytes();
             let write_len = core::cmp::min(8, 64 - output_lane);
             control[output_lane..output_lane + write_len].copy_from_slice(&adjusted[..write_len]);
@@ -8078,8 +8068,7 @@ impl Simd for Neon {
             let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
             let packed = crate::support::EXPAND_8_CONTROLS[block_mask];
             let base = input_lane as u64 * 0x0101_0101_0101_0101;
-            let adjusted =
-                ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base) | (packed & 0x8080_8080_8080_8080);
+            let adjusted = packed + base;
             let output_lane = block * 8;
             control[output_lane..output_lane + 8].copy_from_slice(&adjusted.to_le_bytes());
             input_lane += crate::support::COMPACT_8_COUNTS[block_mask] as usize;
@@ -8101,8 +8090,7 @@ impl Simd for Neon {
             let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
             let packed = crate::support::EXPAND_8_CONTROLS[block_mask];
             let base = input_lane as u64 * 0x0101_0101_0101_0101;
-            let adjusted =
-                ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base) | (packed & 0x8080_8080_8080_8080);
+            let adjusted = packed + base;
             let output_lane = block * 8;
             control[output_lane..output_lane + 8].copy_from_slice(&adjusted.to_le_bytes());
             input_lane += crate::support::COMPACT_8_COUNTS[block_mask] as usize;

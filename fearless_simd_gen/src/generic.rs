@@ -773,9 +773,9 @@ pub(crate) fn composed_compact_op(op: Op, ty: &VecType, options: CompactOptions)
                             let low_count = #low_count;
                             let low = crate::support::COMPRESS_8_CONTROLS[low_mask];
                             let high = crate::support::COMPRESS_8_CONTROLS[high_mask];
-                            let high = ((high & 0x7f7f_7f7f_7f7f_7f7f)
-                                + 0x0808_0808_0808_0808)
-                                | (high & 0x8080_8080_8080_8080);
+                            // Selected indices are 0..7; OR adds eight while
+                            // leaving inactive 0xff controls out of range.
+                            let high = high | 0x0808_0808_0808_0808;
                             let mut control = [u8::MAX; 16];
                             control[..8].copy_from_slice(&low.to_le_bytes());
                             control[low_count..low_count + 8]
@@ -821,8 +821,9 @@ pub(crate) fn composed_compact_op(op: Op, ty: &VecType, options: CompactOptions)
                             let low = crate::support::EXPAND_8_CONTROLS[low_mask];
                             let high = crate::support::EXPAND_8_CONTROLS[high_mask];
                             let high_base = low_count as u64 * 0x0101_0101_0101_0101;
-                            let high = ((high & 0x7f7f_7f7f_7f7f_7f7f) + high_base)
-                                | (high & 0x8080_8080_8080_8080);
+                            // Adding at most eight preserves the inactive 0x80
+                            // controls' high bit without carrying between bytes.
+                            let high = high + high_base;
                             let mut control = [0u8; 16];
                             control[..8].copy_from_slice(&low.to_le_bytes());
                             control[8..].copy_from_slice(&high.to_le_bytes());
@@ -880,8 +881,9 @@ pub(crate) fn composed_compact_op(op: Op, ty: &VecType, options: CompactOptions)
                         let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
                         let packed = crate::support::COMPRESS_8_CONTROLS[block_mask];
                         let base = (block * 8) as u64 * 0x0101_0101_0101_0101;
-                        let adjusted = ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base)
-                            | (packed & 0x8080_8080_8080_8080);
+                        // Block offsets are multiples of eight, disjoint from
+                        // indices 0..7. Inactive 0xff controls stay out of range.
+                        let adjusted = packed | base;
                         let adjusted = adjusted.to_le_bytes();
                         let write_len = core::cmp::min(8, #len - output_lane);
                         control[output_lane..output_lane + write_len]
@@ -921,8 +923,10 @@ pub(crate) fn composed_compact_op(op: Op, ty: &VecType, options: CompactOptions)
                         let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
                         let packed = crate::support::EXPAND_8_CONTROLS[block_mask];
                         let base = input_lane as u64 * 0x0101_0101_0101_0101;
-                        let adjusted = ((packed & 0x7f7f_7f7f_7f7f_7f7f) + base)
-                            | (packed & 0x8080_8080_8080_8080);
+                        // The offset is at most 56 for a 64-byte vector. Adding
+                        // it to inactive 0x80 controls keeps them out of range
+                        // and cannot carry between bytes.
+                        let adjusted = packed + base;
                         let output_lane = block * 8;
                         control[output_lane..output_lane + 8]
                             .copy_from_slice(&adjusted.to_le_bytes());
