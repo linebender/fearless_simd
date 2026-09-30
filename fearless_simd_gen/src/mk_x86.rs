@@ -9,7 +9,7 @@ use crate::arch::x86::{
 use crate::generic::{
     concat_swizzle_dyn_precise_body, count_zeros_method, fallback_method, generic_block_combine,
     generic_block_split, generic_classify, generic_mask_from_bitmask, generic_mask_set,
-    generic_op_name, integer_lane_mask_rotate, integer_lane_mask_splat_arg,
+    generic_op_name, generic_round, integer_lane_mask_rotate, integer_lane_mask_splat_arg,
     recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
 };
 use crate::level::Level;
@@ -2032,6 +2032,7 @@ impl X86 {
         }
 
         match method {
+            "round" => generic_round(method_sig, vec_ty),
             "fract" => {
                 let trunc_op = generic_op_name("trunc", vec_ty);
                 quote! {

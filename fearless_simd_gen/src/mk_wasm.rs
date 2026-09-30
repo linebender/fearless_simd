@@ -7,7 +7,7 @@ use quote::{format_ident, quote};
 use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
     concat_swizzle_dyn_precise_body, count_zeros_method, fallback_method, generic_block_combine,
-    generic_block_split, generic_classify, generic_mask_set, generic_op_name,
+    generic_block_split, generic_classify, generic_mask_set, generic_op_name, generic_round,
     integer_lane_mask_rotate, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
     reverse_method, reverse_vector_mask_method,
 };
@@ -506,6 +506,10 @@ impl Level for WasmSimd128 {
 
                 if method == "count_ones" {
                     return count_ones_method(op, vec_ty);
+                }
+
+                if method == "round" {
+                    return generic_round(method_sig, vec_ty);
                 }
 
                 let args = [quote! { a.into() }];

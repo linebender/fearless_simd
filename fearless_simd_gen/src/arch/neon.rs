@@ -12,6 +12,7 @@ fn translate_op(op: &str) -> Option<&'static str> {
         "floor" => "vrndm",
         "ceil" => "vrndp",
         "round_ties_even" => "vrndn",
+        "round" => "vrnda",
         "trunc" => "vrnd",
         "sqrt" => "vsqrt",
         "add" => "vadd",

@@ -779,3 +779,20 @@ pub(crate) fn generic_classify(
         }
     }
 }
+
+pub(crate) fn generic_round(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(vec_ty.scalar, ScalarType::Float);
+
+    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+
+    let span = Span::call_site();
+    let copysign = Ident::new(&format!("copysign_{}", vec_ty.rust_name()), span);
+    let splat = Ident::new(&format!("splat_{}", vec_ty.rust_name()), span);
+
+    quote! {
+        #method_sig {
+            let bias = self.#splat(const{#scalar::next_down(0.5)});
+            (a + self.#copysign(bias, a)).trunc()
+        }
+    }
+}

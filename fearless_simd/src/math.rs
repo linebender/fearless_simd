@@ -35,6 +35,10 @@ impl FloatExt for f32 {
         libm::rintf(self)
     }
     #[inline(always)]
+    fn round(self) -> Self {
+        libm::roundf(self)
+    }
+    #[inline(always)]
     fn sqrt(self) -> Self {
         libm::sqrtf(self)
     }
@@ -64,6 +68,10 @@ impl FloatExt for f64 {
     #[inline(always)]
     fn round_ties_even(self) -> Self {
         libm::rint(self)
+    }
+    #[inline(always)]
+    fn round(self) -> Self {
+        libm::round(self)
     }
     #[inline(always)]
     fn sqrt(self) -> Self {

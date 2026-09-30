@@ -1011,8 +1011,15 @@ const FLOAT_OPS: &[Op] = &[
         "round_ties_even",
         OpKind::VecTraitMethod,
         OpSig::Unary,
-        "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\n\
-        There is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is.",
+        "Round each element to the nearest integer, with ties rounding to the nearest even integer.",
+    ),
+    Op::new(
+        "round",
+        OpKind::VecTraitMethod,
+        OpSig::Unary,
+        "Round each element to the nearest integer, with ties rounding away from zero.\n\n\
+        ## Performance considerations\n\n\
+        Only `AArch64` has native instructions for this operation. `round` has to be emulated on all other platforms which is around 2-4x slower than `round_ties_even`. Prefer using `round_ties_even` if possible."
     ),
     Op::new(
         "fract",
