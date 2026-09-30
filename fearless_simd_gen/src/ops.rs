@@ -1019,7 +1019,7 @@ const FLOAT_OPS: &[Op] = &[
         OpSig::Unary,
         "Round each element to the nearest integer, with ties rounding away from zero.\n\n\
         ## Performance considerations\n\n\
-        Only `AArch64` has native instructions for this operation. `round` has to be emulated on all other platforms which is around 2-4x slower than `round_ties_even`. Prefer using `round_ties_even` if possible."
+        Only `AArch64` has native instructions for this operation. `round` has to be emulated on all other platforms which is around 2-4x slower than `round_ties_even`. Prefer using [`round_ties_even`](SimdFloat::round_ties_even) if possible."
     ),
     Op::new(
         "fract",
