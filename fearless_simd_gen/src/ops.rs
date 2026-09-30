@@ -467,11 +467,14 @@ impl Op {
                 let arg1 = &arg_names[1];
                 quote! { (#arg0: S, #arg1: Self::Element) -> Self }
             }
-            OpSig::LoadInterleaved { .. }
-            | OpSig::StoreInterleaved { .. }
-            | OpSig::Compress { .. }
-            | OpSig::Expand { .. } => {
+            OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } => {
                 return None;
+            }
+            OpSig::Compress { merge: false } | OpSig::Expand { merge: false } => {
+                quote! { (self, mask: Self::Mask) -> Self }
+            }
+            OpSig::Compress { merge: true } | OpSig::Expand { merge: true } => {
+                quote! { (self, mask: Self::Mask, merge: impl SimdInto<Self, S>) -> Self }
             }
             OpSig::MaskFromBitmask | OpSig::MaskToBitmask | OpSig::MaskSet => return None,
             OpSig::Unary | OpSig::Cvt { .. } => {
@@ -729,36 +732,37 @@ const BASE_OPS: &[Op] = &[
         "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\n\
         The `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero.",
     ),
-];
-
-const U8_ONLY_OPS: &[Op] = &[
     Op::new(
         "compress",
-        OpKind::AssociatedOnly,
+        OpKind::BaseTraitMethod,
         OpSig::Compress { merge: false },
-        "Compact the bytes selected by `{arg1}` into consecutive low lanes.\n\n\
-         Lanes above the number of selected bytes are zero.",
+        "Compact the elements selected by `{arg1}` into consecutive low lanes, preserving their order.\n\n\
+         Lanes above the number of selected elements are zero (positive zero for floats).\n\n\
+         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.",
     ),
     Op::new(
         "compress_merge",
-        OpKind::AssociatedOnly,
+        OpKind::BaseTraitMethod,
         OpSig::Compress { merge: true },
-        "Compact the bytes selected by `{arg1}` into consecutive low lanes.\n\n\
-         Lanes above the number of selected bytes retain the corresponding values from `{arg2}`.",
+        "Compact the elements selected by `{arg1}` into consecutive low lanes, preserving their order.\n\n\
+         Lanes above the number of selected elements retain the corresponding values from `{arg2}`.\n\n\
+         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.",
     ),
     Op::new(
         "expand",
-        OpKind::AssociatedOnly,
+        OpKind::BaseTraitMethod,
         OpSig::Expand { merge: false },
-        "Expand consecutive low bytes from `{arg0}` into the lanes selected by `{arg1}`.\n\n\
-         Unselected lanes are zero.",
+        "Expand consecutive low elements from `{arg0}` into the lanes selected by `{arg1}`, preserving their order.\n\n\
+         Unselected lanes are zero (positive zero for floats).\n\n\
+         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.",
     ),
     Op::new(
         "expand_merge",
-        OpKind::AssociatedOnly,
+        OpKind::BaseTraitMethod,
         OpSig::Expand { merge: true },
-        "Expand consecutive low bytes from `{arg0}` into the lanes selected by `{arg1}`.\n\n\
-         Unselected lanes retain the corresponding values from `{arg2}`.",
+        "Expand consecutive low elements from `{arg0}` into the lanes selected by `{arg1}`, preserving their order.\n\n\
+         Unselected lanes retain the corresponding values from `{arg2}`.\n\n\
+         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.",
     ),
 ];
 
@@ -1630,10 +1634,6 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         }
     }
 
-    if ty.scalar == ScalarType::Unsigned && ty.scalar_bits == 8 {
-        ops.extend_from_slice(U8_ONLY_OPS);
-    }
-
     if let Some(combined_ty) = ty.combine_operand() {
         ops.push(Op::new(
             "combine",
@@ -2029,9 +2029,11 @@ impl OpSig {
             | Self::StoreInterleaved { .. }
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
-            | Self::MaskSet
-            | Self::Compress { .. }
-            | Self::Expand { .. } => &[],
+            | Self::MaskSet => &[],
+            Self::Compress { merge: false } | Self::Expand { merge: false } => &["self", "mask"],
+            Self::Compress { merge: true } | Self::Expand { merge: true } => {
+                &["self", "mask", "merge"]
+            }
             Self::Unary
             | Self::Reduce { .. }
             | Self::RotateElements { .. }
@@ -2110,9 +2112,13 @@ impl OpSig {
             | Self::SwizzleDynWithinBlocks
             | Self::SwizzleDyn
             | Self::SwizzleDynPrecise
-            | Self::Compress { .. }
-            | Self::Expand { .. }
             | Self::Slide { .. } => return None,
+            Self::Compress { merge: false } | Self::Expand { merge: false } => {
+                quote! { self, mask }
+            }
+            Self::Compress { merge: true } | Self::Expand { merge: true } => {
+                quote! { self, mask, merge.simd_into(self.simd) }
+            }
         };
         Some(args)
     }

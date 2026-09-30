@@ -6,10 +6,11 @@ use quote::{format_ident, quote};
 
 use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
-    CompactOptions, composed_compact_op, concat_swizzle_dyn_precise_body, count_zeros_method,
-    fallback_method, generic_block_combine, generic_block_split, generic_classify,
-    generic_mask_set, generic_op_name, integer_lane_mask_rotate, integer_lane_mask_splat_arg,
-    recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
+    CompactOptions, byte_compact_op, composed_compact_op, concat_swizzle_dyn_precise_body,
+    count_zeros_method, fallback_method, generic_block_combine, generic_block_split,
+    generic_classify, generic_mask_set, generic_op_name, integer_lane_mask_rotate,
+    integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body, reverse_method,
+    reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{
@@ -1166,6 +1167,9 @@ impl Level for WasmSimd128 {
                 }
                 _ => unreachable!(),
             },
+            OpSig::Compress { .. } | OpSig::Expand { .. } if *vec_ty != vec_ty.bytes_ty() => {
+                byte_compact_op(op, vec_ty)
+            }
             OpSig::Compress { .. } | OpSig::Expand { .. } => composed_compact_op(
                 op,
                 vec_ty,

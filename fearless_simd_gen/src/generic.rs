@@ -67,6 +67,34 @@ pub(crate) fn byte_swizzle_op(op: &Op, vec_ty: &VecType) -> TokenStream {
     }
 }
 
+/// Forward typed compression/expansion through bytes on vector-backed mask backends.
+///
+/// Each all-zero/all-one mask lane becomes a group of identical byte lanes, so entire
+/// elements move together. This must not be used with compact predicate masks (AVX-512).
+pub(crate) fn byte_compact_op(op: Op, vec_ty: &VecType) -> TokenStream {
+    assert_ne!(*vec_ty, vec_ty.bytes_ty());
+    assert_ne!(vec_ty.scalar, ScalarType::Mask);
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let byte_method = generic_op_name(op.method, &vec_ty.bytes_ty());
+    let byte_mask = vec_ty.bytes_ty().mask_ty().rust();
+    let merge_arg = match op.sig {
+        OpSig::Compress { merge: true } | OpSig::Expand { merge: true } => {
+            quote! { , Bytes::to_bytes(merge) }
+        }
+        OpSig::Compress { merge: false } | OpSig::Expand { merge: false } => TokenStream::new(),
+        _ => unreachable!("only compact operations can be forwarded through bytes"),
+    };
+    quote! {
+        #method_sig {
+            let mask = #byte_mask {
+                val: crate::transmute::checked_transmute_copy(&mask.val),
+                simd: self,
+            };
+            Bytes::from_bytes(self.#byte_method(Bytes::to_bytes(values), mask #merge_arg))
+        }
+    }
+}
+
 /// Implement a greater-than comparison by reversing the corresponding less-than comparison.
 pub(crate) fn reversed_compare_op(op: &Op, vec_ty: &VecType) -> Option<TokenStream> {
     let reversed_method = generic_op_name(op.reversed_compare_method()?, vec_ty);

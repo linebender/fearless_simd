@@ -7,10 +7,11 @@ use crate::arch::x86::{
     unpack_intrinsic,
 };
 use crate::generic::{
-    concat_swizzle_dyn_precise_body, count_zeros_method, fallback_method, generic_block_combine,
-    generic_block_split, generic_classify, generic_mask_from_bitmask, generic_mask_set, generic_op,
-    generic_op_name, integer_lane_mask_rotate, integer_lane_mask_splat_arg,
-    recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
+    byte_compact_op, concat_swizzle_dyn_precise_body, count_zeros_method, fallback_method,
+    generic_block_combine, generic_block_split, generic_classify, generic_mask_from_bitmask,
+    generic_mask_set, generic_op, generic_op_name, integer_lane_mask_rotate,
+    integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body, reverse_method,
+    reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{
@@ -331,6 +332,8 @@ impl Level for X86 {
             OpSig::Compress { .. } | OpSig::Expand { .. } => {
                 if *self == Self::Avx512 {
                     self.handle_avx512_compact_op(op, vec_ty)
+                } else if *vec_ty != vec_ty.bytes_ty() {
+                    byte_compact_op(op, vec_ty)
                 } else if matches!(*self, Self::Sse4_2 | Self::Avx2) && vec_ty.len == 16 {
                     self.handle_x86_compact_16(op, vec_ty)
                 } else if *self == Self::Avx2 && matches!(sig, OpSig::Compress { .. }) {
@@ -1838,55 +1841,43 @@ impl X86 {
     }
 
     fn handle_avx512_compact_op(&self, op: Op, vec_ty: &VecType) -> TokenStream {
-        assert!(
-            *self == Self::Avx512,
-            "compact byte intrinsics require AVX-512"
-        );
-        assert_eq!(
-            vec_ty.scalar,
-            ScalarType::Unsigned,
-            "compact byte intrinsics require unsigned vectors"
-        );
-        assert_eq!(
-            vec_ty.scalar_bits, 8,
-            "compact byte intrinsics require byte lanes"
-        );
-
-        let prefix = match vec_ty.len {
-            16 => "_mm",
-            32 => "_mm256",
-            64 => "_mm512",
+        assert!(*self == Self::Avx512, "compact intrinsics require AVX-512");
+        let prefix = match vec_ty.n_bits() {
+            128 => "_mm",
+            256 => "_mm256",
+            512 => "_mm512",
             _ => unreachable!(),
         };
-        let mask_ty = match vec_ty.len {
-            16 => quote! { u16 },
-            32 => quote! { u32 },
-            64 => quote! { u64 },
-            _ => unreachable!(),
+        let suffix = match (vec_ty.scalar, vec_ty.scalar_bits) {
+            (ScalarType::Float, 32) => "ps".to_owned(),
+            (ScalarType::Float, 64) => "pd".to_owned(),
+            (ScalarType::Int | ScalarType::Unsigned, bits) => format!("epi{bits}"),
+            _ => unreachable!("compact intrinsics require numeric vectors"),
         };
+        let mask_ty = ScalarType::Unsigned.rust(avx512_mask_register_bits(vec_ty));
         let mask_bits = avx512_mask_bits_expr(quote! { mask });
 
         self.kernel_method(op, vec_ty, |token| match op.sig {
             OpSig::Compress { merge: false } => {
-                let intrinsic = format_ident!("{prefix}_maskz_compress_epi8");
+                let intrinsic = format_ident!("{prefix}_maskz_compress_{suffix}");
                 quote! {
                     #intrinsic(#mask_bits as #mask_ty, values.into()).simd_into(#token)
                 }
             }
             OpSig::Compress { merge: true } => {
-                let intrinsic = format_ident!("{prefix}_mask_compress_epi8");
+                let intrinsic = format_ident!("{prefix}_mask_compress_{suffix}");
                 quote! {
                     #intrinsic(merge.into(), #mask_bits as #mask_ty, values.into()).simd_into(#token)
                 }
             }
             OpSig::Expand { merge: false } => {
-                let intrinsic = format_ident!("{prefix}_maskz_expand_epi8");
+                let intrinsic = format_ident!("{prefix}_maskz_expand_{suffix}");
                 quote! {
                     #intrinsic(#mask_bits as #mask_ty, values.into()).simd_into(#token)
                 }
             }
             OpSig::Expand { merge: true } => {
-                let intrinsic = format_ident!("{prefix}_mask_expand_epi8");
+                let intrinsic = format_ident!("{prefix}_mask_expand_{suffix}");
                 quote! {
                     #intrinsic(merge.into(), #mask_bits as #mask_ty, values.into()).simd_into(#token)
                 }
