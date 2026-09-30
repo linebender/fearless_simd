@@ -5,8 +5,8 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
-    CompactOptions, byte_compact_op, composed_compact_op, count_zeros_method, fallback_method,
-    generic_classify, generic_mask_set, generic_op_name, integer_lane_mask_rotate,
+    CompactOptions, byte_compact_op, compact_128_op, composed_compact_op, count_zeros_method,
+    fallback_method, generic_classify, generic_mask_set, generic_op_name, integer_lane_mask_rotate,
     integer_lane_mask_splat_arg, reverse_method, reverse_vector_mask_method,
 };
 use crate::level::Level;
@@ -849,6 +849,11 @@ impl Level for Neon {
                         Bytes::from_bytes(#bytes { val: #wrapper(result), simd: #token })
                     }
                 })
+            }
+            OpSig::Compress { .. } | OpSig::Expand { .. }
+                if vec_ty.n_bits() == 128 && matches!(vec_ty.scalar_bits, 16 | 32 | 64) =>
+            {
+                compact_128_op(op, vec_ty, Some(Self::compact_merge_swizzle))
             }
             OpSig::Compress { .. } | OpSig::Expand { .. } if *vec_ty != vec_ty.bytes_ty() => {
                 byte_compact_op(op, vec_ty)

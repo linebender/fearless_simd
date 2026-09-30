@@ -399,6 +399,7 @@ fn compact_u16x8<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask16x8::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 8];
@@ -585,6 +586,7 @@ fn compact_i16x8<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask16x8::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 8];
@@ -771,6 +773,7 @@ fn compact_u32x4<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask32x4::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 4];
@@ -957,6 +960,7 @@ fn compact_i32x4<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask32x4::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 4];
@@ -1142,6 +1146,7 @@ fn compact_u64x2<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask64x2::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 2];
@@ -1326,6 +1331,7 @@ fn compact_i64x2<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask64x2::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 2];
@@ -1520,6 +1526,7 @@ fn compact_f32x4<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask32x4::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 4];
@@ -1808,6 +1815,7 @@ fn compact_f64x2<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask64x2::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 2];

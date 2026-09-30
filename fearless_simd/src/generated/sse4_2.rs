@@ -171,11 +171,9 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn compress_f32x4(self, values: f32x4<Self>, mask: mask32x4<Self>) -> f32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
+        let bits = self.to_bitmask_mask32x4(mask) as usize & 15;
+        let control = u8x16::simd_from(self, crate::support::compact_128::COMPRESS_32[bits].0);
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
     }
     #[inline(always)]
     fn compress_merge_f32x4(
@@ -184,23 +182,17 @@ impl Simd for Sse4_2 {
         mask: mask32x4<Self>,
         merge: f32x4<Self>,
     ) -> f32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        let bits = self.to_bitmask_mask32x4(mask) as usize & 15;
+        let control = u8x16::simd_from(self, crate::support::compact_128::COMPRESS_32[bits].0);
+        let compressed = self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control);
+        let inactive = self.simd_lt_i8x16(i8x16::from_bytes(control), i8x16::splat(self, 0));
+        Bytes::from_bytes(self.select_u8x16(inactive, Bytes::to_bytes(merge), compressed))
     }
     #[inline(always)]
     fn expand_f32x4(self, values: f32x4<Self>, mask: mask32x4<Self>) -> f32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
+        let bits = self.to_bitmask_mask32x4(mask) as usize & 15;
+        let control = u8x16::simd_from(self, crate::support::compact_128::EXPAND_32[bits].0);
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
     }
     #[inline(always)]
     fn expand_merge_f32x4(
@@ -209,15 +201,10 @@ impl Simd for Sse4_2 {
         mask: mask32x4<Self>,
         merge: f32x4<Self>,
     ) -> f32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        let bits = self.to_bitmask_mask32x4(mask) as usize & 15;
+        let control = u8x16::simd_from(self, crate::support::compact_128::EXPAND_32[bits].0);
+        let expanded = Bytes::from_bytes(self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control));
+        self.select_f32x4(mask, expanded, merge)
     }
     #[inline(always)]
     fn neg_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -2438,11 +2425,9 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn compress_i16x8(self, values: i16x8<Self>, mask: mask16x8<Self>) -> i16x8<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
+        let bits = self.to_bitmask_mask16x8(mask) as usize & 255;
+        let control = u8x16::simd_from(self, crate::support::compact_128::COMPRESS_16[bits].0);
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
     }
     #[inline(always)]
     fn compress_merge_i16x8(
@@ -2451,23 +2436,17 @@ impl Simd for Sse4_2 {
         mask: mask16x8<Self>,
         merge: i16x8<Self>,
     ) -> i16x8<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        let bits = self.to_bitmask_mask16x8(mask) as usize & 255;
+        let control = u8x16::simd_from(self, crate::support::compact_128::COMPRESS_16[bits].0);
+        let compressed = self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control);
+        let inactive = self.simd_lt_i8x16(i8x16::from_bytes(control), i8x16::splat(self, 0));
+        Bytes::from_bytes(self.select_u8x16(inactive, Bytes::to_bytes(merge), compressed))
     }
     #[inline(always)]
     fn expand_i16x8(self, values: i16x8<Self>, mask: mask16x8<Self>) -> i16x8<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
+        let bits = self.to_bitmask_mask16x8(mask) as usize & 255;
+        let control = u8x16::simd_from(self, crate::support::compact_128::EXPAND_16[bits].0);
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
     }
     #[inline(always)]
     fn expand_merge_i16x8(
@@ -2476,15 +2455,10 @@ impl Simd for Sse4_2 {
         mask: mask16x8<Self>,
         merge: i16x8<Self>,
     ) -> i16x8<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        let bits = self.to_bitmask_mask16x8(mask) as usize & 255;
+        let control = u8x16::simd_from(self, crate::support::compact_128::EXPAND_16[bits].0);
+        let expanded = Bytes::from_bytes(self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control));
+        self.select_i16x8(mask, expanded, merge)
     }
     #[inline(always)]
     fn count_ones_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
@@ -3037,11 +3011,9 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn compress_u16x8(self, values: u16x8<Self>, mask: mask16x8<Self>) -> u16x8<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
+        let bits = self.to_bitmask_mask16x8(mask) as usize & 255;
+        let control = u8x16::simd_from(self, crate::support::compact_128::COMPRESS_16[bits].0);
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
     }
     #[inline(always)]
     fn compress_merge_u16x8(
@@ -3050,23 +3022,17 @@ impl Simd for Sse4_2 {
         mask: mask16x8<Self>,
         merge: u16x8<Self>,
     ) -> u16x8<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        let bits = self.to_bitmask_mask16x8(mask) as usize & 255;
+        let control = u8x16::simd_from(self, crate::support::compact_128::COMPRESS_16[bits].0);
+        let compressed = self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control);
+        let inactive = self.simd_lt_i8x16(i8x16::from_bytes(control), i8x16::splat(self, 0));
+        Bytes::from_bytes(self.select_u8x16(inactive, Bytes::to_bytes(merge), compressed))
     }
     #[inline(always)]
     fn expand_u16x8(self, values: u16x8<Self>, mask: mask16x8<Self>) -> u16x8<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
+        let bits = self.to_bitmask_mask16x8(mask) as usize & 255;
+        let control = u8x16::simd_from(self, crate::support::compact_128::EXPAND_16[bits].0);
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
     }
     #[inline(always)]
     fn expand_merge_u16x8(
@@ -3075,15 +3041,10 @@ impl Simd for Sse4_2 {
         mask: mask16x8<Self>,
         merge: u16x8<Self>,
     ) -> u16x8<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        let bits = self.to_bitmask_mask16x8(mask) as usize & 255;
+        let control = u8x16::simd_from(self, crate::support::compact_128::EXPAND_16[bits].0);
+        let expanded = Bytes::from_bytes(self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control));
+        self.select_u16x8(mask, expanded, merge)
     }
     #[inline(always)]
     fn count_ones_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
@@ -3874,11 +3835,9 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn compress_i32x4(self, values: i32x4<Self>, mask: mask32x4<Self>) -> i32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
+        let bits = self.to_bitmask_mask32x4(mask) as usize & 15;
+        let control = u8x16::simd_from(self, crate::support::compact_128::COMPRESS_32[bits].0);
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
     }
     #[inline(always)]
     fn compress_merge_i32x4(
@@ -3887,23 +3846,17 @@ impl Simd for Sse4_2 {
         mask: mask32x4<Self>,
         merge: i32x4<Self>,
     ) -> i32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        let bits = self.to_bitmask_mask32x4(mask) as usize & 15;
+        let control = u8x16::simd_from(self, crate::support::compact_128::COMPRESS_32[bits].0);
+        let compressed = self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control);
+        let inactive = self.simd_lt_i8x16(i8x16::from_bytes(control), i8x16::splat(self, 0));
+        Bytes::from_bytes(self.select_u8x16(inactive, Bytes::to_bytes(merge), compressed))
     }
     #[inline(always)]
     fn expand_i32x4(self, values: i32x4<Self>, mask: mask32x4<Self>) -> i32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
+        let bits = self.to_bitmask_mask32x4(mask) as usize & 15;
+        let control = u8x16::simd_from(self, crate::support::compact_128::EXPAND_32[bits].0);
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
     }
     #[inline(always)]
     fn expand_merge_i32x4(
@@ -3912,15 +3865,10 @@ impl Simd for Sse4_2 {
         mask: mask32x4<Self>,
         merge: i32x4<Self>,
     ) -> i32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        let bits = self.to_bitmask_mask32x4(mask) as usize & 15;
+        let control = u8x16::simd_from(self, crate::support::compact_128::EXPAND_32[bits].0);
+        let expanded = Bytes::from_bytes(self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control));
+        self.select_i32x4(mask, expanded, merge)
     }
     #[inline(always)]
     fn count_ones_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
@@ -4460,11 +4408,9 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn compress_u32x4(self, values: u32x4<Self>, mask: mask32x4<Self>) -> u32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
+        let bits = self.to_bitmask_mask32x4(mask) as usize & 15;
+        let control = u8x16::simd_from(self, crate::support::compact_128::COMPRESS_32[bits].0);
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
     }
     #[inline(always)]
     fn compress_merge_u32x4(
@@ -4473,23 +4419,17 @@ impl Simd for Sse4_2 {
         mask: mask32x4<Self>,
         merge: u32x4<Self>,
     ) -> u32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        let bits = self.to_bitmask_mask32x4(mask) as usize & 15;
+        let control = u8x16::simd_from(self, crate::support::compact_128::COMPRESS_32[bits].0);
+        let compressed = self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control);
+        let inactive = self.simd_lt_i8x16(i8x16::from_bytes(control), i8x16::splat(self, 0));
+        Bytes::from_bytes(self.select_u8x16(inactive, Bytes::to_bytes(merge), compressed))
     }
     #[inline(always)]
     fn expand_u32x4(self, values: u32x4<Self>, mask: mask32x4<Self>) -> u32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
+        let bits = self.to_bitmask_mask32x4(mask) as usize & 15;
+        let control = u8x16::simd_from(self, crate::support::compact_128::EXPAND_32[bits].0);
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
     }
     #[inline(always)]
     fn expand_merge_u32x4(
@@ -4498,15 +4438,10 @@ impl Simd for Sse4_2 {
         mask: mask32x4<Self>,
         merge: u32x4<Self>,
     ) -> u32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        let bits = self.to_bitmask_mask32x4(mask) as usize & 15;
+        let control = u8x16::simd_from(self, crate::support::compact_128::EXPAND_32[bits].0);
+        let expanded = Bytes::from_bytes(self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control));
+        self.select_u32x4(mask, expanded, merge)
     }
     #[inline(always)]
     fn count_ones_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
@@ -5272,11 +5207,9 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn compress_f64x2(self, values: f64x2<Self>, mask: mask64x2<Self>) -> f64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
+        let bits = self.to_bitmask_mask64x2(mask) as usize & 3;
+        let control = u8x16::simd_from(self, crate::support::compact_128::COMPRESS_64[bits].0);
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
     }
     #[inline(always)]
     fn compress_merge_f64x2(
@@ -5285,23 +5218,17 @@ impl Simd for Sse4_2 {
         mask: mask64x2<Self>,
         merge: f64x2<Self>,
     ) -> f64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        let bits = self.to_bitmask_mask64x2(mask) as usize & 3;
+        let control = u8x16::simd_from(self, crate::support::compact_128::COMPRESS_64[bits].0);
+        let compressed = self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control);
+        let inactive = self.simd_lt_i8x16(i8x16::from_bytes(control), i8x16::splat(self, 0));
+        Bytes::from_bytes(self.select_u8x16(inactive, Bytes::to_bytes(merge), compressed))
     }
     #[inline(always)]
     fn expand_f64x2(self, values: f64x2<Self>, mask: mask64x2<Self>) -> f64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
+        let bits = self.to_bitmask_mask64x2(mask) as usize & 3;
+        let control = u8x16::simd_from(self, crate::support::compact_128::EXPAND_64[bits].0);
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
     }
     #[inline(always)]
     fn expand_merge_f64x2(
@@ -5310,15 +5237,10 @@ impl Simd for Sse4_2 {
         mask: mask64x2<Self>,
         merge: f64x2<Self>,
     ) -> f64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        let bits = self.to_bitmask_mask64x2(mask) as usize & 3;
+        let control = u8x16::simd_from(self, crate::support::compact_128::EXPAND_64[bits].0);
+        let expanded = Bytes::from_bytes(self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control));
+        self.select_f64x2(mask, expanded, merge)
     }
     #[inline(always)]
     fn neg_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -5889,11 +5811,9 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn compress_i64x2(self, values: i64x2<Self>, mask: mask64x2<Self>) -> i64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
+        let bits = self.to_bitmask_mask64x2(mask) as usize & 3;
+        let control = u8x16::simd_from(self, crate::support::compact_128::COMPRESS_64[bits].0);
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
     }
     #[inline(always)]
     fn compress_merge_i64x2(
@@ -5902,23 +5822,17 @@ impl Simd for Sse4_2 {
         mask: mask64x2<Self>,
         merge: i64x2<Self>,
     ) -> i64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        let bits = self.to_bitmask_mask64x2(mask) as usize & 3;
+        let control = u8x16::simd_from(self, crate::support::compact_128::COMPRESS_64[bits].0);
+        let compressed = self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control);
+        let inactive = self.simd_lt_i8x16(i8x16::from_bytes(control), i8x16::splat(self, 0));
+        Bytes::from_bytes(self.select_u8x16(inactive, Bytes::to_bytes(merge), compressed))
     }
     #[inline(always)]
     fn expand_i64x2(self, values: i64x2<Self>, mask: mask64x2<Self>) -> i64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
+        let bits = self.to_bitmask_mask64x2(mask) as usize & 3;
+        let control = u8x16::simd_from(self, crate::support::compact_128::EXPAND_64[bits].0);
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
     }
     #[inline(always)]
     fn expand_merge_i64x2(
@@ -5927,15 +5841,10 @@ impl Simd for Sse4_2 {
         mask: mask64x2<Self>,
         merge: i64x2<Self>,
     ) -> i64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        let bits = self.to_bitmask_mask64x2(mask) as usize & 3;
+        let control = u8x16::simd_from(self, crate::support::compact_128::EXPAND_64[bits].0);
+        let expanded = Bytes::from_bytes(self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control));
+        self.select_i64x2(mask, expanded, merge)
     }
     #[inline(always)]
     fn count_ones_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
@@ -6436,11 +6345,9 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn compress_u64x2(self, values: u64x2<Self>, mask: mask64x2<Self>) -> u64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
+        let bits = self.to_bitmask_mask64x2(mask) as usize & 3;
+        let control = u8x16::simd_from(self, crate::support::compact_128::COMPRESS_64[bits].0);
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
     }
     #[inline(always)]
     fn compress_merge_u64x2(
@@ -6449,23 +6356,17 @@ impl Simd for Sse4_2 {
         mask: mask64x2<Self>,
         merge: u64x2<Self>,
     ) -> u64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        let bits = self.to_bitmask_mask64x2(mask) as usize & 3;
+        let control = u8x16::simd_from(self, crate::support::compact_128::COMPRESS_64[bits].0);
+        let compressed = self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control);
+        let inactive = self.simd_lt_i8x16(i8x16::from_bytes(control), i8x16::splat(self, 0));
+        Bytes::from_bytes(self.select_u8x16(inactive, Bytes::to_bytes(merge), compressed))
     }
     #[inline(always)]
     fn expand_u64x2(self, values: u64x2<Self>, mask: mask64x2<Self>) -> u64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
+        let bits = self.to_bitmask_mask64x2(mask) as usize & 3;
+        let control = u8x16::simd_from(self, crate::support::compact_128::EXPAND_64[bits].0);
+        Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
     }
     #[inline(always)]
     fn expand_merge_u64x2(
@@ -6474,15 +6375,10 @@ impl Simd for Sse4_2 {
         mask: mask64x2<Self>,
         merge: u64x2<Self>,
     ) -> u64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        let bits = self.to_bitmask_mask64x2(mask) as usize & 3;
+        let control = u8x16::simd_from(self, crate::support::compact_128::EXPAND_64[bits].0);
+        let expanded = Bytes::from_bytes(self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control));
+        self.select_u64x2(mask, expanded, merge)
     }
     #[inline(always)]
     fn count_ones_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {

@@ -64,6 +64,63 @@ pub(crate) fn cross_block_slide_blocks_at<const N: usize, Block: Copy>(
     [lo_block, hi_block]
 }
 
+/// Byte-shuffle controls for whole 16-, 32-, or 64-bit elements in a 128-bit vector.
+#[allow(
+    dead_code,
+    reason = "Used only by backends with native byte-table shuffles"
+)]
+pub(crate) mod compact_128 {
+    use super::Aligned128;
+
+    #[allow(
+        clippy::cast_possible_truncation,
+        reason = "Byte indices are less than 16"
+    )]
+    const fn controls<const N: usize>(
+        element_bytes: usize,
+        expand: bool,
+    ) -> [Aligned128<[u8; 16]>; N] {
+        assert!(
+            matches!(element_bytes, 2 | 4 | 8),
+            "unsupported element size"
+        );
+        let lanes = 16 / element_bytes;
+        assert!(
+            N == 1 << lanes,
+            "one control row is required per selection mask"
+        );
+        let mut table = [Aligned128([0xff; 16]); N];
+        let mut mask = 0;
+        while mask < N {
+            let mut selected = 0;
+            let mut lane = 0;
+            while lane < lanes {
+                if mask & (1 << lane) != 0 {
+                    let source = if expand { selected } else { lane };
+                    let destination = if expand { lane } else { selected };
+                    let mut byte = 0;
+                    while byte < element_bytes {
+                        table[mask].0[destination * element_bytes + byte] =
+                            (source * element_bytes + byte) as u8;
+                        byte += 1;
+                    }
+                    selected += 1;
+                }
+                lane += 1;
+            }
+            mask += 1;
+        }
+        table
+    }
+
+    pub(crate) const COMPRESS_16: [Aligned128<[u8; 16]>; 256] = controls(2, false);
+    pub(crate) const EXPAND_16: [Aligned128<[u8; 16]>; 256] = controls(2, true);
+    pub(crate) const COMPRESS_32: [Aligned128<[u8; 16]>; 16] = controls(4, false);
+    pub(crate) const EXPAND_32: [Aligned128<[u8; 16]>; 16] = controls(4, true);
+    pub(crate) const COMPRESS_64: [Aligned128<[u8; 16]>; 4] = controls(8, false);
+    pub(crate) const EXPAND_64: [Aligned128<[u8; 16]>; 4] = controls(8, true);
+}
+
 const fn compact_control_table(expand: bool) -> [u64; 256] {
     // Expansion adds a lane offset to each byte of the packed control. Use 0x80
     // for inactive lanes so these additions preserve the zeroing bit without

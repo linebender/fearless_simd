@@ -691,6 +691,73 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
 pub(crate) type CompactMergeSwizzle =
     fn(&VecType, &TokenStream, &TokenStream, &TokenStream) -> TokenStream;
 
+/// Compact whole elements with one table lookup and one native 128-bit byte shuffle.
+pub(crate) fn compact_128_op(
+    op: Op,
+    ty: &VecType,
+    merge_swizzle: Option<CompactMergeSwizzle>,
+) -> TokenStream {
+    assert_eq!(ty.n_bits(), 128, "compact tables cover one 128-bit vector");
+    assert!(
+        matches!(ty.scalar_bits, 16 | 32 | 64),
+        "compact tables require wider elements"
+    );
+    let (expand, merge) = match op.sig {
+        OpSig::Compress { merge } => (false, merge),
+        OpSig::Expand { merge } => (true, merge),
+        _ => unreachable!("compact tables only implement compress/expand"),
+    };
+    let method_sig = op.simd_trait_method_sig(ty);
+    let to_bitmask = generic_op_name("to_bitmask", &ty.mask_ty());
+    let table = Ident::new(
+        &format!(
+            "{}_{}",
+            if expand { "EXPAND" } else { "COMPRESS" },
+            ty.scalar_bits
+        ),
+        Span::call_site(),
+    );
+    let lane_mask = Literal::usize_unsuffixed((1 << ty.len) - 1);
+    let finish = if !merge {
+        quote! {
+            Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
+        }
+    } else if let Some(merge_swizzle) = merge_swizzle {
+        let result = merge_swizzle(
+            &ty.bytes_ty(),
+            &quote! { Bytes::to_bytes(values) },
+            &quote! { control },
+            &quote! { Bytes::to_bytes(merge) },
+        );
+        quote! { Bytes::from_bytes(#result) }
+    } else if expand {
+        let select = generic_op_name("select", ty);
+        quote! {
+            let expanded = Bytes::from_bytes(
+                self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control),
+            );
+            self.#select(mask, expanded, merge)
+        }
+    } else {
+        quote! {
+            let compressed = self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control);
+            let inactive = self.simd_lt_i8x16(
+                i8x16::from_bytes(control), i8x16::splat(self, 0),
+            );
+            Bytes::from_bytes(self.select_u8x16(inactive, Bytes::to_bytes(merge), compressed))
+        }
+    };
+    // Merge forms may use the imprecise shuffle: every out-of-range result is
+    // replaced by a merge byte. Compression's 0xff controls also identify its tail.
+    quote! {
+        #method_sig {
+            let bits = self.#to_bitmask(mask) as usize & #lane_mask;
+            let control = u8x16::simd_from(self, crate::support::compact_128::#table[bits].0);
+            #finish
+        }
+    }
+}
+
 /// Backend capabilities used by [`composed_compact_op`].
 pub(crate) struct CompactOptions {
     /// Compact wide vectors a native 128-bit block at a time and splice them through memory.

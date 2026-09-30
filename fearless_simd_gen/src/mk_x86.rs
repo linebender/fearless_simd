@@ -7,11 +7,11 @@ use crate::arch::x86::{
     unpack_intrinsic,
 };
 use crate::generic::{
-    byte_compact_op, concat_swizzle_dyn_precise_body, count_zeros_method, fallback_method,
-    generic_block_combine, generic_block_split, generic_classify, generic_mask_from_bitmask,
-    generic_mask_set, generic_op, generic_op_name, integer_lane_mask_rotate,
-    integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body, reverse_method,
-    reverse_vector_mask_method,
+    byte_compact_op, compact_128_op, concat_swizzle_dyn_precise_body, count_zeros_method,
+    fallback_method, generic_block_combine, generic_block_split, generic_classify,
+    generic_mask_from_bitmask, generic_mask_set, generic_op, generic_op_name,
+    integer_lane_mask_rotate, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
+    reverse_method, reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{
@@ -332,6 +332,11 @@ impl Level for X86 {
             OpSig::Compress { .. } | OpSig::Expand { .. } => {
                 if *self == Self::Avx512 {
                     self.handle_avx512_compact_op(op, vec_ty)
+                } else if matches!(*self, Self::Sse4_2 | Self::Avx2)
+                    && vec_ty.n_bits() == 128
+                    && matches!(vec_ty.scalar_bits, 16 | 32 | 64)
+                {
+                    compact_128_op(op, vec_ty, None)
                 } else if *vec_ty != vec_ty.bytes_ty() {
                     byte_compact_op(op, vec_ty)
                 } else if matches!(*self, Self::Sse4_2 | Self::Avx2) && vec_ty.len == 16 {
