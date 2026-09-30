@@ -11241,9 +11241,10 @@ pub trait SimdMask<S: Simd>:
     #[doc = r""]
     #[doc = r" False lanes are encoded as all zeroes (integer value 0), and true lanes are encoded as all ones"]
     #[doc = r" (integer value -1)."]
-    type Element: SimdElement;
+    type Element: SimdIntElement<Mask = Self::Element> + core::ops::Neg<Output = Self::Element>;
     #[doc = r" This mask's corresponding integer vector type."]
-    type Ints: SimdBase<S, Element = Self::Element, Mask = Self>;
+    type Ints: SimdInt<S, Element = Self::Element, Mask = Self>
+        + core::ops::Neg<Output = Self::Ints>;
     #[doc = r" This mask type's lane count."]
     const LEN: usize;
     #[doc = r" Create a SIMD mask with all lanes set to the given boolean value."]
