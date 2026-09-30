@@ -130,10 +130,14 @@ pub(crate) enum OpSig {
         quantifier: Quantifier,
         condition: bool,
     },
-    /// Takes a compact bitmask and returns the corresponding mask vector type.
+    /// Takes a compact bitmask and returns its mask vector representation.
     MaskFromBitmask,
     /// Takes a mask vector type and returns its compact bitmask representation.
     MaskToBitmask,
+    /// Takes an integer vector type and converts it to the corresponding mask vector type.
+    MaskFromVector,
+    /// Takes a mask vector type and converts it to the corresponding integer vector type.
+    MaskToVector,
     /// Takes a mutable mask vector, a lane index, and a boolean, and updates the lane in place.
     MaskSet,
     /// Takes a single argument of the vector type, and returns the associated mask type.
@@ -371,6 +375,14 @@ impl Op {
             OpSig::MaskReduce { .. } => (vec![vec], quote! { bool }),
             OpSig::MaskFromBitmask => (vec![quote! { u64 }], vec),
             OpSig::MaskToBitmask => (vec![vec], quote! { u64 }),
+            OpSig::MaskFromVector => {
+                let ints_ty = vec_ty.cast(ScalarType::Int).rust();
+                (vec![quote! { #ints_ty<#simd_ty> }], vec)
+            }
+            OpSig::MaskToVector => {
+                let ints_ty = vec_ty.cast(ScalarType::Int).rust();
+                (vec![vec], quote! { #ints_ty<#simd_ty> })
+            }
             OpSig::MaskSet => (
                 vec![quote! { &mut #vec }, quote! { usize }, quote! { bool }],
                 quote! { () },
@@ -415,7 +427,11 @@ impl Op {
             OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } => {
                 return None;
             }
-            OpSig::MaskFromBitmask | OpSig::MaskToBitmask | OpSig::MaskSet => return None,
+            OpSig::MaskFromBitmask
+            | OpSig::MaskToBitmask
+            | OpSig::MaskFromVector
+            | OpSig::MaskToVector
+            | OpSig::MaskSet => return None,
             OpSig::Unary | OpSig::Cvt { .. } => {
                 let arg0 = &arg_names[0];
                 quote! { (#arg0) -> Self }
@@ -893,6 +909,18 @@ const MASK_REPRESENTATION_OPS: &[Op] = &[
         OpKind::AssociatedOnly,
         OpSig::MaskToBitmask,
         "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared.",
+    ),
+    Op::new(
+        "from_vector",
+        OpKind::VecTraitMethod,
+        OpSig::MaskFromVector,
+        "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior.",
+    ),
+    Op::new(
+        "to_vector",
+        OpKind::VecTraitMethod,
+        OpSig::MaskToVector,
+        "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0.",
     ),
     Op::new(
         "set",
@@ -1850,6 +1878,8 @@ impl OpSig {
                 | Self::Combine { .. }
                 | Self::LoadInterleaved { .. }
                 | Self::StoreInterleaved { .. }
+                | Self::MaskFromVector
+                | Self::MaskToVector
                 | Self::MaskSet
                 | Self::UnaryClassify
                 | Self::RotateElements { .. }
@@ -1893,6 +1923,7 @@ impl OpSig {
         match self {
             Self::Splat => &["val"],
             Self::MaskFromBitmask => &["bits"],
+            Self::MaskFromVector => &["vector"],
             Self::MaskSet => &["a", "index", "value"],
             Self::Unary
             | Self::Reduce { .. }
@@ -1902,6 +1933,7 @@ impl OpSig {
             | Self::Widen { .. }
             | Self::MaskReduce { .. }
             | Self::MaskToBitmask
+            | Self::MaskToVector
             | Self::UnaryClassify => &["a"],
             Self::SwizzleDynWithinBlocks | Self::SwizzleDyn | Self::SwizzleDynPrecise => {
                 &["a", "indices"]
@@ -1930,6 +1962,8 @@ impl OpSig {
             | Self::StoreInterleaved { .. }
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
+            | Self::MaskFromVector
+            | Self::MaskToVector
             | Self::MaskSet => &[],
             Self::Unary
             | Self::Reduce { .. }
@@ -2003,6 +2037,8 @@ impl OpSig {
             | Self::RotateElements { .. }
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
+            | Self::MaskFromVector
+            | Self::MaskToVector
             | Self::MaskSet
             | Self::LoadInterleaved { .. }
             | Self::StoreInterleaved { .. }
