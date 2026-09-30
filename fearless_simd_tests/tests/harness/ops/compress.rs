@@ -899,6 +899,7 @@ fn compact_u32x16<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask32x16::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 16];
@@ -1087,6 +1088,7 @@ fn compact_i32x16<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask32x16::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 16];
@@ -1272,6 +1274,7 @@ fn compact_u64x8<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask64x8::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 8];
@@ -1460,6 +1463,7 @@ fn compact_i64x8<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask64x8::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 8];
@@ -1724,6 +1728,7 @@ fn compact_f32x16<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask32x16::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 16];
@@ -2014,6 +2019,7 @@ fn compact_f64x8<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask64x8::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 8];

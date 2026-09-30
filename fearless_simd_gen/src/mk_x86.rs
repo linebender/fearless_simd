@@ -333,6 +333,11 @@ impl Level for X86 {
                 if *self == Self::Avx512 {
                     self.handle_avx512_compact_op(op, vec_ty)
                 } else if *self == Self::Avx2
+                    && vec_ty.n_bits() == 512
+                    && matches!(vec_ty.scalar_bits, 32 | 64)
+                {
+                    self.handle_avx2_wide_dword_compact(op, vec_ty)
+                } else if *self == Self::Avx2
                     && vec_ty.n_bits() == 256
                     && matches!(vec_ty.scalar_bits, 32 | 64)
                 {
@@ -1299,6 +1304,111 @@ fn expand_16_control(block_bits: TokenStream) -> TokenStream {
 }
 
 impl X86 {
+    /// Reuse native dword/qword compaction, joining the halves with register permutations.
+    fn handle_avx2_wide_dword_compact(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        assert!(*self == Self::Avx2, "wide dword compaction requires AVX2");
+        assert_eq!(vec_ty.n_bits(), 512, "requires two native AVX2 vectors");
+        assert!(
+            matches!(vec_ty.scalar_bits, 32 | 64),
+            "requires dword/qword elements"
+        );
+        let vec = vec_ty.rust();
+        let half = vec_ty.split_operand().unwrap().rust();
+        let low_dwords = if vec_ty.scalar_bits == 32 {
+            quote! { low_count }
+        } else {
+            quote! { low_count * 2 }
+        };
+        let split_mask = generic_op_name("split", &vec_ty.mask_ty());
+        self.kernel_method(op, vec_ty, |token| {
+            let body = match op.sig {
+                OpSig::Compress { merge } => {
+                    let empty = if merge {
+                        quote! { merge }
+                    } else if vec_ty.scalar == ScalarType::Float {
+                        quote! { #vec::splat(#token, 0.0) }
+                    } else {
+                        quote! { #vec::splat(#token, 0) }
+                    };
+                    let all = Literal::u64_unsuffixed((1_u64 << vec_ty.len) - 1);
+                    let compressed = quote! {
+                        #vec {
+                            val: crate::transmute::checked_transmute_copy(&[result_low, result_high]),
+                            simd: #token,
+                        }
+                    };
+                    let finish = if merge {
+                        let mask_ty = vec_ty.mask_ty().rust();
+                        let select = generic_op_name("select", vec_ty);
+                        quote! {
+                            let compressed = #compressed;
+                            let count = low_count + high_mask.to_bitmask().count_ones() as usize;
+                            let prefix = #mask_ty::from_bitmask(#token, (1u64 << count) - 1);
+                            #token.#select(prefix, compressed, merge)
+                        }
+                    } else {
+                        compressed
+                    };
+                    quote! {
+                        let bits = mask.to_bitmask();
+                        if bits == 0 { return #empty; }
+                        if bits == #all { return values; }
+                        let low = low.compress(low_mask);
+                        let high = high.compress(high_mask);
+                        let control: __m256i = crate::transmute::checked_transmute_copy(
+                            &crate::support::compact_256::SHIFTS[#low_dwords],
+                        );
+                        let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                        let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                        let shifted = _mm256_permutevar8x32_epi32(high_bits, control);
+                        // Negative controls identify the low half's selected prefix.
+                        // The rotated high half fills the rest, spilling its tail
+                        // into that same prefix of the second output register.
+                        let result_low = _mm256_blendv_epi8(shifted, low_bits, control);
+                        let result_high = _mm256_and_si256(shifted, _mm256_srai_epi32::<31>(control));
+                        #finish
+                    }
+                }
+                OpSig::Expand { merge } => {
+                    let finish = if merge {
+                        quote! {
+                            let (low_merge, high_merge) = merge.split();
+                            low.expand_merge(low_mask, low_merge)
+                                .combine(high.expand_merge(high_mask, high_merge))
+                        }
+                    } else {
+                        quote! { low.expand(low_mask).combine(high.expand(high_mask)) }
+                    };
+                    quote! {
+                        // Assemble the packed window starting after the elements
+                        // consumed by the low half. The same controls rotate both
+                        // inputs; negative indices select from the low register.
+                        let control: __m256i = crate::transmute::checked_transmute_copy(
+                            &crate::support::compact_256::SHIFTS[8 - (#low_dwords)],
+                        );
+                        let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                        let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                        let from_low = _mm256_permutevar8x32_epi32(low_bits, control);
+                        let from_high = _mm256_permutevar8x32_epi32(high_bits, control);
+                        let packed = _mm256_blendv_epi8(from_high, from_low, control);
+                        let high = #half {
+                            val: crate::transmute::checked_transmute_copy(&packed),
+                            simd: #token,
+                        };
+                        #finish
+                    }
+                }
+                _ => unreachable!("only compact operations reuse the native halves"),
+            };
+            quote! {
+                let (low_mask, high_mask) = #token.#split_mask(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                #body
+            }
+        })
+    }
+
     /// Compact whole dwords/qwords with a single full-width AVX2 permutation.
     fn handle_avx2_dword_compact(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         assert!(*self == Self::Avx2, "dword compaction requires AVX2");

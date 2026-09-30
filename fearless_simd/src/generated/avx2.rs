@@ -14106,11 +14106,36 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn compress_f32x16(self, values: f32x16<Self>, mask: mask32x16<Self>) -> f32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, values: f32x16<Avx2>, mask: mask32x16<Avx2>) -> f32x16<Avx2> {
+                let (low_mask, high_mask) = token.split_mask32x16(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let bits = mask.to_bitmask();
+                if bits == 0 {
+                    return f32x16::splat(token, 0.0);
+                }
+                if bits == 65535 {
+                    return values;
+                }
+                let low = low.compress(low_mask);
+                let high = high.compress(high_mask);
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[low_count],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let shifted = _mm256_permutevar8x32_epi32(high_bits, control);
+                let result_low = _mm256_blendv_epi8(shifted, low_bits, control);
+                let result_high = _mm256_and_si256(shifted, _mm256_srai_epi32::<31>(control));
+                f32x16 {
+                    val: crate::transmute::checked_transmute_copy(&[result_low, result_high]),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, values, mask)
     }
     #[inline(always)]
     fn compress_merge_f32x16(
@@ -14119,23 +14144,69 @@ impl Simd for Avx2 {
         mask: mask32x16<Self>,
         merge: f32x16<Self>,
     ) -> f32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                values: f32x16<Avx2>,
+                mask: mask32x16<Avx2>,
+                merge: f32x16<Avx2>,
+            ) -> f32x16<Avx2> {
+                let (low_mask, high_mask) = token.split_mask32x16(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let bits = mask.to_bitmask();
+                if bits == 0 {
+                    return merge;
+                }
+                if bits == 65535 {
+                    return values;
+                }
+                let low = low.compress(low_mask);
+                let high = high.compress(high_mask);
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[low_count],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let shifted = _mm256_permutevar8x32_epi32(high_bits, control);
+                let result_low = _mm256_blendv_epi8(shifted, low_bits, control);
+                let result_high = _mm256_and_si256(shifted, _mm256_srai_epi32::<31>(control));
+                let compressed = f32x16 {
+                    val: crate::transmute::checked_transmute_copy(&[result_low, result_high]),
+                    simd: token,
+                };
+                let count = low_count + high_mask.to_bitmask().count_ones() as usize;
+                let prefix = mask32x16::from_bitmask(token, (1u64 << count) - 1);
+                token.select_f32x16(prefix, compressed, merge)
+            }
+        );
+        kernel(self, values, mask, merge)
     }
     #[inline(always)]
     fn expand_f32x16(self, values: f32x16<Self>, mask: mask32x16<Self>) -> f32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, values: f32x16<Avx2>, mask: mask32x16<Avx2>) -> f32x16<Avx2> {
+                let (low_mask, high_mask) = token.split_mask32x16(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[8 - (low_count)],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let from_low = _mm256_permutevar8x32_epi32(low_bits, control);
+                let from_high = _mm256_permutevar8x32_epi32(high_bits, control);
+                let packed = _mm256_blendv_epi8(from_high, from_low, control);
+                let high = f32x8 {
+                    val: crate::transmute::checked_transmute_copy(&packed),
+                    simd: token,
+                };
+                low.expand(low_mask).combine(high.expand(high_mask))
+            }
+        );
+        kernel(self, values, mask)
     }
     #[inline(always)]
     fn expand_merge_f32x16(
@@ -14144,15 +14215,35 @@ impl Simd for Avx2 {
         mask: mask32x16<Self>,
         merge: f32x16<Self>,
     ) -> f32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                values: f32x16<Avx2>,
+                mask: mask32x16<Avx2>,
+                merge: f32x16<Avx2>,
+            ) -> f32x16<Avx2> {
+                let (low_mask, high_mask) = token.split_mask32x16(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[8 - (low_count)],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let from_low = _mm256_permutevar8x32_epi32(low_bits, control);
+                let from_high = _mm256_permutevar8x32_epi32(high_bits, control);
+                let packed = _mm256_blendv_epi8(from_high, from_low, control);
+                let high = f32x8 {
+                    val: crate::transmute::checked_transmute_copy(&packed),
+                    simd: token,
+                };
+                let (low_merge, high_merge) = merge.split();
+                low.expand_merge(low_mask, low_merge)
+                    .combine(high.expand_merge(high_mask, high_merge))
+            }
+        );
+        kernel(self, values, mask, merge)
     }
     #[inline(always)]
     fn is_nan_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
@@ -15260,11 +15351,36 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn compress_i32x16(self, values: i32x16<Self>, mask: mask32x16<Self>) -> i32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, values: i32x16<Avx2>, mask: mask32x16<Avx2>) -> i32x16<Avx2> {
+                let (low_mask, high_mask) = token.split_mask32x16(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let bits = mask.to_bitmask();
+                if bits == 0 {
+                    return i32x16::splat(token, 0);
+                }
+                if bits == 65535 {
+                    return values;
+                }
+                let low = low.compress(low_mask);
+                let high = high.compress(high_mask);
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[low_count],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let shifted = _mm256_permutevar8x32_epi32(high_bits, control);
+                let result_low = _mm256_blendv_epi8(shifted, low_bits, control);
+                let result_high = _mm256_and_si256(shifted, _mm256_srai_epi32::<31>(control));
+                i32x16 {
+                    val: crate::transmute::checked_transmute_copy(&[result_low, result_high]),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, values, mask)
     }
     #[inline(always)]
     fn compress_merge_i32x16(
@@ -15273,23 +15389,69 @@ impl Simd for Avx2 {
         mask: mask32x16<Self>,
         merge: i32x16<Self>,
     ) -> i32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                values: i32x16<Avx2>,
+                mask: mask32x16<Avx2>,
+                merge: i32x16<Avx2>,
+            ) -> i32x16<Avx2> {
+                let (low_mask, high_mask) = token.split_mask32x16(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let bits = mask.to_bitmask();
+                if bits == 0 {
+                    return merge;
+                }
+                if bits == 65535 {
+                    return values;
+                }
+                let low = low.compress(low_mask);
+                let high = high.compress(high_mask);
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[low_count],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let shifted = _mm256_permutevar8x32_epi32(high_bits, control);
+                let result_low = _mm256_blendv_epi8(shifted, low_bits, control);
+                let result_high = _mm256_and_si256(shifted, _mm256_srai_epi32::<31>(control));
+                let compressed = i32x16 {
+                    val: crate::transmute::checked_transmute_copy(&[result_low, result_high]),
+                    simd: token,
+                };
+                let count = low_count + high_mask.to_bitmask().count_ones() as usize;
+                let prefix = mask32x16::from_bitmask(token, (1u64 << count) - 1);
+                token.select_i32x16(prefix, compressed, merge)
+            }
+        );
+        kernel(self, values, mask, merge)
     }
     #[inline(always)]
     fn expand_i32x16(self, values: i32x16<Self>, mask: mask32x16<Self>) -> i32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, values: i32x16<Avx2>, mask: mask32x16<Avx2>) -> i32x16<Avx2> {
+                let (low_mask, high_mask) = token.split_mask32x16(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[8 - (low_count)],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let from_low = _mm256_permutevar8x32_epi32(low_bits, control);
+                let from_high = _mm256_permutevar8x32_epi32(high_bits, control);
+                let packed = _mm256_blendv_epi8(from_high, from_low, control);
+                let high = i32x8 {
+                    val: crate::transmute::checked_transmute_copy(&packed),
+                    simd: token,
+                };
+                low.expand(low_mask).combine(high.expand(high_mask))
+            }
+        );
+        kernel(self, values, mask)
     }
     #[inline(always)]
     fn expand_merge_i32x16(
@@ -15298,15 +15460,35 @@ impl Simd for Avx2 {
         mask: mask32x16<Self>,
         merge: i32x16<Self>,
     ) -> i32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                values: i32x16<Avx2>,
+                mask: mask32x16<Avx2>,
+                merge: i32x16<Avx2>,
+            ) -> i32x16<Avx2> {
+                let (low_mask, high_mask) = token.split_mask32x16(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[8 - (low_count)],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let from_low = _mm256_permutevar8x32_epi32(low_bits, control);
+                let from_high = _mm256_permutevar8x32_epi32(high_bits, control);
+                let packed = _mm256_blendv_epi8(from_high, from_low, control);
+                let high = i32x8 {
+                    val: crate::transmute::checked_transmute_copy(&packed),
+                    simd: token,
+                };
+                let (low_merge, high_merge) = merge.split();
+                low.expand_merge(low_mask, low_merge)
+                    .combine(high.expand_merge(high_mask, high_merge))
+            }
+        );
+        kernel(self, values, mask, merge)
     }
     #[inline(always)]
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
@@ -15339,11 +15521,36 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn compress_u32x16(self, values: u32x16<Self>, mask: mask32x16<Self>) -> u32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, values: u32x16<Avx2>, mask: mask32x16<Avx2>) -> u32x16<Avx2> {
+                let (low_mask, high_mask) = token.split_mask32x16(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let bits = mask.to_bitmask();
+                if bits == 0 {
+                    return u32x16::splat(token, 0);
+                }
+                if bits == 65535 {
+                    return values;
+                }
+                let low = low.compress(low_mask);
+                let high = high.compress(high_mask);
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[low_count],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let shifted = _mm256_permutevar8x32_epi32(high_bits, control);
+                let result_low = _mm256_blendv_epi8(shifted, low_bits, control);
+                let result_high = _mm256_and_si256(shifted, _mm256_srai_epi32::<31>(control));
+                u32x16 {
+                    val: crate::transmute::checked_transmute_copy(&[result_low, result_high]),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, values, mask)
     }
     #[inline(always)]
     fn compress_merge_u32x16(
@@ -15352,23 +15559,69 @@ impl Simd for Avx2 {
         mask: mask32x16<Self>,
         merge: u32x16<Self>,
     ) -> u32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                values: u32x16<Avx2>,
+                mask: mask32x16<Avx2>,
+                merge: u32x16<Avx2>,
+            ) -> u32x16<Avx2> {
+                let (low_mask, high_mask) = token.split_mask32x16(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let bits = mask.to_bitmask();
+                if bits == 0 {
+                    return merge;
+                }
+                if bits == 65535 {
+                    return values;
+                }
+                let low = low.compress(low_mask);
+                let high = high.compress(high_mask);
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[low_count],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let shifted = _mm256_permutevar8x32_epi32(high_bits, control);
+                let result_low = _mm256_blendv_epi8(shifted, low_bits, control);
+                let result_high = _mm256_and_si256(shifted, _mm256_srai_epi32::<31>(control));
+                let compressed = u32x16 {
+                    val: crate::transmute::checked_transmute_copy(&[result_low, result_high]),
+                    simd: token,
+                };
+                let count = low_count + high_mask.to_bitmask().count_ones() as usize;
+                let prefix = mask32x16::from_bitmask(token, (1u64 << count) - 1);
+                token.select_u32x16(prefix, compressed, merge)
+            }
+        );
+        kernel(self, values, mask, merge)
     }
     #[inline(always)]
     fn expand_u32x16(self, values: u32x16<Self>, mask: mask32x16<Self>) -> u32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, values: u32x16<Avx2>, mask: mask32x16<Avx2>) -> u32x16<Avx2> {
+                let (low_mask, high_mask) = token.split_mask32x16(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[8 - (low_count)],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let from_low = _mm256_permutevar8x32_epi32(low_bits, control);
+                let from_high = _mm256_permutevar8x32_epi32(high_bits, control);
+                let packed = _mm256_blendv_epi8(from_high, from_low, control);
+                let high = u32x8 {
+                    val: crate::transmute::checked_transmute_copy(&packed),
+                    simd: token,
+                };
+                low.expand(low_mask).combine(high.expand(high_mask))
+            }
+        );
+        kernel(self, values, mask)
     }
     #[inline(always)]
     fn expand_merge_u32x16(
@@ -15377,15 +15630,35 @@ impl Simd for Avx2 {
         mask: mask32x16<Self>,
         merge: u32x16<Self>,
     ) -> u32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                values: u32x16<Avx2>,
+                mask: mask32x16<Avx2>,
+                merge: u32x16<Avx2>,
+            ) -> u32x16<Avx2> {
+                let (low_mask, high_mask) = token.split_mask32x16(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[8 - (low_count)],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let from_low = _mm256_permutevar8x32_epi32(low_bits, control);
+                let from_high = _mm256_permutevar8x32_epi32(high_bits, control);
+                let packed = _mm256_blendv_epi8(from_high, from_low, control);
+                let high = u32x8 {
+                    val: crate::transmute::checked_transmute_copy(&packed),
+                    simd: token,
+                };
+                let (low_merge, high_merge) = merge.split();
+                low.expand_merge(low_mask, low_merge)
+                    .combine(high.expand_merge(high_mask, high_merge))
+            }
+        );
+        kernel(self, values, mask, merge)
     }
     #[inline(always)]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>) {
@@ -15499,11 +15772,36 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn compress_f64x8(self, values: f64x8<Self>, mask: mask64x8<Self>) -> f64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, values: f64x8<Avx2>, mask: mask64x8<Avx2>) -> f64x8<Avx2> {
+                let (low_mask, high_mask) = token.split_mask64x8(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let bits = mask.to_bitmask();
+                if bits == 0 {
+                    return f64x8::splat(token, 0.0);
+                }
+                if bits == 255 {
+                    return values;
+                }
+                let low = low.compress(low_mask);
+                let high = high.compress(high_mask);
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[low_count * 2],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let shifted = _mm256_permutevar8x32_epi32(high_bits, control);
+                let result_low = _mm256_blendv_epi8(shifted, low_bits, control);
+                let result_high = _mm256_and_si256(shifted, _mm256_srai_epi32::<31>(control));
+                f64x8 {
+                    val: crate::transmute::checked_transmute_copy(&[result_low, result_high]),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, values, mask)
     }
     #[inline(always)]
     fn compress_merge_f64x8(
@@ -15512,23 +15810,69 @@ impl Simd for Avx2 {
         mask: mask64x8<Self>,
         merge: f64x8<Self>,
     ) -> f64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                values: f64x8<Avx2>,
+                mask: mask64x8<Avx2>,
+                merge: f64x8<Avx2>,
+            ) -> f64x8<Avx2> {
+                let (low_mask, high_mask) = token.split_mask64x8(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let bits = mask.to_bitmask();
+                if bits == 0 {
+                    return merge;
+                }
+                if bits == 255 {
+                    return values;
+                }
+                let low = low.compress(low_mask);
+                let high = high.compress(high_mask);
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[low_count * 2],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let shifted = _mm256_permutevar8x32_epi32(high_bits, control);
+                let result_low = _mm256_blendv_epi8(shifted, low_bits, control);
+                let result_high = _mm256_and_si256(shifted, _mm256_srai_epi32::<31>(control));
+                let compressed = f64x8 {
+                    val: crate::transmute::checked_transmute_copy(&[result_low, result_high]),
+                    simd: token,
+                };
+                let count = low_count + high_mask.to_bitmask().count_ones() as usize;
+                let prefix = mask64x8::from_bitmask(token, (1u64 << count) - 1);
+                token.select_f64x8(prefix, compressed, merge)
+            }
+        );
+        kernel(self, values, mask, merge)
     }
     #[inline(always)]
     fn expand_f64x8(self, values: f64x8<Self>, mask: mask64x8<Self>) -> f64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, values: f64x8<Avx2>, mask: mask64x8<Avx2>) -> f64x8<Avx2> {
+                let (low_mask, high_mask) = token.split_mask64x8(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[8 - (low_count * 2)],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let from_low = _mm256_permutevar8x32_epi32(low_bits, control);
+                let from_high = _mm256_permutevar8x32_epi32(high_bits, control);
+                let packed = _mm256_blendv_epi8(from_high, from_low, control);
+                let high = f64x4 {
+                    val: crate::transmute::checked_transmute_copy(&packed),
+                    simd: token,
+                };
+                low.expand(low_mask).combine(high.expand(high_mask))
+            }
+        );
+        kernel(self, values, mask)
     }
     #[inline(always)]
     fn expand_merge_f64x8(
@@ -15537,15 +15881,35 @@ impl Simd for Avx2 {
         mask: mask64x8<Self>,
         merge: f64x8<Self>,
     ) -> f64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                values: f64x8<Avx2>,
+                mask: mask64x8<Avx2>,
+                merge: f64x8<Avx2>,
+            ) -> f64x8<Avx2> {
+                let (low_mask, high_mask) = token.split_mask64x8(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[8 - (low_count * 2)],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let from_low = _mm256_permutevar8x32_epi32(low_bits, control);
+                let from_high = _mm256_permutevar8x32_epi32(high_bits, control);
+                let packed = _mm256_blendv_epi8(from_high, from_low, control);
+                let high = f64x4 {
+                    val: crate::transmute::checked_transmute_copy(&packed),
+                    simd: token,
+                };
+                let (low_merge, high_merge) = merge.split();
+                low.expand_merge(low_mask, low_merge)
+                    .combine(high.expand_merge(high_mask, high_merge))
+            }
+        );
+        kernel(self, values, mask, merge)
     }
     #[inline(always)]
     fn is_nan_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
@@ -15610,11 +15974,36 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn compress_i64x8(self, values: i64x8<Self>, mask: mask64x8<Self>) -> i64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, values: i64x8<Avx2>, mask: mask64x8<Avx2>) -> i64x8<Avx2> {
+                let (low_mask, high_mask) = token.split_mask64x8(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let bits = mask.to_bitmask();
+                if bits == 0 {
+                    return i64x8::splat(token, 0);
+                }
+                if bits == 255 {
+                    return values;
+                }
+                let low = low.compress(low_mask);
+                let high = high.compress(high_mask);
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[low_count * 2],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let shifted = _mm256_permutevar8x32_epi32(high_bits, control);
+                let result_low = _mm256_blendv_epi8(shifted, low_bits, control);
+                let result_high = _mm256_and_si256(shifted, _mm256_srai_epi32::<31>(control));
+                i64x8 {
+                    val: crate::transmute::checked_transmute_copy(&[result_low, result_high]),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, values, mask)
     }
     #[inline(always)]
     fn compress_merge_i64x8(
@@ -15623,23 +16012,69 @@ impl Simd for Avx2 {
         mask: mask64x8<Self>,
         merge: i64x8<Self>,
     ) -> i64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                values: i64x8<Avx2>,
+                mask: mask64x8<Avx2>,
+                merge: i64x8<Avx2>,
+            ) -> i64x8<Avx2> {
+                let (low_mask, high_mask) = token.split_mask64x8(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let bits = mask.to_bitmask();
+                if bits == 0 {
+                    return merge;
+                }
+                if bits == 255 {
+                    return values;
+                }
+                let low = low.compress(low_mask);
+                let high = high.compress(high_mask);
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[low_count * 2],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let shifted = _mm256_permutevar8x32_epi32(high_bits, control);
+                let result_low = _mm256_blendv_epi8(shifted, low_bits, control);
+                let result_high = _mm256_and_si256(shifted, _mm256_srai_epi32::<31>(control));
+                let compressed = i64x8 {
+                    val: crate::transmute::checked_transmute_copy(&[result_low, result_high]),
+                    simd: token,
+                };
+                let count = low_count + high_mask.to_bitmask().count_ones() as usize;
+                let prefix = mask64x8::from_bitmask(token, (1u64 << count) - 1);
+                token.select_i64x8(prefix, compressed, merge)
+            }
+        );
+        kernel(self, values, mask, merge)
     }
     #[inline(always)]
     fn expand_i64x8(self, values: i64x8<Self>, mask: mask64x8<Self>) -> i64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, values: i64x8<Avx2>, mask: mask64x8<Avx2>) -> i64x8<Avx2> {
+                let (low_mask, high_mask) = token.split_mask64x8(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[8 - (low_count * 2)],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let from_low = _mm256_permutevar8x32_epi32(low_bits, control);
+                let from_high = _mm256_permutevar8x32_epi32(high_bits, control);
+                let packed = _mm256_blendv_epi8(from_high, from_low, control);
+                let high = i64x4 {
+                    val: crate::transmute::checked_transmute_copy(&packed),
+                    simd: token,
+                };
+                low.expand(low_mask).combine(high.expand(high_mask))
+            }
+        );
+        kernel(self, values, mask)
     }
     #[inline(always)]
     fn expand_merge_i64x8(
@@ -15648,15 +16083,35 @@ impl Simd for Avx2 {
         mask: mask64x8<Self>,
         merge: i64x8<Self>,
     ) -> i64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                values: i64x8<Avx2>,
+                mask: mask64x8<Avx2>,
+                merge: i64x8<Avx2>,
+            ) -> i64x8<Avx2> {
+                let (low_mask, high_mask) = token.split_mask64x8(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[8 - (low_count * 2)],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let from_low = _mm256_permutevar8x32_epi32(low_bits, control);
+                let from_high = _mm256_permutevar8x32_epi32(high_bits, control);
+                let packed = _mm256_blendv_epi8(from_high, from_low, control);
+                let high = i64x4 {
+                    val: crate::transmute::checked_transmute_copy(&packed),
+                    simd: token,
+                };
+                let (low_merge, high_merge) = merge.split();
+                low.expand_merge(low_mask, low_merge)
+                    .combine(high.expand_merge(high_mask, high_merge))
+            }
+        );
+        kernel(self, values, mask, merge)
     }
     #[inline(always)]
     fn split_i64x8(self, a: i64x8<Self>) -> (i64x4<Self>, i64x4<Self>) {
@@ -15689,11 +16144,36 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn compress_u64x8(self, values: u64x8<Self>, mask: mask64x8<Self>) -> u64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, values: u64x8<Avx2>, mask: mask64x8<Avx2>) -> u64x8<Avx2> {
+                let (low_mask, high_mask) = token.split_mask64x8(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let bits = mask.to_bitmask();
+                if bits == 0 {
+                    return u64x8::splat(token, 0);
+                }
+                if bits == 255 {
+                    return values;
+                }
+                let low = low.compress(low_mask);
+                let high = high.compress(high_mask);
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[low_count * 2],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let shifted = _mm256_permutevar8x32_epi32(high_bits, control);
+                let result_low = _mm256_blendv_epi8(shifted, low_bits, control);
+                let result_high = _mm256_and_si256(shifted, _mm256_srai_epi32::<31>(control));
+                u64x8 {
+                    val: crate::transmute::checked_transmute_copy(&[result_low, result_high]),
+                    simd: token,
+                }
+            }
+        );
+        kernel(self, values, mask)
     }
     #[inline(always)]
     fn compress_merge_u64x8(
@@ -15702,23 +16182,69 @@ impl Simd for Avx2 {
         mask: mask64x8<Self>,
         merge: u64x8<Self>,
     ) -> u64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                values: u64x8<Avx2>,
+                mask: mask64x8<Avx2>,
+                merge: u64x8<Avx2>,
+            ) -> u64x8<Avx2> {
+                let (low_mask, high_mask) = token.split_mask64x8(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let bits = mask.to_bitmask();
+                if bits == 0 {
+                    return merge;
+                }
+                if bits == 255 {
+                    return values;
+                }
+                let low = low.compress(low_mask);
+                let high = high.compress(high_mask);
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[low_count * 2],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let shifted = _mm256_permutevar8x32_epi32(high_bits, control);
+                let result_low = _mm256_blendv_epi8(shifted, low_bits, control);
+                let result_high = _mm256_and_si256(shifted, _mm256_srai_epi32::<31>(control));
+                let compressed = u64x8 {
+                    val: crate::transmute::checked_transmute_copy(&[result_low, result_high]),
+                    simd: token,
+                };
+                let count = low_count + high_mask.to_bitmask().count_ones() as usize;
+                let prefix = mask64x8::from_bitmask(token, (1u64 << count) - 1);
+                token.select_u64x8(prefix, compressed, merge)
+            }
+        );
+        kernel(self, values, mask, merge)
     }
     #[inline(always)]
     fn expand_u64x8(self, values: u64x8<Self>, mask: mask64x8<Self>) -> u64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, values: u64x8<Avx2>, mask: mask64x8<Avx2>) -> u64x8<Avx2> {
+                let (low_mask, high_mask) = token.split_mask64x8(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[8 - (low_count * 2)],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let from_low = _mm256_permutevar8x32_epi32(low_bits, control);
+                let from_high = _mm256_permutevar8x32_epi32(high_bits, control);
+                let packed = _mm256_blendv_epi8(from_high, from_low, control);
+                let high = u64x4 {
+                    val: crate::transmute::checked_transmute_copy(&packed),
+                    simd: token,
+                };
+                low.expand(low_mask).combine(high.expand(high_mask))
+            }
+        );
+        kernel(self, values, mask)
     }
     #[inline(always)]
     fn expand_merge_u64x8(
@@ -15727,15 +16253,35 @@ impl Simd for Avx2 {
         mask: mask64x8<Self>,
         merge: u64x8<Self>,
     ) -> u64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                values: u64x8<Avx2>,
+                mask: mask64x8<Avx2>,
+                merge: u64x8<Avx2>,
+            ) -> u64x8<Avx2> {
+                let (low_mask, high_mask) = token.split_mask64x8(mask);
+                let low_count = low_mask.to_bitmask().count_ones() as usize;
+                let (low, high) = values.split();
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::SHIFTS[8 - (low_count * 2)],
+                );
+                let low_bits = crate::transmute::checked_transmute_copy(&low.val);
+                let high_bits = crate::transmute::checked_transmute_copy(&high.val);
+                let from_low = _mm256_permutevar8x32_epi32(low_bits, control);
+                let from_high = _mm256_permutevar8x32_epi32(high_bits, control);
+                let packed = _mm256_blendv_epi8(from_high, from_low, control);
+                let high = u64x4 {
+                    val: crate::transmute::checked_transmute_copy(&packed),
+                    simd: token,
+                };
+                let (low_merge, high_merge) = merge.split();
+                low.expand_merge(low_mask, low_merge)
+                    .combine(high.expand_merge(high_mask, high_merge))
+            }
+        );
+        kernel(self, values, mask, merge)
     }
     #[inline(always)]
     fn split_u64x8(self, a: u64x8<Self>) -> (u64x4<Self>, u64x4<Self>) {

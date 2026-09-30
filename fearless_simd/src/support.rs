@@ -174,6 +174,30 @@ pub(crate) mod compact_256 {
     pub(crate) static EXPAND_32: [Aligned256<[i32; 8]>; 256] = controls(1, true);
     pub(crate) static COMPRESS_64: [Aligned256<[i32; 8]>; 16] = controls(2, false);
     pub(crate) static EXPAND_64: [Aligned256<[i32; 8]>; 16] = controls(2, true);
+
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_possible_wrap,
+        reason = "Dword indices and offsets are at most eight"
+    )]
+    const fn shifts() -> [Aligned256<[i32; 8]>; 9] {
+        let mut table = [Aligned256([0; 8]); 9];
+        let mut offset = 0;
+        while offset <= 8 {
+            let mut lane = 0;
+            while lane < 8 {
+                table[offset].0[lane] = lane as i32 - offset as i32;
+                lane += 1;
+            }
+            offset += 1;
+        }
+        table
+    }
+
+    // VPERMD uses the low three bits to rotate by the offset. Negative controls
+    // (-8..=-1) have every byte's sign bit set, so the same row is a blend mask
+    // for the prefix crossing between two YMM registers. Qwords use even offsets.
+    pub(crate) static SHIFTS: [Aligned256<[i32; 8]>; 9] = shifts();
 }
 
 const fn compact_control_table(expand: bool) -> [u64; 256] {
