@@ -15,6 +15,7 @@ pub(crate) trait FloatExt {
     fn floor(self) -> Self;
     fn ceil(self) -> Self;
     fn round_ties_even(self) -> Self;
+    fn round(self) -> Self;
     fn fract(self) -> Self;
     fn sqrt(self) -> Self;
     fn trunc(self) -> Self;
