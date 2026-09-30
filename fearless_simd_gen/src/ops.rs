@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use anyhow::{Context, anyhow};
-use proc_macro2::{Ident, Literal, Span, TokenStream};
+use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 use std::fmt::Write;
 
@@ -280,46 +280,6 @@ impl Op {
                 );
 
                 #kernel_call
-            }
-        }
-    }
-
-    /// Generate a SIMD trait method whose local kernel uses an explicit target-feature set rather
-    /// than all features associated with the method's backend. This allows a higher backend to
-    /// reuse a lower backend's instruction formulation when wider instructions do not improve it.
-    pub(crate) fn simd_trait_kernel_method_with_target_features(
-        &self,
-        method_level: Ident,
-        target_features: &str,
-        vec_ty: &VecType,
-        body: impl FnOnce(&Ident) -> TokenStream,
-    ) -> TokenStream {
-        assert!(
-            !matches!(self.sig, OpSig::Slide { .. }),
-            "kernel! does not support const-generic methods"
-        );
-
-        let method_sig = self.simd_trait_method_sig(vec_ty);
-        let token = Ident::new("token", Span::call_site());
-        let target_features = Literal::string(target_features);
-        let kernel_body = body(&token);
-        let sig = self.simd_trait_sig_parts(vec_ty, quote! { #method_level });
-        let arg_decls = sig.arg_decls();
-        let call_args = &sig.arg_names;
-        let ret = &sig.ret;
-
-        quote! {
-            #method_sig {
-                #[inline]
-                #[target_feature(enable = #target_features)]
-                unsafe fn kernel(
-                    #token: #method_level #(, #arg_decls)*
-                ) -> #ret {
-                    #kernel_body
-                }
-
-                // SAFETY: the backend token guarantees this kernel's feature subset.
-                unsafe { kernel(self #(, #call_args)*) }
             }
         }
     }

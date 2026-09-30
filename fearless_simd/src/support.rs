@@ -121,6 +121,61 @@ pub(crate) mod compact_128 {
     pub(crate) const EXPAND_64: [Aligned128<[u8; 16]>; 4] = controls(8, true);
 }
 
+/// Dword-permutation controls for whole 32- or 64-bit elements in an AVX2 vector.
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub(crate) mod compact_256 {
+    use super::Aligned256;
+
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_possible_wrap,
+        reason = "Dword indices are less than eight"
+    )]
+    const fn controls<const N: usize>(
+        element_dwords: usize,
+        expand: bool,
+    ) -> [Aligned256<[i32; 8]>; N] {
+        assert!(matches!(element_dwords, 1 | 2), "unsupported element size");
+        let lanes = 8 / element_dwords;
+        assert!(
+            N == 1 << lanes,
+            "one control row is required per selection mask"
+        );
+        // VPERMD only uses the low three index bits. The -1 sentinel separately
+        // identifies inactive lanes for zero/merge fill after the permutation.
+        let mut table = [Aligned256([-1; 8]); N];
+        let mut mask = 0;
+        while mask < N {
+            let mut selected = 0;
+            let mut lane = 0;
+            while lane < lanes {
+                if mask & (1 << lane) != 0 {
+                    let source = if expand { selected } else { lane };
+                    let destination = if expand { lane } else { selected };
+                    let mut dword = 0;
+                    while dword < element_dwords {
+                        // Adjacent dwords of a qword always move together.
+                        table[mask].0[destination * element_dwords + dword] =
+                            (source * element_dwords + dword) as i32;
+                        dword += 1;
+                    }
+                    selected += 1;
+                }
+                lane += 1;
+            }
+            mask += 1;
+        }
+        table
+    }
+
+    // Full dword controls avoid the extra widening/validity work of packed byte
+    // controls, particularly on Zen 1/3. Signed, unsigned and float ops share them.
+    pub(crate) static COMPRESS_32: [Aligned256<[i32; 8]>; 256] = controls(1, false);
+    pub(crate) static EXPAND_32: [Aligned256<[i32; 8]>; 256] = controls(1, true);
+    pub(crate) static COMPRESS_64: [Aligned256<[i32; 8]>; 16] = controls(2, false);
+    pub(crate) static EXPAND_64: [Aligned256<[i32; 8]>; 16] = controls(2, true);
+}
+
 const fn compact_control_table(expand: bool) -> [u64; 256] {
     // Expansion adds a lane offset to each byte of the packed control. Use 0x80
     // for inactive lanes so these additions preserve the zeroing bit without

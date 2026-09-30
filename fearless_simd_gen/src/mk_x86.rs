@@ -332,6 +332,11 @@ impl Level for X86 {
             OpSig::Compress { .. } | OpSig::Expand { .. } => {
                 if *self == Self::Avx512 {
                     self.handle_avx512_compact_op(op, vec_ty)
+                } else if *self == Self::Avx2
+                    && vec_ty.n_bits() == 256
+                    && matches!(vec_ty.scalar_bits, 32 | 64)
+                {
+                    self.handle_avx2_dword_compact(op, vec_ty)
                 } else if matches!(*self, Self::Sse4_2 | Self::Avx2)
                     && vec_ty.n_bits() == 128
                     && matches!(vec_ty.scalar_bits, 16 | 32 | 64)
@@ -343,9 +348,7 @@ impl Level for X86 {
                     self.handle_x86_compact_16(op, vec_ty)
                 } else if *self == Self::Avx2 && matches!(sig, OpSig::Compress { .. }) {
                     self.handle_avx2_shuffle_compact(op, vec_ty)
-                } else if *self == Self::Avx2 {
-                    self.handle_avx2_sse_expand(op, vec_ty)
-                } else if *self == Self::Sse4_2 {
+                } else if matches!(*self, Self::Sse4_2 | Self::Avx2) {
                     self.handle_x86_wide_compact(op, vec_ty)
                 } else {
                     generic_op(&op, vec_ty)
@@ -1296,6 +1299,77 @@ fn expand_16_control(block_bits: TokenStream) -> TokenStream {
 }
 
 impl X86 {
+    /// Compact whole dwords/qwords with a single full-width AVX2 permutation.
+    fn handle_avx2_dword_compact(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        assert!(*self == Self::Avx2, "dword compaction requires AVX2");
+        assert_eq!(vec_ty.n_bits(), 256, "requires one native AVX2 vector");
+        assert!(
+            matches!(vec_ty.scalar_bits, 32 | 64),
+            "requires dword/qword elements"
+        );
+        let (expand, merge) = match op.sig {
+            OpSig::Compress { merge } => (false, merge),
+            OpSig::Expand { merge } => (true, merge),
+            _ => unreachable!("only compact operations use dword permutations"),
+        };
+        let table = format_ident!(
+            "{}_{}",
+            if expand { "EXPAND" } else { "COMPRESS" },
+            vec_ty.scalar_bits,
+        );
+        let to_bitmask = generic_op_name("to_bitmask", &vec_ty.mask_ty());
+        let lane_mask = Literal::usize_unsuffixed((1 << vec_ty.len) - 1);
+        let to_int = |value: TokenStream| {
+            if vec_ty.scalar == ScalarType::Float {
+                let cast = cast_ident(
+                    ScalarType::Float,
+                    ScalarType::Int,
+                    vec_ty.scalar_bits,
+                    vec_ty.scalar_bits,
+                    256,
+                );
+                quote! { #cast(#value.into()) }
+            } else {
+                quote! { #value.into() }
+            }
+        };
+        let values = to_int(quote! { values });
+        let merge_value = to_int(quote! { merge });
+        let finish = match (expand, merge) {
+            (false, false) => quote! {
+                _mm256_andnot_si256(_mm256_srai_epi32::<31>(control), reordered)
+            },
+            // Valid controls 0..7 have no byte sign bits; -1 selects the merge.
+            (false, true) => quote! { _mm256_blendv_epi8(reordered, #merge_value, control) },
+            // Expansion writes exactly the original mask lanes.
+            (true, false) => quote! { _mm256_and_si256(reordered, mask.into()) },
+            (true, true) => quote! { _mm256_blendv_epi8(#merge_value, reordered, mask.into()) },
+        };
+        let result = if vec_ty.scalar == ScalarType::Float {
+            let cast = cast_ident(
+                ScalarType::Int,
+                ScalarType::Float,
+                vec_ty.scalar_bits,
+                vec_ty.scalar_bits,
+                256,
+            );
+            quote! { #cast(result) }
+        } else {
+            quote! { result }
+        };
+        self.kernel_method(op, vec_ty, |token| {
+            quote! {
+                let bits = #token.#to_bitmask(mask) as usize & #lane_mask;
+                let control: __m256i = crate::transmute::checked_transmute_copy(
+                    &crate::support::compact_256::#table[bits],
+                );
+                let reordered = _mm256_permutevar8x32_epi32(#values, control);
+                let result = #finish;
+                #result.simd_into(#token)
+            }
+        })
+    }
+
     fn handle_x86_compact_16(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         assert!(
             matches!(*self, Self::Sse4_2 | Self::Avx2),
@@ -1311,14 +1385,9 @@ impl X86 {
                 let finish = if merge {
                     quote! {
                         let count = mask_bits.count_ones() as usize;
-                        let prefix = unsafe {
-                            _mm_load_si128(
-                                core::ptr::from_ref(
-                                    &crate::support::COMPACT_PREFIX_MASKS[count],
-                                )
-                                .cast::<__m128i>(),
-                            )
-                        };
+                        let [prefix, _] = crate::transmute::checked_transmute_copy::<_, [__m128i; 2]>(
+                            &crate::support::COMPACT_PREFIX_MASKS[count],
+                        );
                         _mm_blendv_epi8(merge.into(), compressed, prefix).simd_into(#token)
                     }
                 } else {
@@ -1355,7 +1424,10 @@ impl X86 {
     }
 
     fn handle_x86_wide_compact(&self, op: Op, vec_ty: &VecType) -> TokenStream {
-        assert!(*self == Self::Sse4_2, "wide x86 compact requires SSE4.2");
+        assert!(
+            matches!(*self, Self::Sse4_2 | Self::Avx2),
+            "wide x86 compact requires SSE4.2 or AVX2"
+        );
         assert!(
             matches!(vec_ty.len, 32 | 64),
             "wide x86 compact requires a 32- or 64-byte vector"
@@ -1405,12 +1477,10 @@ impl X86 {
                         let splice = crate::support::COMPACT_8_SPLICE_CONTROLS[#low_count];
                         let splice = _mm_set_epi64x((splice >> 64) as i64, splice as i64);
                         let compressed = _mm_shuffle_epi8(compacted, splice);
-                        unsafe {
-                            _mm_storeu_si128(
-                                output.as_mut_ptr().add(output_lane).cast::<__m128i>(),
-                                compressed,
-                            );
-                        }
+                        crate::transmute::checked_transmute_store(
+                            compressed,
+                            output[output_lane..].first_chunk_mut::<16>().unwrap(),
+                        );
                         #advance
                     }
                 });
@@ -1420,24 +1490,17 @@ impl X86 {
                         let merge = block_value("merge", block);
                         quote! {
                             let remaining = output_lane.saturating_sub(#offset).min(16);
-                            let prefix = unsafe {
-                                _mm_load_si128(
-                                    core::ptr::from_ref(
-                                        &crate::support::COMPACT_PREFIX_MASKS[remaining],
-                                    )
-                                    .cast::<__m128i>(),
-                                )
-                            };
-                            let compressed = unsafe {
-                                _mm_loadu_si128(output.as_ptr().add(#offset).cast::<__m128i>())
-                            };
+                            let [prefix, _] = crate::transmute::checked_transmute_copy::<_, [__m128i; 2]>(
+                                &crate::support::COMPACT_PREFIX_MASKS[remaining],
+                            );
+                            let compressed = crate::transmute::checked_transmute_copy(
+                                output[#offset..].first_chunk::<16>().unwrap(),
+                            );
                             let blended = _mm_blendv_epi8(#merge, compressed, prefix);
-                            unsafe {
-                                _mm_storeu_si128(
-                                    output.as_mut_ptr().add(#offset).cast::<__m128i>(),
-                                    blended,
-                                );
-                            }
+                            crate::transmute::checked_transmute_store(
+                                blended,
+                                output[#offset..].first_chunk_mut::<16>().unwrap(),
+                            );
                         }
                     });
                     quote! { #(#blend_blocks)* }
@@ -1456,12 +1519,13 @@ impl X86 {
             OpSig::Expand { merge } => {
                 let input = quote! { <[u8; #len]>::from(values) };
                 let expand_blocks = (0..block_count).map(|block| {
-                    let shifted_mask = shifted_mask_bits(block * 16);
+                    // Each shuffle consumes one 128-bit mask. Extract it directly;
+                    // a wide movemask would require extra scalar shifts to split it.
+                    let mask = block_value("mask", block);
                     let offset = Literal::usize_unsuffixed(block * 16);
                     let setup = expand_16_control(quote! { block_bits });
                     let result = if merge {
                         let merge = block_value("merge", block);
-                        let mask = block_value("mask", block);
                         quote! { _mm_blendv_epi8(#merge, expanded, #mask) }
                     } else {
                         quote! { expanded }
@@ -1472,24 +1536,21 @@ impl X86 {
                         TokenStream::new()
                     };
                     quote! {
-                        let block_bits = (#shifted_mask & 0xffff) as usize;
+                        let block_bits = _mm_movemask_epi8(#mask) as usize;
                         #setup
-                        let packed = unsafe {
-                            _mm_loadu_si128(input.as_ptr().add(input_lane).cast::<__m128i>())
-                        };
+                        let packed = crate::transmute::checked_transmute_copy(
+                            input[input_lane..].first_chunk::<16>().unwrap(),
+                        );
                         let expanded = _mm_shuffle_epi8(packed, control);
                         let result = #result;
-                        unsafe {
-                            _mm_storeu_si128(
-                                output.as_mut_ptr().add(#offset).cast::<__m128i>(),
-                                result,
-                            );
-                        }
+                        crate::transmute::checked_transmute_store(
+                            result,
+                            output[#offset..].first_chunk_mut::<16>().unwrap(),
+                        );
                         #advance
                     }
                 });
                 quote! {
-                    let mask_bits = #token.#to_bitmask(mask);
                     let input = #input;
                     let mut output = [0u8; #len];
                     let mut input_lane = 0;
@@ -1499,109 +1560,6 @@ impl X86 {
             }
             _ => unreachable!("only compact operations use the x86 implementation"),
         })
-    }
-
-    fn handle_avx2_sse_expand(&self, op: Op, vec_ty: &VecType) -> TokenStream {
-        assert!(
-            *self == Self::Avx2,
-            "lower-width expand helpers require AVX2"
-        );
-        assert!(
-            matches!(vec_ty.len, 32 | 64),
-            "lower-width expand helpers require a 32- or 64-byte vector"
-        );
-        assert!(
-            matches!(op.sig, OpSig::Expand { .. }),
-            "lower-width expand helpers only implement expand operations"
-        );
-        let vec = vec_ty.rust();
-        let len = Literal::usize_unsuffixed(vec_ty.len);
-        let block_count = vec_ty.len / 16;
-
-        op.simd_trait_kernel_method_with_target_features(
-            self.token(),
-            SSE4_2_FEATURES,
-            vec_ty,
-            |token| {
-                let input_setup = quote! { let input_values = <[u8; #len]>::from(values); };
-                let input = quote! { input_values.as_ptr() };
-                let mask_parts = (0..block_count).map(|block| {
-                    let block_literal = Literal::usize_unsuffixed(block);
-                    let movemask = quote! {
-                        _mm_movemask_epi8(unsafe {
-                            _mm_load_si128(
-                                core::ptr::from_ref(&mask.val.0)
-                                    .cast::<__m128i>()
-                                    .add(#block_literal),
-                            )
-                        }) as u64
-                    };
-                    if block == 0 {
-                        movemask
-                    } else {
-                        let shift = Literal::usize_unsuffixed(block * 16);
-                        quote! { (#movemask) << #shift }
-                    }
-                });
-                let blocks = (0..block_count).map(|block| {
-                    let shifted_mask = shifted_mask_bits(block * 16);
-                    let offset = Literal::usize_unsuffixed(block * 16);
-                    let setup = expand_16_control(quote! { block_bits });
-                    let blend = if matches!(op.sig, OpSig::Expand { merge: true }) {
-                        let block = Literal::usize_unsuffixed(block);
-                        quote! {
-                            unsafe {
-                                _mm_blendv_epi8(
-                                    _mm_load_si128(
-                                        core::ptr::from_ref(&merge.val.0)
-                                            .cast::<__m128i>()
-                                            .add(#block),
-                                    ),
-                                    expanded,
-                                    _mm_load_si128(
-                                        core::ptr::from_ref(&mask.val.0)
-                                            .cast::<__m128i>()
-                                            .add(#block),
-                                    ),
-                                )
-                            }
-                        }
-                    } else {
-                        quote! { expanded }
-                    };
-                    let advance = if block + 1 < block_count {
-                        quote! { input_lane += block_bits.count_ones() as usize; }
-                    } else {
-                        TokenStream::new()
-                    };
-                    quote! {
-                        let block_bits = (#shifted_mask & 0xffff) as usize;
-                        #setup
-                        let packed = unsafe {
-                            _mm_loadu_si128(input.add(input_lane).cast::<__m128i>())
-                        };
-                        let expanded = _mm_shuffle_epi8(packed, control);
-                        let result = #blend;
-                        unsafe {
-                            _mm_storeu_si128(
-                                output.as_mut_ptr().add(#offset).cast::<__m128i>(),
-                                result,
-                            );
-                        }
-                        #advance
-                    }
-                });
-                quote! {
-                    let mask_bits = #(#mask_parts)|*;
-                    #input_setup
-                    let input = #input;
-                    let mut output = [0u8; #len];
-                    let mut input_lane = 0usize;
-                    #(#blocks)*
-                    #vec::simd_from(#token, output)
-                }
-            },
-        )
     }
 
     fn handle_avx2_shuffle_compact(&self, op: Op, vec_ty: &VecType) -> TokenStream {
@@ -1701,15 +1659,10 @@ impl X86 {
                         TokenStream::new()
                     };
                     let finish_pair = quote! {
-                        let splice = unsafe {
-                            _mm256_load_si256(
-                                core::ptr::from_ref(
-                                    &crate::support::COMPACT_16_SPLICE_CONTROLS
-                                        [#bits0.count_ones() as usize],
-                                )
-                                .cast::<__m256i>(),
-                            )
-                        };
+                        let splice = crate::transmute::checked_transmute_copy(
+                            &crate::support::COMPACT_16_SPLICE_CONTROLS
+                                [#bits0.count_ones() as usize],
+                        );
                         let compressed_low =
                             _mm256_permute2x128_si256::<0x80>(compressed, compressed);
                         let compressed_high =
@@ -1749,26 +1702,10 @@ impl X86 {
                             (block_bits_0.count_ones() + block_bits_1.count_ones()) as usize;
                         let controls =
                             &crate::support::COMPACT_32_STITCH_CONTROLS[first_count];
-                        let left_same = unsafe {
-                            _mm256_load_si256(
-                                core::ptr::from_ref(&controls.left_same).cast::<__m256i>(),
-                            )
-                        };
-                        let left_cross = unsafe {
-                            _mm256_load_si256(
-                                core::ptr::from_ref(&controls.left_cross).cast::<__m256i>(),
-                            )
-                        };
-                        let right_same = unsafe {
-                            _mm256_load_si256(
-                                core::ptr::from_ref(&controls.right_same).cast::<__m256i>(),
-                            )
-                        };
-                        let right_cross = unsafe {
-                            _mm256_load_si256(
-                                core::ptr::from_ref(&controls.right_cross).cast::<__m256i>(),
-                            )
-                        };
+                        let left_same = crate::transmute::checked_transmute_copy(&controls.left_same);
+                        let left_cross = crate::transmute::checked_transmute_copy(&controls.left_cross);
+                        let right_same = crate::transmute::checked_transmute_copy(&controls.right_same);
+                        let right_cross = crate::transmute::checked_transmute_copy(&controls.right_cross);
 
                         let low_to_high =
                             _mm256_permute2x128_si256::<0x08>(compressed_1, compressed_1);
@@ -1806,14 +1743,9 @@ impl X86 {
                             quote! { merge.val.0[#pair] }
                         };
                         quote! {
-                            let prefix = unsafe {
-                                _mm256_load_si256(
-                                    core::ptr::from_ref(
-                                        &crate::support::COMPACT_PREFIX_MASKS[#remaining],
-                                    )
-                                    .cast::<__m256i>(),
-                                )
-                            };
+                            let prefix = crate::transmute::checked_transmute_copy(
+                                &crate::support::COMPACT_PREFIX_MASKS[#remaining],
+                            );
                             let #result = _mm256_blendv_epi8(#merge, #compressed, prefix);
                         }
                     } else {

@@ -836,6 +836,7 @@ fn compact_u32x8<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask32x8::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 8];
@@ -1023,6 +1024,7 @@ fn compact_i32x8<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask32x8::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 8];
@@ -1208,6 +1210,7 @@ fn compact_u64x4<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask64x4::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 4];
@@ -1394,6 +1397,7 @@ fn compact_i64x4<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask64x4::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 4];
@@ -1623,6 +1627,7 @@ fn compact_f32x8<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask32x8::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 8];
@@ -1912,6 +1917,7 @@ fn compact_f64x4<S: Simd>(simd: S) {
     .chain(single_lanes)
     .chain(prefixes)
     .chain(suffixes)
+    .chain(0..=all_lanes)
     {
         let mask = mask64x4::from_bitmask(simd, mask_bits);
         let mut expected_compress = [0; 4];
@@ -2176,6 +2182,51 @@ fn compress_u8x16_exhaustive_masks<S: Simd>(simd: S) {
             *values_vec.compress_merge(mask, merge_vec),
             expected_merge,
             "mask {bits:#06x}"
+        );
+    }
+}
+
+#[simd_test]
+fn compress_u32x8_exhaustive_masks<S: Simd>(simd: S) {
+    let values = [
+        0,
+        u32::MAX,
+        0x8000_0000,
+        1,
+        0x7fff_ffff,
+        0x1234_5678,
+        0xfedc_ba98,
+        0x0102_0304,
+    ];
+    let merge = [
+        0xa0b0_c001,
+        0xa0b0_c002,
+        0xa0b0_c003,
+        0xa0b0_c004,
+        0xa0b0_c005,
+        0xa0b0_c006,
+        0xa0b0_c007,
+        0xa0b0_c008,
+    ];
+    let values_vec = u32x8::simd_from(simd, values);
+    let merge_vec = u32x8::simd_from(simd, merge);
+    for bits in 0..=u8::MAX {
+        let mask = mask32x8::from_bitmask(simd, u64::from(bits));
+        let mut expected = [0; 8];
+        let mut expected_merge = merge;
+        let mut selected = 0;
+        for (lane, value) in values.into_iter().enumerate() {
+            if bits & (1 << lane) != 0 {
+                expected[selected] = value;
+                expected_merge[selected] = value;
+                selected += 1;
+            }
+        }
+        assert_eq!(*values_vec.compress(mask), expected, "mask {bits:#04x}");
+        assert_eq!(
+            *values_vec.compress_merge(mask, merge_vec),
+            expected_merge,
+            "mask {bits:#04x}"
         );
     }
 }
