@@ -226,6 +226,58 @@ fn shr_i64x8<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn shr_i64x2_all_counts<S: Simd>(simd: S) {
+    for values in [
+        [i64::MIN, i64::MAX],
+        [-1, 0],
+        [1, -3],
+        [0x0123_4567_89ab_cdef, -0x0123_4567_89ab_cdef],
+    ] {
+        let a = i64x2::from_slice(simd, &values);
+        for shift in 0..64 {
+            let expected = values.map(|value| value >> shift);
+            let result = a >> core::hint::black_box(shift);
+            assert_eq!(*result, expected, "values {values:?}, shift {shift}");
+        }
+    }
+}
+
+#[simd_test]
+fn shr_i64x4_all_counts<S: Simd>(simd: S) {
+    for values in [
+        [i64::MIN, i64::MAX, -1, 0],
+        [1, -3, 0x0123_4567_89ab_cdef, -0x0123_4567_89ab_cdef],
+    ] {
+        let a = i64x4::from_slice(simd, &values);
+        for shift in 0..64 {
+            let expected = values.map(|value| value >> shift);
+            let result = a >> core::hint::black_box(shift);
+            assert_eq!(*result, expected, "values {values:?}, shift {shift}");
+        }
+    }
+}
+
+#[simd_test]
+fn shr_i64x8_all_counts<S: Simd>(simd: S) {
+    let values = [
+        i64::MIN,
+        i64::MAX,
+        -1,
+        0,
+        1,
+        -3,
+        0x0123_4567_89ab_cdef,
+        -0x0123_4567_89ab_cdef,
+    ];
+    let a = i64x8::from_slice(simd, &values);
+    for shift in 0..64 {
+        let expected = values.map(|value| value >> shift);
+        let result = a >> core::hint::black_box(shift);
+        assert_eq!(*result, expected, "shift {shift}");
+    }
+}
+
+#[simd_test]
 fn shr_u64x2<S: Simd>(simd: S) {
     let a = u64x2::from_slice(simd, &[1_u64, 2_u64]);
     assert_eq!(*simd.shr_u64x2(a, 1), [0_u64, 1_u64]);
