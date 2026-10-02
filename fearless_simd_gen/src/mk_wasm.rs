@@ -477,6 +477,10 @@ impl Level for WasmSimd128 {
         }
     }
 
+    fn has_native_simd_ne(&self, _vec_ty: &VecType) -> bool {
+        true
+    }
+
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         let Op { sig, method, .. } = op;
 
@@ -838,12 +842,22 @@ impl Level for WasmSimd128 {
                 }
             }
             OpSig::Compare => {
-                if vec_ty.scalar == ScalarType::Unsigned && vec_ty.scalar_bits == 64 {
+                if vec_ty.scalar == ScalarType::Unsigned
+                    && vec_ty.scalar_bits == 64
+                    && method != "simd_ne"
+                {
                     return fallback_method(op, vec_ty);
                 }
 
+                // Inequality is independent of signedness; in particular, unsigned
+                // 64-bit lanes can use i64x2_ne without falling back to scalar code.
+                let compare_ty = if method == "simd_ne" && vec_ty.scalar != ScalarType::Float {
+                    vec_ty.cast(ScalarType::Int)
+                } else {
+                    *vec_ty
+                };
                 let args = [quote! { a.into() }, quote! { b.into() }];
-                let expr = wasm::expr(method, vec_ty, &args);
+                let expr = wasm::expr(method, &compare_ty, &args);
                 quote! {
                     #method_sig {
                         #expr.simd_into(self)

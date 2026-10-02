@@ -5,7 +5,7 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
-    generic::{byte_swizzle_op, generic_op, reversed_compare_op},
+    generic::{byte_swizzle_op, generic_op, generic_op_name, reversed_compare_op},
     ops::{
         CoreOpTrait, OpKind, OpSig, TyFlavor, base_trait_ops, ops_for_type, overloaded_ops_for,
         vec_trait_ops_for,
@@ -30,6 +30,16 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
                     #[inline(always)]
                     #method_sig {
                         a
+                    }
+                });
+            } else if op.method == "simd_ne" {
+                let eq = generic_op_name("simd_eq", vec_ty);
+                let not = generic_op_name("not", &vec_ty.mask_ty());
+                methods.extend(quote! {
+                    #[doc = #doc]
+                    #[inline(always)]
+                    #method_sig {
+                        self.#not(self.#eq(a, b))
                     }
                 });
             } else if op.sig.should_route_swizzle_through_bytes(vec_ty) {
@@ -600,7 +610,8 @@ fn methods_for_vec_trait(scalar: ScalarType) -> Vec<TokenStream> {
     for op in vec_trait_ops_for(scalar) {
         let doc = op.format_docstring(TyFlavor::VecImpl);
         let method_sig = if scalar == ScalarType::Mask && matches!(op.sig, OpSig::Compare) {
-            Some(quote! { fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self })
+            let method = format_ident!("{}", op.method);
+            Some(quote! { fn #method(self, rhs: impl SimdInto<Self, S>) -> Self })
         } else {
             op.vec_trait_method_sig()
         };

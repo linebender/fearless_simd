@@ -41,6 +41,19 @@ fn generic_abs<S: Simd, V: SimdBase<S>>(value: V) -> V {
     value.abs()
 }
 
+// Inequality is available for generic numeric vectors, masks, and native-width vectors.
+fn generic_simd_ne<S: Simd, V: SimdBase<S>>(lhs: V, rhs: V) -> V::Mask {
+    lhs.simd_ne(rhs)
+}
+
+fn generic_mask_simd_ne<S: Simd, M: SimdMask<S>>(lhs: M, rhs: M) -> M {
+    lhs.simd_ne(rhs)
+}
+
+fn generic_native_simd_ne<S: Simd>(lhs: S::f32s, rhs: S::f32s) -> S::mask32s {
+    lhs.simd_ne(rhs)
+}
+
 // Ensure that integer operations exposed through `SimdInt` are available to generic code.
 fn generic_saturating_add<S: Simd, V: SimdInt<S>>(lhs: V, rhs: V) -> V {
     lhs.saturating_add(rhs)

@@ -13,6 +13,7 @@ pub(crate) fn translate_op(op: &str) -> Option<&'static str> {
         "div" => "div",
         "and" => "and",
         "simd_eq" => "cmpeq",
+        "simd_ne" => "cmpneq",
         "simd_lt" => "cmplt",
         "simd_le" => "cmple",
         "simd_ge" => "cmpge",
@@ -290,6 +291,7 @@ pub(crate) fn float_compare_method(method: &str, vec_ty: &VecType) -> TokenStrea
             // https://www.felixcloutier.com/x86/cmppd#tbl-3-1
             let order_predicate = match method {
                 "simd_eq" => 0x00,
+                "simd_ne" => 0x04, // _CMP_NEQ_UQ: unordered, quiet (NaN != anything).
                 "simd_lt" => 0x11,
                 "simd_le" => 0x12,
                 "simd_ge" => 0x1D,

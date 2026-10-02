@@ -737,7 +737,7 @@ pub(crate) fn generic_classify(
 
     let result = match method {
         "is_nan" => {
-            quote! { !a.simd_eq(a) }
+            quote! { a.simd_ne(a) }
         }
         "is_infinite" => {
             quote! { a.abs().simd_eq(#scalar::INFINITY) }
@@ -750,7 +750,7 @@ pub(crate) fn generic_classify(
             // so we can't use floating-point operations here
             quote! {
                 let i: #int_vec_ident<Self> = a.bitcast();
-                (i & #exp_mask).simd_eq(0) & !(i & #mant_mask).simd_eq(0)
+                (i & #exp_mask).simd_eq(0) & (i & #mant_mask).simd_ne(0)
             }
         }
         "is_normal" => {
@@ -758,7 +758,7 @@ pub(crate) fn generic_classify(
             quote! {
                 let i: #int_vec_ident<Self> = a.bitcast();
                 let exp = i & #exp_mask;
-                !(exp.simd_eq(0) | exp.simd_eq(#exp_mask))
+                exp.simd_ne(0) & exp.simd_ne(#exp_mask)
             }
         }
         "is_sign_positive" => {

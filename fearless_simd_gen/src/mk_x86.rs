@@ -296,6 +296,10 @@ impl Level for X86 {
         }
     }
 
+    fn has_native_simd_ne(&self, vec_ty: &VecType) -> bool {
+        *self == Self::Avx512 || vec_ty.scalar == ScalarType::Float
+    }
+
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         let Op { sig, method, .. } = op;
         let method_sig = op.simd_trait_method_sig(vec_ty);
@@ -975,6 +979,7 @@ fn avx512_mask_bits_expr(expr: TokenStream) -> TokenStream {
 fn avx512_compare_op(method: &str) -> &'static str {
     match method {
         "simd_eq" => "cmpeq",
+        "simd_ne" => "cmpneq",
         "simd_lt" => "cmplt",
         "simd_le" => "cmple",
         "simd_ge" => "cmpge",
@@ -988,6 +993,7 @@ fn avx512_float_compare_predicate(method: &str) -> i32 {
     // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmp_ps_mask
     match method {
         "simd_eq" => 0x00,
+        "simd_ne" => 0x04,
         "simd_lt" => 0x11,
         "simd_le" => 0x12,
         "simd_ge" => 0x1D,
@@ -1002,7 +1008,8 @@ fn avx512_mask_compare_expr(method: &str, vec_ty: &VecType) -> TokenStream {
     let lane_mask = avx512_mask_lane_bits(vec_ty);
     match method {
         "simd_eq" => quote! { !u64::from(a.val ^ b.val) & #lane_mask },
-        _ => unreachable!("masks only support equality comparison"),
+        "simd_ne" => quote! { u64::from(a.val ^ b.val) & #lane_mask },
+        _ => unreachable!("masks only support equality and inequality comparisons"),
     }
 }
 

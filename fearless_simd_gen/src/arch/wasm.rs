@@ -22,6 +22,7 @@ fn translate_op(op: &str) -> Option<&'static str> {
         "mul" => "mul",
         "div" => "div",
         "simd_eq" => "eq",
+        "simd_ne" => "ne",
         "simd_lt" => "lt",
         "simd_le" => "le",
         "simd_ge" => "ge",

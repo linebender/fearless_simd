@@ -269,6 +269,10 @@ impl Simd for WasmSimd128 {
         f32x4_eq(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
+    fn simd_ne_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
+        f32x4_ne(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn simd_lt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
         f32x4_lt(a.into(), b.into()).simd_into(self)
     }
@@ -357,7 +361,7 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn is_nan_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
-        !a.simd_eq(a)
+        a.simd_ne(a)
     }
     #[inline(always)]
     fn is_infinite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
@@ -370,13 +374,13 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn is_subnormal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
         let i: i32x4<Self> = a.bitcast();
-        (i & 0x7F80_0000_i32).simd_eq(0) & !(i & 0x007F_FFFF_i32).simd_eq(0)
+        (i & 0x7F80_0000_i32).simd_eq(0) & (i & 0x007F_FFFF_i32).simd_ne(0)
     }
     #[inline(always)]
     fn is_normal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
         let i: i32x4<Self> = a.bitcast();
         let exp = i & 0x7F80_0000_i32;
-        !(exp.simd_eq(0) | exp.simd_eq(0x7F80_0000_i32))
+        exp.simd_ne(0) & exp.simd_ne(0x7F80_0000_i32)
     }
     #[inline(always)]
     fn is_sign_positive_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
@@ -715,6 +719,10 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
         i8x16_eq(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_ne_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
+        i8x16_ne(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
     fn simd_lt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
@@ -1144,6 +1152,10 @@ impl Simd for WasmSimd128 {
         u8x16_eq(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
+    fn simd_ne_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
+        i8x16_ne(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn simd_lt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
         u8x16_lt(a.into(), b.into()).simd_into(self)
     }
@@ -1395,6 +1407,10 @@ impl Simd for WasmSimd128 {
         i8x16_eq(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
+    fn simd_ne_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
+        i8x16_ne(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn any_true_mask8x16(self, a: mask8x16<Self>) -> bool {
         v128_any_true(a.into())
     }
@@ -1587,6 +1603,10 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
         i16x8_eq(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_ne_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
+        i16x8_ne(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
     fn simd_lt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
@@ -1880,6 +1900,10 @@ impl Simd for WasmSimd128 {
         u16x8_eq(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
+    fn simd_ne_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
+        i16x8_ne(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn simd_lt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
         u16x8_lt(a.into(), b.into()).simd_into(self)
     }
@@ -2113,6 +2137,10 @@ impl Simd for WasmSimd128 {
         i16x8_eq(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
+    fn simd_ne_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
+        i16x8_ne(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn any_true_mask16x8(self, a: mask16x8<Self>) -> bool {
         v128_any_true(a.into())
     }
@@ -2300,6 +2328,10 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
         i32x4_eq(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_ne_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
+        i32x4_ne(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
     fn simd_lt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
@@ -2582,6 +2614,10 @@ impl Simd for WasmSimd128 {
         u32x4_eq(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
+    fn simd_ne_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
+        i32x4_ne(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn simd_lt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
         u32x4_lt(a.into(), b.into()).simd_into(self)
     }
@@ -2819,6 +2855,10 @@ impl Simd for WasmSimd128 {
         i32x4_eq(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
+    fn simd_ne_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
+        i32x4_ne(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn any_true_mask32x4(self, a: mask32x4<Self>) -> bool {
         v128_any_true(a.into())
     }
@@ -2994,6 +3034,10 @@ impl Simd for WasmSimd128 {
         f64x2_eq(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
+    fn simd_ne_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
+        f64x2_ne(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn simd_lt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
         f64x2_lt(a.into(), b.into()).simd_into(self)
     }
@@ -3082,7 +3126,7 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn is_nan_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
-        !a.simd_eq(a)
+        a.simd_ne(a)
     }
     #[inline(always)]
     fn is_infinite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
@@ -3095,13 +3139,13 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn is_subnormal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
         let i: i64x2<Self> = a.bitcast();
-        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & !(i & 0x000F_FFFF_FFFF_FFFF_i64).simd_eq(0)
+        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & (i & 0x000F_FFFF_FFFF_FFFF_i64).simd_ne(0)
     }
     #[inline(always)]
     fn is_normal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
         let i: i64x2<Self> = a.bitcast();
         let exp = i & 0x7FF0_0000_0000_0000_i64;
-        !(exp.simd_eq(0) | exp.simd_eq(0x7FF0_0000_0000_0000_i64))
+        exp.simd_ne(0) & exp.simd_ne(0x7FF0_0000_0000_0000_i64)
     }
     #[inline(always)]
     fn is_sign_positive_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
@@ -3356,6 +3400,10 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
         i64x2_eq(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_ne_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
+        i64x2_ne(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
     fn simd_lt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
@@ -3642,6 +3690,10 @@ impl Simd for WasmSimd128 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn simd_ne_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
+        i64x2_ne(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn simd_lt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
         [
             -(u64::lt(&a[0usize], &b[0usize]) as i64),
@@ -3880,6 +3932,10 @@ impl Simd for WasmSimd128 {
         i64x2_eq(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
+    fn simd_ne_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
+        i64x2_ne(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn any_true_mask64x2(self, a: mask64x2<Self>) -> bool {
         v128_any_true(a.into())
     }
@@ -3926,8 +3982,14 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
+    fn simd_ne_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_mask32x4(self.simd_ne_f32x4(a0, b0), self.simd_ne_f32x4(a1, b1))
+    }
+    #[inline(always)]
     fn is_nan_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
-        !a.simd_eq(a)
+        a.simd_ne(a)
     }
     #[inline(always)]
     fn is_infinite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
@@ -3940,13 +4002,13 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn is_subnormal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
         let i: i32x8<Self> = a.bitcast();
-        (i & 0x7F80_0000_i32).simd_eq(0) & !(i & 0x007F_FFFF_i32).simd_eq(0)
+        (i & 0x7F80_0000_i32).simd_eq(0) & (i & 0x007F_FFFF_i32).simd_ne(0)
     }
     #[inline(always)]
     fn is_normal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
         let i: i32x8<Self> = a.bitcast();
         let exp = i & 0x7F80_0000_i32;
-        !(exp.simd_eq(0) | exp.simd_eq(0x7F80_0000_i32))
+        exp.simd_ne(0) & exp.simd_ne(0x7F80_0000_i32)
     }
     #[inline(always)]
     fn is_sign_positive_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
@@ -3988,6 +4050,12 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn simd_ne_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_mask8x16(self.simd_ne_i8x16(a0, b0), self.simd_ne_i8x16(a1, b1))
     }
     #[inline(always)]
     fn combine_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x64<Self> {
@@ -4095,6 +4163,12 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
+    fn simd_ne_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_mask8x16(self.simd_ne_u8x16(a0, b0), self.simd_ne_u8x16(a1, b1))
+    }
+    #[inline(always)]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self> {
         u8x64 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -4156,6 +4230,12 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn simd_ne_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask8x32(a);
+        let (b0, b1) = self.split_mask8x32(b);
+        self.combine_mask8x16(self.simd_ne_mask8x16(a0, b0), self.simd_ne_mask8x16(a1, b1))
+    }
+    #[inline(always)]
     fn combine_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x64<Self> {
         mask8x64 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -4191,6 +4271,12 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
+    fn simd_ne_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_mask16x8(self.simd_ne_i16x8(a0, b0), self.simd_ne_i16x8(a1, b1))
+    }
+    #[inline(always)]
     fn combine_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x32<Self> {
         i16x32 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -4224,6 +4310,12 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn simd_ne_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_mask16x8(self.simd_ne_u16x8(a0, b0), self.simd_ne_u16x8(a1, b1))
     }
     #[inline(always)]
     fn combine_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x32<Self> {
@@ -4287,6 +4379,12 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn simd_ne_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        let (b0, b1) = self.split_mask16x16(b);
+        self.combine_mask16x8(self.simd_ne_mask16x8(a0, b0), self.simd_ne_mask16x8(a1, b1))
+    }
+    #[inline(always)]
     fn combine_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x32<Self> {
         mask16x32 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -4322,6 +4420,12 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
+    fn simd_ne_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_mask32x4(self.simd_ne_i32x4(a0, b0), self.simd_ne_i32x4(a1, b1))
+    }
+    #[inline(always)]
     fn combine_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x16<Self> {
         i32x16 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -4355,6 +4459,12 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn simd_ne_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_mask32x4(self.simd_ne_u32x4(a0, b0), self.simd_ne_u32x4(a1, b1))
     }
     #[inline(always)]
     fn combine_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x16<Self> {
@@ -4418,6 +4528,12 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn simd_ne_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        let (b0, b1) = self.split_mask32x8(b);
+        self.combine_mask32x4(self.simd_ne_mask32x4(a0, b0), self.simd_ne_mask32x4(a1, b1))
+    }
+    #[inline(always)]
     fn combine_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x16<Self> {
         mask32x16 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -4453,8 +4569,14 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
+    fn simd_ne_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_mask64x2(self.simd_ne_f64x2(a0, b0), self.simd_ne_f64x2(a1, b1))
+    }
+    #[inline(always)]
     fn is_nan_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
-        !a.simd_eq(a)
+        a.simd_ne(a)
     }
     #[inline(always)]
     fn is_infinite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
@@ -4467,13 +4589,13 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn is_subnormal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
         let i: i64x4<Self> = a.bitcast();
-        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & !(i & 0x000F_FFFF_FFFF_FFFF_i64).simd_eq(0)
+        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & (i & 0x000F_FFFF_FFFF_FFFF_i64).simd_ne(0)
     }
     #[inline(always)]
     fn is_normal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
         let i: i64x4<Self> = a.bitcast();
         let exp = i & 0x7FF0_0000_0000_0000_i64;
-        !(exp.simd_eq(0) | exp.simd_eq(0x7FF0_0000_0000_0000_i64))
+        exp.simd_ne(0) & exp.simd_ne(0x7FF0_0000_0000_0000_i64)
     }
     #[inline(always)]
     fn is_sign_positive_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
@@ -4520,6 +4642,12 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
+    fn simd_ne_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        self.combine_mask64x2(self.simd_ne_i64x2(a0, b0), self.simd_ne_i64x2(a1, b1))
+    }
+    #[inline(always)]
     fn combine_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x8<Self> {
         i64x8 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -4553,6 +4681,12 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn simd_ne_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        self.combine_mask64x2(self.simd_ne_u64x2(a0, b0), self.simd_ne_u64x2(a1, b1))
     }
     #[inline(always)]
     fn combine_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x8<Self> {
@@ -4616,6 +4750,12 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn simd_ne_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        let (b0, b1) = self.split_mask64x4(b);
+        self.combine_mask64x2(self.simd_ne_mask64x2(a0, b0), self.simd_ne_mask64x2(a1, b1))
+    }
+    #[inline(always)]
     fn combine_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x8<Self> {
         mask64x8 {
             val: crate::support::Aligned512([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]),
@@ -4651,8 +4791,14 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
+    fn simd_ne_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_mask32x8(self.simd_ne_f32x8(a0, b0), self.simd_ne_f32x8(a1, b1))
+    }
+    #[inline(always)]
     fn is_nan_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
-        !a.simd_eq(a)
+        a.simd_ne(a)
     }
     #[inline(always)]
     fn is_infinite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
@@ -4665,13 +4811,13 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn is_subnormal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
         let i: i32x16<Self> = a.bitcast();
-        (i & 0x7F80_0000_i32).simd_eq(0) & !(i & 0x007F_FFFF_i32).simd_eq(0)
+        (i & 0x7F80_0000_i32).simd_eq(0) & (i & 0x007F_FFFF_i32).simd_ne(0)
     }
     #[inline(always)]
     fn is_normal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
         let i: i32x16<Self> = a.bitcast();
         let exp = i & 0x7F80_0000_i32;
-        !(exp.simd_eq(0) | exp.simd_eq(0x7F80_0000_i32))
+        exp.simd_ne(0) & exp.simd_ne(0x7F80_0000_i32)
     }
     #[inline(always)]
     fn is_sign_positive_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
@@ -4706,6 +4852,12 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn simd_ne_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_mask8x32(self.simd_ne_i8x32(a0, b0), self.simd_ne_i8x32(a1, b1))
     }
     #[inline(always)]
     fn split_i8x64(self, a: i8x64<Self>) -> (i8x32<Self>, i8x32<Self>) {
@@ -4779,6 +4931,12 @@ impl Simd for WasmSimd128 {
         Bytes::from_bytes(result_bytes)
     }
     #[inline(always)]
+    fn simd_ne_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_mask8x32(self.simd_ne_u8x32(a0, b0), self.simd_ne_u8x32(a1, b1))
+    }
+    #[inline(always)]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>) {
         (
             u8x32 {
@@ -4833,6 +4991,12 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn simd_ne_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask8x64(a);
+        let (b0, b1) = self.split_mask8x64(b);
+        self.combine_mask8x32(self.simd_ne_mask8x32(a0, b0), self.simd_ne_mask8x32(a1, b1))
+    }
+    #[inline(always)]
     fn split_mask8x64(self, a: mask8x64<Self>) -> (mask8x32<Self>, mask8x32<Self>) {
         (
             mask8x32 {
@@ -4861,6 +5025,12 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
+    fn simd_ne_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_mask16x16(self.simd_ne_i16x16(a0, b0), self.simd_ne_i16x16(a1, b1))
+    }
+    #[inline(always)]
     fn split_i16x32(self, a: i16x32<Self>) -> (i16x16<Self>, i16x16<Self>) {
         (
             i16x16 {
@@ -4887,6 +5057,12 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn simd_ne_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_mask16x16(self.simd_ne_u16x16(a0, b0), self.simd_ne_u16x16(a1, b1))
     }
     #[inline(always)]
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>) {
@@ -4943,6 +5119,15 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn simd_ne_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        let (b0, b1) = self.split_mask16x32(b);
+        self.combine_mask16x16(
+            self.simd_ne_mask16x16(a0, b0),
+            self.simd_ne_mask16x16(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn split_mask16x32(self, a: mask16x32<Self>) -> (mask16x16<Self>, mask16x16<Self>) {
         (
             mask16x16 {
@@ -4971,6 +5156,12 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
+    fn simd_ne_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_mask32x8(self.simd_ne_i32x8(a0, b0), self.simd_ne_i32x8(a1, b1))
+    }
+    #[inline(always)]
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
         (
             i32x8 {
@@ -4997,6 +5188,12 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn simd_ne_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_mask32x8(self.simd_ne_u32x8(a0, b0), self.simd_ne_u32x8(a1, b1))
     }
     #[inline(always)]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>) {
@@ -5053,6 +5250,12 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn simd_ne_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        let (b0, b1) = self.split_mask32x16(b);
+        self.combine_mask32x8(self.simd_ne_mask32x8(a0, b0), self.simd_ne_mask32x8(a1, b1))
+    }
+    #[inline(always)]
     fn split_mask32x16(self, a: mask32x16<Self>) -> (mask32x8<Self>, mask32x8<Self>) {
         (
             mask32x8 {
@@ -5081,8 +5284,14 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
+    fn simd_ne_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_mask64x4(self.simd_ne_f64x4(a0, b0), self.simd_ne_f64x4(a1, b1))
+    }
+    #[inline(always)]
     fn is_nan_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
-        !a.simd_eq(a)
+        a.simd_ne(a)
     }
     #[inline(always)]
     fn is_infinite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
@@ -5095,13 +5304,13 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn is_subnormal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
         let i: i64x8<Self> = a.bitcast();
-        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & !(i & 0x000F_FFFF_FFFF_FFFF_i64).simd_eq(0)
+        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & (i & 0x000F_FFFF_FFFF_FFFF_i64).simd_ne(0)
     }
     #[inline(always)]
     fn is_normal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
         let i: i64x8<Self> = a.bitcast();
         let exp = i & 0x7FF0_0000_0000_0000_i64;
-        !(exp.simd_eq(0) | exp.simd_eq(0x7FF0_0000_0000_0000_i64))
+        exp.simd_ne(0) & exp.simd_ne(0x7FF0_0000_0000_0000_i64)
     }
     #[inline(always)]
     fn is_sign_positive_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
@@ -5141,6 +5350,12 @@ impl Simd for WasmSimd128 {
         })
     }
     #[inline(always)]
+    fn simd_ne_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_mask64x4(self.simd_ne_i64x4(a0, b0), self.simd_ne_i64x4(a1, b1))
+    }
+    #[inline(always)]
     fn split_i64x8(self, a: i64x8<Self>) -> (i64x4<Self>, i64x4<Self>) {
         (
             i64x4 {
@@ -5167,6 +5382,12 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn simd_ne_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_mask64x4(self.simd_ne_u64x4(a0, b0), self.simd_ne_u64x4(a1, b1))
     }
     #[inline(always)]
     fn split_u64x8(self, a: u64x8<Self>) -> (u64x4<Self>, u64x4<Self>) {
@@ -5221,6 +5442,12 @@ impl Simd for WasmSimd128 {
             val: crate::transmute::checked_transmute_copy(&rotated.val),
             simd: self,
         }
+    }
+    #[inline(always)]
+    fn simd_ne_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_mask64x8(b);
+        self.combine_mask64x4(self.simd_ne_mask64x4(a0, b0), self.simd_ne_mask64x4(a1, b1))
     }
     #[inline(always)]
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>) {

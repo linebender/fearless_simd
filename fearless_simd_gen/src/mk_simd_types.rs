@@ -437,7 +437,8 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
         let Op { sig, method, .. } = op;
         let trait_method = generic_op_name(method, ty);
         let method_sig = if matches!(sig, OpSig::Compare) {
-            Some(quote! { fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self })
+            let method = format_ident!("{method}");
+            Some(quote! { fn #method(self, rhs: impl SimdInto<Self, S>) -> Self })
         } else {
             op.vec_trait_method_sig()
         };
