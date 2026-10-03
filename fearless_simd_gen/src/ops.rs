@@ -1096,6 +1096,18 @@ const FLOAT_OPS: &[Op] = &[
         "Return the integer part of each element, rounding towards zero.",
     ),
     Op::new(
+        "to_degrees",
+        OpKind::VecTraitMethod,
+        OpSig::Unary,
+        "Converts radians to degrees.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next.",
+    ),
+    Op::new(
+        "to_radians",
+        OpKind::VecTraitMethod,
+        OpSig::Unary,
+        "Converts degrees to radians.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next.",
+    ),
+    Op::new(
         "is_nan",
         OpKind::VecTraitMethod,
         OpSig::UnaryClassify,

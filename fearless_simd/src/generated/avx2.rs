@@ -598,6 +598,14 @@ impl Simd for Avx2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn to_degrees_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
+        a * const { f32::to_degrees(1.0) }
+    }
+    #[inline(always)]
+    fn to_radians_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
+        a * const { f32::to_radians(1.0) }
+    }
+    #[inline(always)]
     fn is_nan_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
         a.simd_ne(a)
     }
@@ -5632,6 +5640,14 @@ impl Simd for Avx2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn to_degrees_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
+        a * const { f64::to_degrees(1.0) }
+    }
+    #[inline(always)]
+    fn to_radians_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
+        a * const { f64::to_radians(1.0) }
+    }
+    #[inline(always)]
     fn is_nan_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
         a.simd_ne(a)
     }
@@ -7734,6 +7750,14 @@ impl Simd for Avx2 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn to_degrees_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        a * const { f32::to_degrees(1.0) }
+    }
+    #[inline(always)]
+    fn to_radians_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        a * const { f32::to_radians(1.0) }
     }
     #[inline(always)]
     fn is_nan_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
@@ -12718,6 +12742,14 @@ impl Simd for Avx2 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn to_degrees_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        a * const { f64::to_degrees(1.0) }
+    }
+    #[inline(always)]
+    fn to_radians_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        a * const { f64::to_radians(1.0) }
     }
     #[inline(always)]
     fn is_nan_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {

@@ -401,6 +401,10 @@ pub trait Simd:
     fn fract_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Converts radians to degrees.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next."]
+    fn to_degrees_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Converts degrees to radians.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next."]
+    fn to_radians_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Return a mask indicating which elements are NaN."]
     fn is_nan_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
     #[doc = "Return a mask indicating which elements are positive or negative infinite."]
@@ -1806,6 +1810,10 @@ pub trait Simd:
     fn fract_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Converts radians to degrees.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next."]
+    fn to_degrees_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Converts degrees to radians.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next."]
+    fn to_radians_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Return a mask indicating which elements are NaN."]
     fn is_nan_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
     #[doc = "Return a mask indicating which elements are positive or negative infinite."]
@@ -2652,6 +2660,18 @@ pub trait Simd:
     fn trunc_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
         self.combine_f32x4(self.trunc_f32x4(a0), self.trunc_f32x4(a1))
+    }
+    #[doc = "Converts radians to degrees.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next."]
+    #[inline(always)]
+    fn to_degrees_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f32x4(self.to_degrees_f32x4(a0), self.to_degrees_f32x4(a1))
+    }
+    #[doc = "Converts degrees to radians.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next."]
+    #[inline(always)]
+    fn to_radians_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f32x4(self.to_radians_f32x4(a0), self.to_radians_f32x4(a1))
     }
     #[doc = "Return a mask indicating which elements are NaN."]
     fn is_nan_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
@@ -5760,6 +5780,18 @@ pub trait Simd:
         let (a0, a1) = self.split_f64x4(a);
         self.combine_f64x2(self.trunc_f64x2(a0), self.trunc_f64x2(a1))
     }
+    #[doc = "Converts radians to degrees.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next."]
+    #[inline(always)]
+    fn to_degrees_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_f64x2(self.to_degrees_f64x2(a0), self.to_degrees_f64x2(a1))
+    }
+    #[doc = "Converts degrees to radians.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next."]
+    #[inline(always)]
+    fn to_radians_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_f64x2(self.to_radians_f64x2(a0), self.to_radians_f64x2(a1))
+    }
     #[doc = "Return a mask indicating which elements are NaN."]
     fn is_nan_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
     #[doc = "Return a mask indicating which elements are positive or negative infinite."]
@@ -7138,6 +7170,18 @@ pub trait Simd:
     fn trunc_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
         self.combine_f32x8(self.trunc_f32x8(a0), self.trunc_f32x8(a1))
+    }
+    #[doc = "Converts radians to degrees.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next."]
+    #[inline(always)]
+    fn to_degrees_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f32x8(self.to_degrees_f32x8(a0), self.to_degrees_f32x8(a1))
+    }
+    #[doc = "Converts degrees to radians.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next."]
+    #[inline(always)]
+    fn to_radians_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f32x8(self.to_radians_f32x8(a0), self.to_radians_f32x8(a1))
     }
     #[doc = "Return a mask indicating which elements are NaN."]
     fn is_nan_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
@@ -10249,6 +10293,18 @@ pub trait Simd:
         let (a0, a1) = self.split_f64x8(a);
         self.combine_f64x4(self.trunc_f64x4(a0), self.trunc_f64x4(a1))
     }
+    #[doc = "Converts radians to degrees.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next."]
+    #[inline(always)]
+    fn to_degrees_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f64x4(self.to_degrees_f64x4(a0), self.to_degrees_f64x4(a1))
+    }
+    #[doc = "Converts degrees to radians.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next."]
+    #[inline(always)]
+    fn to_radians_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f64x4(self.to_radians_f64x4(a0), self.to_radians_f64x4(a1))
+    }
     #[doc = "Return a mask indicating which elements are NaN."]
     fn is_nan_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
     #[doc = "Return a mask indicating which elements are positive or negative infinite."]
@@ -11901,6 +11957,10 @@ pub trait SimdFloat<S: Simd>:
     fn fract(self) -> Self;
     #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc(self) -> Self;
+    #[doc = "Converts radians to degrees.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next."]
+    fn to_degrees(self) -> Self;
+    #[doc = "Converts degrees to radians.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next."]
+    fn to_radians(self) -> Self;
     #[doc = "Return a mask indicating which elements are NaN."]
     fn is_nan(self) -> Self::Mask;
     #[doc = "Return a mask indicating which elements are positive or negative infinite."]

@@ -355,6 +355,14 @@ impl<S: Simd> crate::SimdFloat<S> for f32x4<S> {
         self.simd.trunc_f32x4(self)
     }
     #[inline(always)]
+    fn to_degrees(self) -> Self {
+        self.simd.to_degrees_f32x4(self)
+    }
+    #[inline(always)]
+    fn to_radians(self) -> Self {
+        self.simd.to_radians_f32x4(self)
+    }
+    #[inline(always)]
     fn is_nan(self) -> Self::Mask {
         self.simd.is_nan_f32x4(self)
     }
@@ -3302,6 +3310,14 @@ impl<S: Simd> crate::SimdFloat<S> for f64x2<S> {
         self.simd.trunc_f64x2(self)
     }
     #[inline(always)]
+    fn to_degrees(self) -> Self {
+        self.simd.to_degrees_f64x2(self)
+    }
+    #[inline(always)]
+    fn to_radians(self) -> Self {
+        self.simd.to_radians_f64x2(self)
+    }
+    #[inline(always)]
     fn is_nan(self) -> Self::Mask {
         self.simd.is_nan_f64x2(self)
     }
@@ -4565,6 +4581,14 @@ impl<S: Simd> crate::SimdFloat<S> for f32x8<S> {
     #[inline(always)]
     fn trunc(self) -> Self {
         self.simd.trunc_f32x8(self)
+    }
+    #[inline(always)]
+    fn to_degrees(self) -> Self {
+        self.simd.to_degrees_f32x8(self)
+    }
+    #[inline(always)]
+    fn to_radians(self) -> Self {
+        self.simd.to_radians_f32x8(self)
     }
     #[inline(always)]
     fn is_nan(self) -> Self::Mask {
@@ -7553,6 +7577,14 @@ impl<S: Simd> crate::SimdFloat<S> for f64x4<S> {
         self.simd.trunc_f64x4(self)
     }
     #[inline(always)]
+    fn to_degrees(self) -> Self {
+        self.simd.to_degrees_f64x4(self)
+    }
+    #[inline(always)]
+    fn to_radians(self) -> Self {
+        self.simd.to_radians_f64x4(self)
+    }
+    #[inline(always)]
     fn is_nan(self) -> Self::Mask {
         self.simd.is_nan_f64x4(self)
     }
@@ -8811,6 +8843,14 @@ impl<S: Simd> crate::SimdFloat<S> for f32x16<S> {
     #[inline(always)]
     fn trunc(self) -> Self {
         self.simd.trunc_f32x16(self)
+    }
+    #[inline(always)]
+    fn to_degrees(self) -> Self {
+        self.simd.to_degrees_f32x16(self)
+    }
+    #[inline(always)]
+    fn to_radians(self) -> Self {
+        self.simd.to_radians_f32x16(self)
     }
     #[inline(always)]
     fn is_nan(self) -> Self::Mask {
@@ -11881,6 +11921,14 @@ impl<S: Simd> crate::SimdFloat<S> for f64x8<S> {
     #[inline(always)]
     fn trunc(self) -> Self {
         self.simd.trunc_f64x8(self)
+    }
+    #[inline(always)]
+    fn to_degrees(self) -> Self {
+        self.simd.to_degrees_f64x8(self)
+    }
+    #[inline(always)]
+    fn to_radians(self) -> Self {
+        self.simd.to_radians_f64x8(self)
     }
     #[inline(always)]
     fn is_nan(self) -> Self::Mask {

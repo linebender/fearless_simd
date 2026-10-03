@@ -1207,3 +1207,26 @@ pub(crate) fn generic_round(method_sig: TokenStream, vec_ty: &VecType) -> TokenS
         }
     }
 }
+
+pub(crate) fn generic_to_degrees_radians(
+    method_sig: TokenStream,
+    method: &str,
+    vec_ty: &VecType,
+) -> TokenStream {
+    assert_eq!(vec_ty.scalar, ScalarType::Float);
+
+    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+
+    // Use the constant from std, as they may offer more precision.
+    let factor_expr = match method {
+        "to_degrees" => quote! { #scalar::to_degrees(1.0) },
+        "to_radians" => quote! { #scalar::to_radians(1.0) },
+        _ => unimplemented!(),
+    };
+
+    quote! {
+        #method_sig {
+            a * const { #factor_expr }
+        }
+    }
+}

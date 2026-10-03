@@ -29,6 +29,8 @@ pub(crate) fn translate_op(op: &str, is_float: bool) -> Option<&'static str> {
         "fract" => "fract",
         "trunc" => "trunc",
         "sqrt" => "sqrt",
+        "to_degrees" => "to_degrees",
+        "to_radians" => "to_radians",
         "add" => {
             if is_float {
                 "add"

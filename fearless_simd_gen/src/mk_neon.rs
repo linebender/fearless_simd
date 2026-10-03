@@ -6,8 +6,9 @@ use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
     CompactOptions, byte_compact_op, compact_128_op, composed_compact_op, count_zeros_method,
-    fallback_method, generic_classify, generic_mask_set, generic_op_name, integer_lane_mask_rotate,
-    integer_lane_mask_splat_arg, reverse_method, reverse_vector_mask_method,
+    fallback_method, generic_classify, generic_mask_set, generic_op_name,
+    generic_to_degrees_radians, integer_lane_mask_rotate, integer_lane_mask_splat_arg,
+    reverse_method, reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{NarrowingMode, Op, SlideGranularity, relaxed_narrow_method};
@@ -307,6 +308,10 @@ impl Level for Neon {
 
                 if method == "count_ones" {
                     return self.handle_count_ones(op, vec_ty);
+                }
+
+                if matches!(method, "to_degrees" | "to_radians") {
+                    return generic_to_degrees_radians(method_sig, method, vec_ty);
                 }
 
                 let args = [quote! { a.into() }];

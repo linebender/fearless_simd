@@ -105,6 +105,7 @@ mod swizzle_dyn_within_blocks;
 mod to_array;
 mod to_bitmask;
 mod to_bytes;
+mod to_degrees_radians;
 mod trunc;
 mod unzip_high;
 mod unzip_low;
