@@ -433,6 +433,26 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn to_degrees_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
+        [
+            f32::to_degrees(a[0usize]),
+            f32::to_degrees(a[1usize]),
+            f32::to_degrees(a[2usize]),
+            f32::to_degrees(a[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn to_radians_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
+        [
+            f32::to_radians(a[0usize]),
+            f32::to_radians(a[1usize]),
+            f32::to_radians(a[2usize]),
+            f32::to_radians(a[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn is_nan_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
         a.simd_ne(a)
     }
@@ -5723,6 +5743,14 @@ impl Simd for Fallback {
     #[inline(always)]
     fn trunc_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
         [f64::trunc(a[0usize]), f64::trunc(a[1usize])].simd_into(self)
+    }
+    #[inline(always)]
+    fn to_degrees_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
+        [f64::to_degrees(a[0usize]), f64::to_degrees(a[1usize])].simd_into(self)
+    }
+    #[inline(always)]
+    fn to_radians_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
+        [f64::to_radians(a[0usize]), f64::to_radians(a[1usize])].simd_into(self)
     }
     #[inline(always)]
     fn is_nan_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
