@@ -108,6 +108,10 @@ pub(crate) enum OpSig {
     /// Takes two vectors and a same-width byte-index vector, and returns the original vector type with its bytes
     /// dynamically selected from the concatenation of both vectors. Out-of-range indices produce zero.
     ConcatSwizzleDynPrecise,
+    /// Takes a byte vector, a same-width byte-lane mask, and optionally a merge vector.
+    Compress { merge: bool },
+    /// Takes a byte vector, a same-width byte-lane mask, and optionally a merge vector.
+    Expand { merge: bool },
     /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
     /// same length.
     Cvt {
@@ -352,6 +356,17 @@ impl Op {
                     vec,
                 )
             }
+            OpSig::Compress { merge: false } | OpSig::Expand { merge: false } => {
+                let mask = vec_ty.mask_ty().rust();
+                (vec![vec.clone(), quote! { #mask<#simd_ty> }], vec)
+            }
+            OpSig::Compress { merge: true } | OpSig::Expand { merge: true } => {
+                let mask = vec_ty.mask_ty().rust();
+                (
+                    vec![vec.clone(), quote! { #mask<#simd_ty> }, vec.clone()],
+                    vec,
+                )
+            }
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
@@ -414,6 +429,12 @@ impl Op {
             }
             OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } => {
                 return None;
+            }
+            OpSig::Compress { merge: false } | OpSig::Expand { merge: false } => {
+                quote! { (self, mask: Self::Mask) -> Self }
+            }
+            OpSig::Compress { merge: true } | OpSig::Expand { merge: true } => {
+                quote! { (self, mask: Self::Mask, merge: impl SimdInto<Self, S>) -> Self }
             }
             OpSig::MaskFromBitmask | OpSig::MaskToBitmask | OpSig::MaskSet => return None,
             OpSig::Unary | OpSig::Cvt { .. } => {
@@ -670,6 +691,38 @@ const BASE_OPS: &[Op] = &[
         OpSig::ConcatSwizzleDynPrecise,
         "Dynamically select bytes from the concatenation of this vector and `rhs`.\n\n\
         The `indices` operand is a same-width byte vector. For each output byte, index values within the concatenated vectors' byte length select the corresponding byte: the first vector comes first, followed by `rhs`. Out-of-range indices produce zero.",
+    ),
+    Op::new(
+        "compress",
+        OpKind::BaseTraitMethod,
+        OpSig::Compress { merge: false },
+        "Compact the elements selected by `{arg1}` into consecutive low lanes, preserving their order.\n\n\
+         Lanes above the number of selected elements are zero (positive zero for floats).\n\n\
+         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.",
+    ),
+    Op::new(
+        "compress_merge",
+        OpKind::BaseTraitMethod,
+        OpSig::Compress { merge: true },
+        "Compact the elements selected by `{arg1}` into consecutive low lanes, preserving their order.\n\n\
+         Lanes above the number of selected elements retain the corresponding values from `{arg2}`.\n\n\
+         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.",
+    ),
+    Op::new(
+        "expand",
+        OpKind::BaseTraitMethod,
+        OpSig::Expand { merge: false },
+        "Expand consecutive low elements from `{arg0}` into the lanes selected by `{arg1}`, preserving their order.\n\n\
+         Unselected lanes are zero (positive zero for floats).\n\n\
+         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.",
+    ),
+    Op::new(
+        "expand_merge",
+        OpKind::BaseTraitMethod,
+        OpSig::Expand { merge: true },
+        "Expand consecutive low elements from `{arg0}` into the lanes selected by `{arg1}`, preserving their order.\n\n\
+         Unselected lanes retain the corresponding values from `{arg2}`.\n\n\
+         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.",
     ),
 ];
 
@@ -1893,6 +1946,8 @@ impl OpSig {
                 | Self::SwizzleDynPrecise
                 | Self::ConcatSwizzleDyn
                 | Self::ConcatSwizzleDynPrecise
+                | Self::Compress { .. }
+                | Self::Expand { .. }
                 | Self::Slide {
                     granularity: SlideGranularity::AcrossBlocks,
                     ..
@@ -1943,6 +1998,10 @@ impl OpSig {
                 &["a", "indices"]
             }
             Self::ConcatSwizzleDyn | Self::ConcatSwizzleDynPrecise => &["a", "b", "indices"],
+            Self::Compress { merge: false } | Self::Expand { merge: false } => &["values", "mask"],
+            Self::Compress { merge: true } | Self::Expand { merge: true } => {
+                &["values", "mask", "merge"]
+            }
             Self::Binary
             | Self::Compare
             | Self::Combine { .. }
@@ -1967,6 +2026,10 @@ impl OpSig {
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
             | Self::MaskSet => &[],
+            Self::Compress { merge: false } | Self::Expand { merge: false } => &["self", "mask"],
+            Self::Compress { merge: true } | Self::Expand { merge: true } => {
+                &["self", "mask", "merge"]
+            }
             Self::Unary
             | Self::Reduce { .. }
             | Self::RotateElements { .. }
@@ -2046,6 +2109,12 @@ impl OpSig {
             | Self::SwizzleDyn
             | Self::SwizzleDynPrecise
             | Self::Slide { .. } => return None,
+            Self::Compress { merge: false } | Self::Expand { merge: false } => {
+                quote! { self, mask }
+            }
+            Self::Compress { merge: true } | Self::Expand { merge: true } => {
+                quote! { self, mask, merge.simd_into(self.simd) }
+            }
         };
         Some(args)
     }

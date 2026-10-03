@@ -67,6 +67,34 @@ pub(crate) fn byte_swizzle_op(op: &Op, vec_ty: &VecType) -> TokenStream {
     }
 }
 
+/// Forward typed compression/expansion through bytes on vector-backed mask backends.
+///
+/// Each all-zero/all-one mask lane becomes a group of identical byte lanes, so entire
+/// elements move together. This must not be used with compact predicate masks (AVX-512).
+pub(crate) fn byte_compact_op(op: Op, vec_ty: &VecType) -> TokenStream {
+    assert_ne!(*vec_ty, vec_ty.bytes_ty());
+    assert_ne!(vec_ty.scalar, ScalarType::Mask);
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let byte_method = generic_op_name(op.method, &vec_ty.bytes_ty());
+    let byte_mask = vec_ty.bytes_ty().mask_ty().rust();
+    let merge_arg = match op.sig {
+        OpSig::Compress { merge: true } | OpSig::Expand { merge: true } => {
+            quote! { , Bytes::to_bytes(merge) }
+        }
+        OpSig::Compress { merge: false } | OpSig::Expand { merge: false } => TokenStream::new(),
+        _ => unreachable!("only compact operations can be forwarded through bytes"),
+    };
+    quote! {
+        #method_sig {
+            let mask = #byte_mask {
+                val: crate::transmute::checked_transmute_copy(&mask.val),
+                simd: self,
+            };
+            Bytes::from_bytes(self.#byte_method(Bytes::to_bytes(values), mask #merge_arg))
+        }
+    }
+}
+
 /// Implement a greater-than comparison by reversing the corresponding less-than comparison.
 pub(crate) fn reversed_compare_op(op: &Op, vec_ty: &VecType) -> Option<TokenStream> {
     let reversed_method = generic_op_name(op.reversed_compare_method()?, vec_ty);
@@ -353,6 +381,69 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
         | OpSig::ConcatSwizzleDynPrecise => {
             panic!("whole-vector swizzles cannot be done via split/combine");
         }
+        OpSig::Compress { merge: false } => {
+            let merge_method = generic_op_name("compress_merge", ty);
+            let ty = ty.rust();
+            quote! {
+                #method_sig {
+                    self.#merge_method(values, mask, #ty::splat(self, 0))
+                }
+            }
+        }
+        OpSig::Compress { merge: true } => {
+            let len = Literal::usize_unsuffixed(ty.len);
+            let to_bitmask = generic_op_name("to_bitmask", &ty.mask_ty());
+            quote! {
+                #method_sig {
+                    // Branchless: every lane is written at the cursor, which only advances on
+                    // selected lanes. The one slot past the selected lanes may be clobbered by an
+                    // unselected lane, so it is restored from `merge` afterwards.
+                    let mask = self.#to_bitmask(mask);
+                    let mut merge_padded = [0u8; #len + 1];
+                    merge_padded[..#len].copy_from_slice(&*merge);
+                    let mut compacted = merge_padded;
+                    let mut output_lane = 0;
+                    for input_lane in 0..#len {
+                        compacted[output_lane] = values[input_lane];
+                        output_lane += ((mask >> input_lane) & 1) as usize;
+                    }
+                    compacted[output_lane] = merge_padded[output_lane];
+                    let mut result = merge;
+                    result.copy_from_slice(&compacted[..#len]);
+                    result
+                }
+            }
+        }
+        OpSig::Expand { merge: false } => {
+            let merge_method = generic_op_name("expand_merge", ty);
+            let ty = ty.rust();
+            quote! {
+                #method_sig {
+                    self.#merge_method(values, mask, #ty::splat(self, 0))
+                }
+            }
+        }
+        OpSig::Expand { merge: true } => {
+            let len = Literal::usize_unsuffixed(ty.len);
+            let to_bitmask = generic_op_name("to_bitmask", &ty.mask_ty());
+            quote! {
+                #method_sig {
+                    // Branchless: the input cursor never passes the output lane, so the read is
+                    // always in bounds and selected with a lane mask instead of a branch.
+                    let mask = self.#to_bitmask(mask);
+                    let mut result = merge;
+                    let mut input_lane = 0;
+                    for output_lane in 0..#len {
+                        let bit = ((mask >> output_lane) & 1) as u8;
+                        let keep = 0u8.wrapping_sub(bit);
+                        result[output_lane] =
+                            (values[input_lane] & keep) | (result[output_lane] & !keep);
+                        input_lane += usize::from(bit);
+                    }
+                    result
+                }
+            }
+        }
         OpSig::Ternary => {
             quote! {
                 #method_sig {
@@ -594,6 +685,326 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 }
             }
         }
+    }
+}
+
+pub(crate) type CompactMergeSwizzle =
+    fn(&VecType, &TokenStream, &TokenStream, &TokenStream) -> TokenStream;
+
+/// Compact whole elements with one table lookup and one native 128-bit byte shuffle.
+pub(crate) fn compact_128_op(
+    op: Op,
+    ty: &VecType,
+    merge_swizzle: Option<CompactMergeSwizzle>,
+) -> TokenStream {
+    assert_eq!(ty.n_bits(), 128, "compact tables cover one 128-bit vector");
+    assert!(
+        matches!(ty.scalar_bits, 16 | 32 | 64),
+        "compact tables require wider elements"
+    );
+    let (expand, merge) = match op.sig {
+        OpSig::Compress { merge } => (false, merge),
+        OpSig::Expand { merge } => (true, merge),
+        _ => unreachable!("compact tables only implement compress/expand"),
+    };
+    let method_sig = op.simd_trait_method_sig(ty);
+    let to_bitmask = generic_op_name("to_bitmask", &ty.mask_ty());
+    let table = Ident::new(
+        &format!(
+            "{}_{}",
+            if expand { "EXPAND" } else { "COMPRESS" },
+            ty.scalar_bits
+        ),
+        Span::call_site(),
+    );
+    let lane_mask = Literal::usize_unsuffixed((1 << ty.len) - 1);
+    let finish = if !merge {
+        quote! {
+            Bytes::from_bytes(self.swizzle_dyn_precise_u8x16(Bytes::to_bytes(values), control))
+        }
+    } else if let Some(merge_swizzle) = merge_swizzle {
+        let result = merge_swizzle(
+            &ty.bytes_ty(),
+            &quote! { Bytes::to_bytes(values) },
+            &quote! { control },
+            &quote! { Bytes::to_bytes(merge) },
+        );
+        quote! { Bytes::from_bytes(#result) }
+    } else if expand {
+        let select = generic_op_name("select", ty);
+        quote! {
+            let expanded = Bytes::from_bytes(
+                self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control),
+            );
+            self.#select(mask, expanded, merge)
+        }
+    } else {
+        quote! {
+            let compressed = self.swizzle_dyn_u8x16(Bytes::to_bytes(values), control);
+            let inactive = self.simd_lt_i8x16(
+                i8x16::from_bytes(control), i8x16::splat(self, 0),
+            );
+            Bytes::from_bytes(self.select_u8x16(inactive, Bytes::to_bytes(merge), compressed))
+        }
+    };
+    // Merge forms may use the imprecise shuffle: every out-of-range result is
+    // replaced by a merge byte. Compression's 0xff controls also identify its tail.
+    quote! {
+        #method_sig {
+            let bits = self.#to_bitmask(mask) as usize & #lane_mask;
+            let control = u8x16::simd_from(self, crate::support::compact_128::#table[bits].0);
+            #finish
+        }
+    }
+}
+
+/// Backend capabilities used by [`composed_compact_op`].
+pub(crate) struct CompactOptions {
+    /// Compact wide vectors a native 128-bit block at a time and splice them through memory.
+    pub(crate) splice_wide_vectors: bool,
+    /// Use the target's scalar population-count instruction instead of the byte-count table.
+    pub(crate) hardware_popcount: bool,
+    /// Optional backend operation that combines an out-of-range-zeroing shuffle with its merge
+    /// operand. The arguments are `(vector type, values, control, merge)`.
+    pub(crate) merge_swizzle: Option<CompactMergeSwizzle>,
+}
+
+/// Implement byte compression and expansion in terms of a backend's optimized whole-vector
+/// swizzle, compact mask conversion, and selection operations.
+pub(crate) fn composed_compact_op(op: Op, ty: &VecType, options: CompactOptions) -> TokenStream {
+    assert_eq!(
+        ty.scalar,
+        ScalarType::Unsigned,
+        "compact operations require unsigned vectors"
+    );
+    assert_eq!(ty.scalar_bits, 8, "compact operations require byte lanes");
+
+    let method_sig = op.simd_trait_method_sig(ty);
+    let vec = ty.rust();
+    let len = Literal::usize_unsuffixed(ty.len);
+    let swizzle = generic_op_name("swizzle_dyn_precise", ty);
+    let to_bitmask = generic_op_name("to_bitmask", &ty.mask_ty());
+    let from_bitmask = generic_op_name("from_bitmask", &ty.mask_ty());
+    let select = generic_op_name("select", ty);
+    let count_8 = |mask: TokenStream| {
+        if options.hardware_popcount {
+            quote! { #mask.count_ones() as usize }
+        } else {
+            quote! { crate::support::COMPACT_8_COUNTS[#mask] as usize }
+        }
+    };
+
+    // Backends whose byte shuffle is confined to 128-bit blocks can avoid an expensive emulated
+    // whole-vector shuffle by compacting each native block and splicing through a stack buffer.
+    // This is the same broad strategy used by Highway on targets without native byte
+    // compress/expand instructions.
+    if options.splice_wide_vectors && ty.len > 16 {
+        assert!(
+            options.merge_swizzle.is_none(),
+            "block-spliced compact operations do not support a merging shuffle"
+        );
+        let block_vec = VecType {
+            scalar: ScalarType::Unsigned,
+            scalar_bits: 8,
+            len: 16,
+        };
+        let block_swizzle = generic_op_name("swizzle_dyn_precise", &block_vec);
+
+        return match op.sig {
+            OpSig::Compress { merge } => {
+                let low_count = count_8(quote! { low_mask });
+                let high_count = count_8(quote! { high_mask });
+                let finish = if merge {
+                    quote! {
+                        let compressed = #vec::simd_from(self, output);
+                        let prefix_bits = if output_lane == 64 {
+                            u64::MAX
+                        } else {
+                            (1u64 << output_lane) - 1
+                        };
+                        let prefix_mask = self.#from_bitmask(prefix_bits);
+                        self.#select(prefix_mask, compressed, merge)
+                    }
+                } else {
+                    quote! { #vec::simd_from(self, output) }
+                };
+                quote! {
+                    #method_sig {
+                        let mask_bits = self.#to_bitmask(mask);
+                        let mut output = [0u8; #len];
+                        let mut output_lane = 0;
+                        for block in 0..#len / 16 {
+                            let block_bits = ((mask_bits >> (block * 16)) & 0xffff) as usize;
+                            let low_mask = block_bits & 0xff;
+                            let high_mask = block_bits >> 8;
+                            let low_count = #low_count;
+                            let low = crate::support::COMPRESS_8_CONTROLS[low_mask];
+                            let high = crate::support::COMPRESS_8_CONTROLS[high_mask];
+                            // Selected indices are 0..7; OR adds eight while
+                            // leaving inactive 0xff controls out of range.
+                            let high = high | 0x0808_0808_0808_0808;
+                            let mut control = [u8::MAX; 16];
+                            control[..8].copy_from_slice(&low.to_le_bytes());
+                            control[low_count..low_count + 8]
+                                .copy_from_slice(&high.to_le_bytes());
+                            let input = u8x16::from_slice(
+                                self,
+                                &values.as_array()[block * 16..block * 16 + 16],
+                            );
+                            let control = u8x16::simd_from(self, control);
+                            let compacted: [u8; 16] =
+                                self.#block_swizzle(input, control).into();
+                            let write_len = core::cmp::min(16, #len - output_lane);
+                            output[output_lane..output_lane + write_len]
+                                .copy_from_slice(&compacted[..write_len]);
+                            output_lane += low_count + #high_count;
+                        }
+                        #finish
+                    }
+                }
+            }
+            OpSig::Expand { merge } => {
+                let low_count = count_8(quote! { low_mask });
+                let high_count = count_8(quote! { high_mask });
+                let finish = if merge {
+                    quote! {
+                        let expanded = #vec::simd_from(self, output);
+                        self.#select(mask, expanded, merge)
+                    }
+                } else {
+                    quote! { #vec::simd_from(self, output) }
+                };
+                quote! {
+                    #method_sig {
+                        let mask_bits = self.#to_bitmask(mask);
+                        let values: [u8; #len] = values.into();
+                        let mut output = [0u8; #len];
+                        let mut input_lane = 0;
+                        for block in 0..#len / 16 {
+                            let block_bits = ((mask_bits >> (block * 16)) & 0xffff) as usize;
+                            let low_mask = block_bits & 0xff;
+                            let high_mask = block_bits >> 8;
+                            let low_count = #low_count;
+                            let low = crate::support::EXPAND_8_CONTROLS[low_mask];
+                            let high = crate::support::EXPAND_8_CONTROLS[high_mask];
+                            let high_base = low_count as u64 * 0x0101_0101_0101_0101;
+                            // Adding at most eight preserves the inactive 0x80
+                            // controls' high bit without carrying between bytes.
+                            let high = high + high_base;
+                            let mut control = [0u8; 16];
+                            control[..8].copy_from_slice(&low.to_le_bytes());
+                            control[8..].copy_from_slice(&high.to_le_bytes());
+                            let mut input = [0u8; 16];
+                            let read_len = core::cmp::min(16, #len - input_lane);
+                            input[..read_len]
+                                .copy_from_slice(&values[input_lane..input_lane + read_len]);
+                            let input = u8x16::simd_from(self, input);
+                            let control = u8x16::simd_from(self, control);
+                            let expanded: [u8; 16] =
+                                self.#block_swizzle(input, control).into();
+                            output[block * 16..block * 16 + 16].copy_from_slice(&expanded);
+                            input_lane += low_count + #high_count;
+                        }
+                        #finish
+                    }
+                }
+            }
+            _ => unreachable!("composed_compact_op only implements compact byte operations"),
+        };
+    }
+
+    match op.sig {
+        OpSig::Compress { merge } => {
+            let block_count = count_8(quote! { block_mask });
+            let finish = if merge {
+                if let Some(merge_swizzle) = options.merge_swizzle {
+                    merge_swizzle(
+                        ty,
+                        &quote! { values },
+                        &quote! { control },
+                        &quote! { merge },
+                    )
+                } else {
+                    quote! {
+                        let compressed = self.#swizzle(values, control);
+                        let prefix_bits = if output_lane == 64 {
+                            u64::MAX
+                        } else {
+                            (1u64 << output_lane) - 1
+                        };
+                        let prefix_mask = self.#from_bitmask(prefix_bits);
+                        self.#select(prefix_mask, compressed, merge)
+                    }
+                }
+            } else {
+                quote! { self.#swizzle(values, control) }
+            };
+            quote! {
+                #method_sig {
+                    let mask_bits = self.#to_bitmask(mask);
+                    let mut control = [u8::MAX; #len];
+                    let mut output_lane = 0;
+                    for block in 0..#len / 8 {
+                        let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
+                        let packed = crate::support::COMPRESS_8_CONTROLS[block_mask];
+                        let base = (block * 8) as u64 * 0x0101_0101_0101_0101;
+                        // Block offsets are multiples of eight, disjoint from
+                        // indices 0..7. Inactive 0xff controls stay out of range.
+                        let adjusted = packed | base;
+                        let adjusted = adjusted.to_le_bytes();
+                        let write_len = core::cmp::min(8, #len - output_lane);
+                        control[output_lane..output_lane + write_len]
+                            .copy_from_slice(&adjusted[..write_len]);
+                        output_lane += #block_count;
+                    }
+                    let control = #vec::simd_from(self, control);
+                    #finish
+                }
+            }
+        }
+        OpSig::Expand { merge } => {
+            let block_count = count_8(quote! { block_mask });
+            let finish = if merge {
+                if let Some(merge_swizzle) = options.merge_swizzle {
+                    merge_swizzle(
+                        ty,
+                        &quote! { values },
+                        &quote! { control },
+                        &quote! { merge },
+                    )
+                } else {
+                    quote! {
+                        let expanded = self.#swizzle(values, control);
+                        self.#select(mask, expanded, merge)
+                    }
+                }
+            } else {
+                quote! { self.#swizzle(values, control) }
+            };
+            quote! {
+                #method_sig {
+                    let mask_bits = self.#to_bitmask(mask);
+                    let mut control = [u8::MAX; #len];
+                    let mut input_lane = 0;
+                    for block in 0..#len / 8 {
+                        let block_mask = ((mask_bits >> (block * 8)) & 0xff) as usize;
+                        let packed = crate::support::EXPAND_8_CONTROLS[block_mask];
+                        let base = input_lane as u64 * 0x0101_0101_0101_0101;
+                        // The offset is at most 56 for a 64-byte vector. Adding
+                        // it to inactive 0x80 controls keeps them out of range
+                        // and cannot carry between bytes.
+                        let adjusted = packed + base;
+                        let output_lane = block * 8;
+                        control[output_lane..output_lane + 8]
+                            .copy_from_slice(&adjusted.to_le_bytes());
+                        input_lane += #block_count;
+                    }
+                    let control = #vec::simd_from(self, control);
+                    #finish
+                }
+            }
+        }
+        _ => unreachable!("composed_compact_op only implements compact byte operations"),
     }
 }
 
