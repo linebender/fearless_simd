@@ -63,3 +63,344 @@ pub(crate) fn cross_block_slide_blocks_at<const N: usize, Block: Copy>(
     let hi_block = if hi_idx < N { a[hi_idx] } else { b[hi_idx - N] };
     [lo_block, hi_block]
 }
+
+/// Byte-shuffle controls for whole 16-, 32-, or 64-bit elements in a 128-bit vector.
+#[allow(
+    dead_code,
+    reason = "Used only by backends with native byte-table shuffles"
+)]
+pub(crate) mod compact_128 {
+    use super::Aligned128;
+
+    #[allow(
+        clippy::cast_possible_truncation,
+        reason = "Byte indices are less than 16"
+    )]
+    const fn controls<const N: usize>(
+        element_bytes: usize,
+        expand: bool,
+    ) -> [Aligned128<[u8; 16]>; N] {
+        assert!(
+            matches!(element_bytes, 2 | 4 | 8),
+            "unsupported element size"
+        );
+        let lanes = 16 / element_bytes;
+        assert!(
+            N == 1 << lanes,
+            "one control row is required per selection mask"
+        );
+        let mut table = [Aligned128([0xff; 16]); N];
+        let mut mask = 0;
+        while mask < N {
+            let mut selected = 0;
+            let mut lane = 0;
+            while lane < lanes {
+                if mask & (1 << lane) != 0 {
+                    let source = if expand { selected } else { lane };
+                    let destination = if expand { lane } else { selected };
+                    let mut byte = 0;
+                    while byte < element_bytes {
+                        table[mask].0[destination * element_bytes + byte] =
+                            (source * element_bytes + byte) as u8;
+                        byte += 1;
+                    }
+                    selected += 1;
+                }
+                lane += 1;
+            }
+            mask += 1;
+        }
+        table
+    }
+
+    pub(crate) const COMPRESS_16: [Aligned128<[u8; 16]>; 256] = controls(2, false);
+    pub(crate) const EXPAND_16: [Aligned128<[u8; 16]>; 256] = controls(2, true);
+    pub(crate) const COMPRESS_32: [Aligned128<[u8; 16]>; 16] = controls(4, false);
+    pub(crate) const EXPAND_32: [Aligned128<[u8; 16]>; 16] = controls(4, true);
+    pub(crate) const COMPRESS_64: [Aligned128<[u8; 16]>; 4] = controls(8, false);
+    pub(crate) const EXPAND_64: [Aligned128<[u8; 16]>; 4] = controls(8, true);
+}
+
+/// Dword-permutation controls for whole 32- or 64-bit elements in an AVX2 vector.
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub(crate) mod compact_256 {
+    use super::Aligned256;
+
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_possible_wrap,
+        reason = "Dword indices are less than eight"
+    )]
+    const fn controls<const N: usize>(
+        element_dwords: usize,
+        expand: bool,
+    ) -> [Aligned256<[i32; 8]>; N] {
+        assert!(matches!(element_dwords, 1 | 2), "unsupported element size");
+        let lanes = 8 / element_dwords;
+        assert!(
+            N == 1 << lanes,
+            "one control row is required per selection mask"
+        );
+        // VPERMD only uses the low three index bits. The -1 sentinel separately
+        // identifies inactive lanes for zero/merge fill after the permutation.
+        let mut table = [Aligned256([-1; 8]); N];
+        let mut mask = 0;
+        while mask < N {
+            let mut selected = 0;
+            let mut lane = 0;
+            while lane < lanes {
+                if mask & (1 << lane) != 0 {
+                    let source = if expand { selected } else { lane };
+                    let destination = if expand { lane } else { selected };
+                    let mut dword = 0;
+                    while dword < element_dwords {
+                        // Adjacent dwords of a qword always move together.
+                        table[mask].0[destination * element_dwords + dword] =
+                            (source * element_dwords + dword) as i32;
+                        dword += 1;
+                    }
+                    selected += 1;
+                }
+                lane += 1;
+            }
+            mask += 1;
+        }
+        table
+    }
+
+    // Full dword controls avoid the extra widening/validity work of packed byte
+    // controls, particularly on Zen 1/3. Signed, unsigned and float ops share them.
+    pub(crate) static COMPRESS_32: [Aligned256<[i32; 8]>; 256] = controls(1, false);
+    pub(crate) static EXPAND_32: [Aligned256<[i32; 8]>; 256] = controls(1, true);
+    pub(crate) static COMPRESS_64: [Aligned256<[i32; 8]>; 16] = controls(2, false);
+    pub(crate) static EXPAND_64: [Aligned256<[i32; 8]>; 16] = controls(2, true);
+
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_possible_wrap,
+        reason = "Dword indices and offsets are at most eight"
+    )]
+    const fn shifts() -> [Aligned256<[i32; 8]>; 9] {
+        let mut table = [Aligned256([0; 8]); 9];
+        let mut offset = 0;
+        while offset <= 8 {
+            let mut lane = 0;
+            while lane < 8 {
+                table[offset].0[lane] = lane as i32 - offset as i32;
+                lane += 1;
+            }
+            offset += 1;
+        }
+        table
+    }
+
+    // VPERMD uses the low three bits to rotate by the offset. Negative controls
+    // (-8..=-1) have every byte's sign bit set, so the same row is a blend mask
+    // for the prefix crossing between two YMM registers. Qwords use even offsets.
+    pub(crate) static SHIFTS: [Aligned256<[i32; 8]>; 9] = shifts();
+}
+
+const fn compact_control_table(expand: bool) -> [u64; 256] {
+    // Expansion adds a lane offset to each byte of the packed control. Use 0x80
+    // for inactive lanes so these additions preserve the zeroing bit without
+    // carrying into adjacent bytes. Every supported shuffle treats it as zero.
+    let empty = if expand {
+        0x8080_8080_8080_8080
+    } else {
+        u64::MAX
+    };
+    let mut table = [empty; 256];
+    let mut mask = 0_usize;
+    while mask < table.len() {
+        let mut control = empty;
+        let mut selected = 0_usize;
+        let mut lane = 0_usize;
+        while lane < 8 {
+            if mask & (1 << lane) != 0 {
+                let output_lane = if expand { lane } else { selected };
+                control &= !(0xff_u64 << (output_lane * 8));
+                let index = if expand { selected } else { lane };
+                control |= (index as u64) << (output_lane * 8);
+                selected += 1;
+            }
+            lane += 1;
+        }
+        table[mask] = control;
+        mask += 1;
+    }
+    table
+}
+
+const fn compact_count_table() -> [u8; 256] {
+    let mut table = [0; 256];
+    let mut mask = 0_usize;
+    while mask < table.len() {
+        let mut bits = mask;
+        let mut count = 0;
+        while bits != 0 {
+            if bits & 1 != 0 {
+                count += 1;
+            }
+            bits >>= 1;
+        }
+        table[mask] = count;
+        mask += 1;
+    }
+    table
+}
+
+const fn compact_splice_control_table() -> [u128; 9] {
+    let mut table = [u128::MAX; 9];
+    let mut low_count = 0;
+    while low_count <= 8 {
+        let mut control = u128::MAX;
+        let mut lane = 0;
+        while lane < low_count {
+            control &= !(0xff_u128 << (lane * 8));
+            control |= (lane as u128) << (lane * 8);
+            lane += 1;
+        }
+        lane = 0;
+        while lane < 8 {
+            let output_lane = low_count + lane;
+            if output_lane < 16 {
+                control &= !(0xff_u128 << (output_lane * 8));
+                control |= ((lane + 8) as u128) << (output_lane * 8);
+            }
+            lane += 1;
+        }
+        table[low_count] = control;
+        low_count += 1;
+    }
+    table
+}
+
+#[allow(
+    clippy::cast_possible_truncation,
+    reason = "lane is bounded to 0..16 by the table-construction loop"
+)]
+const fn compact_16_splice_control_table() -> [Aligned256<[u8; 32]>; 17] {
+    let mut table = [Aligned256([0x80; 32]); 17];
+    let mut low_count = 0;
+    while low_count <= 16 {
+        let mut lane = 0;
+        while lane < 16 {
+            let output_lane = low_count + lane;
+            if output_lane < 32 {
+                table[low_count].0[output_lane] = lane as u8;
+            }
+            lane += 1;
+        }
+        low_count += 1;
+    }
+    table
+}
+
+const fn compact_prefix_mask_table() -> [Aligned256<[u8; 32]>; 33] {
+    let mut table = [Aligned256([0; 32]); 33];
+    let mut count = 0;
+    while count <= 32 {
+        let mut lane = 0;
+        while lane < count {
+            table[count].0[lane] = u8::MAX;
+            lane += 1;
+        }
+        count += 1;
+    }
+    table
+}
+
+#[derive(Clone, Copy)]
+#[repr(C, align(32))]
+pub(crate) struct Compact32StitchControls {
+    pub(crate) left_same: [u8; 32],
+    pub(crate) left_cross: [u8; 32],
+    pub(crate) right_same: [u8; 32],
+    pub(crate) right_cross: [u8; 32],
+}
+
+/// Controls for concatenating two compacted 32-byte vectors entirely in registers.
+///
+/// For a first-vector length `count`, `left_*` shifts the second vector left by `count`
+/// bytes and `right_*` shifts it right by `32 - count` bytes. Separate same-lane and
+/// cross-lane controls account for AVX2 `vpshufb` operating independently in each
+/// 128-bit lane.
+#[allow(
+    clippy::cast_possible_truncation,
+    reason = "shuffle indices are reduced modulo 16"
+)]
+const fn compact_32_stitch_control_table() -> [Compact32StitchControls; 33] {
+    const EMPTY: Compact32StitchControls = Compact32StitchControls {
+        left_same: [0x80; 32],
+        left_cross: [0x80; 32],
+        right_same: [0x80; 32],
+        right_cross: [0x80; 32],
+    };
+
+    let mut table = [EMPTY; 33];
+    let mut count = 0;
+    while count <= 32 {
+        let mut lane = 0;
+        while lane < 32 {
+            if lane >= count {
+                let source = lane - count;
+                if lane / 16 == source / 16 {
+                    table[count].left_same[lane] = (source % 16) as u8;
+                } else {
+                    table[count].left_cross[lane] = (source % 16) as u8;
+                }
+            }
+
+            let source = lane + (32 - count);
+            if source < 32 {
+                if lane / 16 == source / 16 {
+                    table[count].right_same[lane] = (source % 16) as u8;
+                } else {
+                    table[count].right_cross[lane] = (source % 16) as u8;
+                }
+            }
+            lane += 1;
+        }
+        count += 1;
+    }
+    table
+}
+
+/// Eight-byte shuffle controls indexed by an eight-bit selection mask.
+#[allow(
+    dead_code,
+    reason = "Used only by SIMD backends with byte-table shuffles"
+)]
+pub(crate) const COMPRESS_8_CONTROLS: [u64; 256] = compact_control_table(false);
+
+/// Eight-byte inverse-shuffle controls indexed by an eight-bit selection mask.
+#[allow(
+    dead_code,
+    reason = "Used only by SIMD backends with byte-table shuffles"
+)]
+pub(crate) const EXPAND_8_CONTROLS: [u64; 256] = compact_control_table(true);
+
+/// Population counts indexed by an eight-bit selection mask.
+#[allow(
+    dead_code,
+    reason = "Used only by SIMD backends with byte-table shuffles"
+)]
+pub(crate) const COMPACT_8_COUNTS: [u8; 256] = compact_count_table();
+
+/// Shuffle controls that splice two independently compacted eight-byte halves.
+#[allow(dead_code, reason = "Used only by x86 byte compression")]
+pub(crate) const COMPACT_8_SPLICE_CONTROLS: [u128; 9] = compact_splice_control_table();
+
+/// Shuffle controls that append a compacted 16-byte high lane after a compacted low lane.
+#[allow(dead_code, reason = "Used only by AVX2 byte compression")]
+pub(crate) const COMPACT_16_SPLICE_CONTROLS: [Aligned256<[u8; 32]>; 17] =
+    compact_16_splice_control_table();
+
+/// Shuffle controls that concatenate two independently compacted 32-byte vectors.
+#[allow(dead_code, reason = "Used only by AVX2 64-byte compression")]
+pub(crate) const COMPACT_32_STITCH_CONTROLS: [Compact32StitchControls; 33] =
+    compact_32_stitch_control_table();
+
+/// Byte prefix masks indexed by the number of active lanes.
+#[allow(dead_code, reason = "Used only by x86 byte compression")]
+pub(crate) const COMPACT_PREFIX_MASKS: [Aligned256<[u8; 32]>; 33] = compact_prefix_mask_table();
