@@ -380,3 +380,176 @@ fn mul_8bit_boundary_matrix<S: Simd>(simd: S) {
         );
     }
 }
+
+#[simd_test]
+fn mul_64bit_wrapping_x2<S: Simd>(simd: S) {
+    // Exercise 32-bit cross terms, carries, discarded high products, and signed overflow.
+    const VALUES: [u64; 16] = [
+        0,
+        1,
+        2,
+        3,
+        0x7fff_ffff,
+        0x8000_0000,
+        0xffff_ffff,
+        0x1_0000_0000,
+        0x1_0000_0001,
+        0x7fff_ffff_ffff_ffff,
+        0x8000_0000_0000_0000,
+        0x8000_0000_0000_0001,
+        0xffff_ffff_0000_0000,
+        0xffff_ffff_0000_0001,
+        0xffff_ffff_ffff_fffe,
+        u64::MAX,
+    ];
+
+    for base in (0..VALUES.len() * VALUES.len()).step_by(2) {
+        let left: [u64; 2] = core::array::from_fn(|i| VALUES[(base + i) / VALUES.len()]);
+        let right: [u64; 2] = core::array::from_fn(|i| VALUES[(base + i) % VALUES.len()]);
+        let signed_left = left.map(u64::cast_signed);
+        let signed_right = right.map(u64::cast_signed);
+        let expected: [u64; 2] = core::array::from_fn(|i| left[i].wrapping_mul(right[i]));
+        let signed_expected: [i64; 2] =
+            core::array::from_fn(|i| signed_left[i].wrapping_mul(signed_right[i]));
+
+        let a = u64x2::from_slice(simd, &left);
+        let b = u64x2::from_slice(simd, &right);
+        assert_eq!(*simd.mul_u64x2(a, b), expected, "unsigned batch {base}");
+
+        let a = i64x2::from_slice(simd, &signed_left);
+        let b = i64x2::from_slice(simd, &signed_right);
+        assert_eq!(
+            *simd.mul_i64x2(a, b),
+            signed_expected,
+            "signed batch {base}"
+        );
+    }
+}
+
+#[simd_test]
+fn mul_64bit_wrapping_x4<S: Simd>(simd: S) {
+    // Exercise 32-bit cross terms, carries, discarded high products, and signed overflow.
+    const VALUES: [u64; 16] = [
+        0,
+        1,
+        2,
+        3,
+        0x7fff_ffff,
+        0x8000_0000,
+        0xffff_ffff,
+        0x1_0000_0000,
+        0x1_0000_0001,
+        0x7fff_ffff_ffff_ffff,
+        0x8000_0000_0000_0000,
+        0x8000_0000_0000_0001,
+        0xffff_ffff_0000_0000,
+        0xffff_ffff_0000_0001,
+        0xffff_ffff_ffff_fffe,
+        u64::MAX,
+    ];
+
+    for base in (0..VALUES.len() * VALUES.len()).step_by(4) {
+        let left: [u64; 4] = core::array::from_fn(|i| VALUES[(base + i) / VALUES.len()]);
+        let right: [u64; 4] = core::array::from_fn(|i| VALUES[(base + i) % VALUES.len()]);
+        let signed_left = left.map(u64::cast_signed);
+        let signed_right = right.map(u64::cast_signed);
+        let expected: [u64; 4] = core::array::from_fn(|i| left[i].wrapping_mul(right[i]));
+        let signed_expected: [i64; 4] =
+            core::array::from_fn(|i| signed_left[i].wrapping_mul(signed_right[i]));
+
+        let a = u64x4::from_slice(simd, &left);
+        let b = u64x4::from_slice(simd, &right);
+        assert_eq!(*simd.mul_u64x4(a, b), expected, "unsigned batch {base}");
+
+        let a = i64x4::from_slice(simd, &signed_left);
+        let b = i64x4::from_slice(simd, &signed_right);
+        assert_eq!(
+            *simd.mul_i64x4(a, b),
+            signed_expected,
+            "signed batch {base}"
+        );
+    }
+}
+
+#[simd_test]
+fn mul_64bit_wrapping_x8<S: Simd>(simd: S) {
+    // Exercise 32-bit cross terms, carries, discarded high products, and signed overflow.
+    const VALUES: [u64; 16] = [
+        0,
+        1,
+        2,
+        3,
+        0x7fff_ffff,
+        0x8000_0000,
+        0xffff_ffff,
+        0x1_0000_0000,
+        0x1_0000_0001,
+        0x7fff_ffff_ffff_ffff,
+        0x8000_0000_0000_0000,
+        0x8000_0000_0000_0001,
+        0xffff_ffff_0000_0000,
+        0xffff_ffff_0000_0001,
+        0xffff_ffff_ffff_fffe,
+        u64::MAX,
+    ];
+
+    for base in (0..VALUES.len() * VALUES.len()).step_by(8) {
+        let left: [u64; 8] = core::array::from_fn(|i| VALUES[(base + i) / VALUES.len()]);
+        let right: [u64; 8] = core::array::from_fn(|i| VALUES[(base + i) % VALUES.len()]);
+        let signed_left = left.map(u64::cast_signed);
+        let signed_right = right.map(u64::cast_signed);
+        let expected: [u64; 8] = core::array::from_fn(|i| left[i].wrapping_mul(right[i]));
+        let signed_expected: [i64; 8] =
+            core::array::from_fn(|i| signed_left[i].wrapping_mul(signed_right[i]));
+
+        let a = u64x8::from_slice(simd, &left);
+        let b = u64x8::from_slice(simd, &right);
+        assert_eq!(*simd.mul_u64x8(a, b), expected, "unsigned batch {base}");
+
+        let a = i64x8::from_slice(simd, &signed_left);
+        let b = i64x8::from_slice(simd, &signed_right);
+        assert_eq!(
+            *simd.mul_i64x8(a, b),
+            signed_expected,
+            "signed batch {base}"
+        );
+    }
+}
+
+#[simd_test]
+fn mul_64bit_wrapping_random<S: Simd>(simd: S) {
+    let mut rng = fastrand::Rng::with_seed(0x243f_6a88_85a3_08d3);
+    for _ in 0..512 {
+        let left: [u64; 8] = core::array::from_fn(|_| rng.u64(..));
+        let right: [u64; 8] = core::array::from_fn(|_| rng.u64(..));
+        let signed_left = left.map(u64::cast_signed);
+        let signed_right = right.map(u64::cast_signed);
+        let expected: [u64; 8] = core::array::from_fn(|i| left[i].wrapping_mul(right[i]));
+        let signed_expected: [i64; 8] =
+            core::array::from_fn(|i| signed_left[i].wrapping_mul(signed_right[i]));
+
+        let a = u64x2::from_slice(simd, &left[..2]);
+        let b = u64x2::from_slice(simd, &right[..2]);
+        assert_eq!(simd.mul_u64x2(a, b).as_slice(), &expected[..2]);
+
+        let a = i64x2::from_slice(simd, &signed_left[..2]);
+        let b = i64x2::from_slice(simd, &signed_right[..2]);
+        assert_eq!(simd.mul_i64x2(a, b).as_slice(), &signed_expected[..2]);
+
+        let a = u64x4::from_slice(simd, &left[..4]);
+        let b = u64x4::from_slice(simd, &right[..4]);
+        assert_eq!(simd.mul_u64x4(a, b).as_slice(), &expected[..4]);
+
+        let a = i64x4::from_slice(simd, &signed_left[..4]);
+        let b = i64x4::from_slice(simd, &signed_right[..4]);
+        assert_eq!(simd.mul_i64x4(a, b).as_slice(), &signed_expected[..4]);
+
+        let a = u64x8::from_slice(simd, &left[..8]);
+        let b = u64x8::from_slice(simd, &right[..8]);
+        assert_eq!(simd.mul_u64x8(a, b).as_slice(), &expected[..8]);
+
+        let a = i64x8::from_slice(simd, &signed_left[..8]);
+        let b = i64x8::from_slice(simd, &signed_right[..8]);
+        assert_eq!(simd.mul_i64x8(a, b).as_slice(), &signed_expected[..8]);
+    }
+}

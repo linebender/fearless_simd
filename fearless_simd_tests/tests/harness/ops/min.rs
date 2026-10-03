@@ -386,62 +386,128 @@ fn min_f64x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn min_i64x2<S: Simd>(simd: S) {
-    let a = i64x2::from_slice(simd, &[1_i64, -2_i64]);
-    let b = i64x2::from_slice(simd, &[0_i64, 0_i64]);
-    assert_eq!(*simd.min_i64x2(a, b), [0_i64, -2_i64]);
+    let a = i64x2::from_slice(simd, &[i64::MIN, i64::MAX]);
+    let b = i64x2::from_slice(simd, &[i64::MAX, i64::MIN]);
+    let expected = [i64::MIN, i64::MIN];
+    assert_eq!(*simd.min_i64x2(a, b), expected);
+    assert_eq!(*a.min_precise(b), expected);
+    assert_eq!(*simd.min_i64x2(a, a), *a);
 }
 
 #[simd_test]
 fn min_i64x4<S: Simd>(simd: S) {
-    let a = i64x4::from_slice(simd, &[1_i64, -2_i64, 3_i64, -4_i64]);
-    let b = i64x4::from_slice(simd, &[0_i64, 0_i64, 0_i64, 0_i64]);
-    assert_eq!(*simd.min_i64x4(a, b), [0_i64, -2_i64, 0_i64, -4_i64]);
+    let a = i64x4::from_slice(simd, &[i64::MIN, i64::MAX, -1, 0]);
+    let b = i64x4::from_slice(simd, &[i64::MAX, i64::MIN, 0, -1]);
+    let expected = [i64::MIN, i64::MIN, -1, -1];
+    assert_eq!(*simd.min_i64x4(a, b), expected);
+    assert_eq!(*a.min_precise(b), expected);
+    assert_eq!(*simd.min_i64x4(a, a), *a);
 }
 
 #[simd_test]
 fn min_i64x8<S: Simd>(simd: S) {
     let a = i64x8::from_slice(
         simd,
-        &[1_i64, -2_i64, 3_i64, -4_i64, 5_i64, -6_i64, 7_i64, -8_i64],
+        &[
+            i64::MIN,
+            i64::MAX,
+            -1,
+            0,
+            i64::MIN,
+            i64::MAX,
+            1_i64 << 32,
+            (1_i64 << 32) + 1,
+        ],
     );
     let b = i64x8::from_slice(
         simd,
-        &[0_i64, 0_i64, 0_i64, 0_i64, 0_i64, 0_i64, 0_i64, 0_i64],
+        &[
+            i64::MAX,
+            i64::MIN,
+            0,
+            -1,
+            i64::MIN,
+            i64::MAX,
+            (1_i64 << 32) + 1,
+            1_i64 << 32,
+        ],
     );
-    assert_eq!(
-        *simd.min_i64x8(a, b),
-        [0_i64, -2_i64, 0_i64, -4_i64, 0_i64, -6_i64, 0_i64, -8_i64]
-    );
+    let expected = [
+        i64::MIN,
+        i64::MIN,
+        -1,
+        -1,
+        i64::MIN,
+        i64::MAX,
+        1_i64 << 32,
+        1_i64 << 32,
+    ];
+    assert_eq!(*simd.min_i64x8(a, b), expected);
+    assert_eq!(*a.min_precise(b), expected);
+    assert_eq!(*simd.min_i64x8(a, a), *a);
 }
 
 #[simd_test]
 fn min_u64x2<S: Simd>(simd: S) {
-    let a = u64x2::from_slice(simd, &[1_u64, 2_u64]);
-    let b = u64x2::from_slice(simd, &[0_u64, 0_u64]);
-    assert_eq!(*simd.min_u64x2(a, b), [0_u64, 0_u64]);
+    let a = u64x2::from_slice(simd, &[0, u64::MAX]);
+    let b = u64x2::from_slice(simd, &[u64::MAX, 0]);
+    let expected = [0, 0];
+    assert_eq!(*simd.min_u64x2(a, b), expected);
+    assert_eq!(*a.min_precise(b), expected);
+    assert_eq!(*simd.min_u64x2(a, a), *a);
 }
 
 #[simd_test]
 fn min_u64x4<S: Simd>(simd: S) {
-    let a = u64x4::from_slice(simd, &[1_u64, 2_u64, 3_u64, 4_u64]);
-    let b = u64x4::from_slice(simd, &[0_u64, 0_u64, 0_u64, 0_u64]);
-    assert_eq!(*simd.min_u64x4(a, b), [0_u64, 0_u64, 0_u64, 0_u64]);
+    let a = u64x4::from_slice(simd, &[0, u64::MAX, 1_u64 << 63, (1_u64 << 63) - 1]);
+    let b = u64x4::from_slice(simd, &[u64::MAX, 0, (1_u64 << 63) - 1, 1_u64 << 63]);
+    let expected = [0, 0, (1_u64 << 63) - 1, (1_u64 << 63) - 1];
+    assert_eq!(*simd.min_u64x4(a, b), expected);
+    assert_eq!(*a.min_precise(b), expected);
+    assert_eq!(*simd.min_u64x4(a, a), *a);
 }
 
 #[simd_test]
 fn min_u64x8<S: Simd>(simd: S) {
     let a = u64x8::from_slice(
         simd,
-        &[1_u64, 2_u64, 3_u64, 4_u64, 5_u64, 6_u64, 7_u64, 8_u64],
+        &[
+            0,
+            u64::MAX,
+            1_u64 << 63,
+            (1_u64 << 63) - 1,
+            u64::MAX,
+            0,
+            1_u64 << 32,
+            (1_u64 << 32) + 1,
+        ],
     );
     let b = u64x8::from_slice(
         simd,
-        &[0_u64, 0_u64, 0_u64, 0_u64, 0_u64, 0_u64, 0_u64, 0_u64],
+        &[
+            u64::MAX,
+            0,
+            (1_u64 << 63) - 1,
+            1_u64 << 63,
+            u64::MAX,
+            0,
+            (1_u64 << 32) + 1,
+            1_u64 << 32,
+        ],
     );
-    assert_eq!(
-        *simd.min_u64x8(a, b),
-        [0_u64, 0_u64, 0_u64, 0_u64, 0_u64, 0_u64, 0_u64, 0_u64]
-    );
+    let expected = [
+        0,
+        0,
+        (1_u64 << 63) - 1,
+        (1_u64 << 63) - 1,
+        u64::MAX,
+        0,
+        1_u64 << 32,
+        1_u64 << 32,
+    ];
+    assert_eq!(*simd.min_u64x8(a, b), expected);
+    assert_eq!(*a.min_precise(b), expected);
+    assert_eq!(*simd.min_u64x8(a, a), *a);
 }
 
 // Generated gap-fill coverage rows.

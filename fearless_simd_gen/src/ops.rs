@@ -839,6 +839,15 @@ const COMMON_BASE_OPS: &[Op] = &[
         Returns a mask where each logical lane is true if the corresponding elements are equal, and false if not.",
     ),
     Op::new(
+        "simd_ne",
+        OpKind::BaseTraitMethod,
+        OpSig::Compare,
+        "Compare two vectors element-wise for inequality.\n\n\
+        Returns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\n\
+        For floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\n\
+        This is equivalent to negating the mask returned by `simd_eq`.",
+    ),
+    Op::new(
         "simd_lt",
         OpKind::BaseTraitMethod,
         OpSig::Compare,
@@ -1064,8 +1073,15 @@ const FLOAT_OPS: &[Op] = &[
         "round_ties_even",
         OpKind::VecTraitMethod,
         OpSig::Unary,
-        "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\n\
-        There is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is.",
+        "Round each element to the nearest integer, with ties rounding to the nearest even integer.",
+    ),
+    Op::new(
+        "round",
+        OpKind::VecTraitMethod,
+        OpSig::Unary,
+        "Round each element to the nearest integer, with ties rounding away from zero.\n\n\
+        ## Performance considerations\n\n\
+        Only `AArch64` has native instructions for this operation. `round` has to be emulated on all other platforms which is around 2-4x slower than `round_ties_even`. Prefer using [`round_ties_even`](SimdFloat::round_ties_even) if possible."
     ),
     Op::new(
         "fract",
@@ -1330,6 +1346,14 @@ const MASK_OPS: &[Op] = &[
         OpSig::Compare,
         "Compare two vectors element-wise for equality.\n\n\
         Returns a mask where each logical lane is true if the corresponding elements are equal, and false if not.",
+    ),
+    Op::new(
+        "simd_ne",
+        OpKind::VecTraitMethod,
+        OpSig::Compare,
+        "Compare two masks element-wise for inequality.\n\n\
+        Returns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\n\
+        This is equivalent to negating the mask returned by `simd_eq`.",
     ),
     Op::new(
         "any_true",

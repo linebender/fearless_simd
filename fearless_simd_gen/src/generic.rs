@@ -1148,7 +1148,7 @@ pub(crate) fn generic_classify(
 
     let result = match method {
         "is_nan" => {
-            quote! { !a.simd_eq(a) }
+            quote! { a.simd_ne(a) }
         }
         "is_infinite" => {
             quote! { a.abs().simd_eq(#scalar::INFINITY) }
@@ -1161,7 +1161,7 @@ pub(crate) fn generic_classify(
             // so we can't use floating-point operations here
             quote! {
                 let i: #int_vec_ident<Self> = a.bitcast();
-                (i & #exp_mask).simd_eq(0) & !(i & #mant_mask).simd_eq(0)
+                (i & #exp_mask).simd_eq(0) & (i & #mant_mask).simd_ne(0)
             }
         }
         "is_normal" => {
@@ -1169,7 +1169,7 @@ pub(crate) fn generic_classify(
             quote! {
                 let i: #int_vec_ident<Self> = a.bitcast();
                 let exp = i & #exp_mask;
-                !(exp.simd_eq(0) | exp.simd_eq(#exp_mask))
+                exp.simd_ne(0) & exp.simd_ne(#exp_mask)
             }
         }
         "is_sign_positive" => {
@@ -1187,6 +1187,23 @@ pub(crate) fn generic_classify(
     quote! {
         #method_sig {
             #result
+        }
+    }
+}
+
+pub(crate) fn generic_round(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(vec_ty.scalar, ScalarType::Float);
+
+    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+
+    let span = Span::call_site();
+    let copysign = Ident::new(&format!("copysign_{}", vec_ty.rust_name()), span);
+    let splat = Ident::new(&format!("splat_{}", vec_ty.rust_name()), span);
+
+    quote! {
+        #method_sig {
+            let bias = self.#splat(const{#scalar::next_down(0.5)});
+            (a + self.#copysign(bias, a)).trunc()
         }
     }
 }

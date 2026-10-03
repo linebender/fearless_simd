@@ -253,6 +253,10 @@ impl<S: Simd> SimdBase<S> for f32x4<S> {
         self.simd.simd_eq_f32x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_f32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_f32x4(self, rhs.simd_into(self.simd))
     }
@@ -337,6 +341,10 @@ impl<S: Simd> crate::SimdFloat<S> for f32x4<S> {
     #[inline(always)]
     fn round_ties_even(self) -> Self {
         self.simd.round_ties_even_f32x4(self)
+    }
+    #[inline(always)]
+    fn round(self) -> Self {
+        self.simd.round_f32x4(self)
     }
     #[inline(always)]
     fn fract(self) -> Self {
@@ -678,6 +686,10 @@ impl<S: Simd> SimdBase<S> for i8x16<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i8x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_i8x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -1031,6 +1043,10 @@ impl<S: Simd> SimdBase<S> for u8x16<S> {
         self.simd.simd_eq_u8x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_u8x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_u8x16(self, rhs.simd_into(self.simd))
     }
@@ -1208,6 +1224,10 @@ impl<S: Simd> SimdMask<S> for mask8x16<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask8x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.simd_ne_mask8x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn any_true(self) -> bool {
@@ -1488,6 +1508,10 @@ impl<S: Simd> SimdBase<S> for i16x8<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i16x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_i16x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -1848,6 +1872,10 @@ impl<S: Simd> SimdBase<S> for u16x8<S> {
         self.simd.simd_eq_u16x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_u16x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_u16x8(self, rhs.simd_into(self.simd))
     }
@@ -2040,6 +2068,10 @@ impl<S: Simd> SimdMask<S> for mask16x8<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask16x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.simd_ne_mask16x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn any_true(self) -> bool {
@@ -2315,6 +2347,10 @@ impl<S: Simd> SimdBase<S> for i32x4<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_i32x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -2675,6 +2711,10 @@ impl<S: Simd> SimdBase<S> for u32x4<S> {
         self.simd.simd_eq_u32x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_u32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_u32x4(self, rhs.simd_into(self.simd))
     }
@@ -2879,6 +2919,10 @@ impl<S: Simd> SimdMask<S> for mask32x4<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.simd_ne_mask32x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn any_true(self) -> bool {
@@ -3156,6 +3200,10 @@ impl<S: Simd> SimdBase<S> for f64x2<S> {
         self.simd.simd_eq_f64x2(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_f64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_f64x2(self, rhs.simd_into(self.simd))
     }
@@ -3240,6 +3288,10 @@ impl<S: Simd> crate::SimdFloat<S> for f64x2<S> {
     #[inline(always)]
     fn round_ties_even(self) -> Self {
         self.simd.round_ties_even_f64x2(self)
+    }
+    #[inline(always)]
+    fn round(self) -> Self {
+        self.simd.round_f64x2(self)
     }
     #[inline(always)]
     fn fract(self) -> Self {
@@ -3569,6 +3621,10 @@ impl<S: Simd> SimdBase<S> for i64x2<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_i64x2(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -3922,6 +3978,10 @@ impl<S: Simd> SimdBase<S> for u64x2<S> {
         self.simd.simd_eq_u64x2(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_u64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_u64x2(self, rhs.simd_into(self.simd))
     }
@@ -4119,6 +4179,10 @@ impl<S: Simd> SimdMask<S> for mask64x2<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.simd_ne_mask64x2(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn any_true(self) -> bool {
@@ -4401,6 +4465,10 @@ impl<S: Simd> SimdBase<S> for f32x8<S> {
         self.simd.simd_eq_f32x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_f32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_f32x8(self, rhs.simd_into(self.simd))
     }
@@ -4485,6 +4553,10 @@ impl<S: Simd> crate::SimdFloat<S> for f32x8<S> {
     #[inline(always)]
     fn round_ties_even(self) -> Self {
         self.simd.round_ties_even_f32x8(self)
+    }
+    #[inline(always)]
+    fn round(self) -> Self {
+        self.simd.round_f32x8(self)
     }
     #[inline(always)]
     fn fract(self) -> Self {
@@ -4837,6 +4909,10 @@ impl<S: Simd> SimdBase<S> for i8x32<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i8x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_i8x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -5201,6 +5277,10 @@ impl<S: Simd> SimdBase<S> for u8x32<S> {
         self.simd.simd_eq_u8x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_u8x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_u8x32(self, rhs.simd_into(self.simd))
     }
@@ -5373,6 +5453,10 @@ impl<S: Simd> SimdMask<S> for mask8x32<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask8x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.simd_ne_mask8x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn any_true(self) -> bool {
@@ -5661,6 +5745,10 @@ impl<S: Simd> SimdBase<S> for i16x16<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i16x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_i16x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -6025,6 +6113,10 @@ impl<S: Simd> SimdBase<S> for u16x16<S> {
         self.simd.simd_eq_u16x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_u16x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_u16x16(self, rhs.simd_into(self.simd))
     }
@@ -6213,6 +6305,10 @@ impl<S: Simd> SimdMask<S> for mask16x16<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask16x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.simd_ne_mask16x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn any_true(self) -> bool {
@@ -6500,6 +6596,10 @@ impl<S: Simd> SimdBase<S> for i32x8<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_i32x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -6867,6 +6967,10 @@ impl<S: Simd> SimdBase<S> for u32x8<S> {
         self.simd.simd_eq_u32x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_u32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_u32x8(self, rhs.simd_into(self.simd))
     }
@@ -7066,6 +7170,10 @@ impl<S: Simd> SimdMask<S> for mask32x8<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.simd_ne_mask32x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn any_true(self) -> bool {
@@ -7343,6 +7451,10 @@ impl<S: Simd> SimdBase<S> for f64x4<S> {
         self.simd.simd_eq_f64x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_f64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_f64x4(self, rhs.simd_into(self.simd))
     }
@@ -7427,6 +7539,10 @@ impl<S: Simd> crate::SimdFloat<S> for f64x4<S> {
     #[inline(always)]
     fn round_ties_even(self) -> Self {
         self.simd.round_ties_even_f64x4(self)
+    }
+    #[inline(always)]
+    fn round(self) -> Self {
+        self.simd.round_f64x4(self)
     }
     #[inline(always)]
     fn fract(self) -> Self {
@@ -7751,6 +7867,10 @@ impl<S: Simd> SimdBase<S> for i64x4<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_i64x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -8099,6 +8219,10 @@ impl<S: Simd> SimdBase<S> for u64x4<S> {
         self.simd.simd_eq_u64x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_u64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_u64x4(self, rhs.simd_into(self.simd))
     }
@@ -8291,6 +8415,10 @@ impl<S: Simd> SimdMask<S> for mask64x4<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.simd_ne_mask64x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn any_true(self) -> bool {
@@ -8582,6 +8710,10 @@ impl<S: Simd> SimdBase<S> for f32x16<S> {
         self.simd.simd_eq_f32x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_f32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_f32x16(self, rhs.simd_into(self.simd))
     }
@@ -8667,6 +8799,10 @@ impl<S: Simd> crate::SimdFloat<S> for f32x16<S> {
     #[inline(always)]
     fn round_ties_even(self) -> Self {
         self.simd.round_ties_even_f32x16(self)
+    }
+    #[inline(always)]
+    fn round(self) -> Self {
+        self.simd.round_f32x16(self)
     }
     #[inline(always)]
     fn fract(self) -> Self {
@@ -9045,6 +9181,10 @@ impl<S: Simd> SimdBase<S> for i8x64<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i8x64(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_i8x64(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -9435,6 +9575,10 @@ impl<S: Simd> SimdBase<S> for u8x64<S> {
         self.simd.simd_eq_u8x64(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_u8x64(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_u8x64(self, rhs.simd_into(self.simd))
     }
@@ -9600,6 +9744,10 @@ impl<S: Simd> SimdMask<S> for mask8x64<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask8x64(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.simd_ne_mask8x64(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn any_true(self) -> bool {
@@ -9905,6 +10053,10 @@ impl<S: Simd> SimdBase<S> for i16x32<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i16x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_i16x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -10279,6 +10431,10 @@ impl<S: Simd> SimdBase<S> for u16x32<S> {
         self.simd.simd_eq_u16x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_u16x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_u16x32(self, rhs.simd_into(self.simd))
     }
@@ -10460,6 +10616,10 @@ impl<S: Simd> SimdMask<S> for mask16x32<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask16x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.simd_ne_mask16x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn any_true(self) -> bool {
@@ -10756,6 +10916,10 @@ impl<S: Simd> SimdBase<S> for i32x16<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_i32x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -11126,6 +11290,10 @@ impl<S: Simd> SimdBase<S> for u32x16<S> {
         self.simd.simd_eq_u32x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_u32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_u32x16(self, rhs.simd_into(self.simd))
     }
@@ -11319,6 +11487,10 @@ impl<S: Simd> SimdMask<S> for mask32x16<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.simd_ne_mask32x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn any_true(self) -> bool {
@@ -11609,6 +11781,10 @@ impl<S: Simd> SimdBase<S> for f64x8<S> {
         self.simd.simd_eq_f64x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_f64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_f64x8(self, rhs.simd_into(self.simd))
     }
@@ -11693,6 +11869,10 @@ impl<S: Simd> crate::SimdFloat<S> for f64x8<S> {
     #[inline(always)]
     fn round_ties_even(self) -> Self {
         self.simd.round_ties_even_f64x8(self)
+    }
+    #[inline(always)]
+    fn round(self) -> Self {
+        self.simd.round_f64x8(self)
     }
     #[inline(always)]
     fn fract(self) -> Self {
@@ -12023,6 +12203,10 @@ impl<S: Simd> SimdBase<S> for i64x8<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_i64x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -12377,6 +12561,10 @@ impl<S: Simd> SimdBase<S> for u64x8<S> {
         self.simd.simd_eq_u64x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+        self.simd.simd_ne_u64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_lt_u64x8(self, rhs.simd_into(self.simd))
     }
@@ -12562,6 +12750,10 @@ impl<S: Simd> SimdMask<S> for mask64x8<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn simd_ne(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd.simd_ne_mask64x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn any_true(self) -> bool {

@@ -8,7 +8,7 @@ use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
     CompactOptions, byte_compact_op, compact_128_op, composed_compact_op,
     concat_swizzle_dyn_precise_body, count_zeros_method, fallback_method, generic_block_combine,
-    generic_block_split, generic_classify, generic_mask_set, generic_op_name,
+    generic_block_split, generic_classify, generic_mask_set, generic_op_name, generic_round,
     integer_lane_mask_rotate, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
     reverse_method, reverse_vector_mask_method,
 };
@@ -478,6 +478,10 @@ impl Level for WasmSimd128 {
         }
     }
 
+    fn has_native_simd_ne(&self, _vec_ty: &VecType) -> bool {
+        true
+    }
+
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         let Op { sig, method, .. } = op;
 
@@ -507,6 +511,10 @@ impl Level for WasmSimd128 {
 
                 if method == "count_ones" {
                     return count_ones_method(op, vec_ty);
+                }
+
+                if method == "round" {
+                    return generic_round(method_sig, vec_ty);
                 }
 
                 let args = [quote! { a.into() }];
@@ -835,12 +843,22 @@ impl Level for WasmSimd128 {
                 }
             }
             OpSig::Compare => {
-                if vec_ty.scalar == ScalarType::Unsigned && vec_ty.scalar_bits == 64 {
+                if vec_ty.scalar == ScalarType::Unsigned
+                    && vec_ty.scalar_bits == 64
+                    && method != "simd_ne"
+                {
                     return fallback_method(op, vec_ty);
                 }
 
+                // Inequality is independent of signedness; in particular, unsigned
+                // 64-bit lanes can use i64x2_ne without falling back to scalar code.
+                let compare_ty = if method == "simd_ne" && vec_ty.scalar != ScalarType::Float {
+                    vec_ty.cast(ScalarType::Int)
+                } else {
+                    *vec_ty
+                };
                 let args = [quote! { a.into() }, quote! { b.into() }];
-                let expr = wasm::expr(method, vec_ty, &args);
+                let expr = wasm::expr(method, &compare_ty, &args);
                 quote! {
                     #method_sig {
                         #expr.simd_into(self)
