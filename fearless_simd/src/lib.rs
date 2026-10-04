@@ -477,6 +477,7 @@ impl Level {
     /// This is discussed in more detail in `new`'s documentation.
     #[allow(clippy::allow_attributes, reason = "Only needed in some cfgs.")]
     #[allow(unreachable_code, reason = "Fallback unreachable in some cfgs.")]
+    #[inline]
     pub fn try_detect() -> Option<Self> {
         #[cfg(any(feature = "std", target_arch = "wasm32"))]
         return Some(Self::new());
