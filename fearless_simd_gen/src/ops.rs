@@ -536,15 +536,34 @@ impl Op {
         let mut remaining = self.doc;
         let mut dest = String::new();
         loop {
-            // Go until we reach the next opening brace. If there is none, push the rest of the string; we're done,
-            let Some((left, right)) = remaining.split_once('{') else {
-                dest.push_str(remaining);
+            let var_start = loop {
+                let Some((left, right)) = remaining.split_once('{') else {
+                    // no more braces = no more interpolation
+                    dest.push_str(remaining);
+                    break None;
+                };
+
+                dest.push_str(left);
+
+                // variable interpolation has to start with `{` followed by a letter.
+                if right
+                    .chars()
+                    .next()
+                    .is_some_and(|c| c.is_ascii_alphabetic())
+                {
+                    break Some(right);
+                }
+
+                // we found a brace that isn't a variable interpolation
+                dest.push('{');
+                remaining = right;
+            };
+
+            let Some(var_start) = var_start else {
                 break;
             };
 
-            dest.push_str(left);
-
-            let Some((template_var, rest)) = right.split_once('}') else {
+            let Some((template_var, rest)) = var_start.split_once('}') else {
                 panic!("Unmatched closing brace: {docstring:?}");
             };
             if let Err(e) = interpolate_var_into(&mut dest, template_var) {
@@ -698,7 +717,8 @@ const BASE_OPS: &[Op] = &[
         OpSig::Compress { merge: false },
         "Compact the elements selected by `{arg1}` into consecutive low lanes, preserving their order.\n\n\
          Lanes above the number of selected elements are zero (positive zero for floats).\n\n\
-         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.",
+         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n\
+         This is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector.",
     ),
     Op::new(
         "compress_merge",
@@ -706,7 +726,19 @@ const BASE_OPS: &[Op] = &[
         OpSig::Compress { merge: true },
         "Compact the elements selected by `{arg1}` into consecutive low lanes, preserving their order.\n\n\
          Lanes above the number of selected elements retain the corresponding values from `{arg2}`.\n\n\
-         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.",
+         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n\
+         ## Pseudo code\n\n\
+```ignore
+let mut result = {arg2};
+let mut k = 0;
+for i in 0..LEN {
+    if {arg1}[i] {
+        result[k] = {arg0}[i];
+        k += 1;
+    }
+}
+return result;
+```",
     ),
     Op::new(
         "expand",
@@ -714,7 +746,8 @@ const BASE_OPS: &[Op] = &[
         OpSig::Expand { merge: false },
         "Expand consecutive low elements from `{arg0}` into the lanes selected by `{arg1}`, preserving their order.\n\n\
          Unselected lanes are zero (positive zero for floats).\n\n\
-         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.",
+         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\n\
+         This is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector.",
     ),
     Op::new(
         "expand_merge",
@@ -722,7 +755,19 @@ const BASE_OPS: &[Op] = &[
         OpSig::Expand { merge: true },
         "Expand consecutive low elements from `{arg0}` into the lanes selected by `{arg1}`, preserving their order.\n\n\
          Unselected lanes retain the corresponding values from `{arg2}`.\n\n\
-         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.",
+         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n\
+         ## Pseudo code\n\n\
+```ignore
+let mut result = {arg2};
+let mut k = 0;
+for i in 0..LEN {
+    if {arg1}[i] {
+        result[i] = {arg0}[k];
+        k += 1;
+    }
+}
+return result;
+```",
     ),
 ];
 

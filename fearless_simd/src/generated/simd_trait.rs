@@ -294,18 +294,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_f32x4(self, values: f32x4<Self>, mask: mask32x4<Self>) -> f32x4<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_f32x4(
         self,
         values: f32x4<Self>,
         mask: mask32x4<Self>,
         merge: f32x4<Self>,
     ) -> f32x4<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_f32x4(self, values: f32x4<Self>, mask: mask32x4<Self>) -> f32x4<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_f32x4(
         self,
         values: f32x4<Self>,
@@ -503,18 +503,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_i8x16(self, values: i8x16<Self>, mask: mask8x16<Self>) -> i8x16<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_i8x16(
         self,
         values: i8x16<Self>,
         mask: mask8x16<Self>,
         merge: i8x16<Self>,
     ) -> i8x16<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_i8x16(self, values: i8x16<Self>, mask: mask8x16<Self>) -> i8x16<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_i8x16(
         self,
         values: i8x16<Self>,
@@ -654,18 +654,18 @@ pub trait Simd:
         b: u8x16<Self>,
         indices: u8x16<Self>,
     ) -> u8x16<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_u8x16(
         self,
         values: u8x16<Self>,
         mask: mask8x16<Self>,
         merge: u8x16<Self>,
     ) -> u8x16<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_u8x16(
         self,
         values: u8x16<Self>,
@@ -877,18 +877,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_i16x8(self, values: i16x8<Self>, mask: mask16x8<Self>) -> i16x8<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_i16x8(
         self,
         values: i16x8<Self>,
         mask: mask16x8<Self>,
         merge: i16x8<Self>,
     ) -> i16x8<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_i16x8(self, values: i16x8<Self>, mask: mask16x8<Self>) -> i16x8<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_i16x8(
         self,
         values: i16x8<Self>,
@@ -1057,18 +1057,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_u16x8(self, values: u16x8<Self>, mask: mask16x8<Self>) -> u16x8<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_u16x8(
         self,
         values: u16x8<Self>,
         mask: mask16x8<Self>,
         merge: u16x8<Self>,
     ) -> u16x8<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_u16x8(self, values: u16x8<Self>, mask: mask16x8<Self>) -> u16x8<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_u16x8(
         self,
         values: u16x8<Self>,
@@ -1288,18 +1288,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_i32x4(self, values: i32x4<Self>, mask: mask32x4<Self>) -> i32x4<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_i32x4(
         self,
         values: i32x4<Self>,
         mask: mask32x4<Self>,
         merge: i32x4<Self>,
     ) -> i32x4<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_i32x4(self, values: i32x4<Self>, mask: mask32x4<Self>) -> i32x4<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_i32x4(
         self,
         values: i32x4<Self>,
@@ -1470,18 +1470,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_u32x4(self, values: u32x4<Self>, mask: mask32x4<Self>) -> u32x4<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_u32x4(
         self,
         values: u32x4<Self>,
         mask: mask32x4<Self>,
         merge: u32x4<Self>,
     ) -> u32x4<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_u32x4(self, values: u32x4<Self>, mask: mask32x4<Self>) -> u32x4<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_u32x4(
         self,
         values: u32x4<Self>,
@@ -1703,18 +1703,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_f64x2(self, values: f64x2<Self>, mask: mask64x2<Self>) -> f64x2<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_f64x2(
         self,
         values: f64x2<Self>,
         mask: mask64x2<Self>,
         merge: f64x2<Self>,
     ) -> f64x2<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_f64x2(self, values: f64x2<Self>, mask: mask64x2<Self>) -> f64x2<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_f64x2(
         self,
         values: f64x2<Self>,
@@ -1916,18 +1916,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_i64x2(self, values: i64x2<Self>, mask: mask64x2<Self>) -> i64x2<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_i64x2(
         self,
         values: i64x2<Self>,
         mask: mask64x2<Self>,
         merge: i64x2<Self>,
     ) -> i64x2<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_i64x2(self, values: i64x2<Self>, mask: mask64x2<Self>) -> i64x2<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_i64x2(
         self,
         values: i64x2<Self>,
@@ -2096,18 +2096,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_u64x2(self, values: u64x2<Self>, mask: mask64x2<Self>) -> u64x2<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_u64x2(
         self,
         values: u64x2<Self>,
         mask: mask64x2<Self>,
         merge: u64x2<Self>,
     ) -> u64x2<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_u64x2(self, values: u64x2<Self>, mask: mask64x2<Self>) -> u64x2<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_u64x2(
         self,
         values: u64x2<Self>,
@@ -2342,18 +2342,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_f32x8(self, values: f32x8<Self>, mask: mask32x8<Self>) -> f32x8<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_f32x8(
         self,
         values: f32x8<Self>,
         mask: mask32x8<Self>,
         merge: f32x8<Self>,
     ) -> f32x8<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_f32x8(self, values: f32x8<Self>, mask: mask32x8<Self>) -> f32x8<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_f32x8(
         self,
         values: f32x8<Self>,
@@ -2814,18 +2814,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_i8x32(self, values: i8x32<Self>, mask: mask8x32<Self>) -> i8x32<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_i8x32(
         self,
         values: i8x32<Self>,
         mask: mask8x32<Self>,
         merge: i8x32<Self>,
     ) -> i8x32<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_i8x32(self, values: i8x32<Self>, mask: mask8x32<Self>) -> i8x32<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_i8x32(
         self,
         values: i8x32<Self>,
@@ -3155,18 +3155,18 @@ pub trait Simd:
         b: u8x32<Self>,
         indices: u8x32<Self>,
     ) -> u8x32<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_u8x32(
         self,
         values: u8x32<Self>,
         mask: mask8x32<Self>,
         merge: u8x32<Self>,
     ) -> u8x32<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_u8x32(
         self,
         values: u8x32<Self>,
@@ -3643,18 +3643,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_i16x16(self, values: i16x16<Self>, mask: mask16x16<Self>) -> i16x16<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_i16x16(
         self,
         values: i16x16<Self>,
         mask: mask16x16<Self>,
         merge: i16x16<Self>,
     ) -> i16x16<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_i16x16(self, values: i16x16<Self>, mask: mask16x16<Self>) -> i16x16<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_i16x16(
         self,
         values: i16x16<Self>,
@@ -4030,18 +4030,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_u16x16(self, values: u16x16<Self>, mask: mask16x16<Self>) -> u16x16<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_u16x16(
         self,
         values: u16x16<Self>,
         mask: mask16x16<Self>,
         merge: u16x16<Self>,
     ) -> u16x16<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_u16x16(self, values: u16x16<Self>, mask: mask16x16<Self>) -> u16x16<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_u16x16(
         self,
         values: u16x16<Self>,
@@ -4548,18 +4548,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_i32x8(self, values: i32x8<Self>, mask: mask32x8<Self>) -> i32x8<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_i32x8(
         self,
         values: i32x8<Self>,
         mask: mask32x8<Self>,
         merge: i32x8<Self>,
     ) -> i32x8<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_i32x8(self, values: i32x8<Self>, mask: mask32x8<Self>) -> i32x8<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_i32x8(
         self,
         values: i32x8<Self>,
@@ -4937,18 +4937,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_u32x8(self, values: u32x8<Self>, mask: mask32x8<Self>) -> u32x8<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_u32x8(
         self,
         values: u32x8<Self>,
         mask: mask32x8<Self>,
         merge: u32x8<Self>,
     ) -> u32x8<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_u32x8(self, values: u32x8<Self>, mask: mask32x8<Self>) -> u32x8<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_u32x8(
         self,
         values: u32x8<Self>,
@@ -5461,18 +5461,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_f64x4(self, values: f64x4<Self>, mask: mask64x4<Self>) -> f64x4<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_f64x4(
         self,
         values: f64x4<Self>,
         mask: mask64x4<Self>,
         merge: f64x4<Self>,
     ) -> f64x4<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_f64x4(self, values: f64x4<Self>, mask: mask64x4<Self>) -> f64x4<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_f64x4(
         self,
         values: f64x4<Self>,
@@ -5952,18 +5952,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_i64x4(self, values: i64x4<Self>, mask: mask64x4<Self>) -> i64x4<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_i64x4(
         self,
         values: i64x4<Self>,
         mask: mask64x4<Self>,
         merge: i64x4<Self>,
     ) -> i64x4<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_i64x4(self, values: i64x4<Self>, mask: mask64x4<Self>) -> i64x4<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_i64x4(
         self,
         values: i64x4<Self>,
@@ -6333,18 +6333,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_u64x4(self, values: u64x4<Self>, mask: mask64x4<Self>) -> u64x4<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_u64x4(
         self,
         values: u64x4<Self>,
         mask: mask64x4<Self>,
         merge: u64x4<Self>,
     ) -> u64x4<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_u64x4(self, values: u64x4<Self>, mask: mask64x4<Self>) -> u64x4<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_u64x4(
         self,
         values: u64x4<Self>,
@@ -6842,18 +6842,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_f32x16(self, values: f32x16<Self>, mask: mask32x16<Self>) -> f32x16<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_f32x16(
         self,
         values: f32x16<Self>,
         mask: mask32x16<Self>,
         merge: f32x16<Self>,
     ) -> f32x16<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_f32x16(self, values: f32x16<Self>, mask: mask32x16<Self>) -> f32x16<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_f32x16(
         self,
         values: f32x16<Self>,
@@ -7322,18 +7322,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_i8x64(self, values: i8x64<Self>, mask: mask8x64<Self>) -> i8x64<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_i8x64(
         self,
         values: i8x64<Self>,
         mask: mask8x64<Self>,
         merge: i8x64<Self>,
     ) -> i8x64<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_i8x64(self, values: i8x64<Self>, mask: mask8x64<Self>) -> i8x64<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_i8x64(
         self,
         values: i8x64<Self>,
@@ -7661,18 +7661,18 @@ pub trait Simd:
         b: u8x64<Self>,
         indices: u8x64<Self>,
     ) -> u8x64<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_u8x64(
         self,
         values: u8x64<Self>,
         mask: mask8x64<Self>,
         merge: u8x64<Self>,
     ) -> u8x64<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_u8x64(
         self,
         values: u8x64<Self>,
@@ -8145,18 +8145,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_i16x32(self, values: i16x32<Self>, mask: mask16x32<Self>) -> i16x32<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_i16x32(
         self,
         values: i16x32<Self>,
         mask: mask16x32<Self>,
         merge: i16x32<Self>,
     ) -> i16x32<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_i16x32(self, values: i16x32<Self>, mask: mask16x32<Self>) -> i16x32<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_i16x32(
         self,
         values: i16x32<Self>,
@@ -8536,18 +8536,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_u16x32(self, values: u16x32<Self>, mask: mask16x32<Self>) -> u16x32<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_u16x32(
         self,
         values: u16x32<Self>,
         mask: mask16x32<Self>,
         merge: u16x32<Self>,
     ) -> u16x32<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_u16x32(self, values: u16x32<Self>, mask: mask16x32<Self>) -> u16x32<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_u16x32(
         self,
         values: u16x32<Self>,
@@ -9063,18 +9063,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_i32x16(self, values: i32x16<Self>, mask: mask32x16<Self>) -> i32x16<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_i32x16(
         self,
         values: i32x16<Self>,
         mask: mask32x16<Self>,
         merge: i32x16<Self>,
     ) -> i32x16<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_i32x16(self, values: i32x16<Self>, mask: mask32x16<Self>) -> i32x16<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_i32x16(
         self,
         values: i32x16<Self>,
@@ -9454,18 +9454,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_u32x16(self, values: u32x16<Self>, mask: mask32x16<Self>) -> u32x16<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_u32x16(
         self,
         values: u32x16<Self>,
         mask: mask32x16<Self>,
         merge: u32x16<Self>,
     ) -> u32x16<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_u32x16(self, values: u32x16<Self>, mask: mask32x16<Self>) -> u32x16<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_u32x16(
         self,
         values: u32x16<Self>,
@@ -9974,18 +9974,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_f64x8(self, values: f64x8<Self>, mask: mask64x8<Self>) -> f64x8<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_f64x8(
         self,
         values: f64x8<Self>,
         mask: mask64x8<Self>,
         merge: f64x8<Self>,
     ) -> f64x8<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_f64x8(self, values: f64x8<Self>, mask: mask64x8<Self>) -> f64x8<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_f64x8(
         self,
         values: f64x8<Self>,
@@ -10463,18 +10463,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_i64x8(self, values: i64x8<Self>, mask: mask64x8<Self>) -> i64x8<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_i64x8(
         self,
         values: i64x8<Self>,
         mask: mask64x8<Self>,
         merge: i64x8<Self>,
     ) -> i64x8<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_i64x8(self, values: i64x8<Self>, mask: mask64x8<Self>) -> i64x8<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_i64x8(
         self,
         values: i64x8<Self>,
@@ -10842,18 +10842,18 @@ pub trait Simd:
             indices,
         ))
     }
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress_u64x8(self, values: u64x8<Self>, mask: mask64x8<Self>) -> u64x8<Self>;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge_u64x8(
         self,
         values: u64x8<Self>,
         mask: mask64x8<Self>,
         merge: u64x8<Self>,
     ) -> u64x8<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand_u64x8(self, values: u64x8<Self>, mask: mask64x8<Self>) -> u64x8<Self>;
-    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge_u64x8(
         self,
         values: u64x8<Self>,
@@ -11845,13 +11845,13 @@ pub trait SimdBase<S: Simd>:
         rhs: impl SimdInto<Self, S>,
         indices: impl SimdInto<Self::Bytes, S>,
     ) -> Self;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
     fn compress(self, mask: Self::Mask) -> Self;
-    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = self[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn compress_merge(self, mask: Self::Mask, merge: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Expand consecutive low elements from `self` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `self` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
     fn expand(self, mask: Self::Mask) -> Self;
-    #[doc = "Expand consecutive low elements from `self` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros."]
+    #[doc = "Expand consecutive low elements from `self` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = self[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
     fn expand_merge(self, mask: Self::Mask, merge: impl SimdInto<Self, S>) -> Self;
     #[doc = "Return the maximum element in the vector. Integer vectors always return the exact maximum.\n\nFor floating-point vectors with no NaNs, this returns the true maximum. If any lane is NaN, the entire result is implementation-defined: it may be NaN or a numeric lane that is not the true maximum. See `reduce_max_precise` for a version that ignores quiet NaNs.\n\nIf the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned."]
     fn reduce_max(self) -> Self::Element;
