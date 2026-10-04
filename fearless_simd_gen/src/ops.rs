@@ -536,15 +536,34 @@ impl Op {
         let mut remaining = self.doc;
         let mut dest = String::new();
         loop {
-            // Go until we reach the next opening brace. If there is none, push the rest of the string; we're done,
-            let Some((left, right)) = remaining.split_once('{') else {
-                dest.push_str(remaining);
+            let var_start = loop {
+                let Some((left, right)) = remaining.split_once('{') else {
+                    // no more braces = no more interpolation
+                    dest.push_str(remaining);
+                    break None;
+                };
+
+                dest.push_str(left);
+
+                // variable interpolation has to start with `{` followed by a letter.
+                if right
+                    .chars()
+                    .next()
+                    .is_some_and(|c| c.is_ascii_alphabetic())
+                {
+                    break Some(right);
+                }
+
+                // we found a brace that isn't a variable interpolation
+                dest.push('{');
+                remaining = right;
+            };
+
+            let Some(var_start) = var_start else {
                 break;
             };
 
-            dest.push_str(left);
-
-            let Some((template_var, rest)) = right.split_once('}') else {
+            let Some((template_var, rest)) = var_start.split_once('}') else {
                 panic!("Unmatched closing brace: {docstring:?}");
             };
             if let Err(e) = interpolate_var_into(&mut dest, template_var) {
@@ -710,13 +729,15 @@ const BASE_OPS: &[Op] = &[
          Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n\
          ## Pseudo code\n\n\
 ```ignore
-result = {arg2}
-k = 0
-for i in 0..LEN:
-    if {arg1}[i]:
-        result[k] = {arg0}[i]
-        k += 1
-return result
+let mut result = {arg2};
+let mut k = 0;
+for i in 0..LEN {
+    if {arg1}[i] {
+        result[k] = {arg0}[i];
+        k += 1;
+    }
+}
+return result;
 ```",
     ),
     Op::new(
@@ -737,13 +758,15 @@ return result
          Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n\
          ## Pseudo code\n\n\
 ```ignore
-result = {arg2}
-k = 0
-for i in 0..LEN:
-    if {arg1}[i]:
-        result[i] = {arg0}[k]
-        k += 1
-return result
+let mut result = {arg2};
+let mut k = 0;
+for i in 0..LEN {
+    if {arg1}[i] {
+        result[i] = {arg0}[k];
+        k += 1;
+    }
+}
+return result;
 ```",
     ),
 ];
