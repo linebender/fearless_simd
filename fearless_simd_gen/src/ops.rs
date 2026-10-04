@@ -698,7 +698,8 @@ const BASE_OPS: &[Op] = &[
         OpSig::Compress { merge: false },
         "Compact the elements selected by `{arg1}` into consecutive low lanes, preserving their order.\n\n\
          Lanes above the number of selected elements are zero (positive zero for floats).\n\n\
-         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.",
+         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n\
+         This is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector.",
     ),
     Op::new(
         "compress_merge",
@@ -706,7 +707,17 @@ const BASE_OPS: &[Op] = &[
         OpSig::Compress { merge: true },
         "Compact the elements selected by `{arg1}` into consecutive low lanes, preserving their order.\n\n\
          Lanes above the number of selected elements retain the corresponding values from `{arg2}`.\n\n\
-         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.",
+         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n\
+         ## Pseudo code\n\n\
+```ignore
+result = {arg2}
+k = 0
+for i in 0..LEN:
+    if {arg1}[i]:
+        result[k] = {arg0}[i]
+        k += 1
+return result
+```",
     ),
     Op::new(
         "expand",
@@ -714,7 +725,8 @@ const BASE_OPS: &[Op] = &[
         OpSig::Expand { merge: false },
         "Expand consecutive low elements from `{arg0}` into the lanes selected by `{arg1}`, preserving their order.\n\n\
          Unselected lanes are zero (positive zero for floats).\n\n\
-         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.",
+         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\n\
+         This is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector.",
     ),
     Op::new(
         "expand_merge",
@@ -722,7 +734,17 @@ const BASE_OPS: &[Op] = &[
         OpSig::Expand { merge: true },
         "Expand consecutive low elements from `{arg0}` into the lanes selected by `{arg1}`, preserving their order.\n\n\
          Unselected lanes retain the corresponding values from `{arg2}`.\n\n\
-         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.",
+         Elements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n\
+         ## Pseudo code\n\n\
+```ignore
+result = {arg2}
+k = 0
+for i in 0..LEN:
+    if {arg1}[i]:
+        result[i] = {arg0}[k]
+        k += 1
+return result
+```",
     ),
 ];
 
