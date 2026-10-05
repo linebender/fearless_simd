@@ -9,9 +9,10 @@ use crate::arch::x86::{
 use crate::generic::{
     byte_compact_op, compact_128_op, concat_swizzle_dyn_precise_body, count_zeros_method,
     fallback_method, generic_block_combine, generic_block_split, generic_classify,
-    generic_mask_from_bitmask, generic_mask_set, generic_op, generic_op_name, generic_round,
-    generic_to_degrees_radians, integer_lane_mask_rotate, integer_lane_mask_splat_arg,
-    recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
+    generic_mask_from_bitmask, generic_mask_from_vector, generic_mask_set, generic_mask_to_vector,
+    generic_op, generic_op_name, generic_round, generic_to_degrees_radians,
+    integer_lane_mask_rotate, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
+    reverse_method, reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{
@@ -22,7 +23,7 @@ use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(crate) enum X86 {
     Sse2,
     Sse4_2,
@@ -293,6 +294,7 @@ impl Level for X86 {
         match op.sig {
             OpSig::MaskFromBitmask => !self.has_specialized_mask_from_bitmask(vec_ty),
             OpSig::MaskToBitmask => !self.has_specialized_mask_to_bitmask(vec_ty),
+            OpSig::MaskFromVector | OpSig::MaskToVector => !matches!(self, Self::Avx512),
             _ => true,
         }
     }
@@ -374,6 +376,8 @@ impl Level for X86 {
             } => self.handle_mask_reduce(op, vec_ty, quantifier, condition),
             OpSig::MaskFromBitmask => self.handle_mask_from_bitmask(op, vec_ty),
             OpSig::MaskToBitmask => self.handle_mask_to_bitmask(op, vec_ty),
+            OpSig::MaskFromVector => self.handle_mask_from_vector(op, vec_ty),
+            OpSig::MaskToVector => self.handle_mask_to_vector(op, vec_ty),
             OpSig::MaskSet if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask => {
                 self.handle_avx512_mask_set(method_sig, vec_ty)
             }
@@ -2532,6 +2536,36 @@ impl X86 {
             }
             _ => unreachable!(),
         }
+    }
+
+    pub(crate) fn handle_mask_from_vector(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        if *self != Self::Avx512 {
+            return generic_mask_from_vector(op.simd_trait_method_sig(vec_ty), vec_ty);
+        }
+
+        let movepi_mask = intrinsic_ident(
+            &format!("movepi{}", vec_ty.scalar_bits),
+            "mask",
+            vec_ty.n_bits(),
+        );
+        self.kernel_method(op, vec_ty, |token| {
+            quote! { #movepi_mask(vector.into()).simd_into(#token) }
+        })
+    }
+
+    pub(crate) fn handle_mask_to_vector(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        if *self != Self::Avx512 {
+            return generic_mask_to_vector(op.simd_trait_method_sig(vec_ty), vec_ty);
+        }
+
+        let movm = intrinsic_ident(
+            "movm",
+            op_suffix(vec_ty.scalar, vec_ty.scalar_bits, true),
+            vec_ty.n_bits(),
+        );
+        self.kernel_method(op, vec_ty, |token| {
+            quote! { #movm(a.val).simd_into(#token) }
+        })
     }
 
     pub(crate) fn handle_compare(&self, op: Op, method: &str, vec_ty: &VecType) -> TokenStream {

@@ -8,9 +8,10 @@ use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
     CompactOptions, byte_compact_op, compact_128_op, composed_compact_op,
     concat_swizzle_dyn_precise_body, count_zeros_method, fallback_method, generic_block_combine,
-    generic_block_split, generic_classify, generic_mask_set, generic_op_name, generic_round,
-    generic_to_degrees_radians, integer_lane_mask_rotate, integer_lane_mask_splat_arg,
-    recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
+    generic_block_split, generic_classify, generic_mask_from_vector, generic_mask_set,
+    generic_mask_to_vector, generic_op_name, generic_round, generic_to_degrees_radians,
+    integer_lane_mask_rotate, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
+    reverse_method, reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{
@@ -1270,6 +1271,8 @@ impl Level for WasmSimd128 {
             }
             OpSig::MaskFromBitmask => mask_from_bitmask(method_sig, vec_ty),
             OpSig::MaskToBitmask => mask_to_bitmask(method_sig, vec_ty),
+            OpSig::MaskFromVector => generic_mask_from_vector(method_sig, vec_ty),
+            OpSig::MaskToVector => generic_mask_to_vector(method_sig, vec_ty),
             OpSig::MaskSet => generic_mask_set(method_sig, vec_ty),
             OpSig::UnaryClassify => generic_classify(method_sig, method, vec_ty),
             OpSig::LoadInterleaved {

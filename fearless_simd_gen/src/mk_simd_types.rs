@@ -426,11 +426,15 @@ fn mask_widen_narrow_impls(ty: &VecType) -> TokenStream {
 
 fn simd_mask_impl(ty: &VecType) -> TokenStream {
     let name = ty.rust();
+    let int_ty = ty.cast(ScalarType::Int);
+    let int_ty_name = int_ty.rust();
     let scalar = ty.scalar.rust(ty.scalar_bits);
     let len = Literal::usize_unsuffixed(ty.len);
     let splat = generic_op_name("splat", ty);
     let from_bitmask_op = generic_op_name("from_bitmask", ty);
     let to_bitmask_op = generic_op_name("to_bitmask", ty);
+    let from_vector_op = generic_op_name("from_vector", ty);
+    let to_vector_op = generic_op_name("to_vector", ty);
     let set_op = generic_op_name("set", ty);
     let mut methods = vec![];
     for op in vec_trait_ops_for(ty.scalar) {
@@ -463,6 +467,7 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
     quote! {
         impl<S: Simd> SimdMask<S> for #name<S> {
             type Element = #scalar;
+            type Ints = #int_ty_name<S>;
             const LEN: usize = #len;
 
             #[inline(always)]
@@ -478,6 +483,16 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
             #[inline(always)]
             fn to_bitmask(self) -> u64 {
                 self.simd.#to_bitmask_op(self)
+            }
+
+            #[inline(always)]
+            fn from_vector(vector: Self::Ints) -> Self {
+                vector.token().#from_vector_op(vector)
+            }
+
+            #[inline(always)]
+            fn to_vector(self) -> Self::Ints {
+                self.simd.#to_vector_op(self)
             }
 
             #[inline(always)]

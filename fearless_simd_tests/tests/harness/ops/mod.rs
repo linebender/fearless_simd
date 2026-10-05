@@ -48,6 +48,7 @@ mod interleave;
 mod load_array;
 mod load_array_ref;
 mod load_four_interleaved;
+mod mask_from_to_vector;
 mod max;
 mod max_precise;
 mod min;
