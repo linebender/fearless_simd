@@ -6,17 +6,37 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 -->
 
-The latest published Fearless SIMD release is [1.0.0](#100-2026-09-21) which was released on 2026-09-21,
-alongside `fearless_simd_macros` 0.1.0.
-You can find their changes [documented below](#100-2026-09-21).
+The latest published Fearless SIMD release is [1.1.0](#110-2026-10-06) which was released on 2026-10-06.
+You can find its changes [documented below](#110-2026-10-06).
+The latest `fearless_simd_macros` release is 0.1.0 which was released on 2026-09-21.
 
-## [Unreleased]
+## [1.1.0][] (2026-10-06)
 
 This release has an [MSRV][] of 1.89.
 
 ### Added
 
-- Added lane-wise `simd_ne` for all vector and mask types.
+- Added `concat_swizzle_dyn` and `concat_swizzle_dyn_precise` for all non-mask vector types, selecting bytes from the concatenation of two vectors. Out-of-range indices produce implementation-defined values in the former and zero in the latter. ([#354][] by [@Shnatsel][])
+- Added `compress`, `compress_merge`, `expand`, and `expand_merge` for all integer and floating-point vector types. Compression packs mask-selected elements into consecutive low lanes, while expansion places consecutive low elements into mask-selected lanes. Both preserve element order; unused lanes are zeroed or taken from a merge vector. ([#395][] by [@Novum][], [@Shnatsel][], [#412][] by [@RunDevelopment][])
+- Added `MaskWiden` and `MaskNarrow` traits to widen and narrow mask lanes while preserving their boolean values. `SimdWiden` and `SimdNarrow` now also guarantee the corresponding conversions for a vector's associated mask, making them available in generic code. ([#396][], [#399][] by [@Shnatsel][])
+- Added `SimdMask::from_vector`, `SimdMask::to_vector`, and the associated `Ints` type for conversions between masks and signed integer vectors. True lanes map to -1 and false lanes to 0; other input values have unspecified behavior. ([#400][] by [@valadaptive][], [@Shnatsel][])
+- Added lane-wise `simd_ne` for all vector and mask types. ([#408][] by [@Shnatsel][])
+- Added floating-point classification methods `is_nan`, `is_infinite`, `is_finite`, `is_subnormal`, `is_normal`, `is_sign_positive`, and `is_sign_negative`, returning a mask for each property. ([#405][] by [@RunDevelopment][], [@Shnatsel][])
+- Added `round` for floating-point vectors, rounding to the nearest integer with ties away from zero. ([#409][] by [@RunDevelopment][])
+- Added `to_degrees` and `to_radians` for floating-point vectors. ([#406][] by [@RunDevelopment][])
+
+### Changed
+
+- `mul_add_precise` and `mul_sub_precise` now use shared SIMD emulation on SSE2 and WebAssembly as well as SSE4.2, improving performance on platforms without native fused multiply-add support. ([#394][] by [@valadaptive][], [@Shnatsel][])
+- 512-bit dynamic swizzles now use vectorized decomposition on SSE4.2 and WebAssembly. The SSE4.2 `swizzle_dyn_precise` implementation has also been optimized, and its scalar fallback now avoids branches for unpredictable indices. ([#354][], [#392][] by [@Shnatsel][])
+- Precise `f32`-to-`u32` conversion has been optimized on SSE4.2, and more 32-bit integer/float conversions use SIMD on SSE2. ([#404][] by [@Shnatsel][])
+- More 64-bit integer operations now use explicit SIMD implementations on x86 without AVX-512, including comparisons, min/max, multiplication, and right shifts. Multiplication and shifts by runtime values have also been optimized. ([#407][] by [@Shnatsel][])
+- Floating-point classification now uses `simd_ne` where beneficial to improve x86 code generation. ([#408][] by [@Shnatsel][])
+- `Level::try_detect` is now marked inline. ([#411][] by [@Dr-Emann][])
+
+### Fixed
+
+- Corrected the `mul_add_precise` and `mul_sub_precise` documentation to explain that WebAssembly does not unconditionally provide fused multiply-add support and these operations may be slower there. ([#402][] by [@valadaptive][])
 
 ## [1.0.0][] (2026-09-21)
 
@@ -281,6 +301,8 @@ No changelog was kept for this release.
 [@Shnatsel]: https://github.com/Shnatsel
 [@danderson]: https://github.com/danderson
 [@Dr-Emann]: https://github.com/Dr-Emann
+[@RunDevelopment]: https://github.com/RunDevelopment
+[@Novum]: https://github.com/Novum
 
 [#75]: https://github.com/linebender/fearless_simd/pull/75
 [#76]: https://github.com/linebender/fearless_simd/pull/76
@@ -402,6 +424,7 @@ No changelog was kept for this release.
 [#350]: https://github.com/linebender/fearless_simd/pull/350
 [#351]: https://github.com/linebender/fearless_simd/pull/351
 [#352]: https://github.com/linebender/fearless_simd/pull/352
+[#354]: https://github.com/linebender/fearless_simd/pull/354
 [#356]: https://github.com/linebender/fearless_simd/pull/356
 [#357]: https://github.com/linebender/fearless_simd/pull/357
 [#358]: https://github.com/linebender/fearless_simd/pull/358
@@ -418,8 +441,23 @@ No changelog was kept for this release.
 [#377]: https://github.com/linebender/fearless_simd/pull/377
 [#378]: https://github.com/linebender/fearless_simd/pull/378
 [#383]: https://github.com/linebender/fearless_simd/pull/383
+[#392]: https://github.com/linebender/fearless_simd/pull/392
+[#394]: https://github.com/linebender/fearless_simd/pull/394
+[#395]: https://github.com/linebender/fearless_simd/pull/395
+[#396]: https://github.com/linebender/fearless_simd/pull/396
+[#399]: https://github.com/linebender/fearless_simd/pull/399
+[#400]: https://github.com/linebender/fearless_simd/pull/400
+[#402]: https://github.com/linebender/fearless_simd/pull/402
+[#404]: https://github.com/linebender/fearless_simd/pull/404
+[#405]: https://github.com/linebender/fearless_simd/pull/405
+[#406]: https://github.com/linebender/fearless_simd/pull/406
+[#407]: https://github.com/linebender/fearless_simd/pull/407
+[#408]: https://github.com/linebender/fearless_simd/pull/408
+[#409]: https://github.com/linebender/fearless_simd/pull/409
+[#411]: https://github.com/linebender/fearless_simd/pull/411
+[#412]: https://github.com/linebender/fearless_simd/pull/412
 
-[Unreleased]: https://github.com/linebender/fearless_simd/compare/v1.0.0...HEAD
+[1.1.0]: https://github.com/linebender/fearless_simd/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/linebender/fearless_simd/compare/v0.7.0...v1.0.0
 [0.7.0]: https://github.com/linebender/fearless_simd/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/linebender/fearless_simd/compare/v0.5.0...v0.6.0

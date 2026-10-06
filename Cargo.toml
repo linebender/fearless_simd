@@ -77,7 +77,7 @@ clippy.wildcard_dependencies = "warn"
 clippy.uninlined_format_args = "allow"
 
 [workspace.dependencies]
-fearless_simd = { path = "fearless_simd", version = "1.0.0", default-features = false }
+fearless_simd = { path = "fearless_simd", version = "1.1.0", default-features = false }
 fearless_simd_dev_macros = { path = "fearless_simd_dev_macros" }
 fearless_simd_macros = { path = "fearless_simd_macros", version = "0.1.0" }
 proc-macro2 = "1.0.95"
