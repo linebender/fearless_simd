@@ -553,6 +553,32 @@ pub trait SimdWiden<S: Simd>:
     fn widen(self) -> (Self::Widened, Self::Widened);
 }
 
+/// Exact widening arithmetic on integer SIMD vectors.
+///
+/// Both operands have the same type. Each result lane has twice the input lane width,
+/// preserving the full sum or product without wrapping or saturation. As with
+/// [`SimdWiden::widen`], the first vector contains the lower lanes and the second
+/// contains the upper lanes; each vector has the same total bit width as the inputs.
+///
+/// ```
+/// use fearless_simd::{prelude::*, i16x8, i32x4};
+///
+/// fn fixed<S: Simd>(a: i16x8<S>, b: i16x8<S>) -> (i32x4<S>, i32x4<S>) {
+///     a.widening_mul(b)
+/// }
+///
+/// fn native<S: Simd>(a: S::u8s, b: S::u8s) -> (S::u16s, S::u16s) {
+///     a.widening_add(b)
+/// }
+/// ```
+pub trait SimdIntWiden<S: Simd>: SimdInt<S> + SimdWiden<S, Widened: SimdInt<S>> {
+    /// Multiply corresponding lanes exactly, returning the lower and upper halves.
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened);
+
+    /// Add corresponding lanes exactly, returning the lower and upper halves.
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened);
+}
+
 /// Narrowing conversion of two numeric SIMD vectors.
 ///
 /// Both inputs have the same bit width as the result. The first input supplies the lower result

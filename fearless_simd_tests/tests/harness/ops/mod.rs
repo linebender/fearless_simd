@@ -111,6 +111,8 @@ mod trunc;
 mod unzip_high;
 mod unzip_low;
 mod widen;
+mod widening_add;
+mod widening_mul;
 mod xor;
 mod zip_high;
 mod zip_low;

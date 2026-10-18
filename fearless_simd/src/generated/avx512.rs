@@ -1767,6 +1767,18 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widening_mul_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>) {
+        let (a0, a1) = self.widen_i8x16(a);
+        let (b0, b1) = self.widen_i8x16(b);
+        (self.mul_i16x8(a0, b0), self.mul_i16x8(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>) {
+        let (a0, a1) = self.widen_i8x16(a);
+        let (b0, b1) = self.widen_i8x16(b);
+        (self.add_i16x8(a0, b0), self.add_i16x8(a1, b1))
+    }
+    #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2483,6 +2495,18 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn widening_mul_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>) {
+        let (a0, a1) = self.widen_u8x16(a);
+        let (b0, b1) = self.widen_u8x16(b);
+        (self.mul_u16x8(a0, b0), self.mul_u16x8(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>) {
+        let (a0, a1) = self.widen_u8x16(a);
+        let (b0, b1) = self.widen_u8x16(b);
+        (self.add_u16x8(a0, b0), self.add_u16x8(a1, b1))
     }
     #[inline(always)]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
@@ -3238,6 +3262,18 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widening_mul_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
+        let (a0, a1) = self.widen_i16x8(a);
+        let (b0, b1) = self.widen_i16x8(b);
+        (self.mul_i32x4(a0, b0), self.mul_i32x4(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
+        let (a0, a1) = self.widen_i16x8(a);
+        let (b0, b1) = self.widen_i16x8(b);
+        (self.add_i32x4(a0, b0), self.add_i32x4(a1, b1))
+    }
+    #[inline(always)]
     fn narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3826,6 +3862,18 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn widening_mul_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
+        let (a0, a1) = self.widen_u16x8(a);
+        let (b0, b1) = self.widen_u16x8(b);
+        (self.mul_u32x4(a0, b0), self.mul_u32x4(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
+        let (a0, a1) = self.widen_u16x8(a);
+        let (b0, b1) = self.widen_u16x8(b);
+        (self.add_u32x4(a0, b0), self.add_u32x4(a1, b1))
     }
     #[inline(always)]
     fn narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self> {
@@ -4610,6 +4658,18 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widening_mul_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>) {
+        let (a0, a1) = self.widen_i32x4(a);
+        let (b0, b1) = self.widen_i32x4(b);
+        (self.mul_i64x2(a0, b0), self.mul_i64x2(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>) {
+        let (a0, a1) = self.widen_i32x4(a);
+        let (b0, b1) = self.widen_i32x4(b);
+        (self.add_i64x2(a0, b0), self.add_i64x2(a1, b1))
+    }
+    #[inline(always)]
     fn narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5186,6 +5246,18 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn widening_mul_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>) {
+        let (a0, a1) = self.widen_u32x4(a);
+        let (b0, b1) = self.widen_u32x4(b);
+        (self.mul_u64x2(a0, b0), self.mul_u64x2(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>) {
+        let (a0, a1) = self.widen_u32x4(a);
+        let (b0, b1) = self.widen_u32x4(b);
+        (self.add_u64x2(a0, b0), self.add_u64x2(a1, b1))
     }
     #[inline(always)]
     fn narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self> {
@@ -8768,6 +8840,18 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widening_mul_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> (i16x16<Self>, i16x16<Self>) {
+        let (a0, a1) = self.widen_i8x32(a);
+        let (b0, b1) = self.widen_i8x32(b);
+        (self.mul_i16x16(a0, b0), self.mul_i16x16(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> (i16x16<Self>, i16x16<Self>) {
+        let (a0, a1) = self.widen_i8x32(a);
+        let (b0, b1) = self.widen_i8x32(b);
+        (self.add_i16x16(a0, b0), self.add_i16x16(a1, b1))
+    }
+    #[inline(always)]
     fn splat_u8x32(self, val: u8) -> u8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9458,6 +9542,18 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn widening_mul_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> (u16x16<Self>, u16x16<Self>) {
+        let (a0, a1) = self.widen_u8x32(a);
+        let (b0, b1) = self.widen_u8x32(b);
+        (self.mul_u16x16(a0, b0), self.mul_u16x16(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> (u16x16<Self>, u16x16<Self>) {
+        let (a0, a1) = self.widen_u8x32(a);
+        let (b0, b1) = self.widen_u8x32(b);
+        (self.add_u16x16(a0, b0), self.add_u16x16(a1, b1))
     }
     #[inline(always)]
     fn splat_mask8x32(self, val: bool) -> mask8x32<Self> {
@@ -10206,6 +10302,18 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widening_mul_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
+        let (a0, a1) = self.widen_i16x16(a);
+        let (b0, b1) = self.widen_i16x16(b);
+        (self.mul_i32x8(a0, b0), self.mul_i32x8(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
+        let (a0, a1) = self.widen_i16x16(a);
+        let (b0, b1) = self.widen_i16x16(b);
+        (self.add_i32x8(a0, b0), self.add_i32x8(a1, b1))
+    }
+    #[inline(always)]
     fn narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10773,6 +10881,18 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn widening_mul_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> (u32x8<Self>, u32x8<Self>) {
+        let (a0, a1) = self.widen_u16x16(a);
+        let (b0, b1) = self.widen_u16x16(b);
+        (self.mul_u32x8(a0, b0), self.mul_u32x8(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> (u32x8<Self>, u32x8<Self>) {
+        let (a0, a1) = self.widen_u16x16(a);
+        let (b0, b1) = self.widen_u16x16(b);
+        (self.add_u32x8(a0, b0), self.add_u32x8(a1, b1))
     }
     #[inline(always)]
     fn narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self> {
@@ -11555,6 +11675,18 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widening_mul_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> (i64x4<Self>, i64x4<Self>) {
+        let (a0, a1) = self.widen_i32x8(a);
+        let (b0, b1) = self.widen_i32x8(b);
+        (self.mul_i64x4(a0, b0), self.mul_i64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> (i64x4<Self>, i64x4<Self>) {
+        let (a0, a1) = self.widen_i32x8(a);
+        let (b0, b1) = self.widen_i32x8(b);
+        (self.add_i64x4(a0, b0), self.add_i64x4(a1, b1))
+    }
+    #[inline(always)]
     fn narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12111,6 +12243,18 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn widening_mul_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> (u64x4<Self>, u64x4<Self>) {
+        let (a0, a1) = self.widen_u32x8(a);
+        let (b0, b1) = self.widen_u32x8(b);
+        (self.mul_u64x4(a0, b0), self.mul_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> (u64x4<Self>, u64x4<Self>) {
+        let (a0, a1) = self.widen_u32x8(a);
+        let (b0, b1) = self.widen_u32x8(b);
+        (self.add_u64x4(a0, b0), self.add_u64x4(a1, b1))
     }
     #[inline(always)]
     fn narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self> {
@@ -15698,6 +15842,18 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widening_mul_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> (i16x32<Self>, i16x32<Self>) {
+        let (a0, a1) = self.widen_i8x64(a);
+        let (b0, b1) = self.widen_i8x64(b);
+        (self.mul_i16x32(a0, b0), self.mul_i16x32(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> (i16x32<Self>, i16x32<Self>) {
+        let (a0, a1) = self.widen_i8x64(a);
+        let (b0, b1) = self.widen_i8x64(b);
+        (self.add_i16x32(a0, b0), self.add_i16x32(a1, b1))
+    }
+    #[inline(always)]
     fn splat_u8x64(self, val: u8) -> u8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -16397,6 +16553,18 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn widening_mul_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> (u16x32<Self>, u16x32<Self>) {
+        let (a0, a1) = self.widen_u8x64(a);
+        let (b0, b1) = self.widen_u8x64(b);
+        (self.mul_u16x32(a0, b0), self.mul_u16x32(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> (u16x32<Self>, u16x32<Self>) {
+        let (a0, a1) = self.widen_u8x64(a);
+        let (b0, b1) = self.widen_u8x64(b);
+        (self.add_u16x32(a0, b0), self.add_u16x32(a1, b1))
     }
     #[inline(always)]
     fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
@@ -17148,6 +17316,18 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widening_mul_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> (i32x16<Self>, i32x16<Self>) {
+        let (a0, a1) = self.widen_i16x32(a);
+        let (b0, b1) = self.widen_i16x32(b);
+        (self.mul_i32x16(a0, b0), self.mul_i32x16(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> (i32x16<Self>, i32x16<Self>) {
+        let (a0, a1) = self.widen_i16x32(a);
+        let (b0, b1) = self.widen_i16x32(b);
+        (self.add_i32x16(a0, b0), self.add_i32x16(a1, b1))
+    }
+    #[inline(always)]
     fn narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -17726,6 +17906,18 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn widening_mul_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> (u32x16<Self>, u32x16<Self>) {
+        let (a0, a1) = self.widen_u16x32(a);
+        let (b0, b1) = self.widen_u16x32(b);
+        (self.mul_u32x16(a0, b0), self.mul_u32x16(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> (u32x16<Self>, u32x16<Self>) {
+        let (a0, a1) = self.widen_u16x32(a);
+        let (b0, b1) = self.widen_u16x32(b);
+        (self.add_u32x16(a0, b0), self.add_u32x16(a1, b1))
     }
     #[inline(always)]
     fn narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self> {
@@ -18519,6 +18711,18 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn widening_mul_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> (i64x8<Self>, i64x8<Self>) {
+        let (a0, a1) = self.widen_i32x16(a);
+        let (b0, b1) = self.widen_i32x16(b);
+        (self.mul_i64x8(a0, b0), self.mul_i64x8(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> (i64x8<Self>, i64x8<Self>) {
+        let (a0, a1) = self.widen_i32x16(a);
+        let (b0, b1) = self.widen_i32x16(b);
+        (self.add_i64x8(a0, b0), self.add_i64x8(a1, b1))
+    }
+    #[inline(always)]
     fn narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -19094,6 +19298,18 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn widening_mul_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> (u64x8<Self>, u64x8<Self>) {
+        let (a0, a1) = self.widen_u32x16(a);
+        let (b0, b1) = self.widen_u32x16(b);
+        (self.mul_u64x8(a0, b0), self.mul_u64x8(a1, b1))
+    }
+    #[inline(always)]
+    fn widening_add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> (u64x8<Self>, u64x8<Self>) {
+        let (a0, a1) = self.widen_u32x16(a);
+        let (b0, b1) = self.widen_u32x16(b);
+        (self.add_u64x8(a0, b0), self.add_u64x8(a1, b1))
     }
     #[inline(always)]
     fn narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self> {

@@ -5,8 +5,8 @@
 
 use crate::{
     Bytes, ExtractToken, MaskNarrow, MaskWiden, Select, Simd, SimdBase, SimdCvtFloat,
-    SimdCvtTruncate, SimdFrom, SimdInterleaved, SimdInto, SimdMask, SimdNarrow, SimdWiden,
-    seal::Seal,
+    SimdCvtTruncate, SimdFrom, SimdIntWiden, SimdInterleaved, SimdInto, SimdMask, SimdNarrow,
+    SimdWiden, seal::Seal,
 };
 impl<S: Simd> ExtractToken for f32x4<S> {
     type S = S;
@@ -767,6 +767,16 @@ impl<S: Simd> SimdWiden<S> for i8x16<S> {
         self.simd.widen_i8x16(self)
     }
 }
+impl<S: Simd> SimdIntWiden<S> for i8x16<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_i8x16(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_i8x16(self, rhs)
+    }
+}
 impl<S: Simd> crate::SimdCombine<S> for i8x16<S> {
     type Combined = i8x32<S>;
     #[inline(always)]
@@ -1120,6 +1130,16 @@ impl<S: Simd> SimdWiden<S> for u8x16<S> {
     #[inline(always)]
     fn widen(self) -> (Self::Widened, Self::Widened) {
         self.simd.widen_u8x16(self)
+    }
+}
+impl<S: Simd> SimdIntWiden<S> for u8x16<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_u8x16(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_u8x16(self, rhs)
     }
 }
 impl<S: Simd> crate::SimdCombine<S> for u8x16<S> {
@@ -1598,6 +1618,16 @@ impl<S: Simd> SimdWiden<S> for i16x8<S> {
         self.simd.widen_i16x8(self)
     }
 }
+impl<S: Simd> SimdIntWiden<S> for i16x8<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_i16x8(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_i16x8(self, rhs)
+    }
+}
 impl<S: Simd> SimdNarrow<S> for i16x8<S> {
     type Narrowed = i8x16<S>;
     #[inline(always)]
@@ -1958,6 +1988,16 @@ impl<S: Simd> SimdWiden<S> for u16x8<S> {
     #[inline(always)]
     fn widen(self) -> (Self::Widened, Self::Widened) {
         self.simd.widen_u16x8(self)
+    }
+}
+impl<S: Simd> SimdIntWiden<S> for u16x8<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_u16x8(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_u16x8(self, rhs)
     }
 }
 impl<S: Simd> SimdNarrow<S> for u16x8<S> {
@@ -2458,6 +2498,16 @@ impl<S: Simd> SimdWiden<S> for i32x4<S> {
         self.simd.widen_i32x4(self)
     }
 }
+impl<S: Simd> SimdIntWiden<S> for i32x4<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_i32x4(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_i32x4(self, rhs)
+    }
+}
 impl<S: Simd> SimdNarrow<S> for i32x4<S> {
     type Narrowed = i16x8<S>;
     #[inline(always)]
@@ -2818,6 +2868,16 @@ impl<S: Simd> SimdWiden<S> for u32x4<S> {
     #[inline(always)]
     fn widen(self) -> (Self::Widened, Self::Widened) {
         self.simd.widen_u32x4(self)
+    }
+}
+impl<S: Simd> SimdIntWiden<S> for u32x4<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_u32x4(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_u32x4(self, rhs)
     }
 }
 impl<S: Simd> SimdNarrow<S> for u32x4<S> {
@@ -5042,6 +5102,16 @@ impl<S: Simd> SimdWiden<S> for i8x32<S> {
         self.simd.widen_i8x32(self)
     }
 }
+impl<S: Simd> SimdIntWiden<S> for i8x32<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_i8x32(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_i8x32(self, rhs)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for i8x32<S> {
     type Split = i8x16<S>;
     #[inline(always)]
@@ -5406,6 +5476,16 @@ impl<S: Simd> SimdWiden<S> for u8x32<S> {
     #[inline(always)]
     fn widen(self) -> (Self::Widened, Self::Widened) {
         self.simd.widen_u8x32(self)
+    }
+}
+impl<S: Simd> SimdIntWiden<S> for u8x32<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_u8x32(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_u8x32(self, rhs)
     }
 }
 impl<S: Simd> crate::SimdSplit<S> for u8x32<S> {
@@ -5888,6 +5968,16 @@ impl<S: Simd> SimdWiden<S> for i16x16<S> {
         self.simd.widen_i16x16(self)
     }
 }
+impl<S: Simd> SimdIntWiden<S> for i16x16<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_i16x16(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_i16x16(self, rhs)
+    }
+}
 impl<S: Simd> SimdNarrow<S> for i16x16<S> {
     type Narrowed = i8x32<S>;
     #[inline(always)]
@@ -6252,6 +6342,16 @@ impl<S: Simd> SimdWiden<S> for u16x16<S> {
     #[inline(always)]
     fn widen(self) -> (Self::Widened, Self::Widened) {
         self.simd.widen_u16x16(self)
+    }
+}
+impl<S: Simd> SimdIntWiden<S> for u16x16<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_u16x16(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_u16x16(self, rhs)
     }
 }
 impl<S: Simd> SimdNarrow<S> for u16x16<S> {
@@ -6759,6 +6859,16 @@ impl<S: Simd> SimdWiden<S> for i32x8<S> {
         self.simd.widen_i32x8(self)
     }
 }
+impl<S: Simd> SimdIntWiden<S> for i32x8<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_i32x8(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_i32x8(self, rhs)
+    }
+}
 impl<S: Simd> SimdNarrow<S> for i32x8<S> {
     type Narrowed = i16x16<S>;
     #[inline(always)]
@@ -7126,6 +7236,16 @@ impl<S: Simd> SimdWiden<S> for u32x8<S> {
     #[inline(always)]
     fn widen(self) -> (Self::Widened, Self::Widened) {
         self.simd.widen_u32x8(self)
+    }
+}
+impl<S: Simd> SimdIntWiden<S> for u32x8<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_u32x8(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_u32x8(self, rhs)
     }
 }
 impl<S: Simd> SimdNarrow<S> for u32x8<S> {
@@ -9366,6 +9486,16 @@ impl<S: Simd> SimdWiden<S> for i8x64<S> {
         self.simd.widen_i8x64(self)
     }
 }
+impl<S: Simd> SimdIntWiden<S> for i8x64<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_i8x64(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_i8x64(self, rhs)
+    }
+}
 impl<S: Simd> crate::SimdSplit<S> for i8x64<S> {
     type Split = i8x32<S>;
     #[inline(always)]
@@ -9756,6 +9886,16 @@ impl<S: Simd> SimdWiden<S> for u8x64<S> {
     #[inline(always)]
     fn widen(self) -> (Self::Widened, Self::Widened) {
         self.simd.widen_u8x64(self)
+    }
+}
+impl<S: Simd> SimdIntWiden<S> for u8x64<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_u8x64(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_u8x64(self, rhs)
     }
 }
 impl<S: Simd> crate::SimdSplit<S> for u8x64<S> {
@@ -10248,6 +10388,16 @@ impl<S: Simd> SimdWiden<S> for i16x32<S> {
         self.simd.widen_i16x32(self)
     }
 }
+impl<S: Simd> SimdIntWiden<S> for i16x32<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_i16x32(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_i16x32(self, rhs)
+    }
+}
 impl<S: Simd> SimdNarrow<S> for i16x32<S> {
     type Narrowed = i8x64<S>;
     #[inline(always)]
@@ -10622,6 +10772,16 @@ impl<S: Simd> SimdWiden<S> for u16x32<S> {
     #[inline(always)]
     fn widen(self) -> (Self::Widened, Self::Widened) {
         self.simd.widen_u16x32(self)
+    }
+}
+impl<S: Simd> SimdIntWiden<S> for u16x32<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_u16x32(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_u16x32(self, rhs)
     }
 }
 impl<S: Simd> SimdNarrow<S> for u16x32<S> {
@@ -11132,6 +11292,16 @@ impl<S: Simd> SimdWiden<S> for i32x16<S> {
         self.simd.widen_i32x16(self)
     }
 }
+impl<S: Simd> SimdIntWiden<S> for i32x16<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_i32x16(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_i32x16(self, rhs)
+    }
+}
 impl<S: Simd> SimdNarrow<S> for i32x16<S> {
     type Narrowed = i16x32<S>;
     #[inline(always)]
@@ -11502,6 +11672,16 @@ impl<S: Simd> SimdWiden<S> for u32x16<S> {
     #[inline(always)]
     fn widen(self) -> (Self::Widened, Self::Widened) {
         self.simd.widen_u32x16(self)
+    }
+}
+impl<S: Simd> SimdIntWiden<S> for u32x16<S> {
+    #[inline(always)]
+    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_u32x16(self, rhs)
+    }
+    #[inline(always)]
+    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_u32x16(self, rhs)
     }
 }
 impl<S: Simd> SimdNarrow<S> for u32x16<S> {

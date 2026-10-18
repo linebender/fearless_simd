@@ -16,7 +16,7 @@ use crate::{
 
 pub(crate) fn mk_simd_types() -> TokenStream {
     let mut result = quote! {
-        use crate::{Bytes, ExtractToken, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdMask, SimdCvtFloat, SimdCvtTruncate, SimdInterleaved, SimdWiden, SimdNarrow, MaskWiden, MaskNarrow, seal::Seal};
+        use crate::{Bytes, ExtractToken, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdMask, SimdCvtFloat, SimdCvtTruncate, SimdInterleaved, SimdWiden, SimdIntWiden, SimdNarrow, MaskWiden, MaskNarrow, seal::Seal};
     };
     for ty in SIMD_TYPES {
         let name = ty.rust();
@@ -217,6 +217,23 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     #[inline(always)]
                     fn widen(self) -> (Self::Widened, Self::Widened) {
                         self.simd.#method(self)
+                    }
+                }
+            });
+        }
+        if ty.widened().is_some() && matches!(ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
+            let mul = generic_op_name("widening_mul", ty);
+            let add = generic_op_name("widening_add", ty);
+            conditional_impls.push(quote! {
+                impl<S: Simd> SimdIntWiden<S> for #name<S> {
+                    #[inline(always)]
+                    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+                        self.simd.#mul(self, rhs)
+                    }
+
+                    #[inline(always)]
+                    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
+                        self.simd.#add(self, rhs)
                     }
                 }
             });

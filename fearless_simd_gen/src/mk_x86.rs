@@ -319,6 +319,7 @@ impl Level for X86 {
             OpSig::RotateElements { direction } => {
                 self.handle_mask_rotate_elements(op, vec_ty, direction)
             }
+            OpSig::WideningBinary { .. } => crate::generic::widening_binary_method(op, vec_ty),
             OpSig::Widen { target_ty } => self.handle_widen(op, vec_ty, target_ty),
             OpSig::Narrow { target_ty, mode } => self.handle_narrow(op, vec_ty, target_ty, mode),
             OpSig::Binary => self.handle_binary(op, method, vec_ty),

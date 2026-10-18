@@ -568,6 +568,7 @@ impl Level for WasmSimd128 {
                     reduce_min_max(method_sig, vec_ty, lane_op)
                 }
             }
+            OpSig::WideningBinary { .. } => crate::generic::widening_binary_method(op, vec_ty),
             OpSig::Widen { target_ty } => {
                 if vec_ty.scalar == ScalarType::Float {
                     return quote! {
