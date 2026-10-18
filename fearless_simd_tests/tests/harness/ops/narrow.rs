@@ -1540,6 +1540,35 @@ fn relaxed_narrow_unsigned_upper_bound_debug_asserts() {
     simd.relaxed_narrow_u16x8(low, high);
 }
 
+// catch_unwind cannot catch panics on targets that abort, such as wasm32-wasip1.
+#[cfg(all(debug_assertions, panic = "unwind"))]
+#[simd_test]
+fn relaxed_narrow_u16x8_low_input_debug_asserts<S: Simd>(simd: S) {
+    let low = u16x8::from_slice(simd, &[256, 0, 0, 0, 0, 0, 0, 0]);
+    let high = u16x8::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0]);
+
+    let result =
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| low.relaxed_narrow(high)));
+    assert!(
+        result.is_err(),
+        "out-of-range relaxed narrowing must panic in debug builds"
+    );
+}
+
+#[cfg(all(debug_assertions, panic = "unwind"))]
+#[simd_test]
+fn relaxed_narrow_u32x16_high_input_debug_asserts<S: Simd>(simd: S) {
+    let low = u32x16::from_slice(simd, &[0; 16]);
+    let high = u32x16::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65_536]);
+
+    let result =
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| low.relaxed_narrow(high)));
+    assert!(
+        result.is_err(),
+        "out-of-range relaxed narrowing must panic in debug builds"
+    );
+}
+
 #[simd_test]
 #[ignore] // slow: run with `cargo test --release widen_narrow_random -- --ignored`.
 fn widen_narrow_random<S: Simd>(simd: S) {
@@ -2240,4 +2269,236 @@ fn narrow_mask64x8<S: Simd>(simd: S) {
         assert_eq!(one.narrow(zero).to_bitmask(), 1_u64 << lane);
         assert_eq!(zero.narrow(one).to_bitmask(), 1_u64 << (lane + 8));
     }
+}
+
+// Distinct lane values catch permutations that repeated boundary patterns cannot.
+
+#[simd_test]
+fn saturating_narrow_i16x16_lane_order<S: Simd>(simd: S) {
+    let low = i16x16::from_slice(
+        simd,
+        &[-129, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, -128],
+    );
+    let high = i16x16::from_slice(
+        simd,
+        &[
+            127, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 128,
+        ],
+    );
+    assert_eq!(
+        *low.saturating_narrow(high),
+        [
+            -128, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, -128, 127, 18, 19, 20, 21, 22,
+            23, 24, 25, 26, 27, 28, 29, 30, 31, 127
+        ]
+    );
+}
+
+#[simd_test]
+fn saturating_narrow_i16x32_lane_order<S: Simd>(simd: S) {
+    let low = i16x32::from_slice(
+        simd,
+        &[
+            -129, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31, -128,
+        ],
+    );
+    let high = i16x32::from_slice(
+        simd,
+        &[
+            127, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,
+            54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 128,
+        ],
+    );
+    assert_eq!(
+        *low.saturating_narrow(high),
+        [
+            -128, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31, -128, 127, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
+            45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 127
+        ]
+    );
+}
+
+#[simd_test]
+fn saturating_narrow_u16x16_lane_order<S: Simd>(simd: S) {
+    let low = u16x16::from_slice(
+        simd,
+        &[255, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 256],
+    );
+    let high = u16x16::from_slice(
+        simd,
+        &[
+            32_767, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 32_768, 65_535,
+        ],
+    );
+    assert_eq!(
+        *low.saturating_narrow(high),
+        [
+            255, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 255, 255, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 255, 255
+        ]
+    );
+}
+
+#[simd_test]
+fn saturating_narrow_u16x32_lane_order<S: Simd>(simd: S) {
+    let low = u16x32::from_slice(
+        simd,
+        &[
+            255, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31, 256,
+        ],
+    );
+    let high = u16x32::from_slice(
+        simd,
+        &[
+            32_767, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,
+            54, 55, 56, 57, 58, 59, 60, 61, 62, 32_768, 65_535,
+        ],
+    );
+    assert_eq!(
+        *low.saturating_narrow(high),
+        [
+            255, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31, 255, 255, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
+            45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 255, 255
+        ]
+    );
+}
+
+#[simd_test]
+fn saturating_narrow_i32x8_lane_order<S: Simd>(simd: S) {
+    let low = i32x8::from_slice(simd, &[-32_769, 2, 3, 4, 5, 6, 7, -32_768]);
+    let high = i32x8::from_slice(simd, &[32_767, 10, 11, 12, 13, 14, 15, 32_768]);
+    assert_eq!(
+        *low.saturating_narrow(high),
+        [
+            -32_768, 2, 3, 4, 5, 6, 7, -32_768, 32_767, 10, 11, 12, 13, 14, 15, 32_767
+        ]
+    );
+}
+
+#[simd_test]
+fn saturating_narrow_i32x16_lane_order<S: Simd>(simd: S) {
+    let low = i32x16::from_slice(
+        simd,
+        &[
+            -32_769, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, -32_768,
+        ],
+    );
+    let high = i32x16::from_slice(
+        simd,
+        &[
+            32_767, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32_768,
+        ],
+    );
+    assert_eq!(
+        *low.saturating_narrow(high),
+        [
+            -32_768, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, -32_768, 32_767, 18, 19, 20,
+            21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32_767
+        ]
+    );
+}
+
+#[simd_test]
+fn saturating_narrow_u32x8_lane_order<S: Simd>(simd: S) {
+    let low = u32x8::from_slice(simd, &[65_535, 2, 3, 4, 5, 6, 7, 65_536]);
+    let high = u32x8::from_slice(
+        simd,
+        &[
+            2_147_483_647,
+            10,
+            11,
+            12,
+            13,
+            14,
+            2_147_483_648,
+            4_294_967_295,
+        ],
+    );
+    assert_eq!(
+        *low.saturating_narrow(high),
+        [
+            65_535, 2, 3, 4, 5, 6, 7, 65_535, 65_535, 10, 11, 12, 13, 14, 65_535, 65_535
+        ]
+    );
+}
+
+#[simd_test]
+fn saturating_narrow_u32x16_lane_order<S: Simd>(simd: S) {
+    let low = u32x16::from_slice(
+        simd,
+        &[
+            65_535, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 65_536,
+        ],
+    );
+    let high = u32x16::from_slice(
+        simd,
+        &[
+            2_147_483_647,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            2_147_483_648,
+            4_294_967_295,
+        ],
+    );
+    assert_eq!(
+        *low.saturating_narrow(high),
+        [
+            65_535, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 65_535, 65_535, 18, 19, 20, 21,
+            22, 23, 24, 25, 26, 27, 28, 29, 30, 65_535, 65_535
+        ]
+    );
+}
+
+#[simd_test]
+fn saturating_narrow_u64x8_lane_order<S: Simd>(simd: S) {
+    let low = u64x8::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7]);
+    let high = u64x8::from_slice(
+        simd,
+        &[
+            8,
+            9,
+            10,
+            11,
+            u32::MAX as u64,
+            u32::MAX as u64 + 1,
+            1 << 63,
+            u64::MAX,
+        ],
+    );
+    assert_eq!(
+        *low.saturating_narrow(high),
+        [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            u32::MAX,
+            u32::MAX,
+            u32::MAX,
+            u32::MAX
+        ],
+    );
 }
