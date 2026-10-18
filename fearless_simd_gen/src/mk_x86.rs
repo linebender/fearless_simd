@@ -17,7 +17,7 @@ use crate::generic::{
 use crate::level::Level;
 use crate::ops::{
     ElementDirection, NarrowingMode, Op, OpSig, Quantifier, SaturatingOp, SlideGranularity,
-    relaxed_narrow_method,
+    relaxed_narrow_assertion, relaxed_narrow_method,
 };
 use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Literal, Span, TokenStream};
@@ -3013,27 +3013,6 @@ impl X86 {
             };
         }
 
-        if mode == Relaxed {
-            // SSE4.2 and AVX2 only have saturating narrowing instructions for i32 and i16
-            let implementation = if *self != Self::Avx512
-                && vec_ty.scalar == ScalarType::Int
-                && matches!(vec_ty.scalar_bits, 16 | 32)
-            {
-                "saturating_narrow"
-            } else {
-                // for everything else (SSE2, AVX-512, unsigned values) truncation is cheaper
-                "narrow"
-            };
-            return relaxed_narrow_method(op, vec_ty, target_ty, implementation);
-        }
-
-        // Masks are always in relaxed mode since they are always either 0 or -1 and can't overflow
-        let mode = if vec_ty.scalar == ScalarType::Mask && vec_ty.scalar_bits <= 32 {
-            Saturate
-        } else {
-            mode
-        };
-
         // Packs interleave the two inputs within each 128-bit lane. Restore a-then-b
         // order with an immediate permutation at 256 bits or one qword permutation at 512.
         let reorder_packed = |packed: TokenStream, token: &Ident| {
@@ -3046,6 +3025,43 @@ impl X86 {
                 _ => unreachable!(),
             };
             quote! { #reordered.simd_into(#token) }
+        };
+
+        if mode == Relaxed {
+            if vec_ty.scalar == ScalarType::Unsigned
+                && matches!(vec_ty.scalar_bits, 16 | 32)
+                && (*self != Self::Sse2 || vec_ty.scalar_bits == 16)
+            {
+                // Valid relaxed inputs already fit the unsigned destination, so they
+                // are also nonnegative as signed source elements. PACKUS needs neither
+                // the wrapping implementation's mask nor the saturating one's clamp.
+                let pack = pack_intrinsic(vec_ty.scalar_bits, false, vec_ty.n_bits());
+                let bounds_assertion = relaxed_narrow_assertion(vec_ty, &target_ty);
+                return self.kernel_method(op, vec_ty, |token| {
+                    let packed = reorder_packed(quote! { #pack(a.into(), b.into()) }, token);
+                    quote! {
+                        #bounds_assertion
+                        #packed
+                    }
+                });
+            }
+
+            let implementation = match (*self, vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits()) {
+                // Signed packs are cheaper than truncation, including on AVX-512.
+                (_, ScalarType::Int, 16 | 32, _) => "saturating_narrow",
+                // Clamp + permute ties truncation on Intel and is cheaper on Zen 4.
+                (Self::Avx512, ScalarType::Unsigned, 64, 512) => "saturating_narrow",
+                // Other element types use truncation; SSE2 also needs its u32 fallback.
+                _ => "narrow",
+            };
+            return relaxed_narrow_method(op, vec_ty, target_ty, implementation);
+        }
+
+        // Masks are always in relaxed mode since they are always either 0 or -1 and can't overflow
+        let mode = if vec_ty.scalar == ScalarType::Mask && vec_ty.scalar_bits <= 32 {
+            Saturate
+        } else {
+            mode
         };
 
         // Select the low or high 32-bit half of each 64-bit lane and compact those halves from

@@ -612,7 +612,19 @@ pub(crate) fn relaxed_narrow_method(
 
     let method_sig = op.simd_trait_method_sig(vec_ty);
     let implementation = generic_op_name(implementation, vec_ty);
-    let bounds_assertion = if vec_ty.scalar == ScalarType::Float {
+    let bounds_assertion = relaxed_narrow_assertion(vec_ty, &target_ty);
+
+    quote! {
+        #method_sig {
+            #bounds_assertion
+            self.#implementation(a, b)
+        }
+    }
+}
+
+/// The debug-only range check shared by routed and directly lowered relaxed narrowing.
+pub(crate) fn relaxed_narrow_assertion(vec_ty: &VecType, target_ty: &VecType) -> TokenStream {
+    if vec_ty.scalar == ScalarType::Float {
         TokenStream::new()
     } else {
         let source_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
@@ -625,13 +637,6 @@ pub(crate) fn relaxed_narrow_method(
                 }),
                 "relaxed_narrow inputs must fit in the destination type",
             );
-        }
-    };
-
-    quote! {
-        #method_sig {
-            #bounds_assertion
-            self.#implementation(a, b)
         }
     }
 }

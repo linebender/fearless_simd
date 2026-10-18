@@ -3954,14 +3954,20 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn relaxed_narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self> {
-        debug_assert!(
-            a.as_slice()
-                .iter()
-                .chain(b.as_slice())
-                .all(|&value| { value >= u8::MIN as u16 && value <= u8::MAX as u16 }),
-            "relaxed_narrow inputs must fit in the destination type",
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u16x8<Sse2>, b: u16x8<Sse2>) -> u8x16<Sse2> {
+                debug_assert!(
+                    a.as_slice()
+                        .iter()
+                        .chain(b.as_slice())
+                        .all(|&value| { value >= u8::MIN as u16 && value <= u8::MAX as u16 }),
+                    "relaxed_narrow inputs must fit in the destination type",
+                );
+                _mm_packus_epi16(a.into(), b.into()).simd_into(token)
+            }
         );
-        self.narrow_u16x8(a, b)
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {

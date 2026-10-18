@@ -1540,6 +1540,34 @@ fn relaxed_narrow_unsigned_upper_bound_debug_asserts() {
     simd.relaxed_narrow_u16x8(low, high);
 }
 
+#[cfg(debug_assertions)]
+#[simd_test]
+fn relaxed_narrow_u16x8_low_input_debug_asserts<S: Simd>(simd: S) {
+    let low = u16x8::from_slice(simd, &[256, 0, 0, 0, 0, 0, 0, 0]);
+    let high = u16x8::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0]);
+
+    let result =
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| low.relaxed_narrow(high)));
+    assert!(
+        result.is_err(),
+        "out-of-range relaxed narrowing must panic in debug builds"
+    );
+}
+
+#[cfg(debug_assertions)]
+#[simd_test]
+fn relaxed_narrow_u32x16_high_input_debug_asserts<S: Simd>(simd: S) {
+    let low = u32x16::from_slice(simd, &[0; 16]);
+    let high = u32x16::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65_536]);
+
+    let result =
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| low.relaxed_narrow(high)));
+    assert!(
+        result.is_err(),
+        "out-of-range relaxed narrowing must panic in debug builds"
+    );
+}
+
 #[simd_test]
 #[ignore] // slow: run with `cargo test --release widen_narrow_random -- --ignored`.
 fn widen_narrow_random<S: Simd>(simd: S) {

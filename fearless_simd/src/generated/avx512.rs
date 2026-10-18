@@ -3268,7 +3268,7 @@ impl Simd for Avx512 {
                 .all(|&value| { value >= i8::MIN as i16 && value <= i8::MAX as i16 }),
             "relaxed_narrow inputs must fit in the destination type",
         );
-        self.narrow_i16x8(a, b)
+        self.saturating_narrow_i16x8(a, b)
     }
     #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
@@ -3853,14 +3853,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn relaxed_narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self> {
-        debug_assert!(
-            a.as_slice()
-                .iter()
-                .chain(b.as_slice())
-                .all(|&value| { value >= u8::MIN as u16 && value <= u8::MAX as u16 }),
-            "relaxed_narrow inputs must fit in the destination type",
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u8x16<Avx512> {
+                debug_assert!(
+                    a.as_slice()
+                        .iter()
+                        .chain(b.as_slice())
+                        .all(|&value| { value >= u8::MIN as u16 && value <= u8::MAX as u16 }),
+                    "relaxed_narrow inputs must fit in the destination type",
+                );
+                _mm_packus_epi16(a.into(), b.into()).simd_into(token)
+            }
         );
-        self.narrow_u16x8(a, b)
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {
@@ -4640,7 +4646,7 @@ impl Simd for Avx512 {
                 .all(|&value| { value >= i16::MIN as i32 && value <= i16::MAX as i32 }),
             "relaxed_narrow inputs must fit in the destination type",
         );
-        self.narrow_i32x4(a, b)
+        self.saturating_narrow_i32x4(a, b)
     }
     #[inline(always)]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self> {
@@ -5213,14 +5219,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn relaxed_narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self> {
-        debug_assert!(
-            a.as_slice()
-                .iter()
-                .chain(b.as_slice())
-                .all(|&value| { value >= u16::MIN as u32 && value <= u16::MAX as u32 }),
-            "relaxed_narrow inputs must fit in the destination type",
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u16x8<Avx512> {
+                debug_assert!(
+                    a.as_slice()
+                        .iter()
+                        .chain(b.as_slice())
+                        .all(|&value| { value >= u16::MIN as u32 && value <= u16::MAX as u32 }),
+                    "relaxed_narrow inputs must fit in the destination type",
+                );
+                _mm_packus_epi32(a.into(), b.into()).simd_into(token)
+            }
         );
-        self.narrow_u32x4(a, b)
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self> {
@@ -10248,7 +10260,7 @@ impl Simd for Avx512 {
                 .all(|&value| { value >= i8::MIN as i16 && value <= i8::MAX as i16 }),
             "relaxed_narrow inputs must fit in the destination type",
         );
-        self.narrow_i16x16(a, b)
+        self.saturating_narrow_i16x16(a, b)
     }
     #[inline(always)]
     fn splat_u16x16(self, val: u16) -> u16x16<Self> {
@@ -10815,14 +10827,21 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn relaxed_narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self> {
-        debug_assert!(
-            a.as_slice()
-                .iter()
-                .chain(b.as_slice())
-                .all(|&value| { value >= u8::MIN as u16 && value <= u8::MAX as u16 }),
-            "relaxed_narrow inputs must fit in the destination type",
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u8x32<Avx512> {
+                debug_assert!(
+                    a.as_slice()
+                        .iter()
+                        .chain(b.as_slice())
+                        .all(|&value| { value >= u8::MIN as u16 && value <= u8::MAX as u16 }),
+                    "relaxed_narrow inputs must fit in the destination type",
+                );
+                _mm256_permute4x64_epi64::<0xd8>(_mm256_packus_epi16(a.into(), b.into()))
+                    .simd_into(token)
+            }
         );
-        self.narrow_u16x16(a, b)
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn splat_mask16x16(self, val: bool) -> mask16x16<Self> {
@@ -11601,7 +11620,7 @@ impl Simd for Avx512 {
                 .all(|&value| { value >= i16::MIN as i32 && value <= i16::MAX as i32 }),
             "relaxed_narrow inputs must fit in the destination type",
         );
-        self.narrow_i32x8(a, b)
+        self.saturating_narrow_i32x8(a, b)
     }
     #[inline(always)]
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self> {
@@ -12157,14 +12176,21 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn relaxed_narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self> {
-        debug_assert!(
-            a.as_slice()
-                .iter()
-                .chain(b.as_slice())
-                .all(|&value| { value >= u16::MIN as u32 && value <= u16::MAX as u32 }),
-            "relaxed_narrow inputs must fit in the destination type",
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u16x16<Avx512> {
+                debug_assert!(
+                    a.as_slice()
+                        .iter()
+                        .chain(b.as_slice())
+                        .all(|&value| { value >= u16::MIN as u32 && value <= u16::MAX as u32 }),
+                    "relaxed_narrow inputs must fit in the destination type",
+                );
+                _mm256_permute4x64_epi64::<0xd8>(_mm256_packus_epi32(a.into(), b.into()))
+                    .simd_into(token)
+            }
         );
-        self.narrow_u32x8(a, b)
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self> {
@@ -17211,7 +17237,7 @@ impl Simd for Avx512 {
                 .all(|&value| { value >= i8::MIN as i16 && value <= i8::MAX as i16 }),
             "relaxed_narrow inputs must fit in the destination type",
         );
-        self.narrow_i16x32(a, b)
+        self.saturating_narrow_i16x32(a, b)
     }
     #[inline(always)]
     fn splat_u16x32(self, val: u16) -> u16x32<Self> {
@@ -17789,14 +17815,24 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn relaxed_narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self> {
-        debug_assert!(
-            a.as_slice()
-                .iter()
-                .chain(b.as_slice())
-                .all(|&value| { value >= u8::MIN as u16 && value <= u8::MAX as u16 }),
-            "relaxed_narrow inputs must fit in the destination type",
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u8x64<Avx512> {
+                debug_assert!(
+                    a.as_slice()
+                        .iter()
+                        .chain(b.as_slice())
+                        .all(|&value| { value >= u8::MIN as u16 && value <= u8::MAX as u16 }),
+                    "relaxed_narrow inputs must fit in the destination type",
+                );
+                _mm512_permutexvar_epi64(
+                    _mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7),
+                    _mm512_packus_epi16(a.into(), b.into()),
+                )
+                .simd_into(token)
+            }
         );
-        self.narrow_u16x32(a, b)
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {
@@ -18589,7 +18625,7 @@ impl Simd for Avx512 {
                 .all(|&value| { value >= i16::MIN as i32 && value <= i16::MAX as i32 }),
             "relaxed_narrow inputs must fit in the destination type",
         );
-        self.narrow_i32x16(a, b)
+        self.saturating_narrow_i32x16(a, b)
     }
     #[inline(always)]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
@@ -19164,14 +19200,24 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn relaxed_narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self> {
-        debug_assert!(
-            a.as_slice()
-                .iter()
-                .chain(b.as_slice())
-                .all(|&value| { value >= u16::MIN as u32 && value <= u16::MAX as u32 }),
-            "relaxed_narrow inputs must fit in the destination type",
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u16x32<Avx512> {
+                debug_assert!(
+                    a.as_slice()
+                        .iter()
+                        .chain(b.as_slice())
+                        .all(|&value| { value >= u16::MIN as u32 && value <= u16::MAX as u32 }),
+                    "relaxed_narrow inputs must fit in the destination type",
+                );
+                _mm512_permutexvar_epi64(
+                    _mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7),
+                    _mm512_packus_epi32(a.into(), b.into()),
+                )
+                .simd_into(token)
+            }
         );
-        self.narrow_u32x16(a, b)
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self> {
@@ -21180,7 +21226,7 @@ impl Simd for Avx512 {
                 .all(|&value| { value >= u32::MIN as u64 && value <= u32::MAX as u64 }),
             "relaxed_narrow inputs must fit in the destination type",
         );
-        self.narrow_u64x8(a, b)
+        self.saturating_narrow_u64x8(a, b)
     }
     #[inline(always)]
     fn cvt_f64_u64x8(self, a: u64x8<Self>) -> f64x8<Self> {
