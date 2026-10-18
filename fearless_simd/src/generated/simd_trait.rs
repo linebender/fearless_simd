@@ -618,7 +618,7 @@ pub trait Simd:
     fn widening_mul_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>);
     #[doc = "Add corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
     fn widening_add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>);
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     fn pairwise_dot_product_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i16x8<Self>;
     #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
     #[inline(always)]
@@ -773,7 +773,7 @@ pub trait Simd:
     fn widening_mul_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>);
     #[doc = "Add corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
     fn widening_add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>);
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     fn pairwise_dot_product_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u16x8<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self>;
@@ -1008,7 +1008,7 @@ pub trait Simd:
     fn widening_mul_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>);
     #[doc = "Add corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
     fn widening_add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>);
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     fn pairwise_dot_product_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i32x4<Self>;
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self>;
@@ -1192,7 +1192,7 @@ pub trait Simd:
     fn widening_mul_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>);
     #[doc = "Add corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
     fn widening_add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>);
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     fn pairwise_dot_product_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u32x4<Self>;
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self>;
@@ -1435,7 +1435,7 @@ pub trait Simd:
     fn widening_mul_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>);
     #[doc = "Add corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
     fn widening_add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>);
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     fn pairwise_dot_product_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i64x2<Self>;
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self>;
@@ -1621,7 +1621,7 @@ pub trait Simd:
     fn widening_mul_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>);
     #[doc = "Add corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
     fn widening_add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>);
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     fn pairwise_dot_product_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u64x2<Self>;
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self>;
@@ -3170,7 +3170,7 @@ pub trait Simd:
             self.combine_i16x8(high0, high1),
         )
     }
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     #[inline(always)]
     fn pairwise_dot_product_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i16x16<Self> {
         let (a0, a1) = self.split_i8x32(a);
@@ -3539,7 +3539,7 @@ pub trait Simd:
             self.combine_u16x8(high0, high1),
         )
     }
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     #[inline(always)]
     fn pairwise_dot_product_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u16x16<Self> {
         let (a0, a1) = self.split_u8x32(a);
@@ -4071,7 +4071,7 @@ pub trait Simd:
             self.combine_i32x4(high0, high1),
         )
     }
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     #[inline(always)]
     fn pairwise_dot_product_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i32x8<Self> {
         let (a0, a1) = self.split_i16x16(a);
@@ -4486,7 +4486,7 @@ pub trait Simd:
             self.combine_u32x4(high0, high1),
         )
     }
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     #[inline(always)]
     fn pairwise_dot_product_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u32x8<Self> {
         let (a0, a1) = self.split_u16x16(a);
@@ -5048,7 +5048,7 @@ pub trait Simd:
             self.combine_i64x2(high0, high1),
         )
     }
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     #[inline(always)]
     fn pairwise_dot_product_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i64x4<Self> {
         let (a0, a1) = self.split_i32x8(a);
@@ -5465,7 +5465,7 @@ pub trait Simd:
             self.combine_u64x2(high0, high1),
         )
     }
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     #[inline(always)]
     fn pairwise_dot_product_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u64x4<Self> {
         let (a0, a1) = self.split_u32x8(a);
@@ -7896,7 +7896,7 @@ pub trait Simd:
             self.combine_i16x16(high0, high1),
         )
     }
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     #[inline(always)]
     fn pairwise_dot_product_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i16x32<Self> {
         let (a0, a1) = self.split_i8x64(a);
@@ -8263,7 +8263,7 @@ pub trait Simd:
             self.combine_u16x16(high0, high1),
         )
     }
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     #[inline(always)]
     fn pairwise_dot_product_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u16x32<Self> {
         let (a0, a1) = self.split_u8x64(a);
@@ -8797,7 +8797,7 @@ pub trait Simd:
             self.combine_i32x8(high0, high1),
         )
     }
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     #[inline(always)]
     fn pairwise_dot_product_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i32x16<Self> {
         let (a0, a1) = self.split_i16x32(a);
@@ -9216,7 +9216,7 @@ pub trait Simd:
             self.combine_u32x8(high0, high1),
         )
     }
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     #[inline(always)]
     fn pairwise_dot_product_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u32x16<Self> {
         let (a0, a1) = self.split_u16x32(a);
@@ -9781,7 +9781,7 @@ pub trait Simd:
             self.combine_i64x4(high0, high1),
         )
     }
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     #[inline(always)]
     fn pairwise_dot_product_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i64x8<Self> {
         let (a0, a1) = self.split_i32x16(a);
@@ -10200,7 +10200,7 @@ pub trait Simd:
             self.combine_u64x4(high0, high1),
         )
     }
-    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples."]
+    #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
     #[inline(always)]
     fn pairwise_dot_product_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u64x8<Self> {
         let (a0, a1) = self.split_u32x16(a);

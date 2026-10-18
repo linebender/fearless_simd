@@ -1850,7 +1850,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 "pairwise_dot_product",
                 OpKind::OwnTrait,
                 OpSig::PairwiseDotProduct { target_ty },
-                "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`](crate::SimdIntWiden::pairwise_dot_product) for examples.",
+                "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples.",
             ));
         }
     }
