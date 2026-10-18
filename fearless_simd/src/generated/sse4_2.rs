@@ -3620,9 +3620,23 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn widening_mul_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
-        let (a0, a1) = self.widen_u16x8(a);
-        let (b0, b1) = self.widen_u16x8(b);
-        (self.mul_u32x4(a0, b0), self.mul_u32x4(a1, b1))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                a: u16x8<Sse4_2>,
+                b: u16x8<Sse4_2>,
+            ) -> (u32x4<Sse4_2>, u32x4<Sse4_2>) {
+                let a = a.into();
+                let b = b.into();
+                let low = _mm_mullo_epi16(a, b);
+                let high = _mm_mulhi_epu16(a, b);
+                let result_low = _mm_unpacklo_epi16(low, high);
+                let result_high = _mm_unpackhi_epi16(low, high);
+                (result_low.simd_into(token), result_high.simd_into(token))
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn widening_add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
@@ -4457,9 +4471,24 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn widening_mul_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>) {
-        let (a0, a1) = self.widen_i32x4(a);
-        let (b0, b1) = self.widen_i32x4(b);
-        (self.mul_i64x2(a0, b0), self.mul_i64x2(a1, b1))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sse4_2,
+                a: i32x4<Sse4_2>,
+                b: i32x4<Sse4_2>,
+            ) -> (i64x2<Sse4_2>, i64x2<Sse4_2>) {
+                let a = a.into();
+                let b = b.into();
+                let low = _mm_mul_epi32(a, b);
+                let high =
+                    _mm_mul_epi32(_mm_shuffle_epi32::<0xf5>(a), _mm_shuffle_epi32::<0xf5>(b));
+                let result_low = _mm_unpacklo_epi64(low, high);
+                let result_high = _mm_unpackhi_epi64(low, high);
+                (result_low.simd_into(token), result_high.simd_into(token))
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn widening_add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>) {

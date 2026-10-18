@@ -329,7 +329,9 @@ impl Level for X86 {
                     crate::generic::pairwise_dot_product_method(op, vec_ty)
                 }
             }
-            OpSig::WideningBinary { .. } => crate::generic::widening_binary_method(op, vec_ty),
+            OpSig::WideningBinary { target_ty } => {
+                self.handle_widening_binary(op, vec_ty, target_ty)
+            }
             OpSig::Widen { target_ty } => self.handle_widen(op, vec_ty, target_ty),
             OpSig::Narrow { target_ty, mode } => self.handle_narrow(op, vec_ty, target_ty, mode),
             OpSig::Binary => self.handle_binary(op, method, vec_ty),
@@ -2851,6 +2853,160 @@ impl X86 {
                 })
             }
         }
+    }
+
+    fn handle_widening_binary(&self, op: Op, vec_ty: &VecType, target_ty: VecType) -> TokenStream {
+        // PMADDUBSW with one byte operand set to 1 gives exact byte sums:
+        // [-256, 254] for signed bytes, [0, 510] for unsigned bytes. Neither
+        // reaches its i16 saturation limits. PMADDWD similarly sums signed words.
+        // Keep widening loads for 512-bit addition: the extra cross-lane
+        // permutations did not pay off in the streaming benchmark.
+        let pairwise_add = op.method == "widening_add"
+            && matches!(self, Self::Avx2 | Self::Avx512)
+            && vec_ty.n_bits() <= 256
+            && (vec_ty.scalar_bits == 8
+                || (vec_ty.scalar_bits == 16 && vec_ty.scalar == ScalarType::Int));
+        let widening_mul = op.method == "widening_mul"
+            && match (vec_ty.scalar_bits, vec_ty.scalar, self) {
+                // LLVM already uses PMADDWD for SSE4.2 signed word products.
+                // Replacing it with two multiplies regresses the Tremont model.
+                (16, ScalarType::Int, Self::Sse4_2) => false,
+                (16, _, _) => true,
+                // The generic signed 64-bit multiply expands to three PMULUDQs
+                // per half here. AVX-512 and unsigned inputs already optimize well.
+                (32, ScalarType::Int, Self::Sse4_2 | Self::Avx2) => true,
+                _ => false,
+            };
+        if !pairwise_add && !widening_mul {
+            return crate::generic::widening_binary_method(op, vec_ty);
+        }
+
+        let bits = vec_ty.n_bits();
+        let signed = vec_ty.scalar == ScalarType::Int;
+        let (products, interleave_ty) = if pairwise_add {
+            (quote! { let low = a; let high = b; }, *vec_ty)
+        } else {
+            match vec_ty.scalar_bits {
+                16 => {
+                    let low = intrinsic_ident("mullo", "epi16", bits);
+                    let high =
+                        intrinsic_ident("mulhi", if signed { "epi16" } else { "epu16" }, bits);
+                    // Interleaving the low and high words reconstructs each full product.
+                    (
+                        quote! {
+                            let low = #low(a, b);
+                            let high = #high(a, b);
+                        },
+                        *vec_ty,
+                    )
+                }
+                32 => {
+                    let mul = intrinsic_ident("mul", if signed { "epi32" } else { "epu32" }, bits);
+                    let shuffle = intrinsic_ident("shuffle", "epi32", bits);
+                    // PMULDQ/PMULUDQ consume the even dwords. Move odd dwords into
+                    // those positions, then interleave the two sets of full products.
+                    (
+                        quote! {
+                            let low = #mul(a, b);
+                            let high = #mul(#shuffle::<0xf5>(a), #shuffle::<0xf5>(b));
+                        },
+                        target_ty,
+                    )
+                }
+                _ => unreachable!(),
+            }
+        };
+        let unpack_low =
+            unpack_intrinsic(interleave_ty.scalar, interleave_ty.scalar_bits, true, bits);
+        let unpack_high =
+            unpack_intrinsic(interleave_ty.scalar, interleave_ty.scalar_bits, false, bits);
+        // Swap the middle qwords before unpacking. Unpacking first and then
+        // permuting halves makes LLVM 23 emit four VPERMQs and two blends.
+        let prepare = if bits == 256 && vec_ty.scalar_bits == 32 {
+            quote! {
+                let low = _mm256_permute4x64_epi64::<0xd8>(low);
+                let high = _mm256_permute4x64_epi64::<0xd8>(high);
+            }
+        } else {
+            TokenStream::new()
+        };
+        let interleave = if bits == 512 {
+            // Only 16-bit multiplication uses this path. Interleave the words
+            // across the whole vector, rather than within each 128-bit lane.
+            let len = vec_ty.len;
+            let low_indices = avx512_index_vector(vec_ty, (0..len).map(|i| i / 2 + (i % 2) * len));
+            let high_indices =
+                avx512_index_vector(vec_ty, (0..len).map(|i| len / 2 + i / 2 + (i % 2) * len));
+            quote! {
+                let result_low = _mm512_permutex2var_epi16(low, #low_indices, high);
+                let result_high = _mm512_permutex2var_epi16(low, #high_indices, high);
+            }
+        } else {
+            quote! {
+                #prepare
+                let result_low = #unpack_low(low, high);
+                let result_high = #unpack_high(low, high);
+            }
+        };
+        let reorder = if bits == 256 && vec_ty.scalar_bits != 32 {
+            quote! {
+                let lo = _mm256_permute2x128_si256::<0x20>(result_low, result_high);
+                let hi = _mm256_permute2x128_si256::<0x31>(result_low, result_high);
+                let result_low = lo;
+                let result_high = hi;
+            }
+        } else {
+            TokenStream::new()
+        };
+        let add = if pairwise_add {
+            let set1 = intrinsic_ident(
+                "set1",
+                if vec_ty.scalar_bits == 8 {
+                    "epi8"
+                } else {
+                    "epi16"
+                },
+                bits,
+            );
+            let madd = intrinsic_ident(
+                if vec_ty.scalar_bits == 8 {
+                    "maddubs"
+                } else {
+                    "madd"
+                },
+                "epi16",
+                bits,
+            );
+            let (low, high) = if vec_ty.scalar_bits == 8 && signed {
+                (
+                    quote! { #madd(ones, result_low) },
+                    quote! { #madd(ones, result_high) },
+                )
+            } else {
+                (
+                    quote! { #madd(result_low, ones) },
+                    quote! { #madd(result_high, ones) },
+                )
+            };
+            quote! {
+                let ones = #set1(1);
+                let result_low = #low;
+                let result_high = #high;
+            }
+        } else {
+            TokenStream::new()
+        };
+        self.kernel_method(op, vec_ty, |token| {
+            quote! {
+                let a = a.into();
+                let b = b.into();
+                #products
+                #interleave
+                #add
+                #reorder
+                (result_low.simd_into(#token), result_high.simd_into(#token))
+            }
+        })
     }
 
     fn handle_widen(&self, op: Op, vec_ty: &VecType, target_ty: VecType) -> TokenStream {

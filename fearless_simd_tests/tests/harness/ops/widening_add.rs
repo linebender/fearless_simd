@@ -18,6 +18,103 @@ const U32_MAX: u32 = u32::MAX;
 const U32_MAX_M1: u32 = U32_MAX - 1;
 
 #[simd_test]
+fn widening_add_i8_exhaustive<S: Simd>(simd: S) {
+    for left in i8::MIN..=i8::MAX {
+        for base in (i16::from(i8::MIN)..=i16::from(i8::MAX)).step_by(64) {
+            let a = i8x64::splat(simd, left);
+            let values: [i8; 64] =
+                core::array::from_fn(|i| i8::try_from(base + i16::try_from(i).unwrap()).unwrap());
+            for chunk in values.as_chunks::<16>().0 {
+                let a = i8x16::splat(simd, left);
+                let b = i8x16::from_slice(simd, chunk);
+                let (low, high) = a.widening_add(b);
+                for i in 0..8 {
+                    assert_eq!(low[i], i16::from(left) + i16::from(chunk[i]));
+                    assert_eq!(high[i], i16::from(left) + i16::from(chunk[i + 8]));
+                }
+            }
+            for chunk in values.as_chunks::<32>().0 {
+                let a = i8x32::splat(simd, left);
+                let b = i8x32::from_slice(simd, chunk);
+                let (low, high) = a.widening_add(b);
+                for i in 0..16 {
+                    assert_eq!(low[i], i16::from(left) + i16::from(chunk[i]));
+                    assert_eq!(high[i], i16::from(left) + i16::from(chunk[i + 16]));
+                }
+            }
+            let b = i8x64::from_slice(simd, &values);
+            let (low, high) = a.widening_add(b);
+            for i in 0..32 {
+                assert_eq!(low[i], i16::from(left) + i16::from(values[i]));
+                assert_eq!(high[i], i16::from(left) + i16::from(values[i + 32]));
+            }
+        }
+    }
+}
+
+#[simd_test]
+fn widening_add_u8_exhaustive<S: Simd>(simd: S) {
+    for left in u8::MIN..=u8::MAX {
+        for base in (u16::from(u8::MIN)..=u16::from(u8::MAX)).step_by(64) {
+            let a = u8x64::splat(simd, left);
+            let values: [u8; 64] =
+                core::array::from_fn(|i| u8::try_from(base + u16::try_from(i).unwrap()).unwrap());
+            for chunk in values.as_chunks::<16>().0 {
+                let a = u8x16::splat(simd, left);
+                let b = u8x16::from_slice(simd, chunk);
+                let (low, high) = a.widening_add(b);
+                for i in 0..8 {
+                    assert_eq!(low[i], u16::from(left) + u16::from(chunk[i]));
+                    assert_eq!(high[i], u16::from(left) + u16::from(chunk[i + 8]));
+                }
+            }
+            for chunk in values.as_chunks::<32>().0 {
+                let a = u8x32::splat(simd, left);
+                let b = u8x32::from_slice(simd, chunk);
+                let (low, high) = a.widening_add(b);
+                for i in 0..16 {
+                    assert_eq!(low[i], u16::from(left) + u16::from(chunk[i]));
+                    assert_eq!(high[i], u16::from(left) + u16::from(chunk[i + 16]));
+                }
+            }
+            let b = u8x64::from_slice(simd, &values);
+            let (low, high) = a.widening_add(b);
+            for i in 0..32 {
+                assert_eq!(low[i], u16::from(left) + u16::from(values[i]));
+                assert_eq!(high[i], u16::from(left) + u16::from(values[i + 32]));
+            }
+        }
+    }
+}
+
+#[simd_test]
+fn widening_add_i16_random<S: Simd>(simd: S) {
+    let mut rng = fastrand::Rng::with_seed(0x243f_6a88_85a3_08d3);
+    for _ in 0..512 {
+        let a: [i16; 32] = core::array::from_fn(|_| rng.i16(..));
+        let b: [i16; 32] = core::array::from_fn(|_| rng.i16(..));
+        let (low, high) =
+            i16x8::from_slice(simd, &a[..8]).widening_add(i16x8::from_slice(simd, &b[..8]));
+        for i in 0..4 {
+            assert_eq!(low[i], i32::from(a[i]) + i32::from(b[i]));
+            assert_eq!(high[i], i32::from(a[i + 4]) + i32::from(b[i + 4]));
+        }
+        let (low, high) =
+            i16x16::from_slice(simd, &a[..16]).widening_add(i16x16::from_slice(simd, &b[..16]));
+        for i in 0..8 {
+            assert_eq!(low[i], i32::from(a[i]) + i32::from(b[i]));
+            assert_eq!(high[i], i32::from(a[i + 8]) + i32::from(b[i + 8]));
+        }
+        let (low, high) =
+            i16x32::from_slice(simd, &a[..32]).widening_add(i16x32::from_slice(simd, &b[..32]));
+        for i in 0..16 {
+            assert_eq!(low[i], i32::from(a[i]) + i32::from(b[i]));
+            assert_eq!(high[i], i32::from(a[i + 16]) + i32::from(b[i + 16]));
+        }
+    }
+}
+
+#[simd_test]
 fn widening_add_i8x16<S: Simd>(simd: S) {
     let a: [i8; 16] = [
         I8_MIN, I8_MAX, 0, 1, 4, -5, 6, -7, 8, -9, 10, -11, 12, -13, 14, -15,

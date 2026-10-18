@@ -3282,9 +3282,19 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn widening_mul_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
-        let (a0, a1) = self.widen_i16x8(a);
-        let (b0, b1) = self.widen_i16x8(b);
-        (self.mul_i32x4(a0, b0), self.mul_i32x4(a1, b1))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i16x8<Sse2>, b: i16x8<Sse2>) -> (i32x4<Sse2>, i32x4<Sse2>) {
+                let a = a.into();
+                let b = b.into();
+                let low = _mm_mullo_epi16(a, b);
+                let high = _mm_mulhi_epi16(a, b);
+                let result_low = _mm_unpacklo_epi16(low, high);
+                let result_high = _mm_unpackhi_epi16(low, high);
+                (result_low.simd_into(token), result_high.simd_into(token))
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn widening_add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
@@ -3985,9 +3995,19 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn widening_mul_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
-        let (a0, a1) = self.widen_u16x8(a);
-        let (b0, b1) = self.widen_u16x8(b);
-        (self.mul_u32x4(a0, b0), self.mul_u32x4(a1, b1))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u16x8<Sse2>, b: u16x8<Sse2>) -> (u32x4<Sse2>, u32x4<Sse2>) {
+                let a = a.into();
+                let b = b.into();
+                let low = _mm_mullo_epi16(a, b);
+                let high = _mm_mulhi_epu16(a, b);
+                let result_low = _mm_unpacklo_epi16(low, high);
+                let result_high = _mm_unpackhi_epi16(low, high);
+                (result_low.simd_into(token), result_high.simd_into(token))
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn widening_add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
