@@ -1204,6 +1204,17 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn pairwise_dot_product_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i16x8<Neon> {
+                let (low, high) = token.widening_mul_i8x16(a, b);
+                vpaddq_s16(low.into(), high.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1797,6 +1808,17 @@ impl Simd for Neon {
                     vaddl_u8(vget_low_u8(a.into()), vget_low_u8(b.into())).simd_into(token),
                     vaddl_high_u8(a.into(), b.into()).simd_into(token),
                 )
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn pairwise_dot_product_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> u16x8<Neon> {
+                let (low, high) = token.widening_mul_u8x16(a, b);
+                vpaddq_u16(low.into(), high.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -2563,6 +2585,17 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn pairwise_dot_product_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i32x4<Neon> {
+                let (low, high) = token.widening_mul_i16x8(a, b);
+                vpaddq_s32(low.into(), high.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3084,6 +3117,17 @@ impl Simd for Neon {
                     vaddl_u16(vget_low_u16(a.into()), vget_low_u16(b.into())).simd_into(token),
                     vaddl_high_u16(a.into(), b.into()).simd_into(token),
                 )
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn pairwise_dot_product_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u32x4<Neon> {
+                let (low, high) = token.widening_mul_u16x8(a, b);
+                vpaddq_u32(low.into(), high.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -3884,6 +3928,17 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn pairwise_dot_product_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i64x2<Neon> {
+                let (low, high) = token.widening_mul_i32x4(a, b);
+                vpaddq_s64(low.into(), high.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4414,6 +4469,17 @@ impl Simd for Neon {
                     vaddl_u32(vget_low_u32(a.into()), vget_low_u32(b.into())).simd_into(token),
                     vaddl_high_u32(a.into(), b.into()).simd_into(token),
                 )
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn pairwise_dot_product_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u64x2<Neon> {
+                let (low, high) = token.widening_mul_u32x4(a, b);
+                vpaddq_u64(low.into(), high.into()).simd_into(token)
             }
         );
         kernel(self, a, b)

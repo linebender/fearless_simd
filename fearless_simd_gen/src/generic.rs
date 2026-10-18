@@ -320,6 +320,24 @@ pub(crate) fn widening_binary_method(op: Op, ty: &VecType) -> TokenStream {
     }
 }
 
+/// Form exact widened products, then add adjacent pairs with destination-width wrapping.
+pub(crate) fn pairwise_dot_product_method(op: Op, ty: &VecType) -> TokenStream {
+    let OpSig::PairwiseDotProduct { target_ty } = op.sig else {
+        unreachable!("pairwise_dot_product_method requires a pairwise dot product");
+    };
+    let method_sig = op.simd_trait_method_sig(ty);
+    let mul = generic_op_name("widening_mul", ty);
+    let deinterleave = generic_op_name("deinterleave", &target_ty);
+    let add = generic_op_name("add", &target_ty);
+    quote! {
+        #method_sig {
+            let (low, high) = self.#mul(a, b);
+            let (even, odd) = self.#deinterleave(low, high);
+            self.#add(even, odd)
+        }
+    }
+}
+
 /// Generic operation implementations.
 ///
 /// Most operations are implemented using split/combine, while some forward to
@@ -574,6 +592,18 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                         self.#combine_target(a00, a01),
                         self.#combine_target(a10, a11),
                     )
+                }
+            }
+        }
+        OpSig::PairwiseDotProduct { target_ty } => {
+            let mut target_half = target_ty;
+            target_half.len /= 2;
+            let combine_target = generic_op_name("combine", &target_half);
+            quote! {
+                #method_sig {
+                    let (a0, a1) = self.#split(a);
+                    let (b0, b1) = self.#split(b);
+                    self.#combine_target(self.#do_half(a0, b0), self.#do_half(a1, b1))
                 }
             }
         }

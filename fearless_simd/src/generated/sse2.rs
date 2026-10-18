@@ -1636,6 +1636,12 @@ impl Simd for Sse2 {
         (self.add_i16x8(a0, b0), self.add_i16x8(a1, b1))
     }
     #[inline(always)]
+    fn pairwise_dot_product_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i16x8<Self> {
+        let (low, high) = self.widening_mul_i8x16(a, b);
+        let (even, odd) = self.deinterleave_i16x8(low, high);
+        self.add_i16x8(even, odd)
+    }
+    #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2466,6 +2472,12 @@ impl Simd for Sse2 {
         (self.add_u16x8(a0, b0), self.add_u16x8(a1, b1))
     }
     #[inline(always)]
+    fn pairwise_dot_product_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u16x8<Self> {
+        let (low, high) = self.widening_mul_u8x16(a, b);
+        let (even, odd) = self.deinterleave_u16x8(low, high);
+        self.add_u16x8(even, odd)
+    }
+    #[inline(always)]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3281,6 +3293,16 @@ impl Simd for Sse2 {
         (self.add_i32x4(a0, b0), self.add_i32x4(a1, b1))
     }
     #[inline(always)]
+    fn pairwise_dot_product_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i16x8<Sse2>, b: i16x8<Sse2>) -> i32x4<Sse2> {
+                _mm_madd_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3972,6 +3994,12 @@ impl Simd for Sse2 {
         let (a0, a1) = self.widen_u16x8(a);
         let (b0, b1) = self.widen_u16x8(b);
         (self.add_u32x4(a0, b0), self.add_u32x4(a1, b1))
+    }
+    #[inline(always)]
+    fn pairwise_dot_product_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u32x4<Self> {
+        let (low, high) = self.widening_mul_u16x8(a, b);
+        let (even, odd) = self.deinterleave_u32x4(low, high);
+        self.add_u32x4(even, odd)
     }
     #[inline(always)]
     fn narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self> {
@@ -4842,6 +4870,12 @@ impl Simd for Sse2 {
         (self.add_i64x2(a0, b0), self.add_i64x2(a1, b1))
     }
     #[inline(always)]
+    fn pairwise_dot_product_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i64x2<Self> {
+        let (low, high) = self.widening_mul_i32x4(a, b);
+        let (even, odd) = self.deinterleave_i64x2(low, high);
+        self.add_i64x2(even, odd)
+    }
+    #[inline(always)]
     fn narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self> {
         [
             a[0usize] as i16,
@@ -5494,6 +5528,12 @@ impl Simd for Sse2 {
         let (a0, a1) = self.widen_u32x4(a);
         let (b0, b1) = self.widen_u32x4(b);
         (self.add_u64x2(a0, b0), self.add_u64x2(a1, b1))
+    }
+    #[inline(always)]
+    fn pairwise_dot_product_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u64x2<Self> {
+        let (low, high) = self.widening_mul_u32x4(a, b);
+        let (even, odd) = self.deinterleave_u64x2(low, high);
+        self.add_u64x2(even, odd)
     }
     #[inline(always)]
     fn narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self> {

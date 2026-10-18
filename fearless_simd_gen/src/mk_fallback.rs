@@ -182,6 +182,9 @@ impl Level for Fallback {
                 }
             }
             OpSig::RotateElements { .. } => integer_lane_mask_rotate(op, vec_ty),
+            OpSig::PairwiseDotProduct { .. } => {
+                crate::generic::pairwise_dot_product_method(op, vec_ty)
+            }
             OpSig::WideningBinary { .. } => crate::generic::widening_binary_method(op, vec_ty),
             OpSig::Widen { target_ty } => {
                 let scalar = target_ty.scalar.rust(target_ty.scalar_bits);

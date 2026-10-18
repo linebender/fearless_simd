@@ -553,30 +553,61 @@ pub trait SimdWiden<S: Simd>:
     fn widen(self) -> (Self::Widened, Self::Widened);
 }
 
-/// Exact widening arithmetic on integer SIMD vectors.
+/// Widening arithmetic on integer SIMD vectors.
 ///
-/// Both operands have the same type. Each result lane has twice the input lane width,
-/// preserving the full sum or product without wrapping or saturation. As with
-/// [`SimdWiden::widen`], the first vector contains the lower lanes and the second
-/// contains the upper lanes; each vector has the same total bit width as the inputs.
-///
-/// ```
-/// use fearless_simd::{prelude::*, i16x8, i32x4};
-///
-/// fn fixed<S: Simd>(a: i16x8<S>, b: i16x8<S>) -> (i32x4<S>, i32x4<S>) {
-///     a.widening_mul(b)
-/// }
-///
-/// fn native<S: Simd>(a: S::u8s, b: S::u8s) -> (S::u16s, S::u16s) {
-///     a.widening_add(b)
-/// }
-/// ```
+/// Just like [`SimdWiden::widen`], these methods return two vectors:
+/// the first contains the lower lanes and the second contains the upper lanes.
+/// Each output vector has the same total bit width as the inputs.
 pub trait SimdIntWiden<S: Simd>: SimdInt<S> + SimdWiden<S, Widened: SimdInt<S>> {
     /// Multiply corresponding lanes exactly, returning the lower and upper halves.
     fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened);
 
     /// Add corresponding lanes exactly, returning the lower and upper halves.
     fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened);
+
+    /// Multiply corresponding lanes, then add adjacent pairs of products.
+    ///
+    /// Each adjacent pair of lanes is an independent two-element dot product. The result
+    /// has half as many lanes, each twice as wide, with the same signedness and total bit
+    /// width as the inputs. For inputs `a` and `b`, output lane `i` is:
+    ///
+    /// ```text
+    /// result[i] = widen(a[2*i]) * widen(b[2*i])
+    ///           + widen(a[2*i+1]) * widen(b[2*i+1])
+    /// ```
+    ///
+    /// For example:
+    ///
+    /// ```text
+    /// a      = [ 1,  2,  3,  4,  5,  6,  7,  8]
+    /// b      = [10, 20, 30, 40, 50, 60, 70, 80]
+    /// result = [50, 250, 610, 1130]
+    /// ```
+    ///
+    /// Here, `1*10 + 2*20 = 50`, `3*30 + 4*40 = 250`, and so on.
+    ///
+    /// Multiplication is exact in the widened type. Addition wraps in the widened type.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use fearless_simd::{dispatch, prelude::*, Level, i16x8, i32x4};
+    ///
+    /// dispatch!(Level::new(), simd => {
+    ///     let a = i16x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);
+    ///     let b = i16x8::from_slice(simd, &[10, 20, 30, 40, 50, 60, 70, 80]);
+    ///     let result: i32x4<_> = a.pairwise_dot_product(b);
+    ///     assert_eq!(*result, [50, 250, 610, 1130]);
+    ///
+    ///     let min = i16x8::splat(simd, i16::MIN);
+    ///     assert_eq!(*min.pairwise_dot_product(min), [i32::MIN; 4]);
+    /// });
+    ///
+    /// fn native<S: Simd>(a: S::i16s, b: S::i16s) -> S::i32s {
+    ///     a.pairwise_dot_product(b)
+    /// }
+    /// ```
+    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened;
 }
 
 /// Narrowing conversion of two numeric SIMD vectors.
