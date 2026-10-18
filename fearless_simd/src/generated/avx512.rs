@@ -3254,9 +3254,7 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i8x16<Avx512> {
-                let low = _mm_cvtsepi16_epi8(a.into());
-                let high = _mm_cvtsepi16_epi8(b.into());
-                _mm_unpacklo_epi64(low, high).simd_into(token)
+                _mm_packs_epi16(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -3844,9 +3842,11 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u8x16<Avx512> {
-                let low = _mm_cvtusepi16_epi8(a.into());
-                let high = _mm_cvtusepi16_epi8(b.into());
-                _mm_unpacklo_epi64(low, high).simd_into(token)
+                {
+                    let max = _mm_set1_epi16(i16::MAX);
+                    _mm_packus_epi16(_mm_min_epu16(a.into(), max), _mm_min_epu16(b.into(), max))
+                }
+                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -4626,9 +4626,7 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i16x8<Avx512> {
-                let low = _mm_cvtsepi32_epi16(a.into());
-                let high = _mm_cvtsepi32_epi16(b.into());
-                _mm_unpacklo_epi64(low, high).simd_into(token)
+                _mm_packs_epi32(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -5204,9 +5202,11 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u16x8<Avx512> {
-                let low = _mm_cvtusepi32_epi16(a.into());
-                let high = _mm_cvtusepi32_epi16(b.into());
-                _mm_unpacklo_epi64(low, high).simd_into(token)
+                {
+                    let max = _mm_set1_epi32(i32::MAX);
+                    _mm_packus_epi32(_mm_min_epu32(a.into(), max), _mm_min_epu32(b.into(), max))
+                }
+                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -7233,9 +7233,20 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u64x2<Avx512>, b: u64x2<Avx512>) -> u32x4<Avx512> {
-                let low = _mm_cvtusepi64_epi32(a.into());
-                let high = _mm_cvtusepi64_epi32(b.into());
-                _mm_unpacklo_epi64(low, high).simd_into(token)
+                let a = a.into();
+                let b = b.into();
+                let low = _mm_castps_si128(_mm_shuffle_ps::<0x88>(
+                    _mm_castsi128_ps(a),
+                    _mm_castsi128_ps(b),
+                ));
+                let high = _mm_castps_si128(_mm_shuffle_ps::<0xdd>(
+                    _mm_castsi128_ps(a),
+                    _mm_castsi128_ps(b),
+                ));
+                let zero = _mm_setzero_si128();
+                let fits = _mm_cmpeq_epi32(high, zero);
+                let ones = _mm_cmpeq_epi32(zero, zero);
+                _mm_or_si128(low, _mm_xor_si128(fits, ones)).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -10222,9 +10233,8 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i8x32<Avx512> {
-                let low = _mm256_cvtsepi16_epi8(a.into());
-                let high = _mm256_cvtsepi16_epi8(b.into());
-                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high).simd_into(token)
+                _mm256_permute4x64_epi64::<0xd8>(_mm256_packs_epi16(a.into(), b.into()))
+                    .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -10791,9 +10801,14 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u8x32<Avx512> {
-                let low = _mm256_cvtusepi16_epi8(a.into());
-                let high = _mm256_cvtusepi16_epi8(b.into());
-                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high).simd_into(token)
+                _mm256_permute4x64_epi64::<0xd8>({
+                    let max = _mm256_set1_epi16(i16::MAX);
+                    _mm256_packus_epi16(
+                        _mm256_min_epu16(a.into(), max),
+                        _mm256_min_epu16(b.into(), max),
+                    )
+                })
+                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -11571,9 +11586,8 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i16x16<Avx512> {
-                let low = _mm256_cvtsepi32_epi16(a.into());
-                let high = _mm256_cvtsepi32_epi16(b.into());
-                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high).simd_into(token)
+                _mm256_permute4x64_epi64::<0xd8>(_mm256_packs_epi32(a.into(), b.into()))
+                    .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -12129,9 +12143,14 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u16x16<Avx512> {
-                let low = _mm256_cvtusepi32_epi16(a.into());
-                let high = _mm256_cvtusepi32_epi16(b.into());
-                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high).simd_into(token)
+                _mm256_permute4x64_epi64::<0xd8>({
+                    let max = _mm256_set1_epi32(i32::MAX);
+                    _mm256_packus_epi32(
+                        _mm256_min_epu32(a.into(), max),
+                        _mm256_min_epu32(b.into(), max),
+                    )
+                })
+                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -14113,9 +14132,19 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u64x4<Avx512>, b: u64x4<Avx512>) -> u32x8<Avx512> {
-                let low = _mm256_cvtusepi64_epi32(a.into());
-                let high = _mm256_cvtusepi64_epi32(b.into());
-                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(low), high).simd_into(token)
+                let zero = _mm256_setzero_si256();
+                let ones = _mm256_cmpeq_epi64(zero, zero);
+                let a = a.into();
+                let b = b.into();
+                let a_fits = _mm256_cmpeq_epi64(_mm256_srli_epi64::<32>(a), zero);
+                let b_fits = _mm256_cmpeq_epi64(_mm256_srli_epi64::<32>(b), zero);
+                let a = _mm256_or_si256(a, _mm256_xor_si256(a_fits, ones));
+                let b = _mm256_or_si256(b, _mm256_xor_si256(b_fits, ones));
+                _mm256_permute4x64_epi64::<0xd8>(_mm256_castps_si256(_mm256_shuffle_ps::<0x88>(
+                    _mm256_castsi256_ps(a),
+                    _mm256_castsi256_ps(b),
+                )))
+                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -17164,9 +17193,11 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i8x64<Avx512> {
-                let low = _mm512_cvtsepi16_epi8(a.into());
-                let high = _mm512_cvtsepi16_epi8(b.into());
-                _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high).simd_into(token)
+                _mm512_permutexvar_epi64(
+                    _mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7),
+                    _mm512_packs_epi16(a.into(), b.into()),
+                )
+                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -17744,9 +17775,14 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u8x64<Avx512> {
-                let low = _mm512_cvtusepi16_epi8(a.into());
-                let high = _mm512_cvtusepi16_epi8(b.into());
-                _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high).simd_into(token)
+                _mm512_permutexvar_epi64(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), {
+                    let max = _mm512_set1_epi16(i16::MAX);
+                    _mm512_packus_epi16(
+                        _mm512_min_epu16(a.into(), max),
+                        _mm512_min_epu16(b.into(), max),
+                    )
+                })
+                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -18535,9 +18571,11 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i16x32<Avx512> {
-                let low = _mm512_cvtsepi32_epi16(a.into());
-                let high = _mm512_cvtsepi32_epi16(b.into());
-                _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high).simd_into(token)
+                _mm512_permutexvar_epi64(
+                    _mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7),
+                    _mm512_packs_epi32(a.into(), b.into()),
+                )
+                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -19112,9 +19150,14 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u16x32<Avx512> {
-                let low = _mm512_cvtusepi32_epi16(a.into());
-                let high = _mm512_cvtusepi32_epi16(b.into());
-                _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high).simd_into(token)
+                _mm512_permutexvar_epi64(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), {
+                    let max = _mm512_set1_epi32(i32::MAX);
+                    _mm512_packus_epi32(
+                        _mm512_min_epu32(a.into(), max),
+                        _mm512_min_epu32(b.into(), max),
+                    )
+                })
+                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -21118,9 +21161,12 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u64x8<Avx512>, b: u64x8<Avx512>) -> u32x16<Avx512> {
-                let low = _mm512_cvtusepi64_epi32(a.into());
-                let high = _mm512_cvtusepi64_epi32(b.into());
-                _mm512_inserti64x4::<1>(_mm512_castsi256_si512(low), high).simd_into(token)
+                let max = _mm512_set1_epi64(u32::MAX as i64);
+                let a = _mm512_min_epu64(a.into(), max);
+                let b = _mm512_min_epu64(b.into(), max);
+                let indices =
+                    _mm512_setr_epi32(0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30);
+                _mm512_permutex2var_epi32(a, indices, b).simd_into(token)
             }
         );
         kernel(self, a, b)
