@@ -1540,7 +1540,8 @@ fn relaxed_narrow_unsigned_upper_bound_debug_asserts() {
     simd.relaxed_narrow_u16x8(low, high);
 }
 
-#[cfg(debug_assertions)]
+// catch_unwind cannot catch panics on targets that abort, such as wasm32-wasip1.
+#[cfg(all(debug_assertions, panic = "unwind"))]
 #[simd_test]
 fn relaxed_narrow_u16x8_low_input_debug_asserts<S: Simd>(simd: S) {
     let low = u16x8::from_slice(simd, &[256, 0, 0, 0, 0, 0, 0, 0]);
@@ -1554,7 +1555,7 @@ fn relaxed_narrow_u16x8_low_input_debug_asserts<S: Simd>(simd: S) {
     );
 }
 
-#[cfg(debug_assertions)]
+#[cfg(all(debug_assertions, panic = "unwind"))]
 #[simd_test]
 fn relaxed_narrow_u32x16_high_input_debug_asserts<S: Simd>(simd: S) {
     let low = u32x16::from_slice(simd, &[0; 16]);
