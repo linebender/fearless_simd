@@ -568,6 +568,18 @@ impl Level for WasmSimd128 {
                     reduce_min_max(method_sig, vec_ty, lane_op)
                 }
             }
+            OpSig::PairwiseDotProduct { .. } => {
+                if vec_ty.scalar == ScalarType::Int && vec_ty.scalar_bits == 16 {
+                    quote! {
+                        #method_sig {
+                            i32x4_dot_i16x8(a.into(), b.into()).simd_into(self)
+                        }
+                    }
+                } else {
+                    crate::generic::pairwise_dot_product_method(op, vec_ty)
+                }
+            }
+            OpSig::WideningBinary { .. } => crate::generic::widening_binary_method(op, vec_ty),
             OpSig::Widen { target_ty } => {
                 if vec_ty.scalar == ScalarType::Float {
                     return quote! {

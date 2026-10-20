@@ -121,6 +121,10 @@ pub(crate) enum OpSig {
     },
     /// Widens every lane, returning the lower and upper halves as two same-width vectors.
     Widen { target_ty: VecType },
+    /// Applies binary integer arithmetic with twice-wide lanes, returning lower and upper halves.
+    WideningBinary { target_ty: VecType },
+    /// Multiplies corresponding lanes and sums adjacent products into one widened vector.
+    PairwiseDotProduct { target_ty: VecType },
     /// Narrows two vectors and concatenates them into one same-width vector.
     Narrow {
         target_ty: VecType,
@@ -383,7 +387,14 @@ impl Op {
                 let result = target_ty.rust();
                 (vec![vec], quote! { (#result<#simd_ty>, #result<#simd_ty>) })
             }
-            OpSig::Narrow { target_ty, .. } => {
+            OpSig::WideningBinary { target_ty } => {
+                let result = target_ty.rust();
+                (
+                    vec![vec.clone(), vec],
+                    quote! { (#result<#simd_ty>, #result<#simd_ty>) },
+                )
+            }
+            OpSig::PairwiseDotProduct { target_ty } | OpSig::Narrow { target_ty, .. } => {
                 let result = target_ty.rust();
                 (vec![vec.clone(), vec], quote! { #result<#simd_ty> })
             }
@@ -475,7 +486,12 @@ impl Op {
                 let arg1 = &arg_names[1];
                 quote! { (#arg0, #arg1: impl SimdInto<Self, S>) -> (Self, Self) }
             }
-            OpSig::Widen { .. } | OpSig::Narrow { .. } => return None,
+            OpSig::Widen { .. }
+            | OpSig::WideningBinary { .. }
+            | OpSig::PairwiseDotProduct { .. }
+            | OpSig::Narrow { .. } => {
+                return None;
+            }
             OpSig::Slide { .. } => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
@@ -1822,6 +1838,26 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
             OpSig::Widen { target_ty },
             doc,
         ));
+        if matches!(ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
+            ops.push(Op::new(
+                "widening_mul",
+                OpKind::OwnTrait,
+                OpSig::WideningBinary { target_ty },
+                "Multiply corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes.",
+            ));
+            ops.push(Op::new(
+                "widening_add",
+                OpKind::OwnTrait,
+                OpSig::WideningBinary { target_ty },
+                "Add corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes.",
+            ));
+            ops.push(Op::new(
+                "pairwise_dot_product",
+                OpKind::OwnTrait,
+                OpSig::PairwiseDotProduct { target_ty },
+                "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples.",
+            ));
+        }
     }
 
     if ty.scalar == ScalarType::Mask
@@ -2092,7 +2128,9 @@ impl OpSig {
             | Self::Interleave
             | Self::Deinterleave
             | Self::Slide { .. } => &["a", "b"],
-            Self::Narrow { .. } => &["a", "b"],
+            Self::Narrow { .. } | Self::WideningBinary { .. } | Self::PairwiseDotProduct { .. } => {
+                &["a", "b"]
+            }
             Self::Ternary | Self::Select => &["a", "b", "c"],
             Self::Shift => &["a", "shift"],
             Self::LoadInterleaved { .. } => &["src"],
@@ -2120,7 +2158,9 @@ impl OpSig {
             | Self::Cvt { .. }
             | Self::MaskReduce { .. }
             | Self::UnaryClassify => &["self"],
-            Self::Widen { .. } => &[],
+            Self::Widen { .. } | Self::WideningBinary { .. } | Self::PairwiseDotProduct { .. } => {
+                &[]
+            }
             Self::Narrow { .. } => &[],
             Self::SwizzleDynWithinBlocks | Self::SwizzleDyn | Self::SwizzleDynPrecise => {
                 &["self", "indices"]
@@ -2181,6 +2221,8 @@ impl OpSig {
             | Self::Split { .. }
             | Self::Cvt { .. }
             | Self::Widen { .. }
+            | Self::WideningBinary { .. }
+            | Self::PairwiseDotProduct { .. }
             | Self::Narrow { .. }
             | Self::Shift
             | Self::RotateElements { .. }

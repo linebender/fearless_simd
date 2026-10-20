@@ -399,6 +399,39 @@ impl Level for Neon {
                     }
                 }
             }
+            OpSig::PairwiseDotProduct { target_ty } => {
+                let mul = generic_op_name("widening_mul", vec_ty);
+                let pairwise_add = simple_intrinsic("vpadd", &target_ty);
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        let (low, high) = #token.#mul(a, b);
+                        #pairwise_add(low.into(), high.into()).simd_into(#token)
+                    }
+                })
+            }
+            OpSig::WideningBinary { .. } => {
+                let intrinsic = match method {
+                    "widening_mul" => "vmull",
+                    "widening_add" => "vaddl",
+                    _ => unreachable!("unsupported widening arithmetic"),
+                };
+                let scalar = match vec_ty.scalar {
+                    ScalarType::Int => format!("s{}", vec_ty.scalar_bits),
+                    ScalarType::Unsigned => format!("u{}", vec_ty.scalar_bits),
+                    _ => unreachable!("widening arithmetic requires integer lanes"),
+                };
+                let low = format_ident!("{intrinsic}_{scalar}");
+                let high = format_ident!("{intrinsic}_high_{scalar}");
+                let get_low = format_ident!("vget_low_{scalar}");
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        (
+                            #low(#get_low(a.into()), #get_low(b.into())).simd_into(#token),
+                            #high(a.into(), b.into()).simd_into(#token),
+                        )
+                    }
+                })
+            }
             OpSig::Widen { target_ty: _ } => {
                 if vec_ty.scalar == ScalarType::Float {
                     return self.kernel_method(op, vec_ty, |token| {
