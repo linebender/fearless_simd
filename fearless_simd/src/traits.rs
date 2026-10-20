@@ -555,15 +555,41 @@ pub trait SimdWiden<S: Simd>:
 
 /// Widening arithmetic on integer SIMD vectors.
 ///
-/// Just like [`SimdWiden::widen`], these methods return two vectors:
-/// the first contains the lower lanes and the second contains the upper lanes.
-/// Each output vector has the same total bit width as the inputs.
+/// Each output vector has twice-wide lanes and the same total bit width as the inputs.
+/// [`Self::widening_mul`] and [`Self::widening_add`] return the lower and upper halves
+/// as two vectors, just like [`SimdWiden::widen`]. The pairwise operations combine
+/// adjacent lanes into a single vector with half as many lanes.
 pub trait SimdIntWiden<S: Simd>: SimdInt<S> + SimdWiden<S, Widened: SimdInt<S>> {
     /// Multiply corresponding lanes exactly, returning the lower and upper halves.
     fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened);
 
     /// Add corresponding lanes exactly, returning the lower and upper halves.
     fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened);
+
+    /// Add adjacent integer lanes, widening the result to avoid overflow.
+    ///
+    /// Output lane `i` is `widen(self[2*i]) + widen(self[2*i+1])`. The result has
+    /// half as many lanes, twice the lane width, and the same signedness and total
+    /// vector bit width as the input.
+    ///
+    /// For example, `[1, 2, 3, 4, 5, 6, 7, 8]` becomes `[3, 7, 11, 15]`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use fearless_simd::{dispatch, prelude::*, Level, i16x8, i32x4, i64x2};
+    ///
+    /// dispatch!(Level::new(), simd => {
+    ///     let a = i16x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);
+    ///     let pairs: i32x4<_> = a.pairwise_widening_add();
+    /// });
+    ///
+    /// // Works on native-width vectors too
+    /// fn native<S: Simd>(a: S::u8s) -> S::u16s {
+    ///     a.pairwise_widening_add()
+    /// }
+    /// ```
+    fn pairwise_widening_add(self) -> Self::Widened;
 
     /// Multiply corresponding lanes, then add adjacent pairs of products.
     ///

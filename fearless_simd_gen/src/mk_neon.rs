@@ -399,6 +399,12 @@ impl Level for Neon {
                     }
                 }
             }
+            OpSig::PairwiseWideningAdd { .. } => {
+                let intrinsic = simple_intrinsic("vpaddl", vec_ty);
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! { #intrinsic(a.into()).simd_into(#token) }
+                })
+            }
             OpSig::PairwiseDotProduct { target_ty } => {
                 let mul = generic_op_name("widening_mul", vec_ty);
                 let pairwise_add = simple_intrinsic("vpadd", &target_ty);

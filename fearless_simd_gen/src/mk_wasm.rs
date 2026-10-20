@@ -568,6 +568,35 @@ impl Level for WasmSimd128 {
                     reduce_min_max(method_sig, vec_ty, lane_op)
                 }
             }
+            OpSig::PairwiseWideningAdd { target_ty } => {
+                let expr = if vec_ty.scalar_bits < 32 {
+                    let intrinsic = format_ident!(
+                        "{}_extadd_pairwise_{}",
+                        target_ty.rust_name(),
+                        vec_ty.rust_name(),
+                    );
+                    quote! { #intrinsic(a.into()) }
+                } else if vec_ty.scalar == ScalarType::Unsigned {
+                    quote! {
+                        u64x2_add(
+                            v128_and(a.into(), u64x2_splat(0xffff_ffff)),
+                            u64x2_shr(a.into(), 32),
+                        )
+                    }
+                } else {
+                    quote! {
+                        i64x2_add(
+                            i64x2_shr(i64x2_shl(a.into(), 32), 32),
+                            i64x2_shr(a.into(), 32),
+                        )
+                    }
+                };
+                quote! {
+                    #method_sig {
+                        #expr.simd_into(self)
+                    }
+                }
+            }
             OpSig::PairwiseDotProduct { .. } => {
                 if vec_ty.scalar == ScalarType::Int && vec_ty.scalar_bits == 16 {
                     quote! {

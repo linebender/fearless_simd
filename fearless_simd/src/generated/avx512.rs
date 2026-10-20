@@ -1796,6 +1796,16 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn pairwise_widening_add_i8x16(self, a: i8x16<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>) -> i16x8<Avx512> {
+                ({ _mm_maddubs_epi16(_mm_set1_epi8(1), a.into()) }).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i16x8<Self> {
         let (low, high) = self.widening_mul_i8x16(a, b);
         let (even, odd) = self.deinterleave_i16x8(low, high);
@@ -2547,6 +2557,16 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn pairwise_widening_add_u8x16(self, a: u8x16<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>) -> u16x8<Avx512> {
+                ({ _mm_maddubs_epi16(a.into(), _mm_set1_epi8(1)) }).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn pairwise_dot_product_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u16x8<Self> {
@@ -3351,6 +3371,16 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn pairwise_widening_add_i16x8(self, a: i16x8<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>) -> i32x4<Avx512> {
+                ({ _mm_madd_epi16(a.into(), _mm_set1_epi16(1)) }).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3973,6 +4003,23 @@ impl Simd for Avx512 {
         let (a0, a1) = self.widen_u16x8(a);
         let (b0, b1) = self.widen_u16x8(b);
         (self.add_u32x4(a0, b0), self.add_u32x4(a1, b1))
+    }
+    #[inline(always)]
+    fn pairwise_widening_add_u16x8(self, a: u16x8<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>) -> u32x4<Avx512> {
+                ({
+                    let a = a.into();
+                    _mm_add_epi32(
+                        _mm_and_si128(a, _mm_set1_epi32(65535)),
+                        _mm_srli_epi32::<16>(a),
+                    )
+                })
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn pairwise_dot_product_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u32x4<Self> {
@@ -4783,6 +4830,26 @@ impl Simd for Avx512 {
         (self.add_i64x2(a0, b0), self.add_i64x2(a1, b1))
     }
     #[inline(always)]
+    fn pairwise_widening_add_i32x4(self, a: i32x4<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>) -> i64x2<Avx512> {
+                ({
+                    let a = _mm_xor_si128(a.into(), _mm_set1_epi32(i32::MIN));
+                    _mm_sub_epi64(
+                        _mm_add_epi64(
+                            _mm_and_si128(a, _mm_set1_epi64x(4294967295)),
+                            _mm_srli_epi64::<32>(a),
+                        ),
+                        _mm_set1_epi64x(0x1_0000_0000),
+                    )
+                })
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i64x2<Self> {
         let (low, high) = self.widening_mul_i32x4(a, b);
         let (even, odd) = self.deinterleave_i64x2(low, high);
@@ -5375,6 +5442,23 @@ impl Simd for Avx512 {
         let (a0, a1) = self.widen_u32x4(a);
         let (b0, b1) = self.widen_u32x4(b);
         (self.add_u64x2(a0, b0), self.add_u64x2(a1, b1))
+    }
+    #[inline(always)]
+    fn pairwise_widening_add_u32x4(self, a: u32x4<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>) -> u64x2<Avx512> {
+                ({
+                    let a = a.into();
+                    _mm_add_epi64(
+                        _mm_and_si128(a, _mm_set1_epi64x(4294967295)),
+                        _mm_srli_epi64::<32>(a),
+                    )
+                })
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn pairwise_dot_product_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u64x2<Self> {
@@ -9015,6 +9099,16 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn pairwise_widening_add_i8x32(self, a: i8x32<Self>) -> i16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>) -> i16x16<Avx512> {
+                ({ _mm256_maddubs_epi16(_mm256_set1_epi8(1), a.into()) }).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i16x16<Self> {
         let (low, high) = self.widening_mul_i8x32(a, b);
         let (even, odd) = self.deinterleave_i16x16(low, high);
@@ -9744,6 +9838,16 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn pairwise_widening_add_u8x32(self, a: u8x32<Self>) -> u16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>) -> u16x16<Avx512> {
+                ({ _mm256_maddubs_epi16(a.into(), _mm256_set1_epi8(1)) }).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn pairwise_dot_product_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u16x16<Self> {
@@ -10549,6 +10653,16 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn pairwise_widening_add_i16x16(self, a: i16x16<Self>) -> i32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>) -> i32x8<Avx512> {
+                ({ _mm256_madd_epi16(a.into(), _mm256_set1_epi16(1)) }).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11155,6 +11269,23 @@ impl Simd for Avx512 {
         let (a0, a1) = self.widen_u16x16(a);
         let (b0, b1) = self.widen_u16x16(b);
         (self.add_u32x8(a0, b0), self.add_u32x8(a1, b1))
+    }
+    #[inline(always)]
+    fn pairwise_widening_add_u16x16(self, a: u16x16<Self>) -> u32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>) -> u32x8<Avx512> {
+                ({
+                    let a = a.into();
+                    _mm256_add_epi32(
+                        _mm256_and_si256(a, _mm256_set1_epi32(65535)),
+                        _mm256_srli_epi32::<16>(a),
+                    )
+                })
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn pairwise_dot_product_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u32x8<Self> {
@@ -11967,6 +12098,26 @@ impl Simd for Avx512 {
         (self.add_i64x4(a0, b0), self.add_i64x4(a1, b1))
     }
     #[inline(always)]
+    fn pairwise_widening_add_i32x8(self, a: i32x8<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>) -> i64x4<Avx512> {
+                ({
+                    let a = _mm256_xor_si256(a.into(), _mm256_set1_epi32(i32::MIN));
+                    _mm256_sub_epi64(
+                        _mm256_add_epi64(
+                            _mm256_and_si256(a, _mm256_set1_epi64x(4294967295)),
+                            _mm256_srli_epi64::<32>(a),
+                        ),
+                        _mm256_set1_epi64x(0x1_0000_0000),
+                    )
+                })
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i64x4<Self> {
         let (low, high) = self.widening_mul_i32x8(a, b);
         let (even, odd) = self.deinterleave_i64x4(low, high);
@@ -12540,6 +12691,23 @@ impl Simd for Avx512 {
         let (a0, a1) = self.widen_u32x8(a);
         let (b0, b1) = self.widen_u32x8(b);
         (self.add_u64x4(a0, b0), self.add_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn pairwise_widening_add_u32x8(self, a: u32x8<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>) -> u64x4<Avx512> {
+                ({
+                    let a = a.into();
+                    _mm256_add_epi64(
+                        _mm256_and_si256(a, _mm256_set1_epi64x(4294967295)),
+                        _mm256_srli_epi64::<32>(a),
+                    )
+                })
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn pairwise_dot_product_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u64x4<Self> {
@@ -16167,6 +16335,16 @@ impl Simd for Avx512 {
         (self.add_i16x32(a0, b0), self.add_i16x32(a1, b1))
     }
     #[inline(always)]
+    fn pairwise_widening_add_i8x64(self, a: i8x64<Self>) -> i16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>) -> i16x32<Avx512> {
+                ({ _mm512_maddubs_epi16(_mm512_set1_epi8(1), a.into()) }).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i16x32<Self> {
         let (low, high) = self.widening_mul_i8x64(a, b);
         let (even, odd) = self.deinterleave_i16x32(low, high);
@@ -16884,6 +17062,16 @@ impl Simd for Avx512 {
         let (a0, a1) = self.widen_u8x64(a);
         let (b0, b1) = self.widen_u8x64(b);
         (self.add_u16x32(a0, b0), self.add_u16x32(a1, b1))
+    }
+    #[inline(always)]
+    fn pairwise_widening_add_u8x64(self, a: u8x64<Self>) -> u16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>) -> u16x32<Avx512> {
+                ({ _mm512_maddubs_epi16(a.into(), _mm512_set1_epi8(1)) }).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn pairwise_dot_product_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u16x32<Self> {
@@ -17681,6 +17869,16 @@ impl Simd for Avx512 {
         (self.add_i32x16(a0, b0), self.add_i32x16(a1, b1))
     }
     #[inline(always)]
+    fn pairwise_widening_add_i16x32(self, a: i16x32<Self>) -> i32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>) -> i32x16<Avx512> {
+                ({ _mm512_madd_epi16(a.into(), _mm512_set1_epi16(1)) }).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -18311,6 +18509,23 @@ impl Simd for Avx512 {
         let (a0, a1) = self.widen_u16x32(a);
         let (b0, b1) = self.widen_u16x32(b);
         (self.add_u32x16(a0, b0), self.add_u32x16(a1, b1))
+    }
+    #[inline(always)]
+    fn pairwise_widening_add_u16x32(self, a: u16x32<Self>) -> u32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>) -> u32x16<Avx512> {
+                ({
+                    let a = a.into();
+                    _mm512_add_epi32(
+                        _mm512_and_si512(a, _mm512_set1_epi32(65535)),
+                        _mm512_srli_epi32::<16>(a),
+                    )
+                })
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn pairwise_dot_product_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u32x16<Self> {
@@ -19137,6 +19352,26 @@ impl Simd for Avx512 {
         (self.add_i64x8(a0, b0), self.add_i64x8(a1, b1))
     }
     #[inline(always)]
+    fn pairwise_widening_add_i32x16(self, a: i32x16<Self>) -> i64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>) -> i64x8<Avx512> {
+                ({
+                    let a = _mm512_xor_si512(a.into(), _mm512_set1_epi32(i32::MIN));
+                    _mm512_sub_epi64(
+                        _mm512_add_epi64(
+                            _mm512_and_si512(a, _mm512_set1_epi64(4294967295)),
+                            _mm512_srli_epi64::<32>(a),
+                        ),
+                        _mm512_set1_epi64(0x1_0000_0000),
+                    )
+                })
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i64x8<Self> {
         let (low, high) = self.widening_mul_i32x16(a, b);
         let (even, odd) = self.deinterleave_i64x8(low, high);
@@ -19732,6 +19967,23 @@ impl Simd for Avx512 {
         let (a0, a1) = self.widen_u32x16(a);
         let (b0, b1) = self.widen_u32x16(b);
         (self.add_u64x8(a0, b0), self.add_u64x8(a1, b1))
+    }
+    #[inline(always)]
+    fn pairwise_widening_add_u32x16(self, a: u32x16<Self>) -> u64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>) -> u64x8<Avx512> {
+                ({
+                    let a = a.into();
+                    _mm512_add_epi64(
+                        _mm512_and_si512(a, _mm512_set1_epi64(4294967295)),
+                        _mm512_srli_epi64::<32>(a),
+                    )
+                })
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn pairwise_dot_product_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u64x8<Self> {

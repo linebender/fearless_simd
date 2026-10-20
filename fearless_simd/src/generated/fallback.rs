@@ -1632,6 +1632,20 @@ impl Simd for Fallback {
         (self.add_i16x8(a0, b0), self.add_i16x8(a1, b1))
     }
     #[inline(always)]
+    fn pairwise_widening_add_i8x16(self, a: i8x16<Self>) -> i16x8<Self> {
+        [
+            (a[0usize] as i16) + (a[1usize] as i16),
+            (a[2usize] as i16) + (a[3usize] as i16),
+            (a[4usize] as i16) + (a[5usize] as i16),
+            (a[6usize] as i16) + (a[7usize] as i16),
+            (a[8usize] as i16) + (a[9usize] as i16),
+            (a[10usize] as i16) + (a[11usize] as i16),
+            (a[12usize] as i16) + (a[13usize] as i16),
+            (a[14usize] as i16) + (a[15usize] as i16),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i16x8<Self> {
         let (low, high) = self.widening_mul_i8x16(a, b);
         let (even, odd) = self.deinterleave_i16x8(low, high);
@@ -2711,6 +2725,20 @@ impl Simd for Fallback {
         let (a0, a1) = self.widen_u8x16(a);
         let (b0, b1) = self.widen_u8x16(b);
         (self.add_u16x8(a0, b0), self.add_u16x8(a1, b1))
+    }
+    #[inline(always)]
+    fn pairwise_widening_add_u8x16(self, a: u8x16<Self>) -> u16x8<Self> {
+        [
+            (a[0usize] as u16) + (a[1usize] as u16),
+            (a[2usize] as u16) + (a[3usize] as u16),
+            (a[4usize] as u16) + (a[5usize] as u16),
+            (a[6usize] as u16) + (a[7usize] as u16),
+            (a[8usize] as u16) + (a[9usize] as u16),
+            (a[10usize] as u16) + (a[11usize] as u16),
+            (a[12usize] as u16) + (a[13usize] as u16),
+            (a[14usize] as u16) + (a[15usize] as u16),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn pairwise_dot_product_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u16x8<Self> {
@@ -3793,6 +3821,16 @@ impl Simd for Fallback {
         (self.add_i32x4(a0, b0), self.add_i32x4(a1, b1))
     }
     #[inline(always)]
+    fn pairwise_widening_add_i16x8(self, a: i16x8<Self>) -> i32x4<Self> {
+        [
+            (a[0usize] as i32) + (a[1usize] as i32),
+            (a[2usize] as i32) + (a[3usize] as i32),
+            (a[4usize] as i32) + (a[5usize] as i32),
+            (a[6usize] as i32) + (a[7usize] as i32),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i32x4<Self> {
         let (low, high) = self.widening_mul_i16x8(a, b);
         let (even, odd) = self.deinterleave_i32x4(low, high);
@@ -4470,6 +4508,16 @@ impl Simd for Fallback {
         let (a0, a1) = self.widen_u16x8(a);
         let (b0, b1) = self.widen_u16x8(b);
         (self.add_u32x4(a0, b0), self.add_u32x4(a1, b1))
+    }
+    #[inline(always)]
+    fn pairwise_widening_add_u16x8(self, a: u16x8<Self>) -> u32x4<Self> {
+        [
+            (a[0usize] as u32) + (a[1usize] as u32),
+            (a[2usize] as u32) + (a[3usize] as u32),
+            (a[4usize] as u32) + (a[5usize] as u32),
+            (a[6usize] as u32) + (a[7usize] as u32),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn pairwise_dot_product_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u32x4<Self> {
@@ -5278,6 +5326,14 @@ impl Simd for Fallback {
         (self.add_i64x2(a0, b0), self.add_i64x2(a1, b1))
     }
     #[inline(always)]
+    fn pairwise_widening_add_i32x4(self, a: i32x4<Self>) -> i64x2<Self> {
+        [
+            (a[0usize] as i64) + (a[1usize] as i64),
+            (a[2usize] as i64) + (a[3usize] as i64),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i64x2<Self> {
         let (low, high) = self.widening_mul_i32x4(a, b);
         let (even, odd) = self.deinterleave_i64x2(low, high);
@@ -5742,6 +5798,14 @@ impl Simd for Fallback {
         let (a0, a1) = self.widen_u32x4(a);
         let (b0, b1) = self.widen_u32x4(b);
         (self.add_u64x2(a0, b0), self.add_u64x2(a1, b1))
+    }
+    #[inline(always)]
+    fn pairwise_widening_add_u32x4(self, a: u32x4<Self>) -> u64x2<Self> {
+        [
+            (a[0usize] as u64) + (a[1usize] as u64),
+            (a[2usize] as u64) + (a[3usize] as u64),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn pairwise_dot_product_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u64x2<Self> {
