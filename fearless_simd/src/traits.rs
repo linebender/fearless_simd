@@ -163,12 +163,14 @@ pub trait SimdInto<T, S> {
 }
 
 impl<F, T: SimdFrom<F, S>, S: Simd> SimdInto<T, S> for F {
+    #[inline(always)]
     fn simd_into(self, simd: S) -> T {
         SimdFrom::simd_from(simd, self)
     }
 }
 
 impl<T, S: Simd> SimdFrom<T, S> for T {
+    #[inline(always)]
     fn simd_from(_simd: S, value: T) -> Self {
         value
     }
