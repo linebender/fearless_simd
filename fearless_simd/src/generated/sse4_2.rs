@@ -4554,13 +4554,10 @@ impl Simd for Sse4_2 {
             #[inline(always)]
             fn kernel(token: Sse4_2, a: i32x4<Sse4_2>) -> i64x2<Sse4_2> {
                 ({
-                    let a = _mm_xor_si128(a.into(), _mm_set1_epi32(i32::MIN));
-                    _mm_sub_epi64(
-                        _mm_add_epi64(
-                            _mm_and_si128(a, _mm_set1_epi64x(4294967295)),
-                            _mm_srli_epi64::<32>(a),
-                        ),
-                        _mm_set1_epi64x(0x1_0000_0000),
+                    let y = _mm_xor_si128(a.into(), _mm_set1_epi32(i32::MIN));
+                    _mm_add_epi64(
+                        _mm_or_si128(y, _mm_set1_epi64x(-0x1_0000_0000)),
+                        _mm_srli_epi64::<32>(y),
                     )
                 })
                 .simd_into(token)

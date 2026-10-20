@@ -4835,13 +4835,10 @@ impl Simd for Avx512 {
             #[inline(always)]
             fn kernel(token: Avx512, a: i32x4<Avx512>) -> i64x2<Avx512> {
                 ({
-                    let a = _mm_xor_si128(a.into(), _mm_set1_epi32(i32::MIN));
-                    _mm_sub_epi64(
-                        _mm_add_epi64(
-                            _mm_and_si128(a, _mm_set1_epi64x(4294967295)),
-                            _mm_srli_epi64::<32>(a),
-                        ),
-                        _mm_set1_epi64x(0x1_0000_0000),
+                    let y = _mm_xor_si128(a.into(), _mm_set1_epi32(i32::MIN));
+                    _mm_add_epi64(
+                        _mm_or_si128(y, _mm_set1_epi64x(-0x1_0000_0000)),
+                        _mm_srli_epi64::<32>(y),
                     )
                 })
                 .simd_into(token)
@@ -12103,13 +12100,10 @@ impl Simd for Avx512 {
             #[inline(always)]
             fn kernel(token: Avx512, a: i32x8<Avx512>) -> i64x4<Avx512> {
                 ({
-                    let a = _mm256_xor_si256(a.into(), _mm256_set1_epi32(i32::MIN));
-                    _mm256_sub_epi64(
-                        _mm256_add_epi64(
-                            _mm256_and_si256(a, _mm256_set1_epi64x(4294967295)),
-                            _mm256_srli_epi64::<32>(a),
-                        ),
-                        _mm256_set1_epi64x(0x1_0000_0000),
+                    let y = _mm256_xor_si256(a.into(), _mm256_set1_epi32(i32::MIN));
+                    _mm256_add_epi64(
+                        _mm256_or_si256(y, _mm256_set1_epi64x(-0x1_0000_0000)),
+                        _mm256_srli_epi64::<32>(y),
                     )
                 })
                 .simd_into(token)
@@ -19357,13 +19351,10 @@ impl Simd for Avx512 {
             #[inline(always)]
             fn kernel(token: Avx512, a: i32x16<Avx512>) -> i64x8<Avx512> {
                 ({
-                    let a = _mm512_xor_si512(a.into(), _mm512_set1_epi32(i32::MIN));
-                    _mm512_sub_epi64(
-                        _mm512_add_epi64(
-                            _mm512_and_si512(a, _mm512_set1_epi64(4294967295)),
-                            _mm512_srli_epi64::<32>(a),
-                        ),
-                        _mm512_set1_epi64(0x1_0000_0000),
+                    let y = _mm512_xor_si512(a.into(), _mm512_set1_epi32(i32::MIN));
+                    _mm512_add_epi64(
+                        _mm512_or_si512(y, _mm512_set1_epi64(-0x1_0000_0000)),
+                        _mm512_srli_epi64::<32>(y),
                     )
                 })
                 .simd_into(token)

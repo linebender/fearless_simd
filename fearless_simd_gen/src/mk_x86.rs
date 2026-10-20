@@ -2886,7 +2886,21 @@ impl X86 {
                 let madd = intrinsic_ident("madd", "epi16", bits);
                 quote! { #madd(a.into(), #set1(1)) }
             }
-            (ScalarType::Unsigned, 16 | 32) | (ScalarType::Int, 32) => {
+            (ScalarType::Int, 32) => {
+                let xor = intrinsic_ident("xor", &format!("si{bits}"), bits);
+                let or = intrinsic_ident("or", &format!("si{bits}"), bits);
+                let add = intrinsic_ident("add", "epi64", bits);
+                let shift = intrinsic_ident("srli", "epi64", bits);
+                let set1_wide = set1_intrinsic(&target_ty);
+                // Flipping each i32 sign bit maps its signed value x to u32 x + 2^31.
+                // Setting the upper 32 bits gives low32(y) - 2^32, combining the
+                // low-lane extraction with subtraction of both lanes' biases.
+                quote! {
+                    let y = #xor(a.into(), #set1(i32::MIN));
+                    #add(#or(y, #set1_wide(-0x1_0000_0000)), #shift::<32>(y))
+                }
+            }
+            (ScalarType::Unsigned, 16 | 32) => {
                 let suffix = format!("epi{}", target_ty.scalar_bits);
                 let and = intrinsic_ident("and", &format!("si{bits}"), bits);
                 let add = intrinsic_ident("add", &suffix, bits);
@@ -2894,22 +2908,9 @@ impl X86 {
                 let set1_wide = set1_intrinsic(&target_ty);
                 let shift_bits = Literal::usize_unsuffixed(vec_ty.scalar_bits);
                 let mask = Literal::u64_unsuffixed((1_u64 << vec_ty.scalar_bits) - 1);
-                let sum = quote! { #add(#and(a, #set1_wide(#mask)), #shift::<#shift_bits>(a)) };
-                let (prepare, finish) = if vec_ty.scalar == ScalarType::Int {
-                    let xor = intrinsic_ident("xor", &format!("si{bits}"), bits);
-                    let sub = intrinsic_ident("sub", &suffix, bits);
-                    // Flipping each i32 sign bit maps its signed value x to u32 x + 2^31.
-                    // Subtract twice that bias after summing the two u32 lanes.
-                    (
-                        quote! { let a = #xor(a.into(), #set1(i32::MIN)); },
-                        quote! { #sub(#sum, #set1_wide(0x1_0000_0000)) },
-                    )
-                } else {
-                    (quote! { let a = a.into(); }, sum)
-                };
                 quote! {
-                    #prepare
-                    #finish
+                    let a = a.into();
+                    #add(#and(a, #set1_wide(#mask)), #shift::<#shift_bits>(a))
                 }
             }
             _ => unreachable!("pairwise widening addition requires 8-, 16-, or 32-bit integers"),
