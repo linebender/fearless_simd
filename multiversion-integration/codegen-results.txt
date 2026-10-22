@@ -1,0 +1,49 @@
+rustc 1.97.1 (8bab26f4f 2026-07-14)
+binary: rustc
+commit-hash: 8bab26f4f68e0e26f0bb7960be334d5b520ea452
+commit-date: 2026-07-14
+host: x86_64-unknown-linux-gnu
+release: 1.97.1
+LLVM version: 22.1.6
+
+Release optimization; LTO disabled; one codegen unit; target-cpu=x86-64.
+Offline builds; no global AVX2 assumption. These results are toolchain-specific.
+
+PIC relocation:
+PASS automatic_avx2 feature body == manual_avx2 feature body after label normalization.
+PASS both public kernel! entries have 1 forwarding tail jump(s).
+PASS AVX2 vector loop present; no calls or CPU feature detection in that body.
+PASS automatic_opaque_avx2 feature body == manual_opaque_avx2 feature body after label normalization.
+PASS both opaque kernel! entries have 1 forwarding tail jump(s).
+PASS opaque loop calls the Avx2 helper instantiation; no backend selection in caller or callee.
+NOTE opaque helper has 1 forwarding tail jump(s) into its feature body.
+The manual opaque comparison deliberately calls the same generic helper bridge.
+A direct target_feature clone can avoid that extra helper forwarding jump.
+PASS public_dispatch reaches a wrapper that calls Level::try_detect and selects a backend.
+PASS unannotated_loop calls public mix, whose wrapper still calls Level::try_detect.
+Opaque calls use ordinary linkage indirection (also in manual code); no backend selection.
+Opaque loop call instruction(s):
+callq	*%r12
+Assembly: target/codegen-pic/x86_64-unknown-linux-gnu/release/deps/simd_research_demo-018fc0dc3b502738.s
+
+STATIC relocation:
+PASS automatic_avx2 feature body == manual_avx2 feature body after label normalization.
+PASS both public kernel! entries have 1 forwarding tail jump(s).
+PASS AVX2 vector loop present; no calls or CPU feature detection in that body.
+PASS automatic_opaque_avx2 feature body == manual_opaque_avx2 feature body after label normalization.
+PASS both opaque kernel! entries have 1 forwarding tail jump(s).
+PASS opaque loop calls the Avx2 helper instantiation; no backend selection in caller or callee.
+NOTE opaque helper has 1 forwarding tail jump(s) into its feature body.
+The manual opaque comparison deliberately calls the same generic helper bridge.
+A direct target_feature clone can avoid that extra helper forwarding jump.
+PASS public_dispatch reaches a wrapper that calls Level::try_detect and selects a backend.
+PASS unannotated_loop calls public mix, whose wrapper still calls Level::try_detect.
+Opaque calls use direct machine calls to the selected AVX2 symbol.
+Opaque loop call instruction(s):
+callq	_RINvCsbfrjEdok2P5_21simd_research_kernels31___simd_research_opaque_mix_withNtNtNtCs4FU49fEPEha_13fearless_simd9generated4avx24Avx2NvB2_10opaque_mixECsjN2G0ZL0VrF_18simd_research_demo
+Assembly: target/codegen-static/x86_64-unknown-linux-gnu/release/deps/simd_research_demo-15c796da578abdd4.s
+
+Exact assembly equivalence is evidence for these examples, not a language guarantee.
+Public entry points retain Level detection/dispatch; unannotated callers pay it per call.
+The inlined call graph eliminates internal dispatch; deliberately non-inlined helpers retain
+a fixed forwarding jump in this generic Simd::vectorize integration.

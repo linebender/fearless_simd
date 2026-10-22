@@ -1,0 +1,11 @@
+[package]
+name = "bridge-kernels"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["std"]
+std = ["fearless_simd/std"]
+
+[dependencies]
+fearless_simd = { path = "../../../fearless_simd", default-features = false, features = ["libm"] }
