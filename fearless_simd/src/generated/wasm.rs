@@ -980,6 +980,10 @@ impl Simd for WasmSimd128 {
         (self.add_i16x8(a0, b0), self.add_i16x8(a1, b1))
     }
     #[inline(always)]
+    fn pairwise_widening_add_i8x16(self, a: i8x16<Self>) -> i16x8<Self> {
+        i16x8_extadd_pairwise_i8x16(a.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i16x8<Self> {
         let (low, high) = self.widening_mul_i8x16(a, b);
         let (even, odd) = self.deinterleave_i16x8(low, high);
@@ -1513,6 +1517,10 @@ impl Simd for WasmSimd128 {
         (self.add_u16x8(a0, b0), self.add_u16x8(a1, b1))
     }
     #[inline(always)]
+    fn pairwise_widening_add_u8x16(self, a: u8x16<Self>) -> u16x8<Self> {
+        u16x8_extadd_pairwise_u8x16(a.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u16x8<Self> {
         let (low, high) = self.widening_mul_u8x16(a, b);
         let (even, odd) = self.deinterleave_u16x8(low, high);
@@ -2002,6 +2010,10 @@ impl Simd for WasmSimd128 {
         (self.add_i32x4(a0, b0), self.add_i32x4(a1, b1))
     }
     #[inline(always)]
+    fn pairwise_widening_add_i16x8(self, a: i16x8<Self>) -> i32x4<Self> {
+        i32x4_extadd_pairwise_i16x8(a.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i32x4<Self> {
         i32x4_dot_i16x8(a.into(), b.into()).simd_into(self)
     }
@@ -2344,6 +2356,10 @@ impl Simd for WasmSimd128 {
         let (a0, a1) = self.widen_u16x8(a);
         let (b0, b1) = self.widen_u16x8(b);
         (self.add_u32x4(a0, b0), self.add_u32x4(a1, b1))
+    }
+    #[inline(always)]
+    fn pairwise_widening_add_u16x8(self, a: u16x8<Self>) -> u32x4<Self> {
+        u32x4_extadd_pairwise_u16x8(a.into()).simd_into(self)
     }
     #[inline(always)]
     fn pairwise_dot_product_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u32x4<Self> {
@@ -2849,6 +2865,14 @@ impl Simd for WasmSimd128 {
         (self.add_i64x2(a0, b0), self.add_i64x2(a1, b1))
     }
     #[inline(always)]
+    fn pairwise_widening_add_i32x4(self, a: i32x4<Self>) -> i64x2<Self> {
+        i64x2_add(
+            i64x2_shr(i64x2_shl(a.into(), 32), 32),
+            i64x2_shr(a.into(), 32),
+        )
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i64x2<Self> {
         let (low, high) = self.widening_mul_i32x4(a, b);
         let (even, odd) = self.deinterleave_i64x2(low, high);
@@ -3182,6 +3206,14 @@ impl Simd for WasmSimd128 {
         let (a0, a1) = self.widen_u32x4(a);
         let (b0, b1) = self.widen_u32x4(b);
         (self.add_u64x2(a0, b0), self.add_u64x2(a1, b1))
+    }
+    #[inline(always)]
+    fn pairwise_widening_add_u32x4(self, a: u32x4<Self>) -> u64x2<Self> {
+        u64x2_add(
+            v128_and(a.into(), u64x2_splat(0xffff_ffff)),
+            u64x2_shr(a.into(), 32),
+        )
+        .simd_into(self)
     }
     #[inline(always)]
     fn pairwise_dot_product_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u64x2<Self> {

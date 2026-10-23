@@ -319,6 +319,9 @@ impl Level for X86 {
             OpSig::RotateElements { direction } => {
                 self.handle_mask_rotate_elements(op, vec_ty, direction)
             }
+            OpSig::PairwiseWideningAdd { target_ty } => {
+                self.handle_pairwise_widening_add(op, vec_ty, target_ty)
+            }
             OpSig::PairwiseDotProduct { .. } => {
                 if vec_ty.scalar == ScalarType::Int && vec_ty.scalar_bits == 16 {
                     let madd = intrinsic_ident("madd", "epi16", vec_ty.n_bits());
@@ -2853,6 +2856,68 @@ impl X86 {
                 })
             }
         }
+    }
+
+    fn handle_pairwise_widening_add(
+        &self,
+        op: Op,
+        vec_ty: &VecType,
+        target_ty: VecType,
+    ) -> TokenStream {
+        if *self == Self::Sse2 && vec_ty.scalar_bits == 8 {
+            return fallback_method(op, vec_ty);
+        }
+
+        let bits = vec_ty.n_bits();
+        let set1 = set1_intrinsic(vec_ty);
+        let body = match (vec_ty.scalar, vec_ty.scalar_bits) {
+            (scalar, 8) => {
+                let maddubs = intrinsic_ident("maddubs", "epi16", bits);
+                // maddubs takes unsigned bytes first and signed bytes second.
+                // With one operand fixed at 1, sums are in 0..=510 or -256..=254,
+                // so its signed i16 saturation never changes the result.
+                if scalar == ScalarType::Unsigned {
+                    quote! { #maddubs(a.into(), #set1(1)) }
+                } else {
+                    quote! { #maddubs(#set1(1), a.into()) }
+                }
+            }
+            (ScalarType::Int, 16) => {
+                let madd = intrinsic_ident("madd", "epi16", bits);
+                quote! { #madd(a.into(), #set1(1)) }
+            }
+            (ScalarType::Int, 32) => {
+                let xor = intrinsic_ident("xor", &format!("si{bits}"), bits);
+                let or = intrinsic_ident("or", &format!("si{bits}"), bits);
+                let add = intrinsic_ident("add", "epi64", bits);
+                let shift = intrinsic_ident("srli", "epi64", bits);
+                let set1_wide = set1_intrinsic(&target_ty);
+                // Flipping each i32 sign bit maps its signed value x to u32 x + 2^31.
+                // Setting the upper 32 bits gives low32(y) - 2^32, combining the
+                // low-lane extraction with subtraction of both lanes' biases.
+                quote! {
+                    let y = #xor(a.into(), #set1(i32::MIN));
+                    #add(#or(y, #set1_wide(-0x1_0000_0000)), #shift::<32>(y))
+                }
+            }
+            (ScalarType::Unsigned, 16 | 32) => {
+                let suffix = format!("epi{}", target_ty.scalar_bits);
+                let and = intrinsic_ident("and", &format!("si{bits}"), bits);
+                let add = intrinsic_ident("add", &suffix, bits);
+                let shift = intrinsic_ident("srli", &suffix, bits);
+                let set1_wide = set1_intrinsic(&target_ty);
+                let shift_bits = Literal::usize_unsuffixed(vec_ty.scalar_bits);
+                let mask = Literal::u64_unsuffixed((1_u64 << vec_ty.scalar_bits) - 1);
+                quote! {
+                    let a = a.into();
+                    #add(#and(a, #set1_wide(#mask)), #shift::<#shift_bits>(a))
+                }
+            }
+            _ => unreachable!("pairwise widening addition requires 8-, 16-, or 32-bit integers"),
+        };
+        self.kernel_method(op, vec_ty, |token| {
+            quote! { ({ #body }).simd_into(#token) }
+        })
     }
 
     fn handle_widening_binary(&self, op: Op, vec_ty: &VecType, target_ty: VecType) -> TokenStream {

@@ -182,6 +182,23 @@ impl Level for Fallback {
                 }
             }
             OpSig::RotateElements { .. } => integer_lane_mask_rotate(op, vec_ty),
+            OpSig::PairwiseWideningAdd { target_ty } => {
+                let scalar = target_ty.scalar.rust(target_ty.scalar_bits);
+                let items = make_list(
+                    (0..target_ty.len)
+                        .map(|idx| {
+                            let even = lane(quote! { a }, vec_ty, 2 * idx);
+                            let odd = lane(quote! { a }, vec_ty, 2 * idx + 1);
+                            quote! { (#even as #scalar) + (#odd as #scalar) }
+                        })
+                        .collect(),
+                );
+                quote! {
+                    #method_sig {
+                        #items.simd_into(self)
+                    }
+                }
+            }
             OpSig::PairwiseDotProduct { .. } => {
                 crate::generic::pairwise_dot_product_method(op, vec_ty)
             }

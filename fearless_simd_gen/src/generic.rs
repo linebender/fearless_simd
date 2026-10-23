@@ -595,6 +595,17 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 }
             }
         }
+        OpSig::PairwiseWideningAdd { target_ty } => {
+            let mut target_half = target_ty;
+            target_half.len /= 2;
+            let combine_target = generic_op_name("combine", &target_half);
+            quote! {
+                #method_sig {
+                    let (a0, a1) = self.#split(a);
+                    self.#combine_target(self.#do_half(a0), self.#do_half(a1))
+                }
+            }
+        }
         OpSig::PairwiseDotProduct { target_ty } => {
             let mut target_half = target_ty;
             target_half.len /= 2;

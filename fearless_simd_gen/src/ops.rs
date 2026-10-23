@@ -123,6 +123,8 @@ pub(crate) enum OpSig {
     Widen { target_ty: VecType },
     /// Applies binary integer arithmetic with twice-wide lanes, returning lower and upper halves.
     WideningBinary { target_ty: VecType },
+    /// Sums adjacent lanes exactly into one vector with twice-wide lanes.
+    PairwiseWideningAdd { target_ty: VecType },
     /// Multiplies corresponding lanes and sums adjacent products into one widened vector.
     PairwiseDotProduct { target_ty: VecType },
     /// Narrows two vectors and concatenates them into one same-width vector.
@@ -394,6 +396,10 @@ impl Op {
                     quote! { (#result<#simd_ty>, #result<#simd_ty>) },
                 )
             }
+            OpSig::PairwiseWideningAdd { target_ty } => {
+                let result = target_ty.rust();
+                (vec![vec], quote! { #result<#simd_ty> })
+            }
             OpSig::PairwiseDotProduct { target_ty } | OpSig::Narrow { target_ty, .. } => {
                 let result = target_ty.rust();
                 (vec![vec.clone(), vec], quote! { #result<#simd_ty> })
@@ -488,6 +494,7 @@ impl Op {
             }
             OpSig::Widen { .. }
             | OpSig::WideningBinary { .. }
+            | OpSig::PairwiseWideningAdd { .. }
             | OpSig::PairwiseDotProduct { .. }
             | OpSig::Narrow { .. } => {
                 return None;
@@ -1852,6 +1859,12 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 "Add corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes.",
             ));
             ops.push(Op::new(
+                "pairwise_widening_add",
+                OpKind::OwnTrait,
+                OpSig::PairwiseWideningAdd { target_ty },
+                "Add adjacent integer lanes exactly into twice-wide lanes.\n\nOutput lane `i` is `widen(a[2*i]) + widen(a[2*i+1])`. The result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. The sum cannot overflow the widened type.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` produces `[3, 7, 11, 15]`. See [`SimdIntWiden::pairwise_widening_add`] for supported types and examples.",
+            ));
+            ops.push(Op::new(
                 "pairwise_dot_product",
                 OpKind::OwnTrait,
                 OpSig::PairwiseDotProduct { target_ty },
@@ -2108,6 +2121,7 @@ impl OpSig {
             | Self::Split { .. }
             | Self::Cvt { .. }
             | Self::Widen { .. }
+            | Self::PairwiseWideningAdd { .. }
             | Self::MaskReduce { .. }
             | Self::MaskToBitmask
             | Self::MaskToVector
@@ -2158,9 +2172,10 @@ impl OpSig {
             | Self::Cvt { .. }
             | Self::MaskReduce { .. }
             | Self::UnaryClassify => &["self"],
-            Self::Widen { .. } | Self::WideningBinary { .. } | Self::PairwiseDotProduct { .. } => {
-                &[]
-            }
+            Self::Widen { .. }
+            | Self::WideningBinary { .. }
+            | Self::PairwiseWideningAdd { .. }
+            | Self::PairwiseDotProduct { .. } => &[],
             Self::Narrow { .. } => &[],
             Self::SwizzleDynWithinBlocks | Self::SwizzleDyn | Self::SwizzleDynPrecise => {
                 &["self", "indices"]
@@ -2222,6 +2237,7 @@ impl OpSig {
             | Self::Cvt { .. }
             | Self::Widen { .. }
             | Self::WideningBinary { .. }
+            | Self::PairwiseWideningAdd { .. }
             | Self::PairwiseDotProduct { .. }
             | Self::Narrow { .. }
             | Self::Shift

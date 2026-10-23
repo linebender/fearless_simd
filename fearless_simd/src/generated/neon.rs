@@ -1204,6 +1204,16 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn pairwise_widening_add_i8x16(self, a: i8x16<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>) -> i16x8<Neon> {
+                vpaddlq_s8(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1811,6 +1821,16 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn pairwise_widening_add_u8x16(self, a: u8x16<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>) -> u16x8<Neon> {
+                vpaddlq_u8(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn pairwise_dot_product_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u16x8<Self> {
@@ -2585,6 +2605,16 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn pairwise_widening_add_i16x8(self, a: i16x8<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>) -> i32x4<Neon> {
+                vpaddlq_s16(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3120,6 +3150,16 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn pairwise_widening_add_u16x8(self, a: u16x8<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>) -> u32x4<Neon> {
+                vpaddlq_u16(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn pairwise_dot_product_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u32x4<Self> {
@@ -3928,6 +3968,16 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn pairwise_widening_add_i32x4(self, a: i32x4<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>) -> i64x2<Neon> {
+                vpaddlq_s32(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn pairwise_dot_product_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4472,6 +4522,16 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn pairwise_widening_add_u32x4(self, a: u32x4<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>) -> u64x2<Neon> {
+                vpaddlq_u32(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn pairwise_dot_product_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u64x2<Self> {

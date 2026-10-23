@@ -224,6 +224,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
         if ty.widened().is_some() && matches!(ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
             let mul = generic_op_name("widening_mul", ty);
             let add = generic_op_name("widening_add", ty);
+            let pairwise_add = generic_op_name("pairwise_widening_add", ty);
             let dot = generic_op_name("pairwise_dot_product", ty);
             conditional_impls.push(quote! {
                 impl<S: Simd> SimdIntWiden<S> for #name<S> {
@@ -235,6 +236,11 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     #[inline(always)]
                     fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
                         self.simd.#add(self, rhs)
+                    }
+
+                    #[inline(always)]
+                    fn pairwise_widening_add(self) -> Self::Widened {
+                        self.simd.#pairwise_add(self)
                     }
 
                     #[inline(always)]
