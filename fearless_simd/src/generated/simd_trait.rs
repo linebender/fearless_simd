@@ -12429,6 +12429,47 @@ pub trait SimdBase<S: Simd>:
             _ => unreachable!(),
         }
     }
+    #[doc = r" Clamp each element to the interval `[min, max]`."]
+    #[doc = r""]
+    #[doc = r" If `min > max` or `self`, `min`, or `max` are NaN (for floating-point types),"]
+    #[doc = r" the result is implementation-defined for that lane."]
+    #[doc = r""]
+    #[doc = r" If one floating-point operand is positive zero and the other is negative zero, the"]
+    #[doc = r" result is also implementation-defined, and it could be either one."]
+    #[doc = r""]
+    #[doc = r" # Panics"]
+    #[doc = r""]
+    #[doc = r" Panics with debug assertions if `min > max` for any element or any element of `min`"]
+    #[doc = r" or `max` is NaN."]
+    #[doc = r""]
+    #[doc = r" # Examples"]
+    #[doc = r""]
+    #[doc = r" ```"]
+    #[doc = r" # use fearless_simd::*;"]
+    #[doc = r" # dispatch!(Level::new(), simd => {"]
+    #[doc = r" let f = f32x4::simd_from(simd, [-1.0, 0.0, 0.9, 2.0]);"]
+    #[doc = r" assert_eq!("]
+    #[doc = r"     *f.clamp(0.0, 1.0),"]
+    #[doc = r"     [0.0, 0.0, 0.9, 1.0]"]
+    #[doc = r" );"]
+    #[doc = r""]
+    #[doc = r" let i = i32x4::simd_from(simd, [-10, 0, 14, 24]);"]
+    #[doc = r" assert_eq!("]
+    #[doc = r"     *i.clamp(0, 15),"]
+    #[doc = r"     [0, 0, 14, 15]"]
+    #[doc = r" );"]
+    #[doc = r" # });"]
+    #[doc = r" ```"]
+    #[inline(always)]
+    fn clamp(self, min: impl SimdInto<Self, S>, max: impl SimdInto<Self, S>) -> Self {
+        let min = min.simd_into(self.token());
+        let max = max.simd_into(self.token());
+        debug_assert!(
+            min.simd_le(max).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        self.max(min).min(max)
+    }
     #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
     fn abs(self) -> Self;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
