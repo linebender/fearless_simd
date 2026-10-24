@@ -184,6 +184,24 @@ fn mask8x16_to_bitmask_exhaustive<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn mask8x16_from_bitmask_exhaustive<S: Simd>(simd: S) {
+    for bits in 0..=0xffff_u64 {
+        let expected: [i8; 16] =
+            core::array::from_fn(|i| if bits & (1_u64 << i) == 0 { 0 } else { -1 });
+        assert_eq!(
+            <[i8; 16]>::from(mask8x16::from_bitmask(simd, bits)),
+            expected
+        );
+        // bits above the 16 lanes are ignored
+        let high = bits | 0xa5a5_a5a5_a5a5_0000;
+        assert_eq!(
+            <[i8; 16]>::from(mask8x16::from_bitmask(simd, high)),
+            expected
+        );
+    }
+}
+
+#[simd_test]
 fn mask16x8_to_bitmask_exhaustive<S: Simd>(simd: S) {
     for bits in 0..=0xff_u64 {
         let values: [i16; 8] =

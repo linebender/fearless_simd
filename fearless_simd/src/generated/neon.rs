@@ -1859,18 +1859,15 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, bits: u64) -> mask8x16<Neon> {
-                let shifts = crate::transmute::checked_transmute_copy::<[i16; 8], int16x8_t>(&[
-                    15, 14, 13, 12, 11, 10, 9, 8,
+                let spread = crate::transmute::checked_transmute_copy::<[u8; 16], uint8x16_t>(&[
+                    0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
                 ]);
-                let lo = vshlq_u16(vdupq_n_u16(bits as u16), shifts);
-                let hi = vshlq_u16(vdupq_n_u16((bits >> 8) as u16), shifts);
-                let lo = vcltq_s16(vreinterpretq_s16_u16(lo), vdupq_n_s16(0));
-                let hi = vcltq_s16(vreinterpretq_s16_u16(hi), vdupq_n_s16(0));
-                vcombine_s8(
-                    vmovn_s16(vreinterpretq_s16_u16(lo)),
-                    vmovn_s16(vreinterpretq_s16_u16(hi)),
-                )
-                .simd_into(token)
+                let lane_bits =
+                    crate::transmute::checked_transmute_copy::<[u8; 16], uint8x16_t>(&[
+                        1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128,
+                    ]);
+                let bytes = vqtbl1q_u8(vreinterpretq_u8_u64(vdupq_n_u64(bits)), spread);
+                vreinterpretq_s8_u8(vtstq_u8(bytes, lane_bits)).simd_into(token)
             }
         );
         kernel(self, bits)
