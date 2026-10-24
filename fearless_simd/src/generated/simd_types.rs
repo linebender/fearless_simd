@@ -298,6 +298,7 @@ impl<S: Simd> SimdBase<S> for f32x4<S> {
     }
 }
 impl<S: Simd> crate::SimdFloat<S> for f32x4<S> {
+    type Bits = u32x4<S>;
     #[inline(always)]
     fn sqrt(self) -> Self {
         self.simd.sqrt_f32x4(self)
@@ -3388,6 +3389,7 @@ impl<S: Simd> SimdBase<S> for f64x2<S> {
     }
 }
 impl<S: Simd> crate::SimdFloat<S> for f64x2<S> {
+    type Bits = u64x2<S>;
     #[inline(always)]
     fn sqrt(self) -> Self {
         self.simd.sqrt_f64x2(self)
@@ -4670,6 +4672,7 @@ impl<S: Simd> SimdBase<S> for f32x8<S> {
     }
 }
 impl<S: Simd> crate::SimdFloat<S> for f32x8<S> {
+    type Bits = u32x8<S>;
     #[inline(always)]
     fn sqrt(self) -> Self {
         self.simd.sqrt_f32x8(self)
@@ -7799,6 +7802,7 @@ impl<S: Simd> SimdBase<S> for f64x4<S> {
     }
 }
 impl<S: Simd> crate::SimdFloat<S> for f64x4<S> {
+    type Bits = u64x4<S>;
     #[inline(always)]
     fn sqrt(self) -> Self {
         self.simd.sqrt_f64x4(self)
@@ -9076,6 +9080,7 @@ impl<S: Simd> SimdBase<S> for f32x16<S> {
     }
 }
 impl<S: Simd> crate::SimdFloat<S> for f32x16<S> {
+    type Bits = u32x16<S>;
     #[inline(always)]
     fn sqrt(self) -> Self {
         self.simd.sqrt_f32x16(self)
@@ -12289,6 +12294,7 @@ impl<S: Simd> SimdBase<S> for f64x8<S> {
     }
 }
 impl<S: Simd> crate::SimdFloat<S> for f64x8<S> {
+    type Bits = u64x8<S>;
     #[inline(always)]
     fn sqrt(self) -> Self {
         self.simd.sqrt_f64x8(self)

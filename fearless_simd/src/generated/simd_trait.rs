@@ -12520,6 +12520,24 @@ pub trait SimdFloat<S: Simd>:
     + core::ops::Div<Self::Element, Output = Self>
     + core::ops::DivAssign<Self::Element>
 {
+    #[doc = r" Bit representation of this SIMD float vector type."]
+    type Bits: SimdInt<
+            S,
+            Element = <Self::Element as SimdFloatElement>::Bits,
+            ByteVector = Self::ByteVector,
+        >;
+    #[doc = r" Raw transmutation to an unsigned integer vector type with the same size and number of elements."]
+    #[doc = r""]
+    #[doc = r" This is analogous to [`f32::to_bits`] and [`f64::to_bits`]."]
+    fn to_bits(self) -> Self::Bits {
+        self.bitcast()
+    }
+    #[doc = r" Raw transmutation from an unsigned integer vector type with the same size and number of elements."]
+    #[doc = r""]
+    #[doc = r" This is analogous to [`f32::from_bits`] and [`f64::from_bits`]."]
+    fn from_bits(bits: Self::Bits) -> Self {
+        bits.bitcast()
+    }
     #[doc = r" Convert this floating-point type to an integer. This is a convenience method that"]
     #[doc = r" delegates to [`SimdCvtTruncate::truncate_from`], and can only be called if there"]
     #[doc = r" actually exists a target type of the same bit width (`u32`/`i32` for `f32`, or"]
