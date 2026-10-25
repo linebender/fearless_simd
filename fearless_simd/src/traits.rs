@@ -398,12 +398,16 @@ impl SimdFloatElement for f64 {
 }
 
 /// Construction of integer vectors from floats by truncation
+///
+/// For a more convenient API, see [`SimdFloat::to_int`] and [`SimdFloat::to_int_precise`].
 pub trait SimdCvtTruncate<T: Seal>: Seal {
     fn truncate_from(x: T) -> Self;
     fn truncate_from_precise(x: T) -> Self;
 }
 
-/// Construction of floating point vectors from integers
+/// Construction of floating point vectors from integers.
+///
+/// For a more convenient API, see [`SimdInt::to_float`].
 pub trait SimdCvtFloat<T: Seal>: Seal {
     fn float_from(x: T) -> Self;
 }
@@ -476,6 +480,8 @@ pub trait SimdCombine<S: Simd>: SimdBase<S> + Seal {
         + SimdSplit<S, Split = Self>;
 
     /// Concatenate two vectors into a new one that's twice as long.
+    ///
+    /// The inverse operation is [`split`](SimdSplit::split).
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined;
 }
 
@@ -487,6 +493,8 @@ pub trait SimdSplit<S: Simd>: SimdBase<S> + Seal {
         + SimdCombine<S, Combined = Self>;
 
     /// Split this vector into left and right halves.
+    ///
+    /// The inverse operation is [`combine`](SimdCombine::combine).
     fn split(self) -> (Self::Split, Self::Split);
 }
 
