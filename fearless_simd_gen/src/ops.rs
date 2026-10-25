@@ -193,6 +193,8 @@ pub(crate) struct Op {
     /// `{arg1}`, etc. correspond to the argument names, which are different between the `Simd` trait methods and the
     /// ones defined on the vector types themselves (for instance, the first argument is always `self` in the latter).
     pub(crate) doc: &'static str,
+    /// Custom argument names for the vector trait method (e.g. `SimdBase::clamp`). The first name is typically `self`.
+    custom_vec_trait_arg_names: Option<&'static [&'static str]>,
 }
 
 struct SimdTraitSigParts {
@@ -219,7 +221,12 @@ impl Op {
             kind,
             sig,
             doc,
+            custom_vec_trait_arg_names: None,
         }
+    }
+    const fn with_custom_vec_trait_arg_names(mut self, names: &'static [&'static str]) -> Self {
+        self.custom_vec_trait_arg_names = Some(names);
+        self
     }
 
     pub(crate) fn doc_alias(&self) -> Option<&'static str> {
@@ -442,9 +449,18 @@ impl Op {
         }
     }
 
+    pub(crate) fn vec_trait_arg_names(&self) -> &'static [&'static str] {
+        let default = self.sig.default_vec_trait_arg_names();
+        let names = self.custom_vec_trait_arg_names.unwrap_or(default);
+        assert_eq!(
+            names.len(),
+            default.len(),
+            "Custom vec trait arg names {names:?} have the wrong number of arguments"
+        );
+        names
+    }
     pub(crate) fn vec_trait_method_sig(&self) -> Option<TokenStream> {
         let arg_names = self
-            .sig
             .vec_trait_arg_names()
             .iter()
             .map(|n| Ident::new(n, Span::call_site()))
@@ -553,7 +569,7 @@ impl Op {
     pub(crate) fn format_docstring(&self, flavor: TyFlavor) -> String {
         let arg_names = match flavor {
             TyFlavor::SimdTrait => self.sig.simd_trait_arg_names(),
-            TyFlavor::VecImpl => self.sig.vec_trait_arg_names(),
+            TyFlavor::VecImpl => self.vec_trait_arg_names(),
         };
 
         let interpolate_var_into = |dest: &mut String, template_var: &str| {
@@ -930,7 +946,7 @@ const COMMON_BASE_OPS: &[Op] = &[
         If one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n\
         # Panics\n\
         Panics with debug assertions if `{arg1} > {arg2}` for any element or any element of `{arg1}` or `{arg2}` is NaN.",
-    ),
+    ).with_custom_vec_trait_arg_names(&["self", "min", "max"]),
     Op::new(
         "simd_eq",
         OpKind::BaseTraitMethod,
@@ -2163,7 +2179,7 @@ impl OpSig {
         }
     }
 
-    fn vec_trait_arg_names(&self) -> &'static [&'static str] {
+    fn default_vec_trait_arg_names(&self) -> &'static [&'static str] {
         match self {
             Self::Splat => &["simd", "val"],
             Self::LoadInterleaved { .. }
@@ -2205,9 +2221,11 @@ impl OpSig {
         }
     }
 
-    pub(crate) fn forwarding_call_args(&self) -> Option<TokenStream> {
-        let arg_names = self
-            .vec_trait_arg_names()
+    pub(crate) fn forwarding_call_args(
+        &self,
+        vec_trait_arg_names: &[&'static str],
+    ) -> Option<TokenStream> {
+        let arg_names = vec_trait_arg_names
             .iter()
             .map(|n| Ident::new(n, Span::call_site()))
             .collect::<Vec<_>>();
