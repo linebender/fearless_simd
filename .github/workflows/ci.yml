@@ -252,7 +252,9 @@ jobs:
     strategy:
       matrix:
         platform:
-          - { target: x86_64-unknown-linux-gnu, os: ubuntu-latest }
+          # Ubuntu 26.04 cloud images use amd64v3 system libraries, whose loader
+          # executes AVX instructions even before our tests start on SSE2/SSE4.2 CPUs.
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-24.04 }
     steps:
       - uses: actions/checkout@v4
 
