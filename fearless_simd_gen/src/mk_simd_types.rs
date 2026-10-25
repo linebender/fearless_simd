@@ -480,7 +480,7 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
                 quote! { self.simd.#trait_method::<OFFSET>(self) }
             } else {
                 let call_args = sig
-                    .forwarding_call_args()
+                    .forwarding_call_args(op.vec_trait_arg_names())
                     .expect("this method can be forwarded to a specific Simd function");
                 quote! { self.simd.#trait_method(#call_args) }
             };
@@ -559,7 +559,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
         if matches!(sig, OpSig::Splat) {
             continue;
         }
-        let Some(call_args) = sig.forwarding_call_args() else {
+        let Some(call_args) = sig.forwarding_call_args(op.vec_trait_arg_names()) else {
             continue;
         };
         // Integer min/max have no precision-related edge cases, so the precise
@@ -718,7 +718,7 @@ fn simd_vec_scalar_type_impl(ty: &VecType) -> TokenStream {
         let trait_method = generic_op_name(method, ty);
         if let Some(method_sig) = op.vec_trait_method_sig() {
             let call_args = sig
-                .forwarding_call_args()
+                .forwarding_call_args(op.vec_trait_arg_names())
                 .expect("this method can be forwarded to a specific Simd function");
             methods.push(quote! {
                 #[inline(always)]
