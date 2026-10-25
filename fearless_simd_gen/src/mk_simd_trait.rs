@@ -488,6 +488,9 @@ fn mk_simd_float() -> TokenStream {
             #[inline(always)]
             fn to_int_precise<T: SimdCvtTruncate<Self>>(self) -> T { T::truncate_from_precise(self) }
 
+            /// Compute the reciprocal of this floating-point value, i.e. `1.0 / self`.
+            fn recip(self) -> Self;
+
             #( #methods )*
         }
     }
