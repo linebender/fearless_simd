@@ -921,6 +921,17 @@ const COMMON_BASE_OPS: &[Op] = &[
         Signaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them.",
     ),
     Op::new(
+        "clamp",
+        OpKind::BaseTraitMethod,
+        OpSig::Ternary,
+        "Clamp each element to the interval `[{arg1}, {arg2}]`.\n\n\
+        If `{arg1} > {arg2}`, or `{arg1}` or `{arg2}` are NaN, the result is implementation-defined for that lane.\n\n\
+        If `{arg0}` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\n\
+        If one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n\
+        # Panics\n\
+        Panics with debug assertions if `{arg1} > {arg2}` for any element or any element of `{arg1}` or `{arg2}` is NaN.",
+    ),
+    Op::new(
         "simd_eq",
         OpKind::BaseTraitMethod,
         OpSig::Compare,

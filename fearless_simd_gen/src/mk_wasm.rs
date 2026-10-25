@@ -8,10 +8,10 @@ use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
     CompactOptions, byte_compact_op, compact_128_op, composed_compact_op,
     concat_swizzle_dyn_precise_body, count_zeros_method, fallback_method, generic_block_combine,
-    generic_block_split, generic_classify, generic_mask_from_vector, generic_mask_set,
-    generic_mask_to_vector, generic_op_name, generic_round, generic_to_degrees_radians,
-    integer_lane_mask_rotate, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
-    reverse_method, reverse_vector_mask_method,
+    generic_block_split, generic_clamp_int, generic_classify, generic_mask_from_vector,
+    generic_mask_set, generic_mask_to_vector, generic_op_name, generic_round,
+    generic_to_degrees_radians, integer_lane_mask_rotate, integer_lane_mask_splat_arg,
+    recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{
@@ -882,6 +882,22 @@ impl Level for WasmSimd128 {
 
                             #[cfg(not(target_feature = "relaxed-simd"))]
                             { self.#add_sub(self.#mul(a, b), c) }
+                        }
+                    }
+                } else if method == "clamp" {
+                    if matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
+                        generic_clamp_int(method_sig)
+                    } else {
+                        // WASM's fmin/famx will return NaN if one of the operands is NaN.
+                        // So a NaN value in `a` is naturally propagated through the clamp operation.
+                        let max =
+                            wasm::expr("max", vec_ty, &[quote! { a.into() }, quote! { b.into() }]);
+                        let min = wasm::expr("min", vec_ty, &[max, quote! { c.into() }]);
+                        quote! {
+                            #method_sig {
+                            debug_assert!(b.simd_le(c).all_true(), "clamp requires min <= max for all elements");
+                                #min.simd_into(self)
+                            }
                         }
                     }
                 } else {

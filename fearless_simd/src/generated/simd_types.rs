@@ -249,6 +249,11 @@ impl<S: Simd> SimdBase<S> for f32x4<S> {
         self.simd.min_precise_f32x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_f32x4(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_f32x4(self, rhs.simd_into(self.simd))
     }
@@ -692,6 +697,11 @@ impl<S: Simd> SimdBase<S> for i8x16<S> {
         self.simd.min_i8x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_i8x16(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i8x16(self, rhs.simd_into(self.simd))
     }
@@ -1063,6 +1073,11 @@ impl<S: Simd> SimdBase<S> for u8x16<S> {
     #[inline(always)]
     fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.min_u8x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_u8x16(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -1559,6 +1574,11 @@ impl<S: Simd> SimdBase<S> for i16x8<S> {
         self.simd.min_i16x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_i16x8(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i16x8(self, rhs.simd_into(self.simd))
     }
@@ -1937,6 +1957,11 @@ impl<S: Simd> SimdBase<S> for u16x8<S> {
     #[inline(always)]
     fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.min_u16x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_u16x8(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -2443,6 +2468,11 @@ impl<S: Simd> SimdBase<S> for i32x4<S> {
         self.simd.min_i32x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_i32x4(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i32x4(self, rhs.simd_into(self.simd))
     }
@@ -2821,6 +2851,11 @@ impl<S: Simd> SimdBase<S> for u32x4<S> {
     #[inline(always)]
     fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.min_u32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_u32x4(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -3339,6 +3374,11 @@ impl<S: Simd> SimdBase<S> for f64x2<S> {
         self.simd.min_precise_f64x2(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_f64x2(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_f64x2(self, rhs.simd_into(self.simd))
     }
@@ -3770,6 +3810,11 @@ impl<S: Simd> SimdBase<S> for i64x2<S> {
         self.simd.min_i64x2(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_i64x2(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i64x2(self, rhs.simd_into(self.simd))
     }
@@ -4123,6 +4168,11 @@ impl<S: Simd> SimdBase<S> for u64x2<S> {
     #[inline(always)]
     fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.min_u64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_u64x2(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -4621,6 +4671,11 @@ impl<S: Simd> SimdBase<S> for f32x8<S> {
         self.simd.min_precise_f32x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_f32x8(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_f32x8(self, rhs.simd_into(self.simd))
     }
@@ -5075,6 +5130,11 @@ impl<S: Simd> SimdBase<S> for i8x32<S> {
         self.simd.min_i8x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_i8x32(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i8x32(self, rhs.simd_into(self.simd))
     }
@@ -5457,6 +5517,11 @@ impl<S: Simd> SimdBase<S> for u8x32<S> {
     #[inline(always)]
     fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.min_u8x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_u8x32(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -5956,6 +6021,11 @@ impl<S: Simd> SimdBase<S> for i16x16<S> {
         self.simd.min_i16x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_i16x16(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i16x16(self, rhs.simd_into(self.simd))
     }
@@ -6338,6 +6408,11 @@ impl<S: Simd> SimdBase<S> for u16x16<S> {
     #[inline(always)]
     fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.min_u16x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_u16x16(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -6852,6 +6927,11 @@ impl<S: Simd> SimdBase<S> for i32x8<S> {
         self.simd.min_i32x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_i32x8(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i32x8(self, rhs.simd_into(self.simd))
     }
@@ -7237,6 +7317,11 @@ impl<S: Simd> SimdBase<S> for u32x8<S> {
     #[inline(always)]
     fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.min_u32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_u32x8(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -7750,6 +7835,11 @@ impl<S: Simd> SimdBase<S> for f64x4<S> {
         self.simd.min_precise_f64x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_f64x4(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_f64x4(self, rhs.simd_into(self.simd))
     }
@@ -8176,6 +8266,11 @@ impl<S: Simd> SimdBase<S> for i64x4<S> {
         self.simd.min_i64x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_i64x4(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i64x4(self, rhs.simd_into(self.simd))
     }
@@ -8524,6 +8619,11 @@ impl<S: Simd> SimdBase<S> for u64x4<S> {
     #[inline(always)]
     fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.min_u64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_u64x4(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -9026,6 +9126,11 @@ impl<S: Simd> SimdBase<S> for f32x16<S> {
         self.simd.min_precise_f32x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_f32x16(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_f32x16(self, rhs.simd_into(self.simd))
     }
@@ -9507,6 +9612,11 @@ impl<S: Simd> SimdBase<S> for i8x64<S> {
         self.simd.min_i8x64(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_i8x64(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i8x64(self, rhs.simd_into(self.simd))
     }
@@ -9915,6 +10025,11 @@ impl<S: Simd> SimdBase<S> for u8x64<S> {
     #[inline(always)]
     fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.min_u8x64(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_u8x64(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -10424,6 +10539,11 @@ impl<S: Simd> SimdBase<S> for i16x32<S> {
         self.simd.min_i16x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_i16x32(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i16x32(self, rhs.simd_into(self.simd))
     }
@@ -10816,6 +10936,11 @@ impl<S: Simd> SimdBase<S> for u16x32<S> {
     #[inline(always)]
     fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.min_u16x32(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_u16x32(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -11332,6 +11457,11 @@ impl<S: Simd> SimdBase<S> for i32x16<S> {
         self.simd.min_i32x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_i32x16(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i32x16(self, rhs.simd_into(self.simd))
     }
@@ -11720,6 +11850,11 @@ impl<S: Simd> SimdBase<S> for u32x16<S> {
     #[inline(always)]
     fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.min_u32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_u32x16(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
@@ -12240,6 +12375,11 @@ impl<S: Simd> SimdBase<S> for f64x8<S> {
         self.simd.min_precise_f64x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_f64x8(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_f64x8(self, rhs.simd_into(self.simd))
     }
@@ -12672,6 +12812,11 @@ impl<S: Simd> SimdBase<S> for i64x8<S> {
         self.simd.min_i64x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_i64x8(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
+    }
+    #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i64x8(self, rhs.simd_into(self.simd))
     }
@@ -13026,6 +13171,11 @@ impl<S: Simd> SimdBase<S> for u64x8<S> {
     #[inline(always)]
     fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.min_u64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .clamp_u64x8(self, op1.simd_into(self.simd), op2.simd_into(self.simd))
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
