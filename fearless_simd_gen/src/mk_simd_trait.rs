@@ -456,6 +456,17 @@ fn mk_simd_float() -> TokenStream {
         pub trait SimdFloat<S: Simd>: SimdBase<S, Element: SimdFloatElement> + Seal
             #(+ #op_traits)*
         {
+            /// Bit representation of this SIMD float vector type.
+            type Bits: SimdInt<S, Element = <Self::Element as SimdFloatElement>::Bits, ByteVector = Self::ByteVector>;
+            /// Raw transmutation to an unsigned integer vector type with the same size and number of elements.
+            ///
+            /// This is analogous to [`f32::to_bits`] and [`f64::to_bits`].
+            fn to_bits(self) -> Self::Bits { self.bitcast() }
+            /// Raw transmutation from an unsigned integer vector type with the same size and number of elements.
+            ///
+            /// This is analogous to [`f32::from_bits`] and [`f64::from_bits`].
+            fn from_bits(bits: Self::Bits) -> Self { bits.bitcast() }
+
             /// Convert this floating-point type to an integer. This is a convenience method that
             /// delegates to [`SimdCvtTruncate::truncate_from`], and can only be called if there
             /// actually exists a target type of the same bit width (`u32`/`i32` for `f32`, or

@@ -552,12 +552,6 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let byte_vector = ty.bytes_ty().rust();
     let len = Literal::usize_unsuffixed(ty.len);
     let from_fn_items = unrolled_array(ty.len, |idx| quote! { f(#idx) });
-    let vec_trait = match ty.scalar {
-        ScalarType::Float => "SimdFloat",
-        ScalarType::Unsigned | ScalarType::Int => "SimdInt",
-        ScalarType::Mask => "SimdMask",
-    };
-    let vec_trait_id = Ident::new(vec_trait, Span::call_site());
     let splat = generic_op_name("splat", ty);
     let mut base_methods = vec![];
     for op in base_trait_ops() {
@@ -592,22 +586,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
             }
         });
     }
-    let mut methods = vec![];
-    for op in vec_trait_ops_for(ty.scalar) {
-        let Op { sig, method, .. } = op;
-        let trait_method = generic_op_name(method, ty);
-        if let Some(method_sig) = op.vec_trait_method_sig() {
-            let call_args = sig
-                .forwarding_call_args()
-                .expect("this method can be forwarded to a specific Simd function");
-            methods.push(quote! {
-                #[inline(always)]
-                #method_sig {
-                    self.simd.#trait_method(#call_args)
-                }
-            });
-        }
-    }
+
     let mask_ty = ty.mask_ty().rust();
     let block_ty = ty.block_ty().rust();
     let block_splat_body = match ty.n_bits() {
@@ -638,6 +617,9 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let swizzle_dyn_within_blocks_op = generic_op_name("swizzle_dyn_within_blocks", ty);
     let swizzle_dyn_op = generic_op_name("swizzle_dyn", ty);
     let swizzle_dyn_precise_op = generic_op_name("swizzle_dyn_precise", ty);
+
+    let scalar_impl = simd_vec_scalar_type_impl(ty);
+
     quote! {
         impl<S: Simd> SimdBase<S> for #name<S> {
             type Element = #scalar;
@@ -709,7 +691,47 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
 
             #( #base_methods )*
         }
+
+        #scalar_impl
+    }
+}
+fn simd_vec_scalar_type_impl(ty: &VecType) -> TokenStream {
+    let name = ty.rust();
+    let vec_trait = match ty.scalar {
+        ScalarType::Float => "SimdFloat",
+        ScalarType::Unsigned | ScalarType::Int => "SimdInt",
+        ScalarType::Mask => unreachable!(),
+    };
+    let vec_trait_id = Ident::new(vec_trait, Span::call_site());
+
+    let mut types = vec![];
+    if ty.scalar == ScalarType::Float {
+        let bits = ty.cast(ScalarType::Unsigned).rust();
+        types.push(quote! {
+            type Bits = #bits<S>;
+        });
+    }
+
+    let mut methods = vec![];
+    for op in vec_trait_ops_for(ty.scalar) {
+        let Op { sig, method, .. } = op;
+        let trait_method = generic_op_name(method, ty);
+        if let Some(method_sig) = op.vec_trait_method_sig() {
+            let call_args = sig
+                .forwarding_call_args()
+                .expect("this method can be forwarded to a specific Simd function");
+            methods.push(quote! {
+                #[inline(always)]
+                #method_sig {
+                    self.simd.#trait_method(#call_args)
+                }
+            });
+        }
+    }
+
+    quote! {
         impl<S: Simd> crate::#vec_trait_id<S> for #name<S> {
+            #( #types )*
             #( #methods )*
         }
     }

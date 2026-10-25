@@ -384,13 +384,17 @@ pub trait SimdFloatElement: SimdElement + Neg<Output = Self> + From<i8> + From<u
     /// Its lane count depends on both the scalar type and the backend, and is
     /// available as `T::Native::<S>::LEN` with [`SimdBase`] in scope.
     type Native<S: Simd>: SimdFloat<S, Element = Self>;
+    /// The scalar bit representation of this floating-point type.
+    type Bits: SimdIntElement;
 }
 
 impl SimdFloatElement for f32 {
     type Native<S: Simd> = S::f32s;
+    type Bits = u32;
 }
 impl SimdFloatElement for f64 {
     type Native<S: Simd> = S::f64s;
+    type Bits = u64;
 }
 
 /// Construction of integer vectors from floats by truncation

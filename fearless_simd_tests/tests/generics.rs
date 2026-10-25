@@ -80,6 +80,16 @@ fn generic_bytes_idempotent<T: Bytes>(bytes: T::Bytes) -> T::Bytes {
     bytes.to_bytes()
 }
 
+fn generic_float_bits<S: Simd, F: SimdFloat<S, Element = f32>>(x: F) -> F {
+    F::from_bits(x.to_bits())
+}
+
+fn generic_float_bits_operations<S: Simd, F: SimdFloat<S, Element = f32>>(x: F) -> F {
+    let bits = x.to_bits();
+    const ABS_MASK: u32 = 0x7FFF_FFFF;
+    F::from_bits(bits & ABS_MASK)
+}
+
 // Ensure that a generic vector's mask can select between vectors of that type
 fn generic_select<S: Simd, V: SimdBase<S>>(mask: V::Mask, if_true: V, if_false: V) -> V {
     mask.select(if_true, if_false)
