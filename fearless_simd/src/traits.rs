@@ -567,10 +567,10 @@ pub trait SimdWiden<S: Simd>:
 /// adjacent lanes into a single vector with half as many lanes.
 pub trait SimdIntWiden<S: Simd>: SimdInt<S> + SimdWiden<S, Widened: SimdInt<S>> {
     /// Multiply corresponding lanes exactly, returning the lower and upper halves.
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened);
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened);
 
     /// Add corresponding lanes exactly, returning the lower and upper halves.
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened);
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened);
 
     /// Add adjacent integer lanes, widening the result to avoid overflow.
     ///
@@ -639,7 +639,7 @@ pub trait SimdIntWiden<S: Simd>: SimdInt<S> + SimdWiden<S, Widened: SimdInt<S>> 
     ///     a.pairwise_dot_product(b)
     /// }
     /// ```
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened;
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened;
 }
 
 /// Narrowing conversion of two numeric SIMD vectors.
