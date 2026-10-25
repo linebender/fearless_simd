@@ -8,9 +8,9 @@ use crate::arch::x86::{
 };
 use crate::generic::{
     byte_compact_op, compact_128_op, concat_swizzle_dyn_precise_body, count_zeros_method,
-    fallback_method, generic_block_combine, generic_block_split, generic_classify,
-    generic_mask_from_bitmask, generic_mask_from_vector, generic_mask_set, generic_mask_to_vector,
-    generic_op, generic_op_name, generic_round, generic_to_degrees_radians,
+    fallback_method, generic_block_combine, generic_block_split, generic_clamp_int,
+    generic_classify, generic_mask_from_bitmask, generic_mask_from_vector, generic_mask_set,
+    generic_mask_to_vector, generic_op, generic_op_name, generic_round, generic_to_degrees_radians,
     integer_lane_mask_rotate, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
     reverse_method, reverse_vector_mask_method,
 };
@@ -4402,6 +4402,22 @@ impl X86 {
                     #method_sig {
                         a * b - c
                     }
+                }
+            }
+            "clamp" => {
+                if matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
+                    generic_clamp_int(method_sig)
+                } else {
+                    self.kernel_method(op, vec_ty, |token| {
+                        // On x86, min and max return the second source operand if one is NaN.
+                        // Since we can assume that `b` and `c` are not NaN, this will propagate the NaN value of `a` correctly.
+                        let max = x86::expr("max", vec_ty, &[quote! { b.into() }, quote! { a.into() }]);
+                        let min = x86::expr("min", vec_ty, &[quote! { c.into() }, max]);
+                        quote! {
+                            debug_assert!(b.simd_le(c).all_true(), "clamp requires min <= max for all elements");
+                            #min.simd_into(#token)
+                        }
+                    })
                 }
             }
             _ => {

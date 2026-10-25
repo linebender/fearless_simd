@@ -9,6 +9,7 @@
     reason = "Generated backends use different subsets of these helpers"
 )]
 use crate::math::FloatExt as _;
+use crate::math::ScalarExt as _;
 use crate::{Level, arch_types::ArchTypes, prelude::*, seal::Seal};
 use crate::{
     f32x4, f32x8, f32x16, f64x2, f64x4, f64x8, i8x16, i8x32, i8x64, i16x8, i16x16, i16x32, i32x4,
@@ -349,6 +350,16 @@ impl Simd for Fallback {
             f32::min(a[1usize], b[1usize]),
             f32::min(a[2usize], b[2usize]),
             f32::min(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn clamp_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
+        [
+            f32::clamp_debug(a[0usize], b[0usize], c[0usize]),
+            f32::clamp_debug(a[1usize], b[1usize], c[1usize]),
+            f32::clamp_debug(a[2usize], b[2usize], c[2usize]),
+            f32::clamp_debug(a[3usize], b[3usize], c[3usize]),
         ]
         .simd_into(self)
     }
@@ -1211,6 +1222,28 @@ impl Simd for Fallback {
             i8::min(a[13usize], b[13usize]),
             i8::min(a[14usize], b[14usize]),
             i8::min(a[15usize], b[15usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn clamp_i8x16(self, a: i8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
+        [
+            i8::clamp_debug(a[0usize], b[0usize], c[0usize]),
+            i8::clamp_debug(a[1usize], b[1usize], c[1usize]),
+            i8::clamp_debug(a[2usize], b[2usize], c[2usize]),
+            i8::clamp_debug(a[3usize], b[3usize], c[3usize]),
+            i8::clamp_debug(a[4usize], b[4usize], c[4usize]),
+            i8::clamp_debug(a[5usize], b[5usize], c[5usize]),
+            i8::clamp_debug(a[6usize], b[6usize], c[6usize]),
+            i8::clamp_debug(a[7usize], b[7usize], c[7usize]),
+            i8::clamp_debug(a[8usize], b[8usize], c[8usize]),
+            i8::clamp_debug(a[9usize], b[9usize], c[9usize]),
+            i8::clamp_debug(a[10usize], b[10usize], c[10usize]),
+            i8::clamp_debug(a[11usize], b[11usize], c[11usize]),
+            i8::clamp_debug(a[12usize], b[12usize], c[12usize]),
+            i8::clamp_debug(a[13usize], b[13usize], c[13usize]),
+            i8::clamp_debug(a[14usize], b[14usize], c[14usize]),
+            i8::clamp_debug(a[15usize], b[15usize], c[15usize]),
         ]
         .simd_into(self)
     }
@@ -2328,6 +2361,28 @@ impl Simd for Fallback {
             u8::min(a[13usize], b[13usize]),
             u8::min(a[14usize], b[14usize]),
             u8::min(a[15usize], b[15usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn clamp_u8x16(self, a: u8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
+        [
+            u8::clamp_debug(a[0usize], b[0usize], c[0usize]),
+            u8::clamp_debug(a[1usize], b[1usize], c[1usize]),
+            u8::clamp_debug(a[2usize], b[2usize], c[2usize]),
+            u8::clamp_debug(a[3usize], b[3usize], c[3usize]),
+            u8::clamp_debug(a[4usize], b[4usize], c[4usize]),
+            u8::clamp_debug(a[5usize], b[5usize], c[5usize]),
+            u8::clamp_debug(a[6usize], b[6usize], c[6usize]),
+            u8::clamp_debug(a[7usize], b[7usize], c[7usize]),
+            u8::clamp_debug(a[8usize], b[8usize], c[8usize]),
+            u8::clamp_debug(a[9usize], b[9usize], c[9usize]),
+            u8::clamp_debug(a[10usize], b[10usize], c[10usize]),
+            u8::clamp_debug(a[11usize], b[11usize], c[11usize]),
+            u8::clamp_debug(a[12usize], b[12usize], c[12usize]),
+            u8::clamp_debug(a[13usize], b[13usize], c[13usize]),
+            u8::clamp_debug(a[14usize], b[14usize], c[14usize]),
+            u8::clamp_debug(a[15usize], b[15usize], c[15usize]),
         ]
         .simd_into(self)
     }
@@ -3555,6 +3610,20 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn clamp_i16x8(self, a: i16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
+        [
+            i16::clamp_debug(a[0usize], b[0usize], c[0usize]),
+            i16::clamp_debug(a[1usize], b[1usize], c[1usize]),
+            i16::clamp_debug(a[2usize], b[2usize], c[2usize]),
+            i16::clamp_debug(a[3usize], b[3usize], c[3usize]),
+            i16::clamp_debug(a[4usize], b[4usize], c[4usize]),
+            i16::clamp_debug(a[5usize], b[5usize], c[5usize]),
+            i16::clamp_debug(a[6usize], b[6usize], c[6usize]),
+            i16::clamp_debug(a[7usize], b[7usize], c[7usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
         [
             -(i16::eq(&a[0usize], &b[0usize]) as i16),
@@ -4254,6 +4323,20 @@ impl Simd for Fallback {
             u16::min(a[5usize], b[5usize]),
             u16::min(a[6usize], b[6usize]),
             u16::min(a[7usize], b[7usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn clamp_u16x8(self, a: u16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
+        [
+            u16::clamp_debug(a[0usize], b[0usize], c[0usize]),
+            u16::clamp_debug(a[1usize], b[1usize], c[1usize]),
+            u16::clamp_debug(a[2usize], b[2usize], c[2usize]),
+            u16::clamp_debug(a[3usize], b[3usize], c[3usize]),
+            u16::clamp_debug(a[4usize], b[4usize], c[4usize]),
+            u16::clamp_debug(a[5usize], b[5usize], c[5usize]),
+            u16::clamp_debug(a[6usize], b[6usize], c[6usize]),
+            u16::clamp_debug(a[7usize], b[7usize], c[7usize]),
         ]
         .simd_into(self)
     }
@@ -5176,6 +5259,16 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn clamp_i32x4(self, a: i32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
+        [
+            i32::clamp_debug(a[0usize], b[0usize], c[0usize]),
+            i32::clamp_debug(a[1usize], b[1usize], c[1usize]),
+            i32::clamp_debug(a[2usize], b[2usize], c[2usize]),
+            i32::clamp_debug(a[3usize], b[3usize], c[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
         [
             -(i32::eq(&a[0usize], &b[0usize]) as i32),
@@ -5656,6 +5749,16 @@ impl Simd for Fallback {
             u32::min(a[1usize], b[1usize]),
             u32::min(a[2usize], b[2usize]),
             u32::min(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn clamp_u32x4(self, a: u32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
+        [
+            u32::clamp_debug(a[0usize], b[0usize], c[0usize]),
+            u32::clamp_debug(a[1usize], b[1usize], c[1usize]),
+            u32::clamp_debug(a[2usize], b[2usize], c[2usize]),
+            u32::clamp_debug(a[3usize], b[3usize], c[3usize]),
         ]
         .simd_into(self)
     }
@@ -6264,6 +6367,14 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn clamp_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
+        [
+            f64::clamp_debug(a[0usize], b[0usize], c[0usize]),
+            f64::clamp_debug(a[1usize], b[1usize], c[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn simd_eq_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
         [
             -(f64::eq(&a[0usize], &b[0usize]) as i64),
@@ -6706,6 +6817,14 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn clamp_i64x2(self, a: i64x2<Self>, b: i64x2<Self>, c: i64x2<Self>) -> i64x2<Self> {
+        [
+            i64::clamp_debug(a[0usize], b[0usize], c[0usize]),
+            i64::clamp_debug(a[1usize], b[1usize], c[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
         [
             -(i64::eq(&a[0usize], &b[0usize]) as i64),
@@ -7055,6 +7174,14 @@ impl Simd for Fallback {
         [
             u64::min(a[0usize], b[0usize]),
             u64::min(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn clamp_u64x2(self, a: u64x2<Self>, b: u64x2<Self>, c: u64x2<Self>) -> u64x2<Self> {
+        [
+            u64::clamp_debug(a[0usize], b[0usize], c[0usize]),
+            u64::clamp_debug(a[1usize], b[1usize], c[1usize]),
         ]
         .simd_into(self)
     }

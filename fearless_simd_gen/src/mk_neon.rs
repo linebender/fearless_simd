@@ -6,9 +6,10 @@ use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
     CompactOptions, byte_compact_op, compact_128_op, composed_compact_op, count_zeros_method,
-    fallback_method, generic_classify, generic_mask_from_vector, generic_mask_set,
-    generic_mask_to_vector, generic_op_name, generic_to_degrees_radians, integer_lane_mask_rotate,
-    integer_lane_mask_splat_arg, reverse_method, reverse_vector_mask_method,
+    fallback_method, generic_clamp_int, generic_classify, generic_mask_from_vector,
+    generic_mask_set, generic_mask_to_vector, generic_op_name, generic_to_degrees_radians,
+    integer_lane_mask_rotate, integer_lane_mask_splat_arg, reverse_method,
+    reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{NarrowingMode, Op, SlideGranularity, relaxed_narrow_method};
@@ -587,6 +588,26 @@ impl Level for Neon {
                             self.#mul_sub(a, b, c)
                         }
                     };
+                }
+                if method == "clamp" {
+                    if matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
+                        return generic_clamp_int(method_sig);
+                    }
+                    // Arm Neon's NaN handling depends on FPCR.AH and FPCR.DN. While supporting
+                    // floating-point control flags is out of scope, we can nonetheless makes it
+                    // correct regardless of those flags.
+                    // The trick is that vminq_f32 (and co.) will return a NaN value or the second
+                    // operand if one operand is NaN. So we can propagate NaNs by putting them into
+                    // the second operand.
+                    let max =
+                        neon::expr("max", vec_ty, &[quote! { b.into() }, quote! { a.into() }]);
+                    let min = neon::expr("min", vec_ty, &[quote! { c.into() }, max]);
+                    return self.kernel_method(op, vec_ty, |token| {
+                        quote! {
+                            debug_assert!(b.simd_le(c).all_true(), "clamp requires min <= max for all elements");
+                            #min.simd_into(#token)
+                        }
+                    });
                 }
 
                 let args = [

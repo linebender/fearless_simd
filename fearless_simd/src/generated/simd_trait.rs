@@ -348,6 +348,8 @@ pub trait Simd:
     fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor integer vectors, this operation is the same as `min`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn min_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    fn clamp_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -563,6 +565,8 @@ pub trait Simd:
     fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    fn clamp_i8x16(self, a: i8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -722,6 +726,8 @@ pub trait Simd:
     fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    fn clamp_u8x16(self, a: u8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -957,6 +963,8 @@ pub trait Simd:
     fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    fn clamp_i16x8(self, a: i16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -1145,6 +1153,8 @@ pub trait Simd:
     fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    fn clamp_u16x8(self, a: u16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -1388,6 +1398,8 @@ pub trait Simd:
     fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    fn clamp_i32x4(self, a: i32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -1578,6 +1590,8 @@ pub trait Simd:
     fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    fn clamp_u32x4(self, a: u32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -1817,6 +1831,8 @@ pub trait Simd:
     fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor integer vectors, this operation is the same as `min`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn min_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    fn clamp_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -2036,6 +2052,8 @@ pub trait Simd:
     fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    fn clamp_i64x2(self, a: i64x2<Self>, b: i64x2<Self>, c: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -2216,6 +2234,8 @@ pub trait Simd:
     fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    fn clamp_u64x2(self, a: u64x2<Self>, b: u64x2<Self>, c: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -2549,6 +2569,14 @@ pub trait Simd:
             self.min_precise_f32x4(a0, b0),
             self.min_precise_f32x4(a1, b1),
         )
+    }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        let (c0, c1) = self.split_f32x8(c);
+        self.combine_f32x4(self.clamp_f32x4(a0, b0, c0), self.clamp_f32x4(a1, b1, c1))
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -3040,6 +3068,14 @@ pub trait Simd:
         let (b0, b1) = self.split_i8x32(b);
         self.combine_i8x16(self.min_i8x16(a0, b0), self.min_i8x16(a1, b1))
     }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_i8x32(self, a: i8x32<Self>, b: i8x32<Self>, c: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        let (c0, c1) = self.split_i8x32(c);
+        self.combine_i8x16(self.clamp_i8x16(a0, b0, c0), self.clamp_i8x16(a1, b1, c1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
@@ -3423,6 +3459,14 @@ pub trait Simd:
         let (a0, a1) = self.split_u8x32(a);
         let (b0, b1) = self.split_u8x32(b);
         self.combine_u8x16(self.min_u8x16(a0, b0), self.min_u8x16(a1, b1))
+    }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_u8x32(self, a: u8x32<Self>, b: u8x32<Self>, c: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        let (c0, c1) = self.split_u8x32(c);
+        self.combine_u8x16(self.clamp_u8x16(a0, b0, c0), self.clamp_u8x16(a1, b1, c1))
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -3959,6 +4003,14 @@ pub trait Simd:
         let (b0, b1) = self.split_i16x16(b);
         self.combine_i16x8(self.min_i16x8(a0, b0), self.min_i16x8(a1, b1))
     }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_i16x16(self, a: i16x16<Self>, b: i16x16<Self>, c: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        let (c0, c1) = self.split_i16x16(c);
+        self.combine_i16x8(self.clamp_i16x8(a0, b0, c0), self.clamp_i16x8(a1, b1, c1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
@@ -4388,6 +4440,14 @@ pub trait Simd:
         let (a0, a1) = self.split_u16x16(a);
         let (b0, b1) = self.split_u16x16(b);
         self.combine_u16x8(self.min_u16x8(a0, b0), self.min_u16x8(a1, b1))
+    }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_u16x16(self, a: u16x16<Self>, b: u16x16<Self>, c: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        let (c0, c1) = self.split_u16x16(c);
+        self.combine_u16x8(self.clamp_u16x8(a0, b0, c0), self.clamp_u16x8(a1, b1, c1))
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -4954,6 +5014,14 @@ pub trait Simd:
         let (b0, b1) = self.split_i32x8(b);
         self.combine_i32x4(self.min_i32x4(a0, b0), self.min_i32x4(a1, b1))
     }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_i32x8(self, a: i32x8<Self>, b: i32x8<Self>, c: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        let (c0, c1) = self.split_i32x8(c);
+        self.combine_i32x4(self.clamp_i32x4(a0, b0, c0), self.clamp_i32x4(a1, b1, c1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
@@ -5385,6 +5453,14 @@ pub trait Simd:
         let (a0, a1) = self.split_u32x8(a);
         let (b0, b1) = self.split_u32x8(b);
         self.combine_u32x4(self.min_u32x4(a0, b0), self.min_u32x4(a1, b1))
+    }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_u32x8(self, a: u32x8<Self>, b: u32x8<Self>, c: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        let (c0, c1) = self.split_u32x8(c);
+        self.combine_u32x4(self.clamp_u32x4(a0, b0, c0), self.clamp_u32x4(a1, b1, c1))
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -5939,6 +6015,14 @@ pub trait Simd:
             self.min_precise_f64x2(a1, b1),
         )
     }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        let (c0, c1) = self.split_f64x4(c);
+        self.combine_f64x2(self.clamp_f64x2(a0, b0, c0), self.clamp_f64x2(a1, b1, c1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
@@ -6448,6 +6532,14 @@ pub trait Simd:
         let (b0, b1) = self.split_i64x4(b);
         self.combine_i64x2(self.min_i64x2(a0, b0), self.min_i64x2(a1, b1))
     }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_i64x4(self, a: i64x4<Self>, b: i64x4<Self>, c: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (b0, b1) = self.split_i64x4(b);
+        let (c0, c1) = self.split_i64x4(c);
+        self.combine_i64x2(self.clamp_i64x2(a0, b0, c0), self.clamp_i64x2(a1, b1, c1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
@@ -6828,6 +6920,14 @@ pub trait Simd:
         let (a0, a1) = self.split_u64x4(a);
         let (b0, b1) = self.split_u64x4(b);
         self.combine_u64x2(self.min_u64x2(a0, b0), self.min_u64x2(a1, b1))
+    }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_u64x4(self, a: u64x4<Self>, b: u64x4<Self>, c: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (b0, b1) = self.split_u64x4(b);
+        let (c0, c1) = self.split_u64x4(c);
+        self.combine_u64x2(self.clamp_u64x2(a0, b0, c0), self.clamp_u64x2(a1, b1, c1))
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -7323,6 +7423,14 @@ pub trait Simd:
             self.min_precise_f32x8(a0, b0),
             self.min_precise_f32x8(a1, b1),
         )
+    }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        let (c0, c1) = self.split_f32x16(c);
+        self.combine_f32x8(self.clamp_f32x8(a0, b0, c0), self.clamp_f32x8(a1, b1, c1))
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -7822,6 +7930,14 @@ pub trait Simd:
         let (b0, b1) = self.split_i8x64(b);
         self.combine_i8x32(self.min_i8x32(a0, b0), self.min_i8x32(a1, b1))
     }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_i8x64(self, a: i8x64<Self>, b: i8x64<Self>, c: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        let (c0, c1) = self.split_i8x64(c);
+        self.combine_i8x32(self.clamp_i8x32(a0, b0, c0), self.clamp_i8x32(a1, b1, c1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
@@ -8203,6 +8319,14 @@ pub trait Simd:
         let (a0, a1) = self.split_u8x64(a);
         let (b0, b1) = self.split_u8x64(b);
         self.combine_u8x32(self.min_u8x32(a0, b0), self.min_u8x32(a1, b1))
+    }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_u8x64(self, a: u8x64<Self>, b: u8x64<Self>, c: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        let (c0, c1) = self.split_u8x64(c);
+        self.combine_u8x32(self.clamp_u8x32(a0, b0, c0), self.clamp_u8x32(a1, b1, c1))
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -8735,6 +8859,14 @@ pub trait Simd:
         let (b0, b1) = self.split_i16x32(b);
         self.combine_i16x16(self.min_i16x16(a0, b0), self.min_i16x16(a1, b1))
     }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_i16x32(self, a: i16x32<Self>, b: i16x32<Self>, c: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        let (c0, c1) = self.split_i16x32(c);
+        self.combine_i16x16(self.clamp_i16x16(a0, b0, c0), self.clamp_i16x16(a1, b1, c1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
@@ -9168,6 +9300,14 @@ pub trait Simd:
         let (a0, a1) = self.split_u16x32(a);
         let (b0, b1) = self.split_u16x32(b);
         self.combine_u16x16(self.min_u16x16(a0, b0), self.min_u16x16(a1, b1))
+    }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_u16x32(self, a: u16x32<Self>, b: u16x32<Self>, c: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        let (c0, c1) = self.split_u16x32(c);
+        self.combine_u16x16(self.clamp_u16x16(a0, b0, c0), self.clamp_u16x16(a1, b1, c1))
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -9743,6 +9883,14 @@ pub trait Simd:
         let (b0, b1) = self.split_i32x16(b);
         self.combine_i32x8(self.min_i32x8(a0, b0), self.min_i32x8(a1, b1))
     }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_i32x16(self, a: i32x16<Self>, b: i32x16<Self>, c: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        let (c0, c1) = self.split_i32x16(c);
+        self.combine_i32x8(self.clamp_i32x8(a0, b0, c0), self.clamp_i32x8(a1, b1, c1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
@@ -10176,6 +10324,14 @@ pub trait Simd:
         let (a0, a1) = self.split_u32x16(a);
         let (b0, b1) = self.split_u32x16(b);
         self.combine_u32x8(self.min_u32x8(a0, b0), self.min_u32x8(a1, b1))
+    }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_u32x16(self, a: u32x16<Self>, b: u32x16<Self>, c: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        let (c0, c1) = self.split_u32x16(c);
+        self.combine_u32x8(self.clamp_u32x8(a0, b0, c0), self.clamp_u32x8(a1, b1, c1))
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -10726,6 +10882,14 @@ pub trait Simd:
             self.min_precise_f64x4(a1, b1),
         )
     }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        let (c0, c1) = self.split_f64x8(c);
+        self.combine_f64x4(self.clamp_f64x4(a0, b0, c0), self.clamp_f64x4(a1, b1, c1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
@@ -11233,6 +11397,14 @@ pub trait Simd:
         let (b0, b1) = self.split_i64x8(b);
         self.combine_i64x4(self.min_i64x4(a0, b0), self.min_i64x4(a1, b1))
     }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_i64x8(self, a: i64x8<Self>, b: i64x8<Self>, c: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        let (c0, c1) = self.split_i64x8(c);
+        self.combine_i64x4(self.clamp_i64x4(a0, b0, c0), self.clamp_i64x4(a1, b1, c1))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
     fn simd_eq_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
@@ -11611,6 +11783,14 @@ pub trait Simd:
         let (a0, a1) = self.split_u64x8(a);
         let (b0, b1) = self.split_u64x8(b);
         self.combine_u64x4(self.min_u64x4(a0, b0), self.min_u64x4(a1, b1))
+    }
+    #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
+    #[inline(always)]
+    fn clamp_u64x8(self, a: u64x8<Self>, b: u64x8<Self>, c: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        let (c0, c1) = self.split_u64x8(c);
+        self.combine_u64x4(self.clamp_u64x4(a0, b0, c0), self.clamp_u64x4(a1, b1, c1))
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -12485,6 +12665,8 @@ pub trait SimdBase<S: Simd>:
     fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self;
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor integer vectors, this operation is the same as `min`.\n\nFor floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Clamp each element to the interval `[op1, op2]`.\n\nIf `op1 > op2`, or `op1` or `op2` are NaN, the result is implementation-defined for that lane.\n\nIf `self` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `op1 > op2` for any element or any element of `op1` or `op2` is NaN."]
+    fn clamp(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]

@@ -468,6 +468,20 @@ impl Simd for Sse2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn clamp_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f32x4<Sse2>, b: f32x4<Sse2>, c: f32x4<Sse2>) -> f32x4<Sse2> {
+                debug_assert!(
+                    b.simd_le(c).all_true(),
+                    "clamp requires min <= max for all elements"
+                );
+                _mm_min_ps(c.into(), _mm_max_ps(b.into(), a.into())).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
+    }
+    #[inline(always)]
     fn simd_eq_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1339,6 +1353,14 @@ impl Simd for Sse2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn clamp_i8x16(self, a: i8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
+    }
+    #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2183,6 +2205,14 @@ impl Simd for Sse2 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn clamp_u8x16(self, a: u8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
@@ -3092,6 +3122,14 @@ impl Simd for Sse2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn clamp_i16x8(self, a: i16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
+    }
+    #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3809,6 +3847,14 @@ impl Simd for Sse2 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn clamp_u16x8(self, a: u16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
@@ -4719,6 +4765,14 @@ impl Simd for Sse2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn clamp_i32x4(self, a: i32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
+    }
+    #[inline(always)]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5390,6 +5444,14 @@ impl Simd for Sse2 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn clamp_u32x4(self, a: u32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
@@ -6252,6 +6314,20 @@ impl Simd for Sse2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn clamp_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f64x2<Sse2>, b: f64x2<Sse2>, c: f64x2<Sse2>) -> f64x2<Sse2> {
+                debug_assert!(
+                    b.simd_le(c).all_true(),
+                    "clamp requires min <= max for all elements"
+                );
+                _mm_min_pd(c.into(), _mm_max_pd(b.into(), a.into())).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
+    }
+    #[inline(always)]
     fn simd_eq_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6854,6 +6930,14 @@ impl Simd for Sse2 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn clamp_i64x2(self, a: i64x2<Self>, b: i64x2<Self>, c: i64x2<Self>) -> i64x2<Self> {
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
+    }
+    #[inline(always)]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -7351,6 +7435,14 @@ impl Simd for Sse2 {
             u64::min(a[1usize], b[1usize]),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn clamp_u64x2(self, a: u64x2<Self>, b: u64x2<Self>, c: u64x2<Self>) -> u64x2<Self> {
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {

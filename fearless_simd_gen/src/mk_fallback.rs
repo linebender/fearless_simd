@@ -91,6 +91,7 @@ impl Level for Fallback {
 
         quote! {
             use core::ops::*;
+            use crate::math::ScalarExt as _;
 
             #float_ext
         }

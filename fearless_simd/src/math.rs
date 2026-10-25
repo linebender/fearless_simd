@@ -10,6 +10,24 @@
 
 use crate::{f32x4, f64x2, i32x4, i64x2, prelude::*, u64x2};
 
+pub(crate) trait ScalarExt: Copy + PartialOrd {
+    // Like core's clamp, but invalid bounds are only rejected in debug builds.
+    // Comparisons preserve NaN inputs, unlike floating-point min/max methods.
+    #[inline(always)]
+    fn clamp_debug(mut self, min: Self, max: Self) -> Self {
+        debug_assert!(min <= max, "clamp requires min <= max for all elements");
+        if self < min {
+            self = min;
+        }
+        if self > max {
+            self = max;
+        }
+        self
+    }
+}
+
+impl<T: Copy + PartialOrd> ScalarExt for T {}
+
 #[cfg(all(feature = "libm", not(feature = "std")))]
 pub(crate) trait FloatExt {
     fn floor(self) -> Self;

@@ -1331,3 +1331,12 @@ pub(crate) fn generic_to_degrees_radians(
         }
     }
 }
+
+pub(crate) fn generic_clamp_int(method_sig: TokenStream) -> TokenStream {
+    quote! {
+        #method_sig {
+            debug_assert!(b.simd_le(c).all_true(), "clamp requires min <= max for all elements");
+            a.max(b).min(c)
+        }
+    }
+}

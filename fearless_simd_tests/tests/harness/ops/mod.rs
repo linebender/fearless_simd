@@ -16,6 +16,7 @@ mod as_mut_array;
 mod bitcast;
 mod block_splat;
 mod ceil;
+mod clamp;
 mod combine;
 mod compress;
 mod concat_swizzle_dyn;
