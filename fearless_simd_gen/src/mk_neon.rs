@@ -602,12 +602,12 @@ impl Level for Neon {
                     let max =
                         neon::expr("max", vec_ty, &[quote! { b.into() }, quote! { a.into() }]);
                     let min = neon::expr("min", vec_ty, &[quote! { c.into() }, max]);
-                    return quote! {
-                        #method_sig {
-                        debug_assert!(b.simd_le(c).all_true(), "clamp requires min <= max for all elements");
-                            #min.simd_into(self)
+                    return self.kernel_method(op, vec_ty, |token| {
+                        quote! {
+                            debug_assert!(b.simd_le(c).all_true(), "clamp requires min <= max for all elements");
+                            #min.simd_into(#token)
                         }
-                    };
+                    });
                 }
 
                 let args = [

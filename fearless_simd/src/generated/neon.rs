@@ -428,11 +428,17 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn clamp_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>, c: f32x4<Neon>) -> f32x4<Neon> {
+                debug_assert!(
+                    b.simd_le(c).all_true(),
+                    "clamp requires min <= max for all elements"
+                );
+                vminq_f32(c.into(), vmaxq_f32(b.into(), a.into())).simd_into(token)
+            }
         );
-        vminq_f32(c.into(), vmaxq_f32(b.into(), a.into())).simd_into(self)
+        kernel(self, a, b, c)
     }
     #[inline(always)]
     fn simd_eq_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
@@ -5194,11 +5200,17 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn clamp_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>, c: f64x2<Neon>) -> f64x2<Neon> {
+                debug_assert!(
+                    b.simd_le(c).all_true(),
+                    "clamp requires min <= max for all elements"
+                );
+                vminq_f64(c.into(), vmaxq_f64(b.into(), a.into())).simd_into(token)
+            }
         );
-        vminq_f64(c.into(), vmaxq_f64(b.into(), a.into())).simd_into(self)
+        kernel(self, a, b, c)
     }
     #[inline(always)]
     fn simd_eq_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
