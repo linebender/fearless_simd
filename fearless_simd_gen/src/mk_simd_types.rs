@@ -713,16 +713,6 @@ fn simd_vec_scalar_type_impl(ty: &VecType) -> TokenStream {
     }
 
     let mut methods = vec![];
-
-    if ty.scalar == ScalarType::Float {
-        methods.push(quote! {
-            #[inline(always)]
-            fn recip(self) -> Self {
-                1.0 / self
-            }
-        });
-    }
-
     for op in vec_trait_ops_for(ty.scalar) {
         let Op { sig, method, .. } = op;
         let trait_method = generic_op_name(method, ty);
