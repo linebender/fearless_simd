@@ -6,9 +6,26 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 -->
 
-The latest published Fearless SIMD release is [1.1.0](#110-2026-10-06) which was released on 2026-10-06.
-You can find its changes [documented below](#110-2026-10-06).
+The latest published Fearless SIMD release is [1.2.0](#120-2026-10-25) which was released on 2026-10-25.
+You can find its changes [documented below](#120-2026-10-25).
 The latest `fearless_simd_macros` release is 0.1.0 which was released on 2026-09-21.
+
+## [1.2.0][] (2026-10-25)
+
+This release has an [MSRV][] of 1.89.
+
+### Added
+
+- Added the `SimdIntWiden` trait with `widening_mul` and `widening_add` for signed and unsigned 8-, 16-, and 32-bit integer vectors. These operations compute exact results in lanes twice as wide, returning the lower and upper halves as two vectors. ([#415][] by [@Shnatsel][])
+- Added `SimdIntWiden::pairwise_dot_product`, multiplying corresponding integer lanes and summing adjacent pairs of products into lanes twice as wide. Multiplication is exact; addition wraps in the widened type. ([#415][] by [@Shnatsel][])
+- Added `SimdIntWiden::pairwise_widening_add`, summing adjacent integer lanes into lanes twice as wide without overflow. ([#416][] by [@Shnatsel][])
+- Added `SimdFloat::to_bits`, `SimdFloat::from_bits`, and the associated `Bits` types on `SimdFloat` and `SimdFloatElement`, enabling conversions between floating-point vectors and their unsigned integer bit representations in generic code. ([#420][] by [@RunDevelopment][])
+
+### Changed
+
+- Integer narrowing has been optimized on x86, particularly saturating narrowing on AVX-512 and relaxed narrowing when inputs fit in the destination type. ([#414][] by [@Shnatsel][])
+- `SimdInto` and `SimdFrom` blanket implementations are now marked `#[inline(always)]`, avoiding out-of-line conversion calls and performance losses with `lto = "off"` or `opt-level = 1`. ([#417][] by [@Novum][])
+- `from_bitmask` has been optimized for 8-bit masks on NEON. ([#418][] by [@mightsleep][])
 
 ## [1.1.0][] (2026-10-06)
 
@@ -303,6 +320,7 @@ No changelog was kept for this release.
 [@Dr-Emann]: https://github.com/Dr-Emann
 [@RunDevelopment]: https://github.com/RunDevelopment
 [@Novum]: https://github.com/Novum
+[@mightsleep]: https://github.com/mightsleep
 
 [#75]: https://github.com/linebender/fearless_simd/pull/75
 [#76]: https://github.com/linebender/fearless_simd/pull/76
@@ -456,7 +474,14 @@ No changelog was kept for this release.
 [#409]: https://github.com/linebender/fearless_simd/pull/409
 [#411]: https://github.com/linebender/fearless_simd/pull/411
 [#412]: https://github.com/linebender/fearless_simd/pull/412
+[#414]: https://github.com/linebender/fearless_simd/pull/414
+[#415]: https://github.com/linebender/fearless_simd/pull/415
+[#416]: https://github.com/linebender/fearless_simd/pull/416
+[#417]: https://github.com/linebender/fearless_simd/pull/417
+[#418]: https://github.com/linebender/fearless_simd/pull/418
+[#420]: https://github.com/linebender/fearless_simd/pull/420
 
+[1.2.0]: https://github.com/linebender/fearless_simd/compare/fearless_simd-v1.1.0...fearless_simd-v1.2.0
 [1.1.0]: https://github.com/linebender/fearless_simd/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/linebender/fearless_simd/compare/v0.7.0...v1.0.0
 [0.7.0]: https://github.com/linebender/fearless_simd/compare/v0.6.0...v0.7.0
