@@ -574,13 +574,13 @@ pub trait SimdIntWiden<S: Simd>: SimdInt<S> + SimdWiden<S, Widened: SimdInt<S>> 
     /// # use fearless_simd::*;
     /// # dispatch!(Level::new(), simd => {
     /// let a = i16x8::from_slice(simd, &[100, 200, 300, 400, 500, 600, 700, 800]);
-    /// let (lower, upper) = a.widening_mul(i16x8::splat(simd, 10_000));
+    /// let (lower, upper) = a.widening_mul(10_000);
     /// assert_eq!(*lower, [1_000_000, 2_000_000, 3_000_000, 4_000_000]);
     /// assert_eq!(*upper, [5_000_000, 6_000_000, 7_000_000, 8_000_000]);
     /// # });
     /// ```
     ///
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened);
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened);
 
     /// Add corresponding lanes exactly, returning the lower and upper halves.
     ///
@@ -590,12 +590,12 @@ pub trait SimdIntWiden<S: Simd>: SimdInt<S> + SimdWiden<S, Widened: SimdInt<S>> 
     /// # use fearless_simd::*;
     /// # dispatch!(Level::new(), simd => {
     /// let a = u16x8::from_slice(simd, &[1_000, 2_000, 3_000, 4_000, 5_000, 6_000, 7_000, 8_000]);
-    /// let (lower, upper) = a.widening_add(u16x8::splat(simd, 60_000));
+    /// let (lower, upper) = a.widening_add(60_000);
     /// assert_eq!(*lower, [61_000, 62_000, 63_000, 64_000]);
     /// assert_eq!(*upper, [65_000, 66_000, 67_000, 68_000]);
     /// # });
     /// ```
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened);
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened);
 
     /// Add adjacent integer lanes, widening the result to avoid overflow.
     ///
@@ -673,7 +673,7 @@ pub trait SimdIntWiden<S: Simd>: SimdInt<S> + SimdWiden<S, Widened: SimdInt<S>> 
     ///     a.pairwise_dot_product(b)
     /// }
     /// ```
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened;
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened;
 }
 
 /// Narrowing conversion of two numeric SIMD vectors.

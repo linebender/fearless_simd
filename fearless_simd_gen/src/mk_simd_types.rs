@@ -229,13 +229,13 @@ pub(crate) fn mk_simd_types() -> TokenStream {
             conditional_impls.push(quote! {
                 impl<S: Simd> SimdIntWiden<S> for #name<S> {
                     #[inline(always)]
-                    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-                        self.simd.#mul(self, rhs)
+                    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+                        self.simd.#mul(self, rhs.simd_into(self.simd))
                     }
 
                     #[inline(always)]
-                    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-                        self.simd.#add(self, rhs)
+                    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+                        self.simd.#add(self, rhs.simd_into(self.simd))
                     }
 
                     #[inline(always)]
@@ -244,8 +244,8 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     }
 
                     #[inline(always)]
-                    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-                        self.simd.#dot(self, rhs)
+                    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+                        self.simd.#dot(self, rhs.simd_into(self.simd))
                     }
                 }
             });
