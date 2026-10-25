@@ -780,20 +780,21 @@ impl<S: Simd> SimdWiden<S> for i8x16<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for i8x16<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_i8x16(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_i8x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_i8x16(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_i8x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_i8x16(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_i8x16(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_i8x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdCombine<S> for i8x16<S> {
@@ -1158,20 +1159,21 @@ impl<S: Simd> SimdWiden<S> for u8x16<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for u8x16<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_u8x16(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_u8x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_u8x16(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_u8x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_u8x16(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_u8x16(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_u8x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdCombine<S> for u8x16<S> {
@@ -1657,20 +1659,21 @@ impl<S: Simd> SimdWiden<S> for i16x8<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for i16x8<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_i16x8(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_i16x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_i16x8(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_i16x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_i16x8(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_i16x8(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_i16x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> SimdNarrow<S> for i16x8<S> {
@@ -2042,20 +2045,21 @@ impl<S: Simd> SimdWiden<S> for u16x8<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for u16x8<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_u16x8(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_u16x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_u16x8(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_u16x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_u16x8(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_u16x8(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_u16x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> SimdNarrow<S> for u16x8<S> {
@@ -2563,20 +2567,21 @@ impl<S: Simd> SimdWiden<S> for i32x4<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for i32x4<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_i32x4(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_i32x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_i32x4(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_i32x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_i32x4(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_i32x4(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_i32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> SimdNarrow<S> for i32x4<S> {
@@ -2948,20 +2953,21 @@ impl<S: Simd> SimdWiden<S> for u32x4<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for u32x4<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_u32x4(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_u32x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_u32x4(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_u32x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_u32x4(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_u32x4(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_u32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> SimdNarrow<S> for u32x4<S> {
@@ -5215,20 +5221,21 @@ impl<S: Simd> SimdWiden<S> for i8x32<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for i8x32<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_i8x32(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_i8x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_i8x32(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_i8x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_i8x32(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_i8x32(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_i8x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdSplit<S> for i8x32<S> {
@@ -5604,20 +5611,21 @@ impl<S: Simd> SimdWiden<S> for u8x32<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for u8x32<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_u8x32(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_u8x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_u8x32(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_u8x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_u8x32(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_u8x32(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_u8x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdSplit<S> for u8x32<S> {
@@ -6107,20 +6115,23 @@ impl<S: Simd> SimdWiden<S> for i16x16<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for i16x16<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_i16x16(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd
+            .widening_mul_i16x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_i16x16(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd
+            .widening_add_i16x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_i16x16(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_i16x16(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_i16x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> SimdNarrow<S> for i16x16<S> {
@@ -6496,20 +6507,23 @@ impl<S: Simd> SimdWiden<S> for u16x16<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for u16x16<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_u16x16(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd
+            .widening_mul_u16x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_u16x16(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd
+            .widening_add_u16x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_u16x16(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_u16x16(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_u16x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> SimdNarrow<S> for u16x16<S> {
@@ -7024,20 +7038,21 @@ impl<S: Simd> SimdWiden<S> for i32x8<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for i32x8<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_i32x8(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_i32x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_i32x8(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_i32x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_i32x8(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_i32x8(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_i32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> SimdNarrow<S> for i32x8<S> {
@@ -7416,20 +7431,21 @@ impl<S: Simd> SimdWiden<S> for u32x8<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for u32x8<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_u32x8(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_u32x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_u32x8(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_u32x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_u32x8(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_u32x8(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_u32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> SimdNarrow<S> for u32x8<S> {
@@ -9699,20 +9715,21 @@ impl<S: Simd> SimdWiden<S> for i8x64<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for i8x64<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_i8x64(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_i8x64(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_i8x64(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_i8x64(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_i8x64(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_i8x64(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_i8x64(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdSplit<S> for i8x64<S> {
@@ -10114,20 +10131,21 @@ impl<S: Simd> SimdWiden<S> for u8x64<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for u8x64<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_u8x64(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_mul_u8x64(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_u8x64(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd.widening_add_u8x64(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_u8x64(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_u8x64(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_u8x64(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdSplit<S> for u8x64<S> {
@@ -10627,20 +10645,23 @@ impl<S: Simd> SimdWiden<S> for i16x32<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for i16x32<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_i16x32(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd
+            .widening_mul_i16x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_i16x32(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd
+            .widening_add_i16x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_i16x32(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_i16x32(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_i16x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> SimdNarrow<S> for i16x32<S> {
@@ -11026,20 +11047,23 @@ impl<S: Simd> SimdWiden<S> for u16x32<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for u16x32<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_u16x32(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd
+            .widening_mul_u16x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_u16x32(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd
+            .widening_add_u16x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_u16x32(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_u16x32(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_u16x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> SimdNarrow<S> for u16x32<S> {
@@ -11557,20 +11581,23 @@ impl<S: Simd> SimdWiden<S> for i32x16<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for i32x16<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_i32x16(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd
+            .widening_mul_i32x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_i32x16(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd
+            .widening_add_i32x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_i32x16(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_i32x16(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_i32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> SimdNarrow<S> for i32x16<S> {
@@ -11952,20 +11979,23 @@ impl<S: Simd> SimdWiden<S> for u32x16<S> {
 }
 impl<S: Simd> SimdIntWiden<S> for u32x16<S> {
     #[inline(always)]
-    fn widening_mul(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_mul_u32x16(self, rhs)
+    fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd
+            .widening_mul_u32x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn widening_add(self, rhs: Self) -> (Self::Widened, Self::Widened) {
-        self.simd.widening_add_u32x16(self, rhs)
+    fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened) {
+        self.simd
+            .widening_add_u32x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
     fn pairwise_widening_add(self) -> Self::Widened {
         self.simd.pairwise_widening_add_u32x16(self)
     }
     #[inline(always)]
-    fn pairwise_dot_product(self, rhs: Self) -> Self::Widened {
-        self.simd.pairwise_dot_product_u32x16(self, rhs)
+    fn pairwise_dot_product(self, rhs: impl SimdInto<Self, S>) -> Self::Widened {
+        self.simd
+            .pairwise_dot_product_u32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> SimdNarrow<S> for u32x16<S> {
