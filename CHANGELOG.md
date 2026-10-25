@@ -20,6 +20,7 @@ This release has an [MSRV][] of 1.89.
 - Added `SimdIntWiden::pairwise_dot_product`, multiplying corresponding integer lanes and summing adjacent pairs of products into lanes twice as wide. Multiplication is exact; addition wraps in the widened type. ([#415][] by [@Shnatsel][])
 - Added `SimdIntWiden::pairwise_widening_add`, summing adjacent integer lanes into lanes twice as wide without overflow. ([#416][] by [@Shnatsel][])
 - Added `SimdFloat::to_bits`, `SimdFloat::from_bits`, and the associated `Bits` types on `SimdFloat` and `SimdFloatElement`, enabling conversions between floating-point vectors and their unsigned integer bit representations in generic code. ([#420][] by [@RunDevelopment][])
+- Added `SimdBase::clamp` for all integer and floating-point vectors, clamping each lane to an inclusive interval. NaN input lanes remain NaN; invalid bounds panic when debug assertions are enabled and otherwise produce implementation-defined results. ([#421][] by [@RunDevelopment][], [@Shnatsel][])
 
 ### Changed
 
@@ -480,8 +481,9 @@ No changelog was kept for this release.
 [#417]: https://github.com/linebender/fearless_simd/pull/417
 [#418]: https://github.com/linebender/fearless_simd/pull/418
 [#420]: https://github.com/linebender/fearless_simd/pull/420
+[#421]: https://github.com/linebender/fearless_simd/pull/421
 
-[1.2.0]: https://github.com/linebender/fearless_simd/compare/fearless_simd-v1.1.0...fearless_simd-v1.2.0
+[1.2.0]: https://github.com/linebender/fearless_simd/compare/fearless_simd-v1.1.0...main
 [1.1.0]: https://github.com/linebender/fearless_simd/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/linebender/fearless_simd/compare/v0.7.0...v1.0.0
 [0.7.0]: https://github.com/linebender/fearless_simd/compare/v0.6.0...v0.7.0
