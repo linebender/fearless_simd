@@ -16,11 +16,11 @@ This release has an [MSRV][] of 1.89.
 
 ### Added
 
-- Added the `SimdIntWiden` trait with `widening_mul` and `widening_add` for signed and unsigned 8-, 16-, and 32-bit integer vectors. These operations compute exact results in lanes twice as wide, returning the lower and upper halves as two vectors. ([#415][] by [@Shnatsel][])
-- Added `SimdIntWiden::pairwise_dot_product`, multiplying corresponding integer lanes and summing adjacent pairs of products into lanes twice as wide. Multiplication is exact; addition wraps in the widened type. ([#415][] by [@Shnatsel][])
+- Added the `SimdIntWiden` trait with `widening_mul` and `widening_add` for signed and unsigned 8-, 16-, and 32-bit integer vectors. These operations compute exact results in lanes twice as wide, returning the lower and upper halves as two vectors. ([#415][] by [@Shnatsel][], [#425][] and [#426][] by [@RunDevelopment][])
+- Added `SimdIntWiden::pairwise_dot_product`, multiplying corresponding integer lanes and summing adjacent pairs of products into lanes twice as wide. Multiplication is exact; addition wraps in the widened type. ([#415][] by [@Shnatsel][], [#425][] and [#426][] by [@RunDevelopment][])
 - Added `SimdIntWiden::pairwise_widening_add`, summing adjacent integer lanes into lanes twice as wide without overflow. ([#416][] by [@Shnatsel][])
 - Added `SimdFloat::to_bits`, `SimdFloat::from_bits`, and the associated `Bits` types on `SimdFloat` and `SimdFloatElement`, enabling conversions between floating-point vectors and their unsigned integer bit representations in generic code. ([#420][] by [@RunDevelopment][])
-- Added `SimdBase::clamp` for all integer and floating-point vectors, clamping each lane to an inclusive interval. NaN input lanes remain NaN; invalid bounds panic when debug assertions are enabled and otherwise produce implementation-defined results. ([#421][] by [@RunDevelopment][], [@Shnatsel][])
+- Added `SimdBase::clamp` for all integer and floating-point vectors, clamping each lane to the inclusive interval `[min, max]`. NaN input lanes remain NaN; invalid bounds panic when debug assertions are enabled and otherwise produce implementation-defined results. ([#421][], [#427][] by [@RunDevelopment][], [@Shnatsel][])
 
 ### Changed
 
@@ -482,6 +482,9 @@ No changelog was kept for this release.
 [#418]: https://github.com/linebender/fearless_simd/pull/418
 [#420]: https://github.com/linebender/fearless_simd/pull/420
 [#421]: https://github.com/linebender/fearless_simd/pull/421
+[#425]: https://github.com/linebender/fearless_simd/pull/425
+[#426]: https://github.com/linebender/fearless_simd/pull/426
+[#427]: https://github.com/linebender/fearless_simd/pull/427
 
 [1.2.0]: https://github.com/linebender/fearless_simd/compare/fearless_simd-v1.1.0...fearless_simd-v1.2.0
 [1.1.0]: https://github.com/linebender/fearless_simd/compare/v1.0.0...fearless_simd-v1.1.0
