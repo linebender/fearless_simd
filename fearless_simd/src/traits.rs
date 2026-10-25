@@ -567,9 +567,34 @@ pub trait SimdWiden<S: Simd>:
 /// adjacent lanes into a single vector with half as many lanes.
 pub trait SimdIntWiden<S: Simd>: SimdInt<S> + SimdWiden<S, Widened: SimdInt<S>> {
     /// Multiply corresponding lanes exactly, returning the lower and upper halves.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use fearless_simd::*;
+    /// # dispatch!(Level::new(), simd => {
+    /// let a = i16x8::from_slice(simd, &[100, 200, 300, 400, 500, 600, 700, 800]);
+    /// let (lower, upper) = a.widening_mul(10_000);
+    /// assert_eq!(*lower, [1_000_000, 2_000_000, 3_000_000, 4_000_000]);
+    /// assert_eq!(*upper, [5_000_000, 6_000_000, 7_000_000, 8_000_000]);
+    /// # });
+    /// ```
+    ///
     fn widening_mul(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened);
 
     /// Add corresponding lanes exactly, returning the lower and upper halves.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use fearless_simd::*;
+    /// # dispatch!(Level::new(), simd => {
+    /// let a = u16x8::from_slice(simd, &[1_000, 2_000, 3_000, 4_000, 5_000, 6_000, 7_000, 8_000]);
+    /// let (lower, upper) = a.widening_add(60_000);
+    /// assert_eq!(*lower, [61_000, 62_000, 63_000, 64_000]);
+    /// assert_eq!(*upper, [65_000, 66_000, 67_000, 68_000]);
+    /// # });
+    /// ```
     fn widening_add(self, rhs: impl SimdInto<Self, S>) -> (Self::Widened, Self::Widened);
 
     /// Add adjacent integer lanes, widening the result to avoid overflow.
@@ -578,19 +603,22 @@ pub trait SimdIntWiden<S: Simd>: SimdInt<S> + SimdWiden<S, Widened: SimdInt<S>> 
     /// half as many lanes, twice the lane width, and the same signedness and total
     /// vector bit width as the input.
     ///
-    /// For example, `[1, 2, 3, 4, 5, 6, 7, 8]` becomes `[3, 7, 11, 15]`.
-    ///
     /// # Examples
     ///
     /// ```
-    /// use fearless_simd::{dispatch, prelude::*, Level, i16x8, i32x4, i64x2};
+    /// # use fearless_simd::*;
+    /// # dispatch!(Level::new(), simd => {
+    /// let a = i16x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);
+    /// //                                \  /  \  /  \  /  \  /
+    /// //                                 3     7     11    15
+    /// let pairs: i32x4<_> = a.pairwise_widening_add();
+    /// assert_eq!(*pairs, [3, 7, 11, 15]);
+    /// # });
+    /// ```
     ///
-    /// dispatch!(Level::new(), simd => {
-    ///     let a = i16x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);
-    ///     let pairs: i32x4<_> = a.pairwise_widening_add();
-    /// });
-    ///
-    /// // Works on native-width vectors too
+    /// Works on native-width vectors too:
+    /// ```
+    /// # use fearless_simd::*;
     /// fn native<S: Simd>(a: S::u8s) -> S::u16s {
     ///     a.pairwise_widening_add()
     /// }
@@ -611,9 +639,12 @@ pub trait SimdIntWiden<S: Simd>: SimdInt<S> + SimdWiden<S, Widened: SimdInt<S>> 
     /// For example:
     ///
     /// ```text
-    /// a      = [ 1,  2,  3,  4,  5,  6,  7,  8]
-    /// b      = [10, 20, 30, 40, 50, 60, 70, 80]
-    /// result = [50, 250, 610, 1130]
+    /// a      = [ 1,  2,   3,  4,   5,  6,   7,  8]
+    ///            |   |    |   |    |   |    |   |
+    ///            |---|    |---|    |---|    |---|
+    ///            |   |    |   |    |   |    |   |
+    /// b      = [10, 20,  30, 40,  50, 60,  70, 80]
+    /// result = [    50,     250,     610,    1130]
     /// ```
     ///
     /// Here, `1*10 + 2*20 = 50`, `3*30 + 4*40 = 250`, and so on.
@@ -623,18 +654,21 @@ pub trait SimdIntWiden<S: Simd>: SimdInt<S> + SimdWiden<S, Widened: SimdInt<S>> 
     /// # Examples
     ///
     /// ```
-    /// use fearless_simd::{dispatch, prelude::*, Level, i16x8, i32x4};
+    /// # use fearless_simd::*;
+    /// # dispatch!(Level::new(), simd => {
+    /// let a = i16x8::from_slice(simd, &[ 1,  2,  3,  4,  5,  6,  7,  8]);
+    /// let b = i16x8::from_slice(simd, &[10, 20, 30, 40, 50, 60, 70, 80]);
+    /// let result: i32x4<_> = a.pairwise_dot_product(b);
+    /// assert_eq!(*result, [50, 250, 610, 1130]);
     ///
-    /// dispatch!(Level::new(), simd => {
-    ///     let a = i16x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);
-    ///     let b = i16x8::from_slice(simd, &[10, 20, 30, 40, 50, 60, 70, 80]);
-    ///     let result: i32x4<_> = a.pairwise_dot_product(b);
-    ///     assert_eq!(*result, [50, 250, 610, 1130]);
+    /// let min = i8x16::splat(simd, i8::MIN /* = -128 */);
+    /// assert_eq!(*min.pairwise_dot_product(min), [i16::MIN /* = -32768 */; 8]);
+    /// # });
+    /// ```
     ///
-    ///     let min = i16x8::splat(simd, i16::MIN);
-    ///     assert_eq!(*min.pairwise_dot_product(min), [i32::MIN; 4]);
-    /// });
-    ///
+    /// Works on native-width vectors too:
+    /// ```
+    /// # use fearless_simd::*;
     /// fn native<S: Simd>(a: S::i16s, b: S::i16s) -> S::i32s {
     ///     a.pairwise_dot_product(b)
     /// }
