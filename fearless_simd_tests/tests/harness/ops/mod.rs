@@ -103,6 +103,7 @@ mod store_array;
 mod store_four_interleaved;
 mod store_slice;
 mod sub;
+mod swap_bytes;
 mod swizzle_dyn;
 mod swizzle_dyn_precise;
 mod swizzle_dyn_within_blocks;

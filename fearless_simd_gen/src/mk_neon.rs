@@ -311,6 +311,24 @@ impl Level for Neon {
                     return self.handle_count_ones(op, vec_ty);
                 }
 
+                if method == "swap_bytes" {
+                    if vec_ty.scalar_bits == 8 {
+                        return quote! { #method_sig { a } };
+                    }
+                    let signed = if vec_ty.scalar == ScalarType::Int {
+                        "s"
+                    } else {
+                        "u"
+                    };
+                    let to_u8 = format_ident!("vreinterpretq_u8_{}{}", signed, vec_ty.scalar_bits);
+                    let to_scalar =
+                        format_ident!("vreinterpretq_{}{}_u8", signed, vec_ty.scalar_bits);
+                    let rev = format_ident!("vrev{}q_u8", vec_ty.scalar_bits);
+                    return self.kernel_method(op, vec_ty, |token| {
+                        quote! { #to_scalar(#rev(#to_u8(a))).simd_into(#token) }
+                    });
+                }
+
                 if matches!(method, "to_degrees" | "to_radians") {
                     return generic_to_degrees_radians(method_sig, method, vec_ty);
                 }

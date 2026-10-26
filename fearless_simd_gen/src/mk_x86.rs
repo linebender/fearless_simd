@@ -2027,6 +2027,78 @@ impl X86 {
         }
     }
 
+    fn handle_swap_bytes(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        // swap_bytes is a noop for i8/u8
+        if vec_ty.scalar_bits == 8 {
+            let method_sig = op.simd_trait_method_sig(vec_ty);
+            return quote! { #method_sig { a } };
+        }
+
+        // SSE2 approach
+        // SSE2 lacks the shuffle_epi8 instruction used by the general approach. We work around
+        // this by swapping 16-bit chunks within 32-bit and 64-bit lanes, and then swapping bytes
+        // within the 16-bit chunks.
+        if *self == Self::Sse2 {
+            assert_eq!(vec_ty.n_bits(), 128);
+
+            return self.kernel_method(op, vec_ty, |token| {
+                let swap_bytes_u16 = quote! {
+                    let lo = _mm_srli_epi16(a, 8);
+                    let hi = _mm_slli_epi16(a, 8);
+                    _mm_or_si128(hi, lo).simd_into(#token)
+                };
+
+                match vec_ty.scalar_bits {
+                    16 => quote! {
+                        let a = a.into();
+                        #swap_bytes_u16
+                    },
+                    32 => quote! {
+                        let lo = _mm_srli_epi32(a.into(), 16);
+                        let hi = _mm_slli_epi32(a.into(), 16);
+                        let a = _mm_or_si128(hi, lo);
+                        #swap_bytes_u16
+                    },
+                    64 => quote! {
+                        // This combines two 64-bit-lane shuffles of 16-bit chunks
+                        let lo = _mm_shufflelo_epi16(a.into(), 0b_00_01_10_11);
+                        let hi = _mm_shufflehi_epi16(a.into(), 0b_00_01_10_11);
+                        let a = _mm_castpd_si128(_mm_shuffle_pd(_mm_castsi128_pd(lo), _mm_castsi128_pd(hi), 0b_10));
+                        #swap_bytes_u16
+                    },
+                    _ => unreachable!(),
+                }
+            });
+        }
+
+        // General appraoch based on shuffle_epi8 instructions. Requires SSE3+
+        let bits = vec_ty.n_bits();
+
+        // indexes for the first 128 bits of the vector
+        let indexes_128 = match vec_ty.scalar_bits {
+            16 => quote! { 14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1 },
+            32 => quote! { 12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3 },
+            64 => quote! { 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7 },
+            _ => unreachable!(),
+        };
+        let mask_bits = match bits {
+            128 => indexes_128,
+            256 => quote! { #indexes_128, #indexes_128 },
+            512 => quote! { #indexes_128, #indexes_128, #indexes_128, #indexes_128 },
+            _ => unreachable!(),
+        };
+
+        let set = intrinsic_ident("set", "epi8", bits);
+        let shuffle = intrinsic_ident("shuffle", "epi8", bits);
+
+        self.kernel_method(op, vec_ty, |token| {
+            quote! {
+                let mask = #set(#mask_bits);
+                #shuffle(a.into(), mask).simd_into(#token)
+            }
+        })
+    }
+
     pub(crate) fn handle_reduce_min_max(
         &self,
         op: Op,
@@ -2751,6 +2823,10 @@ impl X86 {
 
         if method == "count_ones" {
             return self.handle_count_ones(op, vec_ty);
+        }
+
+        if method == "swap_bytes" {
+            return self.handle_swap_bytes(op, vec_ty);
         }
 
         if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask {
