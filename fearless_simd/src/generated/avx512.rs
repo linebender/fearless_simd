@@ -2924,14 +2924,9 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x8<Avx512>) -> i16x8<Avx512> {
-                let mask = _mm_set_epi8(14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1);
-                _mm_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
-        );
-        kernel(self, a)
+        let indexes =
+            <u8x16<Self>>::simd_from(self, [1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14]);
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -3604,14 +3599,9 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x8<Avx512>) -> u16x8<Avx512> {
-                let mask = _mm_set_epi8(14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1);
-                _mm_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
-        );
-        kernel(self, a)
+        let indexes =
+            <u8x16<Self>>::simd_from(self, [1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14]);
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -4467,14 +4457,9 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x4<Avx512>) -> i32x4<Avx512> {
-                let mask = _mm_set_epi8(12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3);
-                _mm_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
-        );
-        kernel(self, a)
+        let indexes =
+            <u8x16<Self>>::simd_from(self, [3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12]);
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -5114,14 +5099,9 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x4<Avx512>) -> u32x4<Avx512> {
-                let mask = _mm_set_epi8(12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3);
-                _mm_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
-        );
-        kernel(self, a)
+        let indexes =
+            <u8x16<Self>>::simd_from(self, [3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12]);
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -6707,14 +6687,9 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x2<Avx512>) -> i64x2<Avx512> {
-                let mask = _mm_set_epi8(8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7);
-                _mm_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
-        );
-        kernel(self, a)
+        let indexes =
+            <u8x16<Self>>::simd_from(self, [7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8]);
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -7282,14 +7257,9 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x2<Avx512>) -> u64x2<Avx512> {
-                let mask = _mm_set_epi8(8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7);
-                _mm_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
-        );
-        kernel(self, a)
+        let indexes =
+            <u8x16<Self>>::simd_from(self, [7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8]);
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -10437,17 +10407,14 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x16<Avx512>) -> i16x16<Avx512> {
-                let mask = _mm256_set_epi8(
-                    14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10, 11,
-                    8, 9, 6, 7, 4, 5, 2, 3, 0, 1,
-                );
-                _mm256_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
+        let indexes = <u8x32<Self>>::simd_from(
+            self,
+            [
+                1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14, 1, 0, 3, 2, 5, 4, 7, 6, 9, 8,
+                11, 10, 13, 12, 15, 14,
+            ],
         );
-        kernel(self, a)
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
@@ -11108,17 +11075,14 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x16<Avx512>) -> u16x16<Avx512> {
-                let mask = _mm256_set_epi8(
-                    14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10, 11,
-                    8, 9, 6, 7, 4, 5, 2, 3, 0, 1,
-                );
-                _mm256_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
+        let indexes = <u8x32<Self>>::simd_from(
+            self,
+            [
+                1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14, 1, 0, 3, 2, 5, 4, 7, 6, 9, 8,
+                11, 10, 13, 12, 15, 14,
+            ],
         );
-        kernel(self, a)
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
@@ -11971,17 +11935,14 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x8<Avx512>) -> i32x8<Avx512> {
-                let mask = _mm256_set_epi8(
-                    12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10,
-                    11, 4, 5, 6, 7, 0, 1, 2, 3,
-                );
-                _mm256_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
+        let indexes = <u8x32<Self>>::simd_from(
+            self,
+            [
+                3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12, 3, 2, 1, 0, 7, 6, 5, 4, 11,
+                10, 9, 8, 15, 14, 13, 12,
+            ],
         );
-        kernel(self, a)
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
@@ -12606,17 +12567,14 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x8<Avx512>) -> u32x8<Avx512> {
-                let mask = _mm256_set_epi8(
-                    12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10,
-                    11, 4, 5, 6, 7, 0, 1, 2, 3,
-                );
-                _mm256_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
+        let indexes = <u8x32<Self>>::simd_from(
+            self,
+            [
+                3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12, 3, 2, 1, 0, 7, 6, 5, 4, 11,
+                10, 9, 8, 15, 14, 13, 12,
+            ],
         );
-        kernel(self, a)
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
@@ -14159,17 +14117,14 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x4<Avx512>) -> i64x4<Avx512> {
-                let mask = _mm256_set_epi8(
-                    8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-                    15, 0, 1, 2, 3, 4, 5, 6, 7,
-                );
-                _mm256_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
+        let indexes = <u8x32<Self>>::simd_from(
+            self,
+            [
+                7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 15,
+                14, 13, 12, 11, 10, 9, 8,
+            ],
         );
-        kernel(self, a)
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
@@ -14730,17 +14685,14 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_u64x4(self, a: u64x4<Self>) -> u64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x4<Avx512>) -> u64x4<Avx512> {
-                let mask = _mm256_set_epi8(
-                    8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-                    15, 0, 1, 2, 3, 4, 5, 6, 7,
-                );
-                _mm256_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
+        let indexes = <u8x32<Self>>::simd_from(
+            self,
+            [
+                7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 15,
+                14, 13, 12, 11, 10, 9, 8,
+            ],
         );
-        kernel(self, a)
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
@@ -17847,18 +17799,15 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x32<Avx512>) -> i16x32<Avx512> {
-                let mask = _mm512_set_epi8(
-                    14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10, 11,
-                    8, 9, 6, 7, 4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3,
-                    0, 1, 14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1,
-                );
-                _mm512_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
+        let indexes = <u8x64<Self>>::simd_from(
+            self,
+            [
+                1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14, 1, 0, 3, 2, 5, 4, 7, 6, 9, 8,
+                11, 10, 13, 12, 15, 14, 1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14, 1, 0,
+                3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14,
+            ],
         );
-        kernel(self, a)
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -18522,18 +18471,15 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x32<Avx512>) -> u16x32<Avx512> {
-                let mask = _mm512_set_epi8(
-                    14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10, 11,
-                    8, 9, 6, 7, 4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3,
-                    0, 1, 14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1,
-                );
-                _mm512_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
+        let indexes = <u8x64<Self>>::simd_from(
+            self,
+            [
+                1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14, 1, 0, 3, 2, 5, 4, 7, 6, 9, 8,
+                11, 10, 13, 12, 15, 14, 1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14, 1, 0,
+                3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14,
+            ],
         );
-        kernel(self, a)
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -19406,18 +19352,15 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x16<Avx512>) -> i32x16<Avx512> {
-                let mask = _mm512_set_epi8(
-                    12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10,
-                    11, 4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2,
-                    3, 12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3,
-                );
-                _mm512_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
+        let indexes = <u8x64<Self>>::simd_from(
+            self,
+            [
+                3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12, 3, 2, 1, 0, 7, 6, 5, 4, 11,
+                10, 9, 8, 15, 14, 13, 12, 3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12, 3,
+                2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12,
+            ],
         );
-        kernel(self, a)
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -20064,18 +20007,15 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x16<Avx512>) -> u32x16<Avx512> {
-                let mask = _mm512_set_epi8(
-                    12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10,
-                    11, 4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2,
-                    3, 12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3,
-                );
-                _mm512_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
+        let indexes = <u8x64<Self>>::simd_from(
+            self,
+            [
+                3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12, 3, 2, 1, 0, 7, 6, 5, 4, 11,
+                10, 9, 8, 15, 14, 13, 12, 3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12, 3,
+                2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12,
+            ],
         );
-        kernel(self, a)
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
@@ -21640,18 +21580,15 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x8<Avx512>) -> i64x8<Avx512> {
-                let mask = _mm512_set_epi8(
-                    8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-                    15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6,
-                    7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7,
-                );
-                _mm512_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
+        let indexes = <u8x64<Self>>::simd_from(
+            self,
+            [
+                7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 15,
+                14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8, 7,
+                6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8,
+            ],
         );
-        kernel(self, a)
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
@@ -22221,18 +22158,15 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn swap_bytes_u64x8(self, a: u64x8<Self>) -> u64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x8<Avx512>) -> u64x8<Avx512> {
-                let mask = _mm512_set_epi8(
-                    8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-                    15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6,
-                    7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7,
-                );
-                _mm512_shuffle_epi8(a.into(), mask).simd_into(token)
-            }
+        let indexes = <u8x64<Self>>::simd_from(
+            self,
+            [
+                7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 15,
+                14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8, 7,
+                6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8,
+            ],
         );
-        kernel(self, a)
+        a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
     fn add_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {

@@ -2909,16 +2909,17 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn swap_bytes_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse2, a: i16x8<Sse2>) -> i16x8<Sse2> {
-                let a = a.into();
-                let lo = _mm_srli_epi16(a, 8);
-                let hi = _mm_slli_epi16(a, 8);
-                _mm_or_si128(hi, lo).simd_into(token)
-            }
-        );
-        kernel(self, a)
+        [
+            i16::swap_bytes(a[0usize]),
+            i16::swap_bytes(a[1usize]),
+            i16::swap_bytes(a[2usize]),
+            i16::swap_bytes(a[3usize]),
+            i16::swap_bytes(a[4usize]),
+            i16::swap_bytes(a[5usize]),
+            i16::swap_bytes(a[6usize]),
+            i16::swap_bytes(a[7usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -3555,16 +3556,17 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn swap_bytes_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse2, a: u16x8<Sse2>) -> u16x8<Sse2> {
-                let a = a.into();
-                let lo = _mm_srli_epi16(a, 8);
-                let hi = _mm_slli_epi16(a, 8);
-                _mm_or_si128(hi, lo).simd_into(token)
-            }
-        );
-        kernel(self, a)
+        [
+            u16::swap_bytes(a[0usize]),
+            u16::swap_bytes(a[1usize]),
+            u16::swap_bytes(a[2usize]),
+            u16::swap_bytes(a[3usize]),
+            u16::swap_bytes(a[4usize]),
+            u16::swap_bytes(a[5usize]),
+            u16::swap_bytes(a[6usize]),
+            u16::swap_bytes(a[7usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -4557,18 +4559,13 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn swap_bytes_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse2, a: i32x4<Sse2>) -> i32x4<Sse2> {
-                let lo = _mm_srli_epi32(a.into(), 16);
-                let hi = _mm_slli_epi32(a.into(), 16);
-                let a = _mm_or_si128(hi, lo);
-                let lo = _mm_srli_epi16(a, 8);
-                let hi = _mm_slli_epi16(a, 8);
-                _mm_or_si128(hi, lo).simd_into(token)
-            }
-        );
-        kernel(self, a)
+        [
+            i32::swap_bytes(a[0usize]),
+            i32::swap_bytes(a[1usize]),
+            i32::swap_bytes(a[2usize]),
+            i32::swap_bytes(a[3usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -5223,18 +5220,13 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn swap_bytes_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse2, a: u32x4<Sse2>) -> u32x4<Sse2> {
-                let lo = _mm_srli_epi32(a.into(), 16);
-                let hi = _mm_slli_epi32(a.into(), 16);
-                let a = _mm_or_si128(hi, lo);
-                let lo = _mm_srli_epi16(a, 8);
-                let hi = _mm_slli_epi16(a, 8);
-                _mm_or_si128(hi, lo).simd_into(token)
-            }
-        );
-        kernel(self, a)
+        [
+            u32::swap_bytes(a[0usize]),
+            u32::swap_bytes(a[1usize]),
+            u32::swap_bytes(a[2usize]),
+            u32::swap_bytes(a[3usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -6813,22 +6805,7 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn swap_bytes_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse2, a: i64x2<Sse2>) -> i64x2<Sse2> {
-                let lo = _mm_shufflelo_epi16(a.into(), 0b_00_01_10_11);
-                let hi = _mm_shufflehi_epi16(a.into(), 0b_00_01_10_11);
-                let a = _mm_castpd_si128(_mm_shuffle_pd(
-                    _mm_castsi128_pd(lo),
-                    _mm_castsi128_pd(hi),
-                    0b_10,
-                ));
-                let lo = _mm_srli_epi16(a, 8);
-                let hi = _mm_slli_epi16(a, 8);
-                _mm_or_si128(hi, lo).simd_into(token)
-            }
-        );
-        kernel(self, a)
+        [i64::swap_bytes(a[0usize]), i64::swap_bytes(a[1usize])].simd_into(self)
     }
     #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -7343,22 +7320,7 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn swap_bytes_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse2, a: u64x2<Sse2>) -> u64x2<Sse2> {
-                let lo = _mm_shufflelo_epi16(a.into(), 0b_00_01_10_11);
-                let hi = _mm_shufflehi_epi16(a.into(), 0b_00_01_10_11);
-                let a = _mm_castpd_si128(_mm_shuffle_pd(
-                    _mm_castsi128_pd(lo),
-                    _mm_castsi128_pd(hi),
-                    0b_10,
-                ));
-                let lo = _mm_srli_epi16(a, 8);
-                let hi = _mm_slli_epi16(a, 8);
-                _mm_or_si128(hi, lo).simd_into(token)
-            }
-        );
-        kernel(self, a)
+        [u64::swap_bytes(a[0usize]), u64::swap_bytes(a[1usize])].simd_into(self)
     }
     #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
