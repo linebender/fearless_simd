@@ -2809,7 +2809,11 @@ impl X86 {
 
         if *self == Self::Sse2
             && vec_ty.scalar == ScalarType::Float
-            && matches!(method, "floor" | "ceil" | "round_ties_even" | "trunc")
+            && matches!(method, "floor" | "ceil" | "trunc")
+        {
+            return self.see2_rounding_fallback(op, vec_ty);
+        }
+        if *self == Self::Sse2 && vec_ty.scalar == ScalarType::Float && method == "round_ties_even"
         {
             return fallback_method(op, vec_ty);
         }
@@ -6796,6 +6800,76 @@ impl X86 {
                     cross_block_alignr_one(token, &regs, 0, shift_bytes)
                 }
             );
+        }
+    }
+
+    /// SSE2 doesn't have native instructions for floating-point rounding operations, so we provide
+    /// a bit-exact vectorized implementation based on `trunc`.
+    ///
+    /// ## How it works
+    ///
+    /// I will explain `f32x4`, but the same ideas work for `f64x2` as well.
+    ///
+    /// While SSE2 doesn't have a native `f32::trunc` equivalent, it does have `_mm_cvttps_epi32`
+    /// which converts `f32x4` -> `i32x4` using truncation. Chaining this with `_mm_cvtepi32_ps`
+    /// effectively emulates `f32::trunc` in two instructions. Almost.
+    ///
+    /// It doesn't quite work. Firstly, `_mm_cvttps_epi32` leaves the output for NaN input and
+    /// inputs outside the range of i32 unspecified. Secondly, this handles signed zeros
+    /// incorrectly.
+    ///
+    /// Both issues can be solved using the absolute value of the input.
+    /// First, we create a mask of all input >=2^31 || NaN. This is done using a single `simd_lt`.
+    /// This mask can be used to conditionally return the original input to fix the first issue.
+    /// Secondly, we truncate the absolute value and restore the original sign using `copysign`.
+    /// This fixes the signed zero issue.
+    ///
+    /// Note that mask trick only works, because all f32 values >= 2^31 are integers. Therefore
+    /// returning them unchanged is correct, because truncation of integers is a no-op.
+    ///
+    /// Lastly, `floor` and `ceil`. These are implemented as an adjustment of the truncated value.
+    /// We use the fact that `floor(x) = if trunc(x) > x { trunc(x) - 1 } else { trunc(x) }`.
+    /// Similar for `ceil`.
+    fn see2_rounding_fallback(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        assert_eq!(vec_ty.scalar, ScalarType::Float);
+        assert_eq!(vec_ty.n_bits(), 128);
+
+        let bits = vec_ty.scalar_bits;
+
+        // This is 2^31 for f32 and 2^63 for f64
+        let threshold = match bits {
+            32 => quote! { 2147483648.0_f32 },
+            64 => quote! { 9223372036854775808.0_f64 },
+            _ => panic!("Unsupported float bit width"),
+        };
+
+        let compute_res = match op.method {
+            "trunc" => quote! { trunc },
+            "floor" => quote! { trunc.simd_gt(a).select(trunc - 1.0, trunc) },
+            "ceil" => quote! { trunc.simd_lt(a).select(trunc + 1.0, trunc) },
+            _ => panic!("Unsupported method"),
+        };
+
+        let float_ident = vec_ty.rust();
+        let int_ident = vec_ty.cast(ScalarType::Int).rust();
+        let method_sig = op.simd_trait_method_sig(vec_ty);
+
+        quote! {
+            #method_sig {
+                // Clear sign bit
+                let abs = a.abs();
+
+                // Determine which values to return unchanged
+                let return_res = abs.simd_lt(#threshold);
+
+                // Truncate using the native SSE2 fN <-> iN conversions
+                let abs_trunc: #float_ident<Sse2> = #int_ident::truncate_from(abs).to_float();
+                let trunc = abs_trunc.copysign(a);
+
+                let res = #compute_res;
+
+                return_res.select(res, a)
+            }
         }
     }
 }

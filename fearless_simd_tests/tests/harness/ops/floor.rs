@@ -56,3 +56,19 @@ fn floor_f64x4<S: Simd>(simd: S) {
     let result = simd.floor_f64x4(a);
     assert_eq!(result.as_slice(), expected.as_slice());
 }
+
+// zeros should be bit-exact
+#[simd_test]
+fn floor_neg_zero<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[-0.2, -0.0, 0.0, 0.2]);
+    assert_eq!(
+        *a.floor().to_bits(),
+        [-1.0, -0.0, 0.0, 0.0].map(f32::to_bits)
+    );
+
+    let a = f64x4::from_slice(simd, &[-0.2, -0.0, 0.0, 0.2]);
+    assert_eq!(
+        *a.floor().to_bits(),
+        [-1.0, -0.0, 0.0, 0.0].map(f64::to_bits)
+    );
+}
