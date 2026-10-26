@@ -6808,28 +6808,20 @@ impl X86 {
     ///
     /// ## How it works
     ///
-    /// I will explain `f32x4`, but the same ideas work for `f64x2` as well.
+    /// For f32x4, the main trick is that `_mm_cvtepi32_ps(_mm_cvttps_epi32(x))` is almost the same
+    /// as `trunc(x)`. There are only 2 differences:
     ///
-    /// While SSE2 doesn't have a native `f32::trunc` equivalent, it does have `_mm_cvttps_epi32`
-    /// which converts `f32x4` -> `i32x4` using truncation. Chaining this with `_mm_cvtepi32_ps`
-    /// effectively emulates `f32::trunc` in two instructions. Almost.
+    /// 2. Signed zero. `_mm_cvtepi32_ps(_mm_cvttps_epi32(x))` never output signed zeros, which
+    ///    `trunc(x)` preserves. This is fixed by truncating `x.abs()` and copying the original sign back.
+    /// 1. Range. The output of `_mm_cvtepi32_ps(_mm_cvttps_epi32(x))` is unspecified for inputs
+    ///    that are NaN or outside the range of i32.
+    ///    This is solved by creating a mask for inputs that are NaN or outside the range of i32
+    ///    and returning the original input for those cases.
     ///
-    /// It doesn't quite work. Firstly, `_mm_cvttps_epi32` leaves the output for NaN input and
-    /// inputs outside the range of i32 unspecified. Secondly, this handles signed zeros
-    /// incorrectly.
+    /// The same also works for f64x2, with analogous intrinsic.
     ///
-    /// Both issues can be solved using the absolute value of the input.
-    /// First, we create a mask of all input >=2^31 || NaN. This is done using a single `simd_lt`.
-    /// This mask can be used to conditionally return the original input to fix the first issue.
-    /// Secondly, we truncate the absolute value and restore the original sign using `copysign`.
-    /// This fixes the signed zero issue.
-    ///
-    /// Note that mask trick only works, because all f32 values >= 2^31 are integers. Therefore
-    /// returning them unchanged is correct, because truncation of integers is a no-op.
-    ///
-    /// Lastly, `floor` and `ceil`. These are implemented as an adjustment of the truncated value.
-    /// We use the fact that `floor(x) = if trunc(x) > x { trunc(x) - 1 } else { trunc(x) }`.
-    /// Similar for `ceil`.
+    /// Lastly, `floor` and `ceil` are implemented by adjusting the truncated value. We use the
+    /// fact that `floor(x) = if trunc(x) > x { trunc(x) - 1 } else { trunc(x) }`. Similar for `ceil`.
     fn see2_rounding_fallback(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         assert_eq!(vec_ty.scalar, ScalarType::Float);
         assert_eq!(vec_ty.n_bits(), 128);
