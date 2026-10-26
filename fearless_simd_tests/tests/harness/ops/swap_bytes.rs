@@ -50,26 +50,23 @@ impl SwapBytes for i64 {
     }
 }
 
-/// Returns an array of type `T` where each byte is unique.
-fn get_data<const N: usize, const BYTES: usize, T: Copy + Default>() -> [T; N] {
-    assert_eq!(BYTES, N * size_of::<T>());
-    let bytes: [u8; BYTES] = std::array::from_fn(|i| i as u8);
-    unsafe { std::mem::transmute_copy(&bytes) }
+fn get_data<S: Simd, T: SimdInt<S>>(simd: S) -> T {
+    let unique_bytes: [u8; 64] = std::array::from_fn(|i| i as u8);
+    T::ByteVector::from_slice(simd, &unique_bytes[..T::ByteVector::LEN]).bitcast::<T>()
 }
 
 macro_rules! test_swap_bytes {
     ($scalar:ident, $len:literal, $vector:ty, $simd:expr) => {
-        let data = get_data::<$len, { $len * size_of::<$scalar>() }, $scalar>();
-        let data_inv = data.map(|x| !x);
-        for data in [data, data_inv] {
-            let expected = data.map(SwapBytes::swap_bytes);
-            let actual = <$vector>::from_slice($simd, &data).swap_bytes();
+        let data = get_data::<S, $vector>($simd);
+        for data in [data, !data] {
+            let expected = data.to_array().map(SwapBytes::swap_bytes);
+            let actual = data.swap_bytes().to_array();
             assert!(
-                *actual == expected,
+                actual == expected,
                 "Failed:\n     input: {:X?}\n  expected: {:X?}\n    actual: {:X?}",
                 data,
                 expected,
-                *actual
+                actual
             );
         }
     };
