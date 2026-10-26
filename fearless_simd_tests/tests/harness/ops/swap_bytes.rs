@@ -32,15 +32,18 @@ fn get_data<const N: usize, const BYTES: usize, T: Copy + Default>() -> [T; N] {
 macro_rules! test_swap_bytes {
     ($scalar:ident, $len:literal, $vector:ty, $simd:expr) => {
         let data = get_data::<$len, { $len * size_of::<$scalar>() }, $scalar>();
-        let expected = data.map(SwapBytes::swap_bytes);
-        let actual = <$vector>::from_slice($simd, &data).swap_bytes();
-        assert!(
-            *actual == expected,
-            "Failed:\n     input: {:X?}\n  expected: {:X?}\n    actual: {:X?}",
-            data,
-            expected,
-            *actual
-        );
+        let data_inv = data.map(|x| !x);
+        for data in [data, data_inv] {
+            let expected = data.map(SwapBytes::swap_bytes);
+            let actual = <$vector>::from_slice($simd, &data).swap_bytes();
+            assert!(
+                *actual == expected,
+                "Failed:\n     input: {:X?}\n  expected: {:X?}\n    actual: {:X?}",
+                data,
+                expected,
+                *actual
+            );
+        }
     };
 }
 
