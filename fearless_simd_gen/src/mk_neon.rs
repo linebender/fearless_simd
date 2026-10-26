@@ -325,7 +325,7 @@ impl Level for Neon {
                         format_ident!("vreinterpretq_{}{}_u8", signed, vec_ty.scalar_bits);
                     let rev = format_ident!("vrev{}q_u8", vec_ty.scalar_bits);
                     return self.kernel_method(op, vec_ty, |token| {
-                        quote! { #to_scalar(#rev(#to_u8(a))).simd_into(#token) }
+                        quote! { #to_scalar(#rev(#to_u8(a.into()))).simd_into(#token) }
                     });
                 }
 

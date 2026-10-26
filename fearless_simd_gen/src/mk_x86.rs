@@ -2071,7 +2071,7 @@ impl X86 {
             });
         }
 
-        // General appraoch based on shuffle_epi8 instructions. Requires SSE3+
+        // General approach based on shuffle_epi8 instructions. Requires SSE3+
         let bits = vec_ty.n_bits();
 
         // indexes for the first 128 bits of the vector
