@@ -9,18 +9,46 @@ use fearless_simd_dev_macros::simd_test;
 trait SwapBytes {
     fn swap_bytes(self) -> Self;
 }
-macro_rules! impl_swap_bytes {
-    ($( $t:ty ),* $(,)?) => {
-        $(
-            impl SwapBytes for $t {
-                fn swap_bytes(self) -> Self {
-                    self.swap_bytes()
-                }
-            }
-        )*
-    };
+impl SwapBytes for u8 {
+    fn swap_bytes(self) -> Self {
+        self.swap_bytes()
+    }
 }
-impl_swap_bytes!(u8, u16, u32, u64, i8, i16, i32, i64);
+impl SwapBytes for u16 {
+    fn swap_bytes(self) -> Self {
+        self.swap_bytes()
+    }
+}
+impl SwapBytes for u32 {
+    fn swap_bytes(self) -> Self {
+        self.swap_bytes()
+    }
+}
+impl SwapBytes for u64 {
+    fn swap_bytes(self) -> Self {
+        self.swap_bytes()
+    }
+}
+impl SwapBytes for i8 {
+    fn swap_bytes(self) -> Self {
+        self.swap_bytes()
+    }
+}
+impl SwapBytes for i16 {
+    fn swap_bytes(self) -> Self {
+        self.swap_bytes()
+    }
+}
+impl SwapBytes for i32 {
+    fn swap_bytes(self) -> Self {
+        self.swap_bytes()
+    }
+}
+impl SwapBytes for i64 {
+    fn swap_bytes(self) -> Self {
+        self.swap_bytes()
+    }
+}
 
 /// Returns an array of type `T` where each byte is unique.
 fn get_data<const N: usize, const BYTES: usize, T: Copy + Default>() -> [T; N] {
