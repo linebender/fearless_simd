@@ -9,6 +9,8 @@
 ///
 /// The first argument must be a SIMD token written as `token: Neon`,
 /// `token: WasmSimd128`, `token: Sse2`, `token: Sse4_2`, `token: Avx2`, or `token: Avx512`.
+/// With `experimental_sve2`, `token: Sve2_128`, `token: Sve2_256`, and
+/// `token: Sve2_512` are also accepted, subject to the prototype's per-thread width limitation.
 ///
 /// For levels with runtime-detected target features, the macro runs your body
 /// inside an inner function annotated with the appropriate `#[target_feature]`
@@ -56,6 +58,7 @@
 ///
 /// The SIMD token type must be written as a bare supported name:
 /// literally `Neon`, `WasmSimd128`, `Sse2`, `Sse4_2`, `Avx2`, or `Avx512`. No paths or aliases.
+/// The experimental SVE2 names listed above follow the same rule.
 ///
 /// For soundness, this macro only accepts safe functions.
 ///
@@ -105,6 +108,15 @@ macro_rules! kernel {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __fearless_simd_kernel_cfg {
+    (Sve2_128, $item:item) => {
+        $crate::__fearless_simd_sve2_kernel_cfg!($item);
+    };
+    (Sve2_256, $item:item) => {
+        $crate::__fearless_simd_sve2_kernel_cfg!($item);
+    };
+    (Sve2_512, $item:item) => {
+        $crate::__fearless_simd_sve2_kernel_cfg!($item);
+    };
     (Neon, $item:item) => {
         #[cfg(target_arch = "aarch64")]
         $item
@@ -145,11 +157,31 @@ macro_rules! __fearless_simd_kernel_cfg {
     };
 }
 
+// Select in this crate, not in the downstream crate expanding `kernel!`.
+#[doc(hidden)]
+#[macro_export]
+#[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]
+macro_rules! __fearless_simd_sve2_kernel_cfg {
+    ($item:item) => {
+        $item
+    };
+}
+
+#[doc(hidden)]
+#[macro_export]
+#[cfg(not(all(target_arch = "aarch64", feature = "experimental_sve2")))]
+macro_rules! __fearless_simd_sve2_kernel_cfg {
+    ($item:item) => {};
+}
+
 // Internal interface for `kernel!` and `__fearless_simd_dispatch_entry!`, which backs
 // the argument-taking `#[simd]` expansion in `fearless_simd_macros`.
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __fearless_simd_kernel_target_fn {
+    (Sve2_128, $item:item) => { #[target_feature(enable = "sve2")] $item };
+    (Sve2_256, $item:item) => { #[target_feature(enable = "sve2")] $item };
+    (Sve2_512, $item:item) => { #[target_feature(enable = "sve2")] $item };
     (Neon, $item:item) => {
         #[target_feature(enable = "neon")]
         $item

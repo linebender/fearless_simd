@@ -13,6 +13,8 @@
 /// frequently calling [`Level::new()`].
 /// On x86, the first call to `Level::new` detects which target features are available and caches
 /// the result. Passing the resulting value around avoids even the cached atomic load.
+/// Experimental SVE2 tokens additionally require the same active vector length on
+/// every thread that uses them; detection does not establish this across threads.
 ///
 /// The code of the operation will be repeated literally several times in the output, so you should prefer
 /// to keep this code small (as it will be type-checked, etc. for each supported SIMD level on your target).
@@ -55,7 +57,22 @@ macro_rules! dispatch {
         $crate::__fearless_simd_dispatch_inner!($level, $simd => $op)
     }};
     (@impl $level:expr, $simd:pat => $op:expr; $forced_fallback_arm:literal) => {{
+        $crate::__fearless_simd_dispatch_sve2!($level, $simd => $op; $forced_fallback_arm)
+    }};
+    (@impl_sve2 $level:expr, $simd:pat => $op:expr; $forced_fallback_arm:literal; $sve2_arm:literal) => {{
         match $crate::Level::__dispatch_target($level) {
+            #[cfg(all(target_arch = "aarch64", $sve2_arm))]
+            $crate::Level::Sve2_128(sve) => {
+                $crate::__fearless_simd_dispatch_with_token!(sve, $simd => $op)
+            }
+            #[cfg(all(target_arch = "aarch64", $sve2_arm))]
+            $crate::Level::Sve2_256(sve) => {
+                $crate::__fearless_simd_dispatch_with_token!(sve, $simd => $op)
+            }
+            #[cfg(all(target_arch = "aarch64", $sve2_arm))]
+            $crate::Level::Sve2_512(sve) => {
+                $crate::__fearless_simd_dispatch_with_token!(sve, $simd => $op)
+            }
             #[cfg(target_arch = "aarch64")]
             $crate::Level::Neon(neon) => {
                 $crate::__fearless_simd_dispatch_with_token!(neon, $simd => $op)
@@ -101,6 +118,27 @@ macro_rules! dispatch {
             _ => unreachable!(),
         }
     }};
+}
+
+// Carry this crate's feature selection into downstream macro expansions.
+/// Implementation detail of [`crate::dispatch`]; this is not public API.
+#[macro_export]
+#[doc(hidden)]
+#[cfg(feature = "experimental_sve2")]
+macro_rules! __fearless_simd_dispatch_sve2 {
+    ($level:expr, $simd:pat => $op:expr; $fallback:literal) => {
+        $crate::dispatch!(@impl_sve2 $level, $simd => $op; $fallback; true)
+    };
+}
+
+/// Implementation detail of [`crate::dispatch`]; this is not public API.
+#[macro_export]
+#[doc(hidden)]
+#[cfg(not(feature = "experimental_sve2"))]
+macro_rules! __fearless_simd_dispatch_sve2 {
+    ($level:expr, $simd:pat => $op:expr; $fallback:literal) => {
+        $crate::dispatch!(@impl_sve2 $level, $simd => $op; $fallback; false)
+    };
 }
 
 // This macro turns whether `force_support_fallback` is enabled into a boolean literal in

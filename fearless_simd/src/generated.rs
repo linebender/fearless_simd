@@ -56,6 +56,12 @@ mod simd_types;
 mod sse2;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod sse4_2;
+#[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]
+mod sve2_128;
+#[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]
+mod sve2_256;
+#[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]
+mod sve2_512;
 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
 mod wasm;
 
@@ -76,3 +82,5 @@ pub use sse2::*;
 pub use sse4_2::*;
 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
 pub use wasm::*;
+#[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]
+pub use {sve2_128::*, sve2_256::*, sve2_512::*};

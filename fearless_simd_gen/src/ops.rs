@@ -2136,7 +2136,7 @@ impl OpSig {
         true
     }
 
-    fn simd_trait_arg_names(&self) -> &'static [&'static str] {
+    pub(crate) fn simd_trait_arg_names(&self) -> &'static [&'static str] {
         match self {
             Self::Splat => &["val"],
             Self::MaskFromBitmask => &["bits"],

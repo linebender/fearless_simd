@@ -221,6 +221,10 @@
 #![allow(non_camel_case_types, reason = "TODO")]
 #![expect(clippy::unused_unit, reason = "easier for code generation")]
 #![no_std]
+#![cfg_attr(
+    all(target_arch = "aarch64", feature = "experimental_sve2"),
+    feature(stdarch_aarch64_sve)
+)]
 
 #[cfg(feature = "std")]
 extern crate std;
@@ -256,6 +260,8 @@ pub mod prelude {
 #[cfg(target_arch = "aarch64")]
 pub mod aarch64 {
     pub use crate::generated::Neon;
+    #[cfg(feature = "experimental_sve2")]
+    pub use crate::generated::{Sve2_128, Sve2_256, Sve2_512};
 }
 
 /// Implementations of [`Simd`] for webassembly.
@@ -406,6 +412,15 @@ pub enum Level {
     /// The Neon instruction set on 64 bit ARM.
     #[cfg(target_arch = "aarch64")]
     Neon(Neon),
+    /// Experimental SVE2 with an active vector length of exactly 128 bits.
+    #[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]
+    Sve2_128(Sve2_128),
+    /// Experimental SVE2 with an active vector length of exactly 256 bits.
+    #[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]
+    Sve2_256(Sve2_256),
+    /// Experimental SVE2 with an active vector length of exactly 512 bits.
+    #[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]
+    Sve2_512(Sve2_512),
     /// The SIMD 128 instructions on 32-bit WebAssembly.
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     WasmSimd128(WasmSimd128),
@@ -431,11 +446,49 @@ pub enum Level {
 }
 
 impl Level {
+    /// Detect an experimental exact-width SVE2 level on the calling thread.
+    ///
+    /// Returns `None` without SVE2 or at widths other than 128, 256, and 512 bits.
+    /// Unlike CPU feature availability, the current vector length is not cached.
+    /// [`Self::new`] also performs this detection when the experimental feature is enabled.
+    ///
+    /// # Known prototype soundness limitation
+    ///
+    /// Every use of the returned level, its tokens, or vectors carrying those
+    /// tokens must occur with the same active non-streaming SVE vector length
+    /// detected here. The existing `Send`/`Sync` implementations do not enforce
+    /// this: transferring a token to a thread with a different vector length
+    /// can cause undefined behavior through safe operations. This prototype
+    /// deliberately retains the safe detection API despite that limitation.
+    /// Explicit changes to vector length are assumed to be unsafe and out of scope.
+    #[cfg(all(
+        target_arch = "aarch64",
+        feature = "experimental_sve2",
+        feature = "std"
+    ))]
+    pub fn detect_sve2() -> Option<Self> {
+        if !std::arch::is_aarch64_feature_detected!("sve2") {
+            return None;
+        }
+        // SVE2 and the exact width are checked on this thread. KNOWN UNSOUNDNESS:
+        // the resulting proof can cross threads with a different VL via Send/Sync.
+        unsafe {
+            match core::arch::aarch64::svcntb() {
+                16 => Some(Self::Sve2_128(Sve2_128::assume_supported())),
+                32 => Some(Self::Sve2_256(Sve2_256::assume_supported())),
+                64 => Some(Self::Sve2_512(Sve2_512::assume_supported())),
+                _ => None,
+            }
+        }
+    }
+
     /// Return the best SIMD level available on the CPU. This value should be passed to [`dispatch`].
     ///
     /// On x86 and x86-64 targets, this detects the available CPU features on the first call and
-    /// caches the result. Other targets return their strongest statically supported level.
-    /// This may change in the future if runtime-detected levels for other platforms are added.
+    /// caches the result. With `experimental_sve2`, AArch64 also checks the calling
+    /// thread's active SVE vector length on each call; see `Level::detect_sve2`'s
+    /// documented prototype limitation (available on AArch64 with that feature).
+    /// Other targets return their strongest statically supported level.
     ///
     /// This function requires the standard library on targets other than wasm32. On wasm32, the
     /// available level is known statically, so the standard library isn't required.
@@ -457,12 +510,20 @@ impl Level {
     )]
     #[inline]
     pub fn new() -> Self {
+        #[cfg(all(
+            target_arch = "aarch64",
+            feature = "experimental_sve2",
+            feature = "std"
+        ))]
+        if let Some(level) = Self::detect_sve2() {
+            return level;
+        }
         #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
         {
             *X86_LEVEL.0
         }
 
-        // targets other than x86 do not perform any runtime detection
+        // No experimental runtime backend was selected above; use the static baseline.
         #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
         {
             Self::baseline()
@@ -530,6 +591,11 @@ impl Level {
         )]
         match self {
             Self::Neon(neon) => Some(neon),
+            #[cfg(feature = "experimental_sve2")]
+            Self::Sve2_128(_) | Self::Sve2_256(_) | Self::Sve2_512(_) => {
+                // SAFETY: SVE2 implies NEON, independently of vector length.
+                Some(unsafe { Neon::assume_supported() })
+            }
             _ => None,
         }
     }
@@ -871,6 +937,13 @@ impl Level {
 
         #[cfg(target_arch = "aarch64")]
         {
+            #[cfg(feature = "experimental_sve2")]
+            if matches!(
+                self,
+                Self::Sve2_128(_) | Self::Sve2_256(_) | Self::Sve2_512(_)
+            ) {
+                return self;
+            }
             let baseline = Self::baseline();
             if let Some(neon) = self.as_neon().or_else(|| baseline.as_neon()) {
                 return Self::Neon(neon);
