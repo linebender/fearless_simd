@@ -6826,10 +6826,8 @@ impl X86 {
         assert_eq!(vec_ty.scalar, ScalarType::Float);
         assert_eq!(vec_ty.n_bits(), 128);
 
-        let bits = vec_ty.scalar_bits;
-
         // This is 2^31 for f32 and 2^63 for f64
-        let threshold = match bits {
+        let threshold = match vec_ty.scalar_bits {
             32 => quote! { 2147483648.0_f32 },
             64 => quote! { 9223372036854775808.0_f64 },
             _ => panic!("Unsupported float bit width"),
