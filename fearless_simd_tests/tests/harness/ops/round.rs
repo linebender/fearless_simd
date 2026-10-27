@@ -124,3 +124,40 @@ fn round_neg_zero<S: Simd>(simd: S) {
         [-0.0, -0.0, 0.0, 0.0].map(f64::to_bits)
     );
 }
+
+#[simd_test]
+#[ignore = "exhaustive testing to verify bit-exactness of f32xN::round"]
+fn bit_exact_f32_exhaustive<S: Simd>(simd: S) {
+    for bits in 0..=u32::MAX {
+        let input = f32::from_bits(bits);
+        let expected = input.round();
+        let actual = f32x4::splat(simd, input).round()[0];
+
+        // NaN bit-patterns aren't preserved
+        if input.is_nan() {
+            assert!(actual.is_nan());
+        } else {
+            assert_eq!(expected.to_bits(), actual.to_bits(), "{input} ({bits:x})");
+        }
+    }
+}
+
+#[simd_test]
+fn bit_exact_f64_randomized<S: Simd>(simd: S) {
+    let mut rng = fastrand::Rng::with_seed(0xa409_3822_299f_31d0);
+    // exhaustively check the top K bits and randomize the rest
+    let exhaustive_bits = 16;
+    for bits in 0..(1_u64 << exhaustive_bits) {
+        let bits = (bits << (64 - exhaustive_bits)) | rng.u64(..) >> exhaustive_bits;
+        let input = f64::from_bits(bits);
+        let expected = input.round();
+        let actual = f64x2::splat(simd, input).round()[0];
+
+        // NaN bit-patterns aren't preserved
+        if input.is_nan() {
+            assert!(actual.is_nan());
+        } else {
+            assert_eq!(expected.to_bits(), actual.to_bits(), "{input} ({bits:x})");
+        }
+    }
+}
