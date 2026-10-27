@@ -25,6 +25,8 @@ use core::str::FromStr;
 /// attribute extracts a token from its first non-receiver parameter using this
 /// trait.
 ///
+/// # Example
+///
 /// ```
 /// use fearless_simd::{ExtractToken, Simd, f32x4};
 ///
@@ -39,6 +41,11 @@ use core::str::FromStr;
 ///         self.0.token()
 ///     }
 /// }
+/// ```
+///
+/// ```ignore
+/// #[simd]
+/// fn process_audio<S: Simd>(samples: AudioSamples<S>) { todo!() }
 /// ```
 #[diagnostic::on_unimplemented(
     message = "`{Self}` does not carry a SIMD token",
@@ -398,12 +405,16 @@ impl SimdFloatElement for f64 {
 }
 
 /// Construction of integer vectors from floats by truncation
+///
+/// For a more convenient API, see [`SimdFloat::to_int`] and [`SimdFloat::to_int_precise`].
 pub trait SimdCvtTruncate<T: Seal>: Seal {
     fn truncate_from(x: T) -> Self;
     fn truncate_from_precise(x: T) -> Self;
 }
 
-/// Construction of floating point vectors from integers
+/// Construction of floating point vectors from integers.
+///
+/// For a more convenient API, see [`SimdInt::to_float`].
 pub trait SimdCvtFloat<T: Seal>: Seal {
     fn float_from(x: T) -> Self;
 }
@@ -476,6 +487,19 @@ pub trait SimdCombine<S: Simd>: SimdBase<S> + Seal {
         + SimdSplit<S, Split = Self>;
 
     /// Concatenate two vectors into a new one that's twice as long.
+    ///
+    /// The inverse operation is [`split`](SimdSplit::split).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use fearless_simd::*;
+    /// # dispatch!(Level::new(), simd => {
+    /// let a = i32x4::from_slice(simd, &[1, 2, 3, 4]);
+    /// let b = i32x4::from_slice(simd, &[5, 6, 7, 8]);
+    /// assert_eq!(*a.combine(b), [1, 2, 3, 4, 5, 6, 7, 8]);
+    /// # });
+    /// ```
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined;
 }
 
@@ -487,6 +511,19 @@ pub trait SimdSplit<S: Simd>: SimdBase<S> + Seal {
         + SimdCombine<S, Combined = Self>;
 
     /// Split this vector into left and right halves.
+    ///
+    /// The inverse operation is [`combine`](SimdCombine::combine).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use fearless_simd::*;
+    /// # dispatch!(Level::new(), simd => {
+    /// let (a, b) = i32x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]).split();
+    /// assert_eq!(*a, [1, 2, 3, 4]);
+    /// assert_eq!(*b, [5, 6, 7, 8]);
+    /// # });
+    /// ```
     fn split(self) -> (Self::Split, Self::Split);
 }
 
@@ -556,6 +593,18 @@ pub trait SimdWiden<S: Simd>:
     type Widened: SimdNarrow<S, Narrowed = Self>;
 
     /// Widen every lane, returning the lower and upper halves in that order.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use fearless_simd::*;
+    /// # dispatch!(Level::new(), simd => {
+    /// let a = i32x4::from_slice(simd, &[-100, 0, 100, i32::MAX]);
+    /// let (lower, upper) = a.widen();
+    /// assert_eq!(*lower, [-100_i64, 0_i64]);
+    /// assert_eq!(*upper, [100_i64, i32::MAX as i64]);
+    /// # });
+    /// ```
     fn widen(self) -> (Self::Widened, Self::Widened);
 }
 
