@@ -86,17 +86,9 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         fn #sve2_name() {
             // Detection and every operation remain on this test's thread.
             if let Some(level) = fearless_simd::Level::detect_sve2() {
-                // Exercise lower levels on wider hardware as well as the selected
-                // level: bounded implementations must not depend on physical VL.
-                if let Some(simd) = level.as_sve2_128() {
-                    simd.vectorize(#[inline(always)] || #input_fn_name(simd));
-                }
-                if let Some(simd) = level.as_sve2_256() {
-                    simd.vectorize(#[inline(always)] || #input_fn_name(simd));
-                }
-                if let Some(simd) = level.as_sve2_512() {
-                    simd.vectorize(#[inline(always)] || #input_fn_name(simd));
-                }
+                // Smaller logical vectors are tested with this same exact-width
+                // token; a different SVE2 token would require a different physical VL.
+                fearless_simd::dispatch!(level, simd => #input_fn_name(simd));
             }
         }
     };

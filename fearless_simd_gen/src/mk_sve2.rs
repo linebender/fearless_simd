@@ -1,7 +1,8 @@
 // Copyright 2026 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! Experimental bounded-width SVE2 backend. Arrays are the ABI; scalable values are locals.
+//! Experimental exact-width SVE2 backend with bounded memory accesses.
+//! Arrays are the ABI; scalable values are locals.
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -64,10 +65,10 @@ impl Level for Sve2 {
     }
 
     fn token_doc(&self) -> &'static str {
-        "Experimental bounded-width SVE2 token with aligned array storage.\n\n\
-         Known prototype soundness hole for the wider levels: tokens and vectors implement `Send` and `Sync`,\n\
+        "Experimental exact-width SVE2 token with aligned array storage and bounded memory accesses.\n\n\
+         Known prototype soundness hole: tokens and vectors implement `Send` and `Sync`,\n\
          but the active SVE vector length is per-thread. Safe detection does not protect\n\
-         against transfer to a thread with insufficient width. See `assume_supported`\n\
+         against transfer to a thread with a different width. See `assume_supported`\n\
          and `Level::detect_sve2` for the execution-context requirements."
     }
 
@@ -82,7 +83,7 @@ impl Level for Sve2 {
     fn make_impl_body(&self) -> TokenStream {
         let bits = self.0;
         quote! {
-            /// Logical vector width and minimum active SVE vector length, in bits.
+            /// Native vector width and required exact active SVE vector length, in bits.
             pub const VECTOR_BITS: usize = #bits;
 
             /// Construct a token without checking SVE2 availability or active vector length.
@@ -91,7 +92,7 @@ impl Level for Sve2 {
             ///
             /// Every use of this token, any copy, or any vector carrying it must occur
             /// on a thread with SVE2 enabled and an active non-streaming SVE vector
-            /// length of at least `Self::VECTOR_BITS`. This includes uses after transfer
+            /// length of exactly `Self::VECTOR_BITS`. This includes uses after transfer
             /// through `Send` or `Sync`. The length must remain unchanged during use.
             /// Enabling the `sve2` target feature alone does not establish the width.
             #[inline]
@@ -123,9 +124,10 @@ impl Level for Sve2 {
         let load = format_ident!("svld1_{suffix}");
         let store = format_ident!("svst1_{suffix}");
         let ptrue = format_ident!("svptrue_pat_b{}", ty.scalar_bits);
-        // The same logical-width implementation is used on every wider level.
-        // Never use SV_ALL: physical registers may exceed both the level and type.
+        // Keep memory accesses bounded even at the exact native width: this makes
+        // their fixed size visible to LLVM and helps eliminate intermediate arrays.
         let pattern = format_ident!("SV_VL{}", ty.len);
+        let is_native = ty.n_bits() == self.0;
         let vec = ty.rust();
         let scalar = ty.scalar.rust(ty.scalar_bits);
         let len = ty.len;
@@ -145,15 +147,24 @@ impl Level for Sve2 {
             let zip1 = intrinsic("zip1");
             let half_len = ty.len / 2;
             let half_pattern = format_ident!("SV_VL{half_len}");
-            let zip_high = quote! {
-                {
-                    // ZIP2 starts at half the *physical* width. Gather the logical
-                    // upper halves into the low lanes before using ZIP1 instead.
-                    let indices = #index(#half_len as #index_scalar, 1);
-                    #zip1(#tbl(a, indices), #tbl(b, indices))
+            let zip_high = if is_native {
+                let zip2 = intrinsic("zip2");
+                quote! { #zip2(a, b) }
+            } else {
+                quote! {
+                    {
+                        // ZIP2 starts at half the *physical* width. Gather the logical
+                        // upper halves into the low lanes before using ZIP1 instead.
+                        let indices = #index(#half_len as #index_scalar, 1);
+                        #zip1(#tbl(a, indices), #tbl(b, indices))
+                    }
                 }
             };
             let unzip = |odd: bool| {
+                if is_native {
+                    let uzp = intrinsic(if odd { "uzp2" } else { "uzp1" });
+                    return quote! { #uzp(a, b) };
+                }
                 let first = usize::from(odd);
                 let lane_mask = len - 1;
                 let and = format_ident!("svand_n_u{}_x", ty.scalar_bits);
@@ -185,6 +196,10 @@ impl Level for Sve2 {
                     let f = intrinsic("addv");
                     quote! { #f(pg, a) as #scalar }
                 }
+                "reverse" if is_native => {
+                    let rev = intrinsic("rev");
+                    quote! { #rev(a) }
+                }
                 "reverse" => {
                     let last = len - 1;
                     // An unsigned all-ones step encodes -1 for INDEX.
@@ -205,6 +220,9 @@ impl Level for Sve2 {
                 // Bounded loads zero every lane beyond the logical table. This
                 // also makes precise out-of-range lookups zero on wider hardware.
                 "swizzle_dyn" | "swizzle_dyn_precise" => quote! { svtbl_u8(a, indices) },
+                "concat_swizzle_dyn" | "concat_swizzle_dyn_precise" if is_native => {
+                    quote! { svtbl2_u8(svcreate2_u8(a, b), indices) }
+                }
                 "concat_swizzle_dyn" | "concat_swizzle_dyn_precise" => {
                     // TBL2 places b at the physical width, not the logical width.
                     // Each lookup is zero outside its logical table; combine them.
@@ -248,7 +266,7 @@ impl Level for Sve2 {
                     #[target_feature(enable = "sve2")]
                     fn store(token: #level, pg: svbool_t, value: #native) -> #vec<#level> {
                         let mut out = core::mem::MaybeUninit::<[#scalar; #len]>::uninit();
-                        // SAFETY: the minimum-width token guarantees the predicate activates
+                        // SAFETY: the exact-width token guarantees the predicate activates
                         // all logical lanes, and no lanes beyond this array.
                         unsafe {
                             #store(pg, out.as_mut_ptr().cast::<#scalar>(), value);

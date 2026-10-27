@@ -13,7 +13,7 @@ fn concat_swizzle_dyn_precise_u8x16_all_indices<S: Simd>(simd: S) {
     let a = u8x16::simd_from(simd, a_bytes);
     let b = u8x16::simd_from(simd, b_bytes);
 
-    // Includes wrapped indices into the second table on physical VLs up to 2048.
+    // Includes wrapped indices into the second table when physical VL exceeds 128 bits.
     for start in 0..=255_u8 {
         let mut indices = [0; 16];
         let mut expected = [0; 16];

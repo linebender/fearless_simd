@@ -1,7 +1,7 @@
 // Copyright 2026 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! Assembly inspection fixtures for the bounded-width SVE2 prototype.
+//! Assembly inspection fixtures for the exact-width SVE2 prototype with bounded memory accesses.
 //! See SVE2_PROTOTYPE.md for build and execution instructions.
 
 #[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]

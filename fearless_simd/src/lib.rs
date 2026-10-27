@@ -412,13 +412,13 @@ pub enum Level {
     /// The Neon instruction set on 64 bit ARM.
     #[cfg(target_arch = "aarch64")]
     Neon(Neon),
-    /// Experimental SVE2 with an active vector length of at least 128 bits.
+    /// Experimental SVE2 with an active vector length of exactly 128 bits.
     #[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]
     Sve2_128(Sve2_128),
-    /// Experimental SVE2 with an active vector length of at least 256 bits.
+    /// Experimental SVE2 with an active vector length of exactly 256 bits.
     #[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]
     Sve2_256(Sve2_256),
-    /// Experimental SVE2 with an active vector length of at least 512 bits.
+    /// Experimental SVE2 with an active vector length of exactly 512 bits.
     #[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]
     Sve2_512(Sve2_512),
     /// The SIMD 128 instructions on 32-bit WebAssembly.
@@ -446,19 +446,18 @@ pub enum Level {
 }
 
 impl Level {
-    /// Detect an experimental bounded-width SVE2 level on the calling thread.
+    /// Detect an experimental exact-width SVE2 level on the calling thread.
     ///
-    /// Selects the largest of 128, 256, and 512 bits that fits the active width.
-    /// Returns `None` without SVE2. Widths above 512 bits use `Sve2_512`.
+    /// Returns `None` without SVE2 or at widths other than 128, 256, and 512 bits.
     /// Unlike CPU feature availability, the current vector length is not cached.
     /// [`Self::new`] also performs this detection when the experimental feature is enabled.
     ///
     /// # Known prototype soundness limitation
     ///
     /// Every use of the returned level, its tokens, or vectors carrying those
-    /// tokens must occur with an active non-streaming SVE vector length at least
-    /// as wide as the selected level. The existing `Send`/`Sync` implementations
-    /// do not enforce this: transferring a token to a thread with insufficient width
+    /// tokens must occur with the exact active non-streaming SVE vector length
+    /// detected here. The existing `Send`/`Sync` implementations do not enforce
+    /// this: transferring a token to a thread with a different width
     /// can cause undefined behavior through safe operations. This prototype
     /// deliberately retains the safe detection API despite that limitation.
     /// Explicit changes to vector length are assumed to be unsafe and out of scope.
@@ -471,47 +470,39 @@ impl Level {
         if !std::arch::is_aarch64_feature_detected!("sve2") {
             return None;
         }
-        // SVE2 and the minimum width are checked on this thread. KNOWN UNSOUNDNESS:
-        // the resulting proof can cross threads with insufficient VL via Send/Sync.
+        // SVE2 and the exact width are checked on this thread. KNOWN UNSOUNDNESS:
+        // the resulting proof can cross threads with a different VL via Send/Sync.
         unsafe {
             match core::arch::aarch64::svcntb() {
-                64.. => Some(Self::Sve2_512(Sve2_512::assume_supported())),
-                32.. => Some(Self::Sve2_256(Sve2_256::assume_supported())),
-                16.. => Some(Self::Sve2_128(Sve2_128::assume_supported())),
+                64 => Some(Self::Sve2_512(Sve2_512::assume_supported())),
+                32 => Some(Self::Sve2_256(Sve2_256::assume_supported())),
+                16 => Some(Self::Sve2_128(Sve2_128::assume_supported())),
                 _ => None,
             }
         }
     }
 
-    /// Access a bounded 128-bit SVE2 token from any SVE2 level.
+    /// Access the token only if this is the exact 128-bit SVE2 level.
     #[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]
     #[inline]
     pub fn as_sve2_128(self) -> Option<Sve2_128> {
         match self {
             Self::Sve2_128(token) => Some(token),
-            Self::Sve2_256(_) | Self::Sve2_512(_) => {
-                // SAFETY: either level guarantees at least 128 bits.
-                Some(unsafe { Sve2_128::assume_supported() })
-            }
             _ => None,
         }
     }
 
-    /// Access a bounded 256-bit SVE2 token from a 256-bit or wider SVE2 level.
+    /// Access the token only if this is the exact 256-bit SVE2 level.
     #[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]
     #[inline]
     pub fn as_sve2_256(self) -> Option<Sve2_256> {
         match self {
             Self::Sve2_256(token) => Some(token),
-            Self::Sve2_512(_) => {
-                // SAFETY: this level guarantees at least 256 bits.
-                Some(unsafe { Sve2_256::assume_supported() })
-            }
             _ => None,
         }
     }
 
-    /// Access a bounded 512-bit SVE2 token when the level guarantees it.
+    /// Access the token only if this is the exact 512-bit SVE2 level.
     #[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]
     #[inline]
     pub fn as_sve2_512(self) -> Option<Sve2_512> {

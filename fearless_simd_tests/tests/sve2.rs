@@ -1,7 +1,7 @@
 // Copyright 2026 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! Explicit prototype checks; the operation harness also runs on every supported SVE2 level.
+//! Explicit prototype checks; the operation harness also runs on the detected exact-width SVE2 level.
 
 use fearless_simd::*;
 
@@ -31,10 +31,13 @@ fn sve2_detection_and_dispatch() {
             format!("{level:?}"),
             format!("{:?}", Level::detect_sve2().unwrap())
         );
-        let narrow = level.as_sve2_128().unwrap();
-        assert_eq!(dispatch!(narrow.level(), simd => native_bits(simd)), 128);
-        assert_eq!(level.as_sve2_256().is_some(), bits >= 256);
-        assert_eq!(level.as_sve2_512().is_some(), bits >= 512);
+        // Accessors must not convert between exact-width tokens, in either direction.
+        assert_eq!(level.as_sve2_128().is_some(), bits == 128);
+        assert_eq!(level.as_sve2_256().is_some(), bits == 256);
+        assert_eq!(level.as_sve2_512().is_some(), bits == 512);
+        if let Some(narrow) = level.as_sve2_128() {
+            assert_eq!(dispatch!(narrow.level(), simd => native_bits(simd)), 128);
+        }
         if let Some(medium) = level.as_sve2_256() {
             assert_eq!(dispatch!(medium.level(), simd => native_bits(simd)), 256);
         }
@@ -78,6 +81,29 @@ fn sve2_256_operations_outside_vectorize() {
         let b = (a + a) * a;
         assert_eq!(*b, [2.0, 8.0, 18.0, 32.0, 50.0, 72.0, 98.0, 128.0]);
         assert_eq!(*a.zip_high(a), [5.0, 5.0, 6.0, 6.0, 7.0, 7.0, 8.0, 8.0]);
+    }
+}
+
+#[test]
+fn sve2_256_native_and_smaller_rearrangement_chains() {
+    if let Some(simd) = Level::new().as_sve2_256() {
+        simd.vectorize(
+            #[inline(always)]
+            || {
+                let a = f32x8::from_slice(simd, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+                let b = f32x8::from_slice(simd, &[11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0]);
+                assert_eq!(
+                    *a.reverse().zip_high(b).unzip_low(a),
+                    [4.0, 3.0, 2.0, 1.0, 1.0, 3.0, 5.0, 7.0]
+                );
+
+                // The same token also supports 128-bit logical vectors, using bounded
+                // permutations instead of the physical register's upper half.
+                let a = f32x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);
+                let b = f32x4::from_slice(simd, &[11.0, 12.0, 13.0, 14.0]);
+                assert_eq!(*a.reverse().zip_high(b).unzip_low(a), [2.0, 1.0, 1.0, 3.0]);
+            },
+        );
     }
 }
 
