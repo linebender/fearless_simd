@@ -2809,7 +2809,11 @@ impl X86 {
 
         if *self == Self::Sse2
             && vec_ty.scalar == ScalarType::Float
-            && matches!(method, "floor" | "ceil" | "round_ties_even" | "trunc")
+            && matches!(method, "floor" | "ceil" | "trunc")
+        {
+            return self.see2_rounding_fallback(op, vec_ty);
+        }
+        if *self == Self::Sse2 && vec_ty.scalar == ScalarType::Float && method == "round_ties_even"
         {
             return fallback_method(op, vec_ty);
         }
@@ -6796,6 +6800,66 @@ impl X86 {
                     cross_block_alignr_one(token, &regs, 0, shift_bytes)
                 }
             );
+        }
+    }
+
+    /// SSE2 doesn't have native instructions for floating-point rounding operations, so we provide
+    /// a bit-exact vectorized implementation based on `trunc`.
+    ///
+    /// ## How it works
+    ///
+    /// For f32x4, the main trick is that `_mm_cvtepi32_ps(_mm_cvttps_epi32(x))` is almost the same
+    /// as `trunc(x)`. There are only 2 differences:
+    ///
+    /// 2. Signed zero. `_mm_cvtepi32_ps(_mm_cvttps_epi32(x))` never output signed zeros, which
+    ///    `trunc(x)` preserves. This is fixed by truncating `x.abs()` and copying the original sign back.
+    /// 1. Range. The output of `_mm_cvtepi32_ps(_mm_cvttps_epi32(x))` is unspecified for inputs
+    ///    that are NaN or outside the range of i32.
+    ///    This is solved by creating a mask for inputs that are NaN or outside the range of i32
+    ///    and returning the original input for those cases.
+    ///
+    /// The same also works for f64x2, with analogous intrinsic.
+    ///
+    /// Lastly, `floor` and `ceil` are implemented by adjusting the truncated value. We use the
+    /// fact that `floor(x) = if trunc(x) > x { trunc(x) - 1 } else { trunc(x) }`. Similar for `ceil`.
+    fn see2_rounding_fallback(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        assert_eq!(vec_ty.scalar, ScalarType::Float);
+        assert_eq!(vec_ty.n_bits(), 128);
+
+        // This is 2^31 for f32 and 2^63 for f64
+        let threshold = match vec_ty.scalar_bits {
+            32 => quote! { 2147483648.0_f32 },
+            64 => quote! { 9223372036854775808.0_f64 },
+            _ => panic!("Unsupported float bit width"),
+        };
+
+        let compute_res = match op.method {
+            "trunc" => quote! { trunc },
+            "floor" => quote! { trunc.simd_gt(a).select(trunc - 1.0, trunc) },
+            "ceil" => quote! { trunc.simd_lt(a).select(trunc + 1.0, trunc) },
+            _ => panic!("Unsupported method"),
+        };
+
+        let float_ident = vec_ty.rust();
+        let int_ident = vec_ty.cast(ScalarType::Int).rust();
+        let method_sig = op.simd_trait_method_sig(vec_ty);
+
+        quote! {
+            #method_sig {
+                // Clear sign bit
+                let abs = a.abs();
+
+                // Determine which values to return unchanged
+                let return_res = abs.simd_lt(#threshold);
+
+                // Truncate using the native SSE2 fN <-> iN conversions
+                let abs_trunc: #float_ident<Sse2> = #int_ident::truncate_from(abs).to_float();
+                let trunc = abs_trunc.copysign(a);
+
+                let res = #compute_res;
+
+                return_res.select(res, a)
+            }
         }
     }
 }

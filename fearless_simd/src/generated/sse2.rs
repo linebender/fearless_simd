@@ -587,23 +587,21 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn floor_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        [
-            f32::floor(a[0usize]),
-            f32::floor(a[1usize]),
-            f32::floor(a[2usize]),
-            f32::floor(a[3usize]),
-        ]
-        .simd_into(self)
+        let abs = a.abs();
+        let return_res = abs.simd_lt(2147483648.0_f32);
+        let abs_trunc: f32x4<Sse2> = i32x4::truncate_from(abs).to_float();
+        let trunc = abs_trunc.copysign(a);
+        let res = trunc.simd_gt(a).select(trunc - 1.0, trunc);
+        return_res.select(res, a)
     }
     #[inline(always)]
     fn ceil_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        [
-            f32::ceil(a[0usize]),
-            f32::ceil(a[1usize]),
-            f32::ceil(a[2usize]),
-            f32::ceil(a[3usize]),
-        ]
-        .simd_into(self)
+        let abs = a.abs();
+        let return_res = abs.simd_lt(2147483648.0_f32);
+        let abs_trunc: f32x4<Sse2> = i32x4::truncate_from(abs).to_float();
+        let trunc = abs_trunc.copysign(a);
+        let res = trunc.simd_lt(a).select(trunc + 1.0, trunc);
+        return_res.select(res, a)
     }
     #[inline(always)]
     fn round_ties_even_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -626,13 +624,12 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn trunc_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        [
-            f32::trunc(a[0usize]),
-            f32::trunc(a[1usize]),
-            f32::trunc(a[2usize]),
-            f32::trunc(a[3usize]),
-        ]
-        .simd_into(self)
+        let abs = a.abs();
+        let return_res = abs.simd_lt(2147483648.0_f32);
+        let abs_trunc: f32x4<Sse2> = i32x4::truncate_from(abs).to_float();
+        let trunc = abs_trunc.copysign(a);
+        let res = trunc;
+        return_res.select(res, a)
     }
     #[inline(always)]
     fn to_degrees_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -6433,11 +6430,21 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn floor_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        [f64::floor(a[0usize]), f64::floor(a[1usize])].simd_into(self)
+        let abs = a.abs();
+        let return_res = abs.simd_lt(9223372036854775808.0_f64);
+        let abs_trunc: f64x2<Sse2> = i64x2::truncate_from(abs).to_float();
+        let trunc = abs_trunc.copysign(a);
+        let res = trunc.simd_gt(a).select(trunc - 1.0, trunc);
+        return_res.select(res, a)
     }
     #[inline(always)]
     fn ceil_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        [f64::ceil(a[0usize]), f64::ceil(a[1usize])].simd_into(self)
+        let abs = a.abs();
+        let return_res = abs.simd_lt(9223372036854775808.0_f64);
+        let abs_trunc: f64x2<Sse2> = i64x2::truncate_from(abs).to_float();
+        let trunc = abs_trunc.copysign(a);
+        let res = trunc.simd_lt(a).select(trunc + 1.0, trunc);
+        return_res.select(res, a)
     }
     #[inline(always)]
     fn round_ties_even_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -6458,7 +6465,12 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn trunc_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        [f64::trunc(a[0usize]), f64::trunc(a[1usize])].simd_into(self)
+        let abs = a.abs();
+        let return_res = abs.simd_lt(9223372036854775808.0_f64);
+        let abs_trunc: f64x2<Sse2> = i64x2::truncate_from(abs).to_float();
+        let trunc = abs_trunc.copysign(a);
+        let res = trunc;
+        return_res.select(res, a)
     }
     #[inline(always)]
     fn to_degrees_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
