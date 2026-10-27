@@ -37,8 +37,8 @@ libm = ["dep:libm"]
 # This is primarily used for tests
 force_support_fallback = []
 
-# Exact-width SVE2 research backend. Requires nightly on AArch64.
-# Known soundness hole: Send/Sync tokens may cross threads with different vector lengths.
+# Bounded-width SVE2 research backend. Requires nightly on AArch64.
+# Known soundness hole: Send/Sync tokens may cross threads with insufficient vector length.
 experimental_sve2 = []
 
 [lints]

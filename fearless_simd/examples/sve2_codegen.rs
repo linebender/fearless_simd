@@ -1,7 +1,7 @@
 // Copyright 2026 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! Assembly inspection fixtures for the exact-width SVE2 prototype.
+//! Assembly inspection fixtures for the bounded-width SVE2 prototype.
 //! See SVE2_PROTOTYPE.md for build and execution instructions.
 
 #[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]
@@ -101,6 +101,22 @@ mod probes {
         pub fn sve2_integer_sum_512(simd: Sve2_512, a: u32x16<Sve2_512>, b: u32x16<Sve2_512>) -> u32 {
             let _ = simd;
             (a * b).reduce_sum()
+        }
+    }
+
+    kernel! {
+        #[unsafe(no_mangle)]
+        pub fn sve2_subwidth_128(simd: Sve2_128, a: f32x4<Sve2_128>, b: f32x4<Sve2_128>) -> f32x4<Sve2_128> {
+            let _ = simd;
+            (a + b).reverse().zip_high(b)
+        }
+    }
+
+    kernel! {
+        #[unsafe(no_mangle)]
+        pub fn sve2_subwidth_256(simd: Sve2_256, a: f32x4<Sve2_256>, b: f32x4<Sve2_256>) -> f32x4<Sve2_256> {
+            let _ = simd;
+            (a + b).reverse().zip_high(b)
         }
     }
 

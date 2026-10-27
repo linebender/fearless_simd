@@ -19,7 +19,7 @@ use crate::{
 };
 use core::arch::aarch64::*;
 use core::ops::*;
-#[doc = "Experimental exact-width SVE2 token with aligned array storage.\n\nKnown prototype soundness hole: this token and its vectors implement `Send` and `Sync`,\nbut the active SVE vector length is per-thread. Safe detection does not protect\nagainst transfer to a thread with a different width. See `assume_supported`\nand `Level::detect_sve2` for the execution-context requirements."]
+#[doc = "Experimental bounded-width SVE2 token with aligned array storage.\n\nKnown prototype soundness hole for the wider levels: tokens and vectors implement `Send` and `Sync`,\nbut the active SVE vector length is per-thread. Safe detection does not protect\nagainst transfer to a thread with insufficient width. See `assume_supported`\nand `Level::detect_sve2` for the execution-context requirements."]
 #[doc = "# Browsing the documentation"]
 #[doc = "The method list on this struct is very verbose."]
 #[doc = "A better way to browse the docs is by looking at vector types such as [`u32x4`], [`f32x4`] or [`mask32x4`]."]
@@ -29,7 +29,7 @@ pub struct Sve2_256 {
     _private: (),
 }
 impl Sve2_256 {
-    #[doc = r" Required active SVE vector length, in bits."]
+    #[doc = r" Logical vector width and minimum active SVE vector length, in bits."]
     pub const VECTOR_BITS: usize = 256usize;
     #[doc = r" Construct a token without checking SVE2 availability or active vector length."]
     #[doc = r""]
@@ -37,7 +37,7 @@ impl Sve2_256 {
     #[doc = r""]
     #[doc = r" Every use of this token, any copy, or any vector carrying it must occur"]
     #[doc = r" on a thread with SVE2 enabled and an active non-streaming SVE vector"]
-    #[doc = r" length of exactly `Self::VECTOR_BITS`. This includes uses after transfer"]
+    #[doc = r" length of at least `Self::VECTOR_BITS`. This includes uses after transfer"]
     #[doc = r" through `Send` or `Sync`. The length must remain unchanged during use."]
     #[doc = r" Enabling the `sve2` target feature alone does not establish the width."]
     #[inline]
@@ -141,7 +141,31 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn reverse_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        [a[3usize], a[2usize], a[1usize], a[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: f32x4<Sve2_256>) -> f32x4<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svfloat32_t) -> f32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[f32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_f32(pg, out.as_mut_ptr().cast::<f32>(), value);
+                        f32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
+                store(
+                    token,
+                    pg,
+                    svtbl_f32(a, svindex_u32(3usize as u32, u32::MAX)),
+                )
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
@@ -478,27 +502,191 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn zip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        [a[0usize], b[0usize], a[1usize], b[1usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: f32x4<Sve2_256>, b: f32x4<Sve2_256>) -> f32x4<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svfloat32_t) -> f32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[f32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_f32(pg, out.as_mut_ptr().cast::<f32>(), value);
+                        f32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_f32(pg, b.as_array().as_ptr()) };
+                store(token, pg, svzip1_f32(a, b))
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        [a[2usize], b[2usize], a[3usize], b[3usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: f32x4<Sve2_256>, b: f32x4<Sve2_256>) -> f32x4<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svfloat32_t) -> f32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[f32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_f32(pg, out.as_mut_ptr().cast::<f32>(), value);
+                        f32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_f32(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svindex_u32(2usize as u32, 1);
+                    svzip1_f32(svtbl_f32(a, indices), svtbl_f32(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        [a[0usize], a[2usize], b[0usize], b[2usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: f32x4<Sve2_256>, b: f32x4<Sve2_256>) -> f32x4<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svfloat32_t) -> f32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[f32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_f32(pg, out.as_mut_ptr().cast::<f32>(), value);
+                        f32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_f32(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u32_x(pg, svindex_u32(0usize as u32, 2), 3usize as u32);
+                    let first_half = svptrue_pat_b32::<{ svpattern::SV_VL2 }>();
+                    svsel_f32(first_half, svtbl_f32(a, indices), svtbl_f32(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        [a[1usize], a[3usize], b[1usize], b[3usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: f32x4<Sve2_256>, b: f32x4<Sve2_256>) -> f32x4<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svfloat32_t) -> f32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[f32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_f32(pg, out.as_mut_ptr().cast::<f32>(), value);
+                        f32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_f32(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u32_x(pg, svindex_u32(1usize as u32, 2), 3usize as u32);
+                    let first_half = svptrue_pat_b32::<{ svpattern::SV_VL2 }>();
+                    svsel_f32(first_half, svtbl_f32(a, indices), svtbl_f32(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>) {
-        (self.zip_low_f32x4(a, b), self.zip_high_f32x4(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: f32x4<Sve2_256>,
+                b: f32x4<Sve2_256>,
+            ) -> (f32x4<Sve2_256>, f32x4<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svfloat32_t) -> f32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[f32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_f32(pg, out.as_mut_ptr().cast::<f32>(), value);
+                        f32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_f32(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, svzip1_f32(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u32(2usize as u32, 1);
+                        svzip1_f32(svtbl_f32(a, indices), svtbl_f32(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn deinterleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>) {
-        (self.unzip_low_f32x4(a, b), self.unzip_high_f32x4(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: f32x4<Sve2_256>,
+                b: f32x4<Sve2_256>,
+            ) -> (f32x4<Sve2_256>, f32x4<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svfloat32_t) -> f32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[f32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_f32(pg, out.as_mut_ptr().cast::<f32>(), value);
+                        f32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_f32(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u32_x(pg, svindex_u32(0usize as u32, 2), 3usize as u32);
+                        let first_half = svptrue_pat_b32::<{ svpattern::SV_VL2 }>();
+                        svsel_f32(first_half, svtbl_f32(a, indices), svtbl_f32(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u32_x(pg, svindex_u32(1usize as u32, 2), 3usize as u32);
+                        let first_half = svptrue_pat_b32::<{ svpattern::SV_VL2 }>();
+                        svsel_f32(first_half, svtbl_f32(a, indices), svtbl_f32(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
@@ -797,12 +985,27 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn reverse_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        [
-            a[15usize], a[14usize], a[13usize], a[12usize], a[11usize], a[10usize], a[9usize],
-            a[8usize], a[7usize], a[6usize], a[5usize], a[4usize], a[3usize], a[2usize], a[1usize],
-            a[0usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i8x16<Sve2_256>) -> i8x16<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint8_t) -> i8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_s8(pg, out.as_mut_ptr().cast::<i8>(), value);
+                        i8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
+                store(token, pg, svtbl_s8(a, svindex_u8(15usize as u8, u8::MAX)))
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -1421,46 +1624,189 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn zip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        [
-            a[0usize], b[0usize], a[1usize], b[1usize], a[2usize], b[2usize], a[3usize], b[3usize],
-            a[4usize], b[4usize], a[5usize], b[5usize], a[6usize], b[6usize], a[7usize], b[7usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i8x16<Sve2_256>, b: i8x16<Sve2_256>) -> i8x16<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint8_t) -> i8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_s8(pg, out.as_mut_ptr().cast::<i8>(), value);
+                        i8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s8(pg, b.as_array().as_ptr()) };
+                store(token, pg, svzip1_s8(a, b))
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        [
-            a[8usize], b[8usize], a[9usize], b[9usize], a[10usize], b[10usize], a[11usize],
-            b[11usize], a[12usize], b[12usize], a[13usize], b[13usize], a[14usize], b[14usize],
-            a[15usize], b[15usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i8x16<Sve2_256>, b: i8x16<Sve2_256>) -> i8x16<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint8_t) -> i8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_s8(pg, out.as_mut_ptr().cast::<i8>(), value);
+                        i8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s8(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svindex_u8(8usize as u8, 1);
+                    svzip1_s8(svtbl_s8(a, indices), svtbl_s8(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        [
-            a[0usize], a[2usize], a[4usize], a[6usize], a[8usize], a[10usize], a[12usize],
-            a[14usize], b[0usize], b[2usize], b[4usize], b[6usize], b[8usize], b[10usize],
-            b[12usize], b[14usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i8x16<Sve2_256>, b: i8x16<Sve2_256>) -> i8x16<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint8_t) -> i8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_s8(pg, out.as_mut_ptr().cast::<i8>(), value);
+                        i8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s8(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u8_x(pg, svindex_u8(0usize as u8, 2), 15usize as u8);
+                    let first_half = svptrue_pat_b8::<{ svpattern::SV_VL8 }>();
+                    svsel_s8(first_half, svtbl_s8(a, indices), svtbl_s8(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        [
-            a[1usize], a[3usize], a[5usize], a[7usize], a[9usize], a[11usize], a[13usize],
-            a[15usize], b[1usize], b[3usize], b[5usize], b[7usize], b[9usize], b[11usize],
-            b[13usize], b[15usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i8x16<Sve2_256>, b: i8x16<Sve2_256>) -> i8x16<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint8_t) -> i8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_s8(pg, out.as_mut_ptr().cast::<i8>(), value);
+                        i8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s8(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u8_x(pg, svindex_u8(1usize as u8, 2), 15usize as u8);
+                    let first_half = svptrue_pat_b8::<{ svpattern::SV_VL8 }>();
+                    svsel_s8(first_half, svtbl_s8(a, indices), svtbl_s8(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>) {
-        (self.zip_low_i8x16(a, b), self.zip_high_i8x16(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: i8x16<Sve2_256>,
+                b: i8x16<Sve2_256>,
+            ) -> (i8x16<Sve2_256>, i8x16<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint8_t) -> i8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_s8(pg, out.as_mut_ptr().cast::<i8>(), value);
+                        i8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s8(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, svzip1_s8(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u8(8usize as u8, 1);
+                        svzip1_s8(svtbl_s8(a, indices), svtbl_s8(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn deinterleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>) {
-        (self.unzip_low_i8x16(a, b), self.unzip_high_i8x16(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: i8x16<Sve2_256>,
+                b: i8x16<Sve2_256>,
+            ) -> (i8x16<Sve2_256>, i8x16<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint8_t) -> i8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_s8(pg, out.as_mut_ptr().cast::<i8>(), value);
+                        i8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s8(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, {
+                        let indices = svand_n_u8_x(pg, svindex_u8(0usize as u8, 2), 15usize as u8);
+                        let first_half = svptrue_pat_b8::<{ svpattern::SV_VL8 }>();
+                        svsel_s8(first_half, svtbl_s8(a, indices), svtbl_s8(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices = svand_n_u8_x(pg, svindex_u8(1usize as u8, 2), 15usize as u8);
+                        let first_half = svptrue_pat_b8::<{ svpattern::SV_VL8 }>();
+                        svsel_s8(first_half, svtbl_s8(a, indices), svtbl_s8(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
@@ -1796,12 +2142,27 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn reverse_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        [
-            a[15usize], a[14usize], a[13usize], a[12usize], a[11usize], a[10usize], a[9usize],
-            a[8usize], a[7usize], a[6usize], a[5usize], a[4usize], a[3usize], a[2usize], a[1usize],
-            a[0usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u8x16<Sve2_256>) -> u8x16<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint8_t) -> u8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_u8(pg, out.as_mut_ptr().cast::<u8>(), value);
+                        u8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
+                store(token, pg, svtbl_u8(a, svindex_u8(15usize as u8, u8::MAX)))
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -1812,98 +2173,101 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_u8x16(self, a: u8x16<Self>, indices: u8x16<Self>) -> u8x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let result: u8x16<Self> = [
-            {
-                let index = indices[0usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[1usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[2usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[3usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[4usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[5usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[6usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[7usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[8usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[9usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[10usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[11usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[12usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[13usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[14usize] as usize;
-                bytes[index % 16usize]
-            },
-            {
-                let index = indices[15usize] as usize;
-                bytes[index % 16usize]
-            },
-        ]
-        .simd_into(self);
-        Bytes::from_bytes(result)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: u8x16<Sve2_256>,
+                indices: u8x16<Sve2_256>,
+            ) -> u8x16<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint8_t) -> u8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_u8(pg, out.as_mut_ptr().cast::<u8>(), value);
+                        u8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
+                let indices = unsafe { svld1_u8(pg, indices.as_array().as_ptr()) };
+                store(
+                    token,
+                    pg,
+                    svtbl_u8(
+                        a,
+                        svadd_u8_x(
+                            pg,
+                            svand_n_u8_x(pg, svindex_u8(0, 1), 0xf0),
+                            svand_n_u8_x(pg, indices, 0x0f),
+                        ),
+                    ),
+                )
+            }
+        );
+        kernel(self, a, indices)
     }
     #[inline(always)]
     fn swizzle_dyn_u8x16(self, a: u8x16<Self>, indices: u8x16<Self>) -> u8x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            output[lane] = bytes[index % 16usize];
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: u8x16<Sve2_256>,
+                indices: u8x16<Sve2_256>,
+            ) -> u8x16<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint8_t) -> u8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_u8(pg, out.as_mut_ptr().cast::<u8>(), value);
+                        u8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
+                let indices = unsafe { svld1_u8(pg, indices.as_array().as_ptr()) };
+                store(token, pg, svtbl_u8(a, indices))
+            }
+        );
+        kernel(self, a, indices)
     }
     #[inline(always)]
     fn swizzle_dyn_precise_u8x16(self, a: u8x16<Self>, indices: u8x16<Self>) -> u8x16<Self> {
-        let bytes = Bytes::to_bytes(a);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            let value = bytes[index % 16usize];
-            output[lane] = core::hint::select_unpredictable(index < 16usize, value, 0u8);
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: u8x16<Sve2_256>,
+                indices: u8x16<Sve2_256>,
+            ) -> u8x16<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint8_t) -> u8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_u8(pg, out.as_mut_ptr().cast::<u8>(), value);
+                        u8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
+                let indices = unsafe { svld1_u8(pg, indices.as_array().as_ptr()) };
+                store(token, pg, svtbl_u8(a, indices))
+            }
+        );
+        kernel(self, a, indices)
     }
     #[inline(always)]
     fn concat_swizzle_dyn_u8x16(
@@ -1912,19 +2276,42 @@ impl Simd for Sve2_256 {
         b: u8x16<Self>,
         indices: u8x16<Self>,
     ) -> u8x16<Self> {
-        let first_table = Bytes::to_bytes(a);
-        let second_table = Bytes::to_bytes(b);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize % 32usize;
-            output[lane] = if index < 16usize {
-                first_table[index]
-            } else {
-                second_table[index - 16usize]
-            };
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: u8x16<Sve2_256>,
+                b: u8x16<Sve2_256>,
+                indices: u8x16<Sve2_256>,
+            ) -> u8x16<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint8_t) -> u8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_u8(pg, out.as_mut_ptr().cast::<u8>(), value);
+                        u8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
+                let indices = unsafe { svld1_u8(pg, indices.as_array().as_ptr()) };
+                store(
+                    token,
+                    pg,
+                    svorr_u8_x(
+                        pg,
+                        svtbl_u8(a, indices),
+                        svtbl_u8(b, svsub_n_u8_x(pg, indices, 16usize as u8)),
+                    ),
+                )
+            }
+        );
+        kernel(self, a, b, indices)
     }
     #[inline(always)]
     fn concat_swizzle_dyn_precise_u8x16(
@@ -1933,21 +2320,42 @@ impl Simd for Sve2_256 {
         b: u8x16<Self>,
         indices: u8x16<Self>,
     ) -> u8x16<Self> {
-        let first_table = Bytes::to_bytes(a);
-        let second_table = Bytes::to_bytes(b);
-        let mut output = [0u8; 16usize];
-        for lane in 0..16usize {
-            let index = indices[lane] as usize;
-            let table_index = index % 16usize;
-            let value = if index < 16usize {
-                first_table[table_index]
-            } else {
-                second_table[table_index]
-            };
-            output[lane] = if index < 32usize { value } else { 0 };
-        }
-        let result: u8x16<Self> = output.simd_into(self);
-        Bytes::from_bytes(result)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: u8x16<Sve2_256>,
+                b: u8x16<Sve2_256>,
+                indices: u8x16<Sve2_256>,
+            ) -> u8x16<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint8_t) -> u8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_u8(pg, out.as_mut_ptr().cast::<u8>(), value);
+                        u8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
+                let indices = unsafe { svld1_u8(pg, indices.as_array().as_ptr()) };
+                store(
+                    token,
+                    pg,
+                    svorr_u8_x(
+                        pg,
+                        svtbl_u8(a, indices),
+                        svtbl_u8(b, svsub_n_u8_x(pg, indices, 16usize as u8)),
+                    ),
+                )
+            }
+        );
+        kernel(self, a, b, indices)
     }
     #[inline(always)]
     fn compress_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self> {
@@ -2556,46 +2964,189 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn zip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        [
-            a[0usize], b[0usize], a[1usize], b[1usize], a[2usize], b[2usize], a[3usize], b[3usize],
-            a[4usize], b[4usize], a[5usize], b[5usize], a[6usize], b[6usize], a[7usize], b[7usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u8x16<Sve2_256>, b: u8x16<Sve2_256>) -> u8x16<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint8_t) -> u8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_u8(pg, out.as_mut_ptr().cast::<u8>(), value);
+                        u8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
+                store(token, pg, svzip1_u8(a, b))
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        [
-            a[8usize], b[8usize], a[9usize], b[9usize], a[10usize], b[10usize], a[11usize],
-            b[11usize], a[12usize], b[12usize], a[13usize], b[13usize], a[14usize], b[14usize],
-            a[15usize], b[15usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u8x16<Sve2_256>, b: u8x16<Sve2_256>) -> u8x16<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint8_t) -> u8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_u8(pg, out.as_mut_ptr().cast::<u8>(), value);
+                        u8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svindex_u8(8usize as u8, 1);
+                    svzip1_u8(svtbl_u8(a, indices), svtbl_u8(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        [
-            a[0usize], a[2usize], a[4usize], a[6usize], a[8usize], a[10usize], a[12usize],
-            a[14usize], b[0usize], b[2usize], b[4usize], b[6usize], b[8usize], b[10usize],
-            b[12usize], b[14usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u8x16<Sve2_256>, b: u8x16<Sve2_256>) -> u8x16<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint8_t) -> u8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_u8(pg, out.as_mut_ptr().cast::<u8>(), value);
+                        u8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u8_x(pg, svindex_u8(0usize as u8, 2), 15usize as u8);
+                    let first_half = svptrue_pat_b8::<{ svpattern::SV_VL8 }>();
+                    svsel_u8(first_half, svtbl_u8(a, indices), svtbl_u8(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        [
-            a[1usize], a[3usize], a[5usize], a[7usize], a[9usize], a[11usize], a[13usize],
-            a[15usize], b[1usize], b[3usize], b[5usize], b[7usize], b[9usize], b[11usize],
-            b[13usize], b[15usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u8x16<Sve2_256>, b: u8x16<Sve2_256>) -> u8x16<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint8_t) -> u8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_u8(pg, out.as_mut_ptr().cast::<u8>(), value);
+                        u8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u8_x(pg, svindex_u8(1usize as u8, 2), 15usize as u8);
+                    let first_half = svptrue_pat_b8::<{ svpattern::SV_VL8 }>();
+                    svsel_u8(first_half, svtbl_u8(a, indices), svtbl_u8(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>) {
-        (self.zip_low_u8x16(a, b), self.zip_high_u8x16(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: u8x16<Sve2_256>,
+                b: u8x16<Sve2_256>,
+            ) -> (u8x16<Sve2_256>, u8x16<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint8_t) -> u8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_u8(pg, out.as_mut_ptr().cast::<u8>(), value);
+                        u8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, svzip1_u8(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u8(8usize as u8, 1);
+                        svzip1_u8(svtbl_u8(a, indices), svtbl_u8(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn deinterleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>) {
-        (self.unzip_low_u8x16(a, b), self.unzip_high_u8x16(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: u8x16<Sve2_256>,
+                b: u8x16<Sve2_256>,
+            ) -> (u8x16<Sve2_256>, u8x16<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint8_t) -> u8x16<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u8; 16usize]>::uninit();
+                    unsafe {
+                        svst1_u8(pg, out.as_mut_ptr().cast::<u8>(), value);
+                        u8x16 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, {
+                        let indices = svand_n_u8_x(pg, svindex_u8(0usize as u8, 2), 15usize as u8);
+                        let first_half = svptrue_pat_b8::<{ svpattern::SV_VL8 }>();
+                        svsel_u8(first_half, svtbl_u8(a, indices), svtbl_u8(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices = svand_n_u8_x(pg, svindex_u8(1usize as u8, 2), 15usize as u8);
+                        let first_half = svptrue_pat_b8::<{ svpattern::SV_VL8 }>();
+                        svsel_u8(first_half, svtbl_u8(a, indices), svtbl_u8(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
@@ -3351,10 +3902,31 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn reverse_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
-        [
-            a[7usize], a[6usize], a[5usize], a[4usize], a[3usize], a[2usize], a[1usize], a[0usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i16x8<Sve2_256>) -> i16x8<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint16_t) -> i16x8<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i16; 8usize]>::uninit();
+                    unsafe {
+                        svst1_s16(pg, out.as_mut_ptr().cast::<i16>(), value);
+                        i16x8 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
+                store(
+                    token,
+                    pg,
+                    svtbl_s16(a, svindex_u16(7usize as u16, u16::MAX)),
+                )
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -3799,39 +4371,191 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn zip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        [
-            a[0usize], b[0usize], a[1usize], b[1usize], a[2usize], b[2usize], a[3usize], b[3usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i16x8<Sve2_256>, b: i16x8<Sve2_256>) -> i16x8<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint16_t) -> i16x8<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i16; 8usize]>::uninit();
+                    unsafe {
+                        svst1_s16(pg, out.as_mut_ptr().cast::<i16>(), value);
+                        i16x8 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s16(pg, b.as_array().as_ptr()) };
+                store(token, pg, svzip1_s16(a, b))
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        [
-            a[4usize], b[4usize], a[5usize], b[5usize], a[6usize], b[6usize], a[7usize], b[7usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i16x8<Sve2_256>, b: i16x8<Sve2_256>) -> i16x8<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint16_t) -> i16x8<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i16; 8usize]>::uninit();
+                    unsafe {
+                        svst1_s16(pg, out.as_mut_ptr().cast::<i16>(), value);
+                        i16x8 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s16(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svindex_u16(4usize as u16, 1);
+                    svzip1_s16(svtbl_s16(a, indices), svtbl_s16(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        [
-            a[0usize], a[2usize], a[4usize], a[6usize], b[0usize], b[2usize], b[4usize], b[6usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i16x8<Sve2_256>, b: i16x8<Sve2_256>) -> i16x8<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint16_t) -> i16x8<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i16; 8usize]>::uninit();
+                    unsafe {
+                        svst1_s16(pg, out.as_mut_ptr().cast::<i16>(), value);
+                        i16x8 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s16(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u16_x(pg, svindex_u16(0usize as u16, 2), 7usize as u16);
+                    let first_half = svptrue_pat_b16::<{ svpattern::SV_VL4 }>();
+                    svsel_s16(first_half, svtbl_s16(a, indices), svtbl_s16(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        [
-            a[1usize], a[3usize], a[5usize], a[7usize], b[1usize], b[3usize], b[5usize], b[7usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i16x8<Sve2_256>, b: i16x8<Sve2_256>) -> i16x8<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint16_t) -> i16x8<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i16; 8usize]>::uninit();
+                    unsafe {
+                        svst1_s16(pg, out.as_mut_ptr().cast::<i16>(), value);
+                        i16x8 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s16(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u16_x(pg, svindex_u16(1usize as u16, 2), 7usize as u16);
+                    let first_half = svptrue_pat_b16::<{ svpattern::SV_VL4 }>();
+                    svsel_s16(first_half, svtbl_s16(a, indices), svtbl_s16(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>) {
-        (self.zip_low_i16x8(a, b), self.zip_high_i16x8(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: i16x8<Sve2_256>,
+                b: i16x8<Sve2_256>,
+            ) -> (i16x8<Sve2_256>, i16x8<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint16_t) -> i16x8<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i16; 8usize]>::uninit();
+                    unsafe {
+                        svst1_s16(pg, out.as_mut_ptr().cast::<i16>(), value);
+                        i16x8 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s16(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, svzip1_s16(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u16(4usize as u16, 1);
+                        svzip1_s16(svtbl_s16(a, indices), svtbl_s16(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn deinterleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>) {
-        (self.unzip_low_i16x8(a, b), self.unzip_high_i16x8(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: i16x8<Sve2_256>,
+                b: i16x8<Sve2_256>,
+            ) -> (i16x8<Sve2_256>, i16x8<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint16_t) -> i16x8<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i16; 8usize]>::uninit();
+                    unsafe {
+                        svst1_s16(pg, out.as_mut_ptr().cast::<i16>(), value);
+                        i16x8 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s16(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u16_x(pg, svindex_u16(0usize as u16, 2), 7usize as u16);
+                        let first_half = svptrue_pat_b16::<{ svpattern::SV_VL4 }>();
+                        svsel_s16(first_half, svtbl_s16(a, indices), svtbl_s16(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u16_x(pg, svindex_u16(1usize as u16, 2), 7usize as u16);
+                        let first_half = svptrue_pat_b16::<{ svpattern::SV_VL4 }>();
+                        svsel_s16(first_half, svtbl_s16(a, indices), svtbl_s16(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
@@ -4098,10 +4822,31 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn reverse_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
-        [
-            a[7usize], a[6usize], a[5usize], a[4usize], a[3usize], a[2usize], a[1usize], a[0usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u16x8<Sve2_256>) -> u16x8<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint16_t) -> u16x8<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u16; 8usize]>::uninit();
+                    unsafe {
+                        svst1_u16(pg, out.as_mut_ptr().cast::<u16>(), value);
+                        u16x8 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
+                store(
+                    token,
+                    pg,
+                    svtbl_u16(a, svindex_u16(7usize as u16, u16::MAX)),
+                )
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -4546,39 +5291,191 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn zip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        [
-            a[0usize], b[0usize], a[1usize], b[1usize], a[2usize], b[2usize], a[3usize], b[3usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u16x8<Sve2_256>, b: u16x8<Sve2_256>) -> u16x8<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint16_t) -> u16x8<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u16; 8usize]>::uninit();
+                    unsafe {
+                        svst1_u16(pg, out.as_mut_ptr().cast::<u16>(), value);
+                        u16x8 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u16(pg, b.as_array().as_ptr()) };
+                store(token, pg, svzip1_u16(a, b))
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        [
-            a[4usize], b[4usize], a[5usize], b[5usize], a[6usize], b[6usize], a[7usize], b[7usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u16x8<Sve2_256>, b: u16x8<Sve2_256>) -> u16x8<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint16_t) -> u16x8<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u16; 8usize]>::uninit();
+                    unsafe {
+                        svst1_u16(pg, out.as_mut_ptr().cast::<u16>(), value);
+                        u16x8 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u16(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svindex_u16(4usize as u16, 1);
+                    svzip1_u16(svtbl_u16(a, indices), svtbl_u16(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        [
-            a[0usize], a[2usize], a[4usize], a[6usize], b[0usize], b[2usize], b[4usize], b[6usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u16x8<Sve2_256>, b: u16x8<Sve2_256>) -> u16x8<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint16_t) -> u16x8<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u16; 8usize]>::uninit();
+                    unsafe {
+                        svst1_u16(pg, out.as_mut_ptr().cast::<u16>(), value);
+                        u16x8 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u16(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u16_x(pg, svindex_u16(0usize as u16, 2), 7usize as u16);
+                    let first_half = svptrue_pat_b16::<{ svpattern::SV_VL4 }>();
+                    svsel_u16(first_half, svtbl_u16(a, indices), svtbl_u16(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        [
-            a[1usize], a[3usize], a[5usize], a[7usize], b[1usize], b[3usize], b[5usize], b[7usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u16x8<Sve2_256>, b: u16x8<Sve2_256>) -> u16x8<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint16_t) -> u16x8<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u16; 8usize]>::uninit();
+                    unsafe {
+                        svst1_u16(pg, out.as_mut_ptr().cast::<u16>(), value);
+                        u16x8 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u16(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u16_x(pg, svindex_u16(1usize as u16, 2), 7usize as u16);
+                    let first_half = svptrue_pat_b16::<{ svpattern::SV_VL4 }>();
+                    svsel_u16(first_half, svtbl_u16(a, indices), svtbl_u16(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>) {
-        (self.zip_low_u16x8(a, b), self.zip_high_u16x8(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: u16x8<Sve2_256>,
+                b: u16x8<Sve2_256>,
+            ) -> (u16x8<Sve2_256>, u16x8<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint16_t) -> u16x8<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u16; 8usize]>::uninit();
+                    unsafe {
+                        svst1_u16(pg, out.as_mut_ptr().cast::<u16>(), value);
+                        u16x8 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u16(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, svzip1_u16(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u16(4usize as u16, 1);
+                        svzip1_u16(svtbl_u16(a, indices), svtbl_u16(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn deinterleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>) {
-        (self.unzip_low_u16x8(a, b), self.unzip_high_u16x8(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: u16x8<Sve2_256>,
+                b: u16x8<Sve2_256>,
+            ) -> (u16x8<Sve2_256>, u16x8<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint16_t) -> u16x8<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u16; 8usize]>::uninit();
+                    unsafe {
+                        svst1_u16(pg, out.as_mut_ptr().cast::<u16>(), value);
+                        u16x8 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u16(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u16_x(pg, svindex_u16(0usize as u16, 2), 7usize as u16);
+                        let first_half = svptrue_pat_b16::<{ svpattern::SV_VL4 }>();
+                        svsel_u16(first_half, svtbl_u16(a, indices), svtbl_u16(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u16_x(pg, svindex_u16(1usize as u16, 2), 7usize as u16);
+                        let first_half = svptrue_pat_b16::<{ svpattern::SV_VL4 }>();
+                        svsel_u16(first_half, svtbl_u16(a, indices), svtbl_u16(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
@@ -5155,7 +6052,31 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn reverse_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
-        [a[3usize], a[2usize], a[1usize], a[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i32x4<Sve2_256>) -> i32x4<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint32_t) -> i32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_s32(pg, out.as_mut_ptr().cast::<i32>(), value);
+                        i32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
+                store(
+                    token,
+                    pg,
+                    svtbl_s32(a, svindex_u32(3usize as u32, u32::MAX)),
+                )
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -5510,27 +6431,191 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn zip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        [a[0usize], b[0usize], a[1usize], b[1usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i32x4<Sve2_256>, b: i32x4<Sve2_256>) -> i32x4<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint32_t) -> i32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_s32(pg, out.as_mut_ptr().cast::<i32>(), value);
+                        i32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s32(pg, b.as_array().as_ptr()) };
+                store(token, pg, svzip1_s32(a, b))
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        [a[2usize], b[2usize], a[3usize], b[3usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i32x4<Sve2_256>, b: i32x4<Sve2_256>) -> i32x4<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint32_t) -> i32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_s32(pg, out.as_mut_ptr().cast::<i32>(), value);
+                        i32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s32(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svindex_u32(2usize as u32, 1);
+                    svzip1_s32(svtbl_s32(a, indices), svtbl_s32(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        [a[0usize], a[2usize], b[0usize], b[2usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i32x4<Sve2_256>, b: i32x4<Sve2_256>) -> i32x4<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint32_t) -> i32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_s32(pg, out.as_mut_ptr().cast::<i32>(), value);
+                        i32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s32(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u32_x(pg, svindex_u32(0usize as u32, 2), 3usize as u32);
+                    let first_half = svptrue_pat_b32::<{ svpattern::SV_VL2 }>();
+                    svsel_s32(first_half, svtbl_s32(a, indices), svtbl_s32(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        [a[1usize], a[3usize], b[1usize], b[3usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i32x4<Sve2_256>, b: i32x4<Sve2_256>) -> i32x4<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint32_t) -> i32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_s32(pg, out.as_mut_ptr().cast::<i32>(), value);
+                        i32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s32(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u32_x(pg, svindex_u32(1usize as u32, 2), 3usize as u32);
+                    let first_half = svptrue_pat_b32::<{ svpattern::SV_VL2 }>();
+                    svsel_s32(first_half, svtbl_s32(a, indices), svtbl_s32(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>) {
-        (self.zip_low_i32x4(a, b), self.zip_high_i32x4(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: i32x4<Sve2_256>,
+                b: i32x4<Sve2_256>,
+            ) -> (i32x4<Sve2_256>, i32x4<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint32_t) -> i32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_s32(pg, out.as_mut_ptr().cast::<i32>(), value);
+                        i32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s32(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, svzip1_s32(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u32(2usize as u32, 1);
+                        svzip1_s32(svtbl_s32(a, indices), svtbl_s32(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn deinterleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>) {
-        (self.unzip_low_i32x4(a, b), self.unzip_high_i32x4(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: i32x4<Sve2_256>,
+                b: i32x4<Sve2_256>,
+            ) -> (i32x4<Sve2_256>, i32x4<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint32_t) -> i32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_s32(pg, out.as_mut_ptr().cast::<i32>(), value);
+                        i32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s32(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u32_x(pg, svindex_u32(0usize as u32, 2), 3usize as u32);
+                        let first_half = svptrue_pat_b32::<{ svpattern::SV_VL2 }>();
+                        svsel_s32(first_half, svtbl_s32(a, indices), svtbl_s32(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u32_x(pg, svindex_u32(1usize as u32, 2), 3usize as u32);
+                        let first_half = svptrue_pat_b32::<{ svpattern::SV_VL2 }>();
+                        svsel_s32(first_half, svtbl_s32(a, indices), svtbl_s32(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
@@ -5697,7 +6782,31 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn reverse_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
-        [a[3usize], a[2usize], a[1usize], a[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u32x4<Sve2_256>) -> u32x4<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint32_t) -> u32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_u32(pg, out.as_mut_ptr().cast::<u32>(), value);
+                        u32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
+                store(
+                    token,
+                    pg,
+                    svtbl_u32(a, svindex_u32(3usize as u32, u32::MAX)),
+                )
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -6052,27 +7161,191 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn zip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        [a[0usize], b[0usize], a[1usize], b[1usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u32x4<Sve2_256>, b: u32x4<Sve2_256>) -> u32x4<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint32_t) -> u32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_u32(pg, out.as_mut_ptr().cast::<u32>(), value);
+                        u32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u32(pg, b.as_array().as_ptr()) };
+                store(token, pg, svzip1_u32(a, b))
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        [a[2usize], b[2usize], a[3usize], b[3usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u32x4<Sve2_256>, b: u32x4<Sve2_256>) -> u32x4<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint32_t) -> u32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_u32(pg, out.as_mut_ptr().cast::<u32>(), value);
+                        u32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u32(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svindex_u32(2usize as u32, 1);
+                    svzip1_u32(svtbl_u32(a, indices), svtbl_u32(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        [a[0usize], a[2usize], b[0usize], b[2usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u32x4<Sve2_256>, b: u32x4<Sve2_256>) -> u32x4<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint32_t) -> u32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_u32(pg, out.as_mut_ptr().cast::<u32>(), value);
+                        u32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u32(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u32_x(pg, svindex_u32(0usize as u32, 2), 3usize as u32);
+                    let first_half = svptrue_pat_b32::<{ svpattern::SV_VL2 }>();
+                    svsel_u32(first_half, svtbl_u32(a, indices), svtbl_u32(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        [a[1usize], a[3usize], b[1usize], b[3usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u32x4<Sve2_256>, b: u32x4<Sve2_256>) -> u32x4<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint32_t) -> u32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_u32(pg, out.as_mut_ptr().cast::<u32>(), value);
+                        u32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u32(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u32_x(pg, svindex_u32(1usize as u32, 2), 3usize as u32);
+                    let first_half = svptrue_pat_b32::<{ svpattern::SV_VL2 }>();
+                    svsel_u32(first_half, svtbl_u32(a, indices), svtbl_u32(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>) {
-        (self.zip_low_u32x4(a, b), self.zip_high_u32x4(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: u32x4<Sve2_256>,
+                b: u32x4<Sve2_256>,
+            ) -> (u32x4<Sve2_256>, u32x4<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint32_t) -> u32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_u32(pg, out.as_mut_ptr().cast::<u32>(), value);
+                        u32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u32(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, svzip1_u32(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u32(2usize as u32, 1);
+                        svzip1_u32(svtbl_u32(a, indices), svtbl_u32(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn deinterleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>) {
-        (self.unzip_low_u32x4(a, b), self.unzip_high_u32x4(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: u32x4<Sve2_256>,
+                b: u32x4<Sve2_256>,
+            ) -> (u32x4<Sve2_256>, u32x4<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint32_t) -> u32x4<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u32; 4usize]>::uninit();
+                    unsafe {
+                        svst1_u32(pg, out.as_mut_ptr().cast::<u32>(), value);
+                        u32x4 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u32(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u32_x(pg, svindex_u32(0usize as u32, 2), 3usize as u32);
+                        let first_half = svptrue_pat_b32::<{ svpattern::SV_VL2 }>();
+                        svsel_u32(first_half, svtbl_u32(a, indices), svtbl_u32(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u32_x(pg, svindex_u32(1usize as u32, 2), 3usize as u32);
+                        let first_half = svptrue_pat_b32::<{ svpattern::SV_VL2 }>();
+                        svsel_u32(first_half, svtbl_u32(a, indices), svtbl_u32(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
@@ -6451,7 +7724,31 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn reverse_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        [a[1usize], a[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: f64x2<Sve2_256>) -> f64x2<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svfloat64_t) -> f64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[f64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_f64(pg, out.as_mut_ptr().cast::<f64>(), value);
+                        f64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
+                store(
+                    token,
+                    pg,
+                    svtbl_f64(a, svindex_u64(1usize as u64, u64::MAX)),
+                )
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
@@ -6746,27 +8043,191 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn zip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        [a[0usize], b[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: f64x2<Sve2_256>, b: f64x2<Sve2_256>) -> f64x2<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svfloat64_t) -> f64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[f64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_f64(pg, out.as_mut_ptr().cast::<f64>(), value);
+                        f64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_f64(pg, b.as_array().as_ptr()) };
+                store(token, pg, svzip1_f64(a, b))
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        [a[1usize], b[1usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: f64x2<Sve2_256>, b: f64x2<Sve2_256>) -> f64x2<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svfloat64_t) -> f64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[f64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_f64(pg, out.as_mut_ptr().cast::<f64>(), value);
+                        f64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_f64(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svindex_u64(1usize as u64, 1);
+                    svzip1_f64(svtbl_f64(a, indices), svtbl_f64(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        [a[0usize], b[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: f64x2<Sve2_256>, b: f64x2<Sve2_256>) -> f64x2<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svfloat64_t) -> f64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[f64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_f64(pg, out.as_mut_ptr().cast::<f64>(), value);
+                        f64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_f64(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u64_x(pg, svindex_u64(0usize as u64, 2), 1usize as u64);
+                    let first_half = svptrue_pat_b64::<{ svpattern::SV_VL1 }>();
+                    svsel_f64(first_half, svtbl_f64(a, indices), svtbl_f64(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        [a[1usize], b[1usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: f64x2<Sve2_256>, b: f64x2<Sve2_256>) -> f64x2<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svfloat64_t) -> f64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[f64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_f64(pg, out.as_mut_ptr().cast::<f64>(), value);
+                        f64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_f64(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u64_x(pg, svindex_u64(1usize as u64, 2), 1usize as u64);
+                    let first_half = svptrue_pat_b64::<{ svpattern::SV_VL1 }>();
+                    svsel_f64(first_half, svtbl_f64(a, indices), svtbl_f64(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>) {
-        (self.zip_low_f64x2(a, b), self.zip_high_f64x2(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: f64x2<Sve2_256>,
+                b: f64x2<Sve2_256>,
+            ) -> (f64x2<Sve2_256>, f64x2<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svfloat64_t) -> f64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[f64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_f64(pg, out.as_mut_ptr().cast::<f64>(), value);
+                        f64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_f64(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, svzip1_f64(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u64(1usize as u64, 1);
+                        svzip1_f64(svtbl_f64(a, indices), svtbl_f64(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn deinterleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>) {
-        (self.unzip_low_f64x2(a, b), self.unzip_high_f64x2(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: f64x2<Sve2_256>,
+                b: f64x2<Sve2_256>,
+            ) -> (f64x2<Sve2_256>, f64x2<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svfloat64_t) -> f64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[f64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_f64(pg, out.as_mut_ptr().cast::<f64>(), value);
+                        f64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_f64(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u64_x(pg, svindex_u64(0usize as u64, 2), 1usize as u64);
+                        let first_half = svptrue_pat_b64::<{ svpattern::SV_VL1 }>();
+                        svsel_f64(first_half, svtbl_f64(a, indices), svtbl_f64(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u64_x(pg, svindex_u64(1usize as u64, 2), 1usize as u64);
+                        let first_half = svptrue_pat_b64::<{ svpattern::SV_VL1 }>();
+                        svsel_f64(first_half, svtbl_f64(a, indices), svtbl_f64(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
@@ -6978,7 +8439,31 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn reverse_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
-        [a[1usize], a[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i64x2<Sve2_256>) -> i64x2<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint64_t) -> i64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_s64(pg, out.as_mut_ptr().cast::<i64>(), value);
+                        i64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
+                store(
+                    token,
+                    pg,
+                    svtbl_s64(a, svindex_u64(1usize as u64, u64::MAX)),
+                )
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -7281,27 +8766,191 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn zip_low_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        [a[0usize], b[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i64x2<Sve2_256>, b: i64x2<Sve2_256>) -> i64x2<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint64_t) -> i64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_s64(pg, out.as_mut_ptr().cast::<i64>(), value);
+                        i64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s64(pg, b.as_array().as_ptr()) };
+                store(token, pg, svzip1_s64(a, b))
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        [a[1usize], b[1usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i64x2<Sve2_256>, b: i64x2<Sve2_256>) -> i64x2<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint64_t) -> i64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_s64(pg, out.as_mut_ptr().cast::<i64>(), value);
+                        i64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s64(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svindex_u64(1usize as u64, 1);
+                    svzip1_s64(svtbl_s64(a, indices), svtbl_s64(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        [a[0usize], b[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i64x2<Sve2_256>, b: i64x2<Sve2_256>) -> i64x2<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint64_t) -> i64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_s64(pg, out.as_mut_ptr().cast::<i64>(), value);
+                        i64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s64(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u64_x(pg, svindex_u64(0usize as u64, 2), 1usize as u64);
+                    let first_half = svptrue_pat_b64::<{ svpattern::SV_VL1 }>();
+                    svsel_s64(first_half, svtbl_s64(a, indices), svtbl_s64(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        [a[1usize], b[1usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: i64x2<Sve2_256>, b: i64x2<Sve2_256>) -> i64x2<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint64_t) -> i64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_s64(pg, out.as_mut_ptr().cast::<i64>(), value);
+                        i64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s64(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u64_x(pg, svindex_u64(1usize as u64, 2), 1usize as u64);
+                    let first_half = svptrue_pat_b64::<{ svpattern::SV_VL1 }>();
+                    svsel_s64(first_half, svtbl_s64(a, indices), svtbl_s64(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> (i64x2<Self>, i64x2<Self>) {
-        (self.zip_low_i64x2(a, b), self.zip_high_i64x2(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: i64x2<Sve2_256>,
+                b: i64x2<Sve2_256>,
+            ) -> (i64x2<Sve2_256>, i64x2<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint64_t) -> i64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_s64(pg, out.as_mut_ptr().cast::<i64>(), value);
+                        i64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s64(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, svzip1_s64(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u64(1usize as u64, 1);
+                        svzip1_s64(svtbl_s64(a, indices), svtbl_s64(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn deinterleave_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> (i64x2<Self>, i64x2<Self>) {
-        (self.unzip_low_i64x2(a, b), self.unzip_high_i64x2(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: i64x2<Sve2_256>,
+                b: i64x2<Sve2_256>,
+            ) -> (i64x2<Sve2_256>, i64x2<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svint64_t) -> i64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[i64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_s64(pg, out.as_mut_ptr().cast::<i64>(), value);
+                        i64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_s64(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u64_x(pg, svindex_u64(0usize as u64, 2), 1usize as u64);
+                        let first_half = svptrue_pat_b64::<{ svpattern::SV_VL1 }>();
+                        svsel_s64(first_half, svtbl_s64(a, indices), svtbl_s64(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u64_x(pg, svindex_u64(1usize as u64, 2), 1usize as u64);
+                        let first_half = svptrue_pat_b64::<{ svpattern::SV_VL1 }>();
+                        svsel_s64(first_half, svtbl_s64(a, indices), svtbl_s64(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn select_i64x2(self, a: mask64x2<Self>, b: i64x2<Self>, c: i64x2<Self>) -> i64x2<Self> {
@@ -7397,7 +9046,31 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn reverse_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
-        [a[1usize], a[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u64x2<Sve2_256>) -> u64x2<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint64_t) -> u64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_u64(pg, out.as_mut_ptr().cast::<u64>(), value);
+                        u64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
+                store(
+                    token,
+                    pg,
+                    svtbl_u64(a, svindex_u64(1usize as u64, u64::MAX)),
+                )
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -7700,27 +9373,191 @@ impl Simd for Sve2_256 {
     }
     #[inline(always)]
     fn zip_low_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        [a[0usize], b[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u64x2<Sve2_256>, b: u64x2<Sve2_256>) -> u64x2<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint64_t) -> u64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_u64(pg, out.as_mut_ptr().cast::<u64>(), value);
+                        u64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u64(pg, b.as_array().as_ptr()) };
+                store(token, pg, svzip1_u64(a, b))
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        [a[1usize], b[1usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u64x2<Sve2_256>, b: u64x2<Sve2_256>) -> u64x2<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint64_t) -> u64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_u64(pg, out.as_mut_ptr().cast::<u64>(), value);
+                        u64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u64(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svindex_u64(1usize as u64, 1);
+                    svzip1_u64(svtbl_u64(a, indices), svtbl_u64(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        [a[0usize], b[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u64x2<Sve2_256>, b: u64x2<Sve2_256>) -> u64x2<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint64_t) -> u64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_u64(pg, out.as_mut_ptr().cast::<u64>(), value);
+                        u64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u64(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u64_x(pg, svindex_u64(0usize as u64, 2), 1usize as u64);
+                    let first_half = svptrue_pat_b64::<{ svpattern::SV_VL1 }>();
+                    svsel_u64(first_half, svtbl_u64(a, indices), svtbl_u64(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        [a[1usize], b[1usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sve2_256, a: u64x2<Sve2_256>, b: u64x2<Sve2_256>) -> u64x2<Sve2_256> {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint64_t) -> u64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_u64(pg, out.as_mut_ptr().cast::<u64>(), value);
+                        u64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u64(pg, b.as_array().as_ptr()) };
+                store(token, pg, {
+                    let indices = svand_n_u64_x(pg, svindex_u64(1usize as u64, 2), 1usize as u64);
+                    let first_half = svptrue_pat_b64::<{ svpattern::SV_VL1 }>();
+                    svsel_u64(first_half, svtbl_u64(a, indices), svtbl_u64(b, indices))
+                })
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> (u64x2<Self>, u64x2<Self>) {
-        (self.zip_low_u64x2(a, b), self.zip_high_u64x2(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: u64x2<Sve2_256>,
+                b: u64x2<Sve2_256>,
+            ) -> (u64x2<Sve2_256>, u64x2<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint64_t) -> u64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_u64(pg, out.as_mut_ptr().cast::<u64>(), value);
+                        u64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u64(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, svzip1_u64(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u64(1usize as u64, 1);
+                        svzip1_u64(svtbl_u64(a, indices), svtbl_u64(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn deinterleave_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> (u64x2<Self>, u64x2<Self>) {
-        (self.unzip_low_u64x2(a, b), self.unzip_high_u64x2(a, b))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Sve2_256,
+                a: u64x2<Sve2_256>,
+                b: u64x2<Sve2_256>,
+            ) -> (u64x2<Sve2_256>, u64x2<Sve2_256>) {
+                #[inline]
+                #[target_feature(enable = "sve2")]
+                fn store(token: Sve2_256, pg: svbool_t, value: svuint64_t) -> u64x2<Sve2_256> {
+                    let mut out = core::mem::MaybeUninit::<[u64; 2usize]>::uninit();
+                    unsafe {
+                        svst1_u64(pg, out.as_mut_ptr().cast::<u64>(), value);
+                        u64x2 {
+                            val: crate::support::Aligned128(out.assume_init()),
+                            simd: token,
+                        }
+                    }
+                }
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
+                let b = unsafe { svld1_u64(pg, b.as_array().as_ptr()) };
+                (
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u64_x(pg, svindex_u64(0usize as u64, 2), 1usize as u64);
+                        let first_half = svptrue_pat_b64::<{ svpattern::SV_VL1 }>();
+                        svsel_u64(first_half, svtbl_u64(a, indices), svtbl_u64(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u64_x(pg, svindex_u64(1usize as u64, 2), 1usize as u64);
+                        let first_half = svptrue_pat_b64::<{ svpattern::SV_VL1 }>();
+                        svsel_u64(first_half, svtbl_u64(a, indices), svtbl_u64(b, indices))
+                    }),
+                )
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn select_u64x2(self, a: mask64x2<Self>, b: u64x2<Self>, c: u64x2<Self>) -> u64x2<Self> {
@@ -7998,9 +9835,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
-                store(token, pg, svrev_f32(a))
+                store(
+                    token,
+                    pg,
+                    svtbl_f32(a, svindex_u32(7usize as u32, u32::MAX)),
+                )
             }
         );
         kernel(self, a)
@@ -8079,7 +9920,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
                 store(token, pg, svsqrt_f32_x(pg, a))
             }
@@ -8103,7 +9944,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f32(pg, b.as_array().as_ptr()) };
                 store(token, pg, svadd_f32_x(pg, a, b))
@@ -8128,7 +9969,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f32(pg, b.as_array().as_ptr()) };
                 store(token, pg, svsub_f32_x(pg, a, b))
@@ -8153,7 +9994,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f32(pg, b.as_array().as_ptr()) };
                 store(token, pg, svmul_f32_x(pg, a, b))
@@ -8178,7 +10019,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f32(pg, b.as_array().as_ptr()) };
                 store(token, pg, svdiv_f32_x(pg, a, b))
@@ -8203,7 +10044,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f32(pg, b.as_array().as_ptr()) };
                 store(token, pg, svzip1_f32(a, b))
@@ -8228,10 +10069,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f32(pg, b.as_array().as_ptr()) };
-                store(token, pg, svzip2_f32(a, b))
+                store(token, pg, {
+                    let indices = svindex_u32(4usize as u32, 1);
+                    svzip1_f32(svtbl_f32(a, indices), svtbl_f32(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -8253,10 +10097,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f32(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp1_f32(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u32_x(pg, svindex_u32(0usize as u32, 2), 7usize as u32);
+                    let first_half = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                    svsel_f32(first_half, svtbl_f32(a, indices), svtbl_f32(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -8278,10 +10126,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f32(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp2_f32(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u32_x(pg, svindex_u32(1usize as u32, 2), 7usize as u32);
+                    let first_half = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                    svsel_f32(first_half, svtbl_f32(a, indices), svtbl_f32(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -8307,12 +10159,15 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f32(pg, b.as_array().as_ptr()) };
                 (
                     store(token, pg, svzip1_f32(a, b)),
-                    store(token, pg, svzip2_f32(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u32(4usize as u32, 1);
+                        svzip1_f32(svtbl_f32(a, indices), svtbl_f32(b, indices))
+                    }),
                 )
             }
         );
@@ -8339,12 +10194,22 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f32(pg, b.as_array().as_ptr()) };
                 (
-                    store(token, pg, svuzp1_f32(a, b)),
-                    store(token, pg, svuzp2_f32(a, b)),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u32_x(pg, svindex_u32(0usize as u32, 2), 7usize as u32);
+                        let first_half = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                        svsel_f32(first_half, svtbl_f32(a, indices), svtbl_f32(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u32_x(pg, svindex_u32(1usize as u32, 2), 7usize as u32);
+                        let first_half = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                        svsel_f32(first_half, svtbl_f32(a, indices), svtbl_f32(b, indices))
+                    }),
                 )
             }
         );
@@ -8372,7 +10237,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_f32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f32(pg, b.as_array().as_ptr()) };
                 let c = unsafe { svld1_f32(pg, c.as_array().as_ptr()) };
@@ -8445,9 +10310,9 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
-                store(token, pg, svrev_s8(a))
+                store(token, pg, svtbl_s8(a, svindex_u8(31usize as u8, u8::MAX)))
             }
         );
         kernel(self, a)
@@ -8526,7 +10391,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s8(pg, b.as_array().as_ptr()) };
                 store(token, pg, svadd_s8_x(pg, a, b))
@@ -8551,7 +10416,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s8(pg, b.as_array().as_ptr()) };
                 store(token, pg, svsub_s8_x(pg, a, b))
@@ -8576,7 +10441,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s8(pg, b.as_array().as_ptr()) };
                 store(token, pg, svmul_s8_x(pg, a, b))
@@ -8589,7 +10454,7 @@ impl Simd for Sve2_256 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sve2_256, a: i8x32<Sve2_256>) -> i8 {
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
                 svaddv_s8(pg, a) as i8
             }
@@ -8613,7 +10478,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s8(pg, b.as_array().as_ptr()) };
                 store(token, pg, svzip1_s8(a, b))
@@ -8638,10 +10503,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s8(pg, b.as_array().as_ptr()) };
-                store(token, pg, svzip2_s8(a, b))
+                store(token, pg, {
+                    let indices = svindex_u8(16usize as u8, 1);
+                    svzip1_s8(svtbl_s8(a, indices), svtbl_s8(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -8663,10 +10531,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s8(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp1_s8(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u8_x(pg, svindex_u8(0usize as u8, 2), 31usize as u8);
+                    let first_half = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                    svsel_s8(first_half, svtbl_s8(a, indices), svtbl_s8(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -8688,10 +10560,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s8(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp2_s8(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u8_x(pg, svindex_u8(1usize as u8, 2), 31usize as u8);
+                    let first_half = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                    svsel_s8(first_half, svtbl_s8(a, indices), svtbl_s8(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -8717,12 +10593,15 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s8(pg, b.as_array().as_ptr()) };
                 (
                     store(token, pg, svzip1_s8(a, b)),
-                    store(token, pg, svzip2_s8(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u8(16usize as u8, 1);
+                        svzip1_s8(svtbl_s8(a, indices), svtbl_s8(b, indices))
+                    }),
                 )
             }
         );
@@ -8749,12 +10628,20 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_s8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s8(pg, b.as_array().as_ptr()) };
                 (
-                    store(token, pg, svuzp1_s8(a, b)),
-                    store(token, pg, svuzp2_s8(a, b)),
+                    store(token, pg, {
+                        let indices = svand_n_u8_x(pg, svindex_u8(0usize as u8, 2), 31usize as u8);
+                        let first_half = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                        svsel_s8(first_half, svtbl_s8(a, indices), svtbl_s8(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices = svand_n_u8_x(pg, svindex_u8(1usize as u8, 2), 31usize as u8);
+                        let first_half = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                        svsel_s8(first_half, svtbl_s8(a, indices), svtbl_s8(b, indices))
+                    }),
                 )
             }
         );
@@ -8792,9 +10679,9 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
-                store(token, pg, svrev_u8(a))
+                store(token, pg, svtbl_u8(a, svindex_u8(31usize as u8, u8::MAX)))
             }
         );
         kernel(self, a)
@@ -8827,7 +10714,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
                 let indices = unsafe { svld1_u8(pg, indices.as_array().as_ptr()) };
                 store(
@@ -8867,7 +10754,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
                 let indices = unsafe { svld1_u8(pg, indices.as_array().as_ptr()) };
                 store(token, pg, svtbl_u8(a, indices))
@@ -8896,7 +10783,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
                 let indices = unsafe { svld1_u8(pg, indices.as_array().as_ptr()) };
                 store(token, pg, svtbl_u8(a, indices))
@@ -8931,11 +10818,19 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
                 let indices = unsafe { svld1_u8(pg, indices.as_array().as_ptr()) };
-                store(token, pg, svtbl2_u8(svcreate2_u8(a, b), indices))
+                store(
+                    token,
+                    pg,
+                    svorr_u8_x(
+                        pg,
+                        svtbl_u8(a, indices),
+                        svtbl_u8(b, svsub_n_u8_x(pg, indices, 32usize as u8)),
+                    ),
+                )
             }
         );
         kernel(self, a, b, indices)
@@ -8967,11 +10862,19 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
                 let indices = unsafe { svld1_u8(pg, indices.as_array().as_ptr()) };
-                store(token, pg, svtbl2_u8(svcreate2_u8(a, b), indices))
+                store(
+                    token,
+                    pg,
+                    svorr_u8_x(
+                        pg,
+                        svtbl_u8(a, indices),
+                        svtbl_u8(b, svsub_n_u8_x(pg, indices, 32usize as u8)),
+                    ),
+                )
             }
         );
         kernel(self, a, b, indices)
@@ -9040,7 +10943,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
                 store(token, pg, svadd_u8_x(pg, a, b))
@@ -9065,7 +10968,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
                 store(token, pg, svsub_u8_x(pg, a, b))
@@ -9090,7 +10993,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
                 store(token, pg, svmul_u8_x(pg, a, b))
@@ -9103,7 +11006,7 @@ impl Simd for Sve2_256 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sve2_256, a: u8x32<Sve2_256>) -> u8 {
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
                 svaddv_u8(pg, a) as u8
             }
@@ -9127,7 +11030,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
                 store(token, pg, svzip1_u8(a, b))
@@ -9152,10 +11055,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
-                store(token, pg, svzip2_u8(a, b))
+                store(token, pg, {
+                    let indices = svindex_u8(16usize as u8, 1);
+                    svzip1_u8(svtbl_u8(a, indices), svtbl_u8(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -9177,10 +11083,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp1_u8(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u8_x(pg, svindex_u8(0usize as u8, 2), 31usize as u8);
+                    let first_half = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                    svsel_u8(first_half, svtbl_u8(a, indices), svtbl_u8(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -9202,10 +11112,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp2_u8(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u8_x(pg, svindex_u8(1usize as u8, 2), 31usize as u8);
+                    let first_half = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                    svsel_u8(first_half, svtbl_u8(a, indices), svtbl_u8(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -9231,12 +11145,15 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
                 (
                     store(token, pg, svzip1_u8(a, b)),
-                    store(token, pg, svzip2_u8(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u8(16usize as u8, 1);
+                        svzip1_u8(svtbl_u8(a, indices), svtbl_u8(b, indices))
+                    }),
                 )
             }
         );
@@ -9263,12 +11180,20 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b8::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b8::<{ svpattern::SV_VL32 }>();
                 let a = unsafe { svld1_u8(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u8(pg, b.as_array().as_ptr()) };
                 (
-                    store(token, pg, svuzp1_u8(a, b)),
-                    store(token, pg, svuzp2_u8(a, b)),
+                    store(token, pg, {
+                        let indices = svand_n_u8_x(pg, svindex_u8(0usize as u8, 2), 31usize as u8);
+                        let first_half = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                        svsel_u8(first_half, svtbl_u8(a, indices), svtbl_u8(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices = svand_n_u8_x(pg, svindex_u8(1usize as u8, 2), 31usize as u8);
+                        let first_half = svptrue_pat_b8::<{ svpattern::SV_VL16 }>();
+                        svsel_u8(first_half, svtbl_u8(a, indices), svtbl_u8(b, indices))
+                    }),
                 )
             }
         );
@@ -9376,9 +11301,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
-                store(token, pg, svrev_s16(a))
+                store(
+                    token,
+                    pg,
+                    svtbl_s16(a, svindex_u16(15usize as u16, u16::MAX)),
+                )
             }
         );
         kernel(self, a)
@@ -9461,7 +11390,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s16(pg, b.as_array().as_ptr()) };
                 store(token, pg, svadd_s16_x(pg, a, b))
@@ -9490,7 +11419,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s16(pg, b.as_array().as_ptr()) };
                 store(token, pg, svsub_s16_x(pg, a, b))
@@ -9519,7 +11448,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s16(pg, b.as_array().as_ptr()) };
                 store(token, pg, svmul_s16_x(pg, a, b))
@@ -9532,7 +11461,7 @@ impl Simd for Sve2_256 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sve2_256, a: i16x16<Sve2_256>) -> i16 {
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
                 svaddv_s16(pg, a) as i16
             }
@@ -9560,7 +11489,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s16(pg, b.as_array().as_ptr()) };
                 store(token, pg, svzip1_s16(a, b))
@@ -9589,10 +11518,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s16(pg, b.as_array().as_ptr()) };
-                store(token, pg, svzip2_s16(a, b))
+                store(token, pg, {
+                    let indices = svindex_u16(8usize as u16, 1);
+                    svzip1_s16(svtbl_s16(a, indices), svtbl_s16(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -9618,10 +11550,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s16(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp1_s16(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u16_x(pg, svindex_u16(0usize as u16, 2), 15usize as u16);
+                    let first_half = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                    svsel_s16(first_half, svtbl_s16(a, indices), svtbl_s16(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -9647,10 +11583,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s16(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp2_s16(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u16_x(pg, svindex_u16(1usize as u16, 2), 15usize as u16);
+                    let first_half = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                    svsel_s16(first_half, svtbl_s16(a, indices), svtbl_s16(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -9676,12 +11616,15 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s16(pg, b.as_array().as_ptr()) };
                 (
                     store(token, pg, svzip1_s16(a, b)),
-                    store(token, pg, svzip2_s16(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u16(8usize as u16, 1);
+                        svzip1_s16(svtbl_s16(a, indices), svtbl_s16(b, indices))
+                    }),
                 )
             }
         );
@@ -9708,12 +11651,22 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_s16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s16(pg, b.as_array().as_ptr()) };
                 (
-                    store(token, pg, svuzp1_s16(a, b)),
-                    store(token, pg, svuzp2_s16(a, b)),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u16_x(pg, svindex_u16(0usize as u16, 2), 15usize as u16);
+                        let first_half = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                        svsel_s16(first_half, svtbl_s16(a, indices), svtbl_s16(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u16_x(pg, svindex_u16(1usize as u16, 2), 15usize as u16);
+                        let first_half = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                        svsel_s16(first_half, svtbl_s16(a, indices), svtbl_s16(b, indices))
+                    }),
                 )
             }
         );
@@ -9751,9 +11704,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
-                store(token, pg, svrev_u16(a))
+                store(
+                    token,
+                    pg,
+                    svtbl_u16(a, svindex_u16(15usize as u16, u16::MAX)),
+                )
             }
         );
         kernel(self, a)
@@ -9836,7 +11793,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u16(pg, b.as_array().as_ptr()) };
                 store(token, pg, svadd_u16_x(pg, a, b))
@@ -9865,7 +11822,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u16(pg, b.as_array().as_ptr()) };
                 store(token, pg, svsub_u16_x(pg, a, b))
@@ -9894,7 +11851,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u16(pg, b.as_array().as_ptr()) };
                 store(token, pg, svmul_u16_x(pg, a, b))
@@ -9907,7 +11864,7 @@ impl Simd for Sve2_256 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sve2_256, a: u16x16<Sve2_256>) -> u16 {
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
                 svaddv_u16(pg, a) as u16
             }
@@ -9935,7 +11892,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u16(pg, b.as_array().as_ptr()) };
                 store(token, pg, svzip1_u16(a, b))
@@ -9964,10 +11921,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u16(pg, b.as_array().as_ptr()) };
-                store(token, pg, svzip2_u16(a, b))
+                store(token, pg, {
+                    let indices = svindex_u16(8usize as u16, 1);
+                    svzip1_u16(svtbl_u16(a, indices), svtbl_u16(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -9993,10 +11953,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u16(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp1_u16(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u16_x(pg, svindex_u16(0usize as u16, 2), 15usize as u16);
+                    let first_half = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                    svsel_u16(first_half, svtbl_u16(a, indices), svtbl_u16(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -10022,10 +11986,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u16(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp2_u16(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u16_x(pg, svindex_u16(1usize as u16, 2), 15usize as u16);
+                    let first_half = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                    svsel_u16(first_half, svtbl_u16(a, indices), svtbl_u16(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -10051,12 +12019,15 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u16(pg, b.as_array().as_ptr()) };
                 (
                     store(token, pg, svzip1_u16(a, b)),
-                    store(token, pg, svzip2_u16(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u16(8usize as u16, 1);
+                        svzip1_u16(svtbl_u16(a, indices), svtbl_u16(b, indices))
+                    }),
                 )
             }
         );
@@ -10083,12 +12054,22 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b16::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b16::<{ svpattern::SV_VL16 }>();
                 let a = unsafe { svld1_u16(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u16(pg, b.as_array().as_ptr()) };
                 (
-                    store(token, pg, svuzp1_u16(a, b)),
-                    store(token, pg, svuzp2_u16(a, b)),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u16_x(pg, svindex_u16(0usize as u16, 2), 15usize as u16);
+                        let first_half = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                        svsel_u16(first_half, svtbl_u16(a, indices), svtbl_u16(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u16_x(pg, svindex_u16(1usize as u16, 2), 15usize as u16);
+                        let first_half = svptrue_pat_b16::<{ svpattern::SV_VL8 }>();
+                        svsel_u16(first_half, svtbl_u16(a, indices), svtbl_u16(b, indices))
+                    }),
                 )
             }
         );
@@ -10196,9 +12177,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
-                store(token, pg, svrev_s32(a))
+                store(
+                    token,
+                    pg,
+                    svtbl_s32(a, svindex_u32(7usize as u32, u32::MAX)),
+                )
             }
         );
         kernel(self, a)
@@ -10277,7 +12262,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s32(pg, b.as_array().as_ptr()) };
                 store(token, pg, svadd_s32_x(pg, a, b))
@@ -10302,7 +12287,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s32(pg, b.as_array().as_ptr()) };
                 store(token, pg, svsub_s32_x(pg, a, b))
@@ -10327,7 +12312,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s32(pg, b.as_array().as_ptr()) };
                 store(token, pg, svmul_s32_x(pg, a, b))
@@ -10340,7 +12325,7 @@ impl Simd for Sve2_256 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sve2_256, a: i32x8<Sve2_256>) -> i32 {
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
                 svaddv_s32(pg, a) as i32
             }
@@ -10364,7 +12349,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s32(pg, b.as_array().as_ptr()) };
                 store(token, pg, svzip1_s32(a, b))
@@ -10389,10 +12374,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s32(pg, b.as_array().as_ptr()) };
-                store(token, pg, svzip2_s32(a, b))
+                store(token, pg, {
+                    let indices = svindex_u32(4usize as u32, 1);
+                    svzip1_s32(svtbl_s32(a, indices), svtbl_s32(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -10414,10 +12402,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s32(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp1_s32(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u32_x(pg, svindex_u32(0usize as u32, 2), 7usize as u32);
+                    let first_half = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                    svsel_s32(first_half, svtbl_s32(a, indices), svtbl_s32(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -10439,10 +12431,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s32(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp2_s32(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u32_x(pg, svindex_u32(1usize as u32, 2), 7usize as u32);
+                    let first_half = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                    svsel_s32(first_half, svtbl_s32(a, indices), svtbl_s32(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -10468,12 +12464,15 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s32(pg, b.as_array().as_ptr()) };
                 (
                     store(token, pg, svzip1_s32(a, b)),
-                    store(token, pg, svzip2_s32(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u32(4usize as u32, 1);
+                        svzip1_s32(svtbl_s32(a, indices), svtbl_s32(b, indices))
+                    }),
                 )
             }
         );
@@ -10500,12 +12499,22 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_s32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s32(pg, b.as_array().as_ptr()) };
                 (
-                    store(token, pg, svuzp1_s32(a, b)),
-                    store(token, pg, svuzp2_s32(a, b)),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u32_x(pg, svindex_u32(0usize as u32, 2), 7usize as u32);
+                        let first_half = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                        svsel_s32(first_half, svtbl_s32(a, indices), svtbl_s32(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u32_x(pg, svindex_u32(1usize as u32, 2), 7usize as u32);
+                        let first_half = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                        svsel_s32(first_half, svtbl_s32(a, indices), svtbl_s32(b, indices))
+                    }),
                 )
             }
         );
@@ -10543,9 +12552,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
-                store(token, pg, svrev_u32(a))
+                store(
+                    token,
+                    pg,
+                    svtbl_u32(a, svindex_u32(7usize as u32, u32::MAX)),
+                )
             }
         );
         kernel(self, a)
@@ -10624,7 +12637,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u32(pg, b.as_array().as_ptr()) };
                 store(token, pg, svadd_u32_x(pg, a, b))
@@ -10649,7 +12662,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u32(pg, b.as_array().as_ptr()) };
                 store(token, pg, svsub_u32_x(pg, a, b))
@@ -10674,7 +12687,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u32(pg, b.as_array().as_ptr()) };
                 store(token, pg, svmul_u32_x(pg, a, b))
@@ -10687,7 +12700,7 @@ impl Simd for Sve2_256 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sve2_256, a: u32x8<Sve2_256>) -> u32 {
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
                 svaddv_u32(pg, a) as u32
             }
@@ -10711,7 +12724,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u32(pg, b.as_array().as_ptr()) };
                 store(token, pg, svzip1_u32(a, b))
@@ -10736,10 +12749,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u32(pg, b.as_array().as_ptr()) };
-                store(token, pg, svzip2_u32(a, b))
+                store(token, pg, {
+                    let indices = svindex_u32(4usize as u32, 1);
+                    svzip1_u32(svtbl_u32(a, indices), svtbl_u32(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -10761,10 +12777,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u32(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp1_u32(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u32_x(pg, svindex_u32(0usize as u32, 2), 7usize as u32);
+                    let first_half = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                    svsel_u32(first_half, svtbl_u32(a, indices), svtbl_u32(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -10786,10 +12806,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u32(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp2_u32(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u32_x(pg, svindex_u32(1usize as u32, 2), 7usize as u32);
+                    let first_half = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                    svsel_u32(first_half, svtbl_u32(a, indices), svtbl_u32(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -10815,12 +12839,15 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u32(pg, b.as_array().as_ptr()) };
                 (
                     store(token, pg, svzip1_u32(a, b)),
-                    store(token, pg, svzip2_u32(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u32(4usize as u32, 1);
+                        svzip1_u32(svtbl_u32(a, indices), svtbl_u32(b, indices))
+                    }),
                 )
             }
         );
@@ -10847,12 +12874,22 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b32::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b32::<{ svpattern::SV_VL8 }>();
                 let a = unsafe { svld1_u32(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u32(pg, b.as_array().as_ptr()) };
                 (
-                    store(token, pg, svuzp1_u32(a, b)),
-                    store(token, pg, svuzp2_u32(a, b)),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u32_x(pg, svindex_u32(0usize as u32, 2), 7usize as u32);
+                        let first_half = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                        svsel_u32(first_half, svtbl_u32(a, indices), svtbl_u32(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u32_x(pg, svindex_u32(1usize as u32, 2), 7usize as u32);
+                        let first_half = svptrue_pat_b32::<{ svpattern::SV_VL4 }>();
+                        svsel_u32(first_half, svtbl_u32(a, indices), svtbl_u32(b, indices))
+                    }),
                 )
             }
         );
@@ -10960,9 +12997,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
-                store(token, pg, svrev_f64(a))
+                store(
+                    token,
+                    pg,
+                    svtbl_f64(a, svindex_u64(3usize as u64, u64::MAX)),
+                )
             }
         );
         kernel(self, a)
@@ -11041,7 +13082,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
                 store(token, pg, svsqrt_f64_x(pg, a))
             }
@@ -11065,7 +13106,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f64(pg, b.as_array().as_ptr()) };
                 store(token, pg, svadd_f64_x(pg, a, b))
@@ -11090,7 +13131,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f64(pg, b.as_array().as_ptr()) };
                 store(token, pg, svsub_f64_x(pg, a, b))
@@ -11115,7 +13156,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f64(pg, b.as_array().as_ptr()) };
                 store(token, pg, svmul_f64_x(pg, a, b))
@@ -11140,7 +13181,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f64(pg, b.as_array().as_ptr()) };
                 store(token, pg, svdiv_f64_x(pg, a, b))
@@ -11165,7 +13206,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f64(pg, b.as_array().as_ptr()) };
                 store(token, pg, svzip1_f64(a, b))
@@ -11190,10 +13231,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f64(pg, b.as_array().as_ptr()) };
-                store(token, pg, svzip2_f64(a, b))
+                store(token, pg, {
+                    let indices = svindex_u64(2usize as u64, 1);
+                    svzip1_f64(svtbl_f64(a, indices), svtbl_f64(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -11215,10 +13259,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f64(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp1_f64(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u64_x(pg, svindex_u64(0usize as u64, 2), 3usize as u64);
+                    let first_half = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                    svsel_f64(first_half, svtbl_f64(a, indices), svtbl_f64(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -11240,10 +13288,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f64(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp2_f64(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u64_x(pg, svindex_u64(1usize as u64, 2), 3usize as u64);
+                    let first_half = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                    svsel_f64(first_half, svtbl_f64(a, indices), svtbl_f64(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -11269,12 +13321,15 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f64(pg, b.as_array().as_ptr()) };
                 (
                     store(token, pg, svzip1_f64(a, b)),
-                    store(token, pg, svzip2_f64(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u64(2usize as u64, 1);
+                        svzip1_f64(svtbl_f64(a, indices), svtbl_f64(b, indices))
+                    }),
                 )
             }
         );
@@ -11301,12 +13356,22 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f64(pg, b.as_array().as_ptr()) };
                 (
-                    store(token, pg, svuzp1_f64(a, b)),
-                    store(token, pg, svuzp2_f64(a, b)),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u64_x(pg, svindex_u64(0usize as u64, 2), 3usize as u64);
+                        let first_half = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                        svsel_f64(first_half, svtbl_f64(a, indices), svtbl_f64(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u64_x(pg, svindex_u64(1usize as u64, 2), 3usize as u64);
+                        let first_half = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                        svsel_f64(first_half, svtbl_f64(a, indices), svtbl_f64(b, indices))
+                    }),
                 )
             }
         );
@@ -11334,7 +13399,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_f64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_f64(pg, b.as_array().as_ptr()) };
                 let c = unsafe { svld1_f64(pg, c.as_array().as_ptr()) };
@@ -11407,9 +13472,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
-                store(token, pg, svrev_s64(a))
+                store(
+                    token,
+                    pg,
+                    svtbl_s64(a, svindex_u64(3usize as u64, u64::MAX)),
+                )
             }
         );
         kernel(self, a)
@@ -11488,7 +13557,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s64(pg, b.as_array().as_ptr()) };
                 store(token, pg, svadd_s64_x(pg, a, b))
@@ -11513,7 +13582,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s64(pg, b.as_array().as_ptr()) };
                 store(token, pg, svsub_s64_x(pg, a, b))
@@ -11538,7 +13607,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s64(pg, b.as_array().as_ptr()) };
                 store(token, pg, svmul_s64_x(pg, a, b))
@@ -11551,7 +13620,7 @@ impl Simd for Sve2_256 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sve2_256, a: i64x4<Sve2_256>) -> i64 {
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
                 svaddv_s64(pg, a) as i64
             }
@@ -11575,7 +13644,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s64(pg, b.as_array().as_ptr()) };
                 store(token, pg, svzip1_s64(a, b))
@@ -11600,10 +13669,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s64(pg, b.as_array().as_ptr()) };
-                store(token, pg, svzip2_s64(a, b))
+                store(token, pg, {
+                    let indices = svindex_u64(2usize as u64, 1);
+                    svzip1_s64(svtbl_s64(a, indices), svtbl_s64(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -11625,10 +13697,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s64(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp1_s64(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u64_x(pg, svindex_u64(0usize as u64, 2), 3usize as u64);
+                    let first_half = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                    svsel_s64(first_half, svtbl_s64(a, indices), svtbl_s64(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -11650,10 +13726,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s64(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp2_s64(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u64_x(pg, svindex_u64(1usize as u64, 2), 3usize as u64);
+                    let first_half = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                    svsel_s64(first_half, svtbl_s64(a, indices), svtbl_s64(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -11679,12 +13759,15 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s64(pg, b.as_array().as_ptr()) };
                 (
                     store(token, pg, svzip1_s64(a, b)),
-                    store(token, pg, svzip2_s64(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u64(2usize as u64, 1);
+                        svzip1_s64(svtbl_s64(a, indices), svtbl_s64(b, indices))
+                    }),
                 )
             }
         );
@@ -11711,12 +13794,22 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_s64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_s64(pg, b.as_array().as_ptr()) };
                 (
-                    store(token, pg, svuzp1_s64(a, b)),
-                    store(token, pg, svuzp2_s64(a, b)),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u64_x(pg, svindex_u64(0usize as u64, 2), 3usize as u64);
+                        let first_half = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                        svsel_s64(first_half, svtbl_s64(a, indices), svtbl_s64(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u64_x(pg, svindex_u64(1usize as u64, 2), 3usize as u64);
+                        let first_half = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                        svsel_s64(first_half, svtbl_s64(a, indices), svtbl_s64(b, indices))
+                    }),
                 )
             }
         );
@@ -11754,9 +13847,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
-                store(token, pg, svrev_u64(a))
+                store(
+                    token,
+                    pg,
+                    svtbl_u64(a, svindex_u64(3usize as u64, u64::MAX)),
+                )
             }
         );
         kernel(self, a)
@@ -11835,7 +13932,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u64(pg, b.as_array().as_ptr()) };
                 store(token, pg, svadd_u64_x(pg, a, b))
@@ -11860,7 +13957,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u64(pg, b.as_array().as_ptr()) };
                 store(token, pg, svsub_u64_x(pg, a, b))
@@ -11885,7 +13982,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u64(pg, b.as_array().as_ptr()) };
                 store(token, pg, svmul_u64_x(pg, a, b))
@@ -11898,7 +13995,7 @@ impl Simd for Sve2_256 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sve2_256, a: u64x4<Sve2_256>) -> u64 {
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
                 svaddv_u64(pg, a) as u64
             }
@@ -11922,7 +14019,7 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u64(pg, b.as_array().as_ptr()) };
                 store(token, pg, svzip1_u64(a, b))
@@ -11947,10 +14044,13 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u64(pg, b.as_array().as_ptr()) };
-                store(token, pg, svzip2_u64(a, b))
+                store(token, pg, {
+                    let indices = svindex_u64(2usize as u64, 1);
+                    svzip1_u64(svtbl_u64(a, indices), svtbl_u64(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -11972,10 +14072,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u64(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp1_u64(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u64_x(pg, svindex_u64(0usize as u64, 2), 3usize as u64);
+                    let first_half = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                    svsel_u64(first_half, svtbl_u64(a, indices), svtbl_u64(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -11997,10 +14101,14 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u64(pg, b.as_array().as_ptr()) };
-                store(token, pg, svuzp2_u64(a, b))
+                store(token, pg, {
+                    let indices = svand_n_u64_x(pg, svindex_u64(1usize as u64, 2), 3usize as u64);
+                    let first_half = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                    svsel_u64(first_half, svtbl_u64(a, indices), svtbl_u64(b, indices))
+                })
             }
         );
         kernel(self, a, b)
@@ -12026,12 +14134,15 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u64(pg, b.as_array().as_ptr()) };
                 (
                     store(token, pg, svzip1_u64(a, b)),
-                    store(token, pg, svzip2_u64(a, b)),
+                    store(token, pg, {
+                        let indices = svindex_u64(2usize as u64, 1);
+                        svzip1_u64(svtbl_u64(a, indices), svtbl_u64(b, indices))
+                    }),
                 )
             }
         );
@@ -12058,12 +14169,22 @@ impl Simd for Sve2_256 {
                         }
                     }
                 }
-                let pg = svptrue_pat_b64::<{ svpattern::SV_ALL }>();
+                let pg = svptrue_pat_b64::<{ svpattern::SV_VL4 }>();
                 let a = unsafe { svld1_u64(pg, a.as_array().as_ptr()) };
                 let b = unsafe { svld1_u64(pg, b.as_array().as_ptr()) };
                 (
-                    store(token, pg, svuzp1_u64(a, b)),
-                    store(token, pg, svuzp2_u64(a, b)),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u64_x(pg, svindex_u64(0usize as u64, 2), 3usize as u64);
+                        let first_half = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                        svsel_u64(first_half, svtbl_u64(a, indices), svtbl_u64(b, indices))
+                    }),
+                    store(token, pg, {
+                        let indices =
+                            svand_n_u64_x(pg, svindex_u64(1usize as u64, 2), 3usize as u64);
+                        let first_half = svptrue_pat_b64::<{ svpattern::SV_VL2 }>();
+                        svsel_u64(first_half, svtbl_u64(a, indices), svtbl_u64(b, indices))
+                    }),
                 )
             }
         );

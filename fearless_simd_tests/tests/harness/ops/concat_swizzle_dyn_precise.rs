@@ -5,6 +5,67 @@ use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
 #[simd_test]
+fn concat_swizzle_dyn_precise_u8x16_all_indices<S: Simd>(simd: S) {
+    let a_bytes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+    let b_bytes = [
+        17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+    ];
+    let a = u8x16::simd_from(simd, a_bytes);
+    let b = u8x16::simd_from(simd, b_bytes);
+
+    // Includes wrapped indices into the second table on physical VLs up to 2048.
+    for start in 0..=255_u8 {
+        let mut indices = [0; 16];
+        let mut expected = [0; 16];
+        for lane in 0..16 {
+            indices[lane] = start.wrapping_add((lane as u8).wrapping_mul(37));
+            let index = usize::from(indices[lane]);
+            expected[lane] = if index < 16 {
+                a_bytes[index]
+            } else if index < 32 {
+                b_bytes[index - 16]
+            } else {
+                0
+            };
+        }
+        let indices = u8x16::simd_from(simd, indices);
+        assert_eq!(*a.concat_swizzle_dyn_precise(b, indices), expected);
+    }
+}
+
+#[simd_test]
+fn concat_swizzle_dyn_precise_u8x32_all_indices<S: Simd>(simd: S) {
+    let a_bytes = [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+        26, 27, 28, 29, 30, 31, 32,
+    ];
+    let b_bytes = [
+        33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
+        56, 57, 58, 59, 60, 61, 62, 63, 64,
+    ];
+    let a = u8x32::simd_from(simd, a_bytes);
+    let b = u8x32::simd_from(simd, b_bytes);
+
+    for start in 0..=255_u8 {
+        let mut indices = [0; 32];
+        let mut expected = [0; 32];
+        for lane in 0..32 {
+            indices[lane] = start.wrapping_add((lane as u8).wrapping_mul(37));
+            let index = usize::from(indices[lane]);
+            expected[lane] = if index < 32 {
+                a_bytes[index]
+            } else if index < 64 {
+                b_bytes[index - 32]
+            } else {
+                0
+            };
+        }
+        let indices = u8x32::simd_from(simd, indices);
+        assert_eq!(*a.concat_swizzle_dyn_precise(b, indices), expected);
+    }
+}
+
+#[simd_test]
 fn concat_swizzle_dyn_precise_u8x16<S: Simd>(simd: S) {
     let a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
     let b = [

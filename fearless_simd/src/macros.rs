@@ -13,7 +13,7 @@
 /// frequently calling [`Level::new()`].
 /// On x86, the first call to `Level::new` detects which target features are available and caches
 /// the result. Passing the resulting value around avoids even the cached atomic load.
-/// Experimental SVE2 tokens additionally require the same active vector length on
+/// Experimental SVE2 tokens additionally require at least their logical width on
 /// every thread that uses them; detection does not establish this across threads.
 ///
 /// The code of the operation will be repeated literally several times in the output, so you should prefer

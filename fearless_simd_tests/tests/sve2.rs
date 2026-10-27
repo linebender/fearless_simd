@@ -1,7 +1,7 @@
 // Copyright 2026 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! Explicit prototype checks; the operation harness also runs on the detected SVE2 level.
+//! Explicit prototype checks; the operation harness also runs on every supported SVE2 level.
 
 use fearless_simd::*;
 
@@ -31,8 +31,18 @@ fn sve2_detection_and_dispatch() {
             format!("{level:?}"),
             format!("{:?}", Level::detect_sve2().unwrap())
         );
+        let narrow = level.as_sve2_128().unwrap();
+        assert_eq!(dispatch!(narrow.level(), simd => native_bits(simd)), 128);
+        assert_eq!(level.as_sve2_256().is_some(), bits >= 256);
+        assert_eq!(level.as_sve2_512().is_some(), bits >= 512);
+        if let Some(medium) = level.as_sve2_256() {
+            assert_eq!(dispatch!(medium.level(), simd => native_bits(simd)), 256);
+        }
     } else {
         assert!(Level::detect_sve2().is_none());
+        assert!(level.as_sve2_128().is_none());
+        assert!(level.as_sve2_256().is_none());
+        assert!(level.as_sve2_512().is_none());
     }
 }
 
@@ -53,7 +63,7 @@ fn sve2_array_layout() {
 
 #[test]
 fn sve2_128_operations_outside_vectorize() {
-    if let Level::Sve2_128(simd) = Level::new() {
+    if let Some(simd) = Level::new().as_sve2_128() {
         let a = f32x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);
         let b = (a + a) * a;
         assert_eq!(*b, [2.0, 8.0, 18.0, 32.0]);
@@ -63,7 +73,7 @@ fn sve2_128_operations_outside_vectorize() {
 
 #[test]
 fn sve2_256_operations_outside_vectorize() {
-    if let Level::Sve2_256(simd) = Level::new() {
+    if let Some(simd) = Level::new().as_sve2_256() {
         let a = f32x8::from_slice(simd, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
         let b = (a + a) * a;
         assert_eq!(*b, [2.0, 8.0, 18.0, 32.0, 50.0, 72.0, 98.0, 128.0]);
@@ -73,7 +83,7 @@ fn sve2_256_operations_outside_vectorize() {
 
 #[test]
 fn sve2_512_operations_outside_vectorize() {
-    if let Level::Sve2_512(simd) = Level::new() {
+    if let Some(simd) = Level::new().as_sve2_512() {
         let a = u32x16::from_slice(
             simd,
             &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
