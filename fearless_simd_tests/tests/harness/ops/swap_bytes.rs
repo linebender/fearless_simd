@@ -4,8 +4,6 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
-// One concrete test row per supported vector type.
-
 trait SwapBytes {
     fn swap_bytes(self) -> Self;
 }
@@ -55,75 +53,218 @@ fn get_data<S: Simd, T: SimdInt<S>>(simd: S) -> T {
     T::ByteVector::from_slice(simd, &unique_bytes[..T::ByteVector::LEN]).bitcast::<T>()
 }
 
-macro_rules! test_swap_bytes {
-    ($vector:ty, $simd:expr) => {
-        let data = get_data::<S, $vector>($simd);
-        for data in [data, !data] {
-            let expected = data.to_array().map(SwapBytes::swap_bytes);
-            let actual = data.swap_bytes().to_array();
-            assert!(
-                actual == expected,
-                "Failed:\n     input: {:X?}\n  expected: {:X?}\n    actual: {:X?}",
-                data,
-                expected,
-                actual
-            );
-        }
-    };
+#[simd_test]
+fn swap_bytes_u8x16<S: Simd>(simd: S) {
+    let data = get_data::<S, u8x16<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
 }
 
 #[simd_test]
-fn combine_u8<S: Simd>(simd: S) {
-    test_swap_bytes!(u8x16<S>, simd);
-    test_swap_bytes!(u8x32<S>, simd);
-    test_swap_bytes!(u8x64<S>, simd);
+fn swap_bytes_u8x32<S: Simd>(simd: S) {
+    let data = get_data::<S, u8x32<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
 }
 
 #[simd_test]
-fn combine_i8<S: Simd>(simd: S) {
-    test_swap_bytes!(i8x16<S>, simd);
-    test_swap_bytes!(i8x32<S>, simd);
-    test_swap_bytes!(i8x64<S>, simd);
+fn swap_bytes_u8x64<S: Simd>(simd: S) {
+    let data = get_data::<S, u8x64<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
 }
 
 #[simd_test]
-fn combine_u16<S: Simd>(simd: S) {
-    test_swap_bytes!(u16x8<S>, simd);
-    test_swap_bytes!(u16x16<S>, simd);
-    test_swap_bytes!(u16x32<S>, simd);
+fn swap_bytes_i8x16<S: Simd>(simd: S) {
+    let data = get_data::<S, i8x16<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
 }
 
 #[simd_test]
-fn combine_i16<S: Simd>(simd: S) {
-    test_swap_bytes!(i16x8<S>, simd);
-    test_swap_bytes!(i16x16<S>, simd);
-    test_swap_bytes!(i16x32<S>, simd);
+fn swap_bytes_i8x32<S: Simd>(simd: S) {
+    let data = get_data::<S, i8x32<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
 }
 
 #[simd_test]
-fn combine_u32<S: Simd>(simd: S) {
-    test_swap_bytes!(u32x4<S>, simd);
-    test_swap_bytes!(u32x8<S>, simd);
-    test_swap_bytes!(u32x16<S>, simd);
+fn swap_bytes_i8x64<S: Simd>(simd: S) {
+    let data = get_data::<S, i8x64<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
 }
 
 #[simd_test]
-fn combine_i32<S: Simd>(simd: S) {
-    test_swap_bytes!(i32x4<S>, simd);
-    test_swap_bytes!(i32x8<S>, simd);
-    test_swap_bytes!(i32x16<S>, simd);
+fn swap_bytes_u16x8<S: Simd>(simd: S) {
+    let data = get_data::<S, u16x8<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
 }
 
 #[simd_test]
-fn combine_u64<S: Simd>(simd: S) {
-    test_swap_bytes!(u64x2<S>, simd);
-    test_swap_bytes!(u64x4<S>, simd);
-    test_swap_bytes!(u64x8<S>, simd);
+fn swap_bytes_u16x16<S: Simd>(simd: S) {
+    let data = get_data::<S, u16x16<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
 }
 
 #[simd_test]
-fn combine_i64<S: Simd>(simd: S) {
-    test_swap_bytes!(i64x2<S>, simd);
-    test_swap_bytes!(i64x4<S>, simd);
-    test_swap_bytes!(i64x8<S>, simd);
+fn swap_bytes_u16x32<S: Simd>(simd: S) {
+    let data = get_data::<S, u16x32<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
+}
+
+#[simd_test]
+fn swap_bytes_i16x8<S: Simd>(simd: S) {
+    let data = get_data::<S, i16x8<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
+}
+
+#[simd_test]
+fn swap_bytes_i16x16<S: Simd>(simd: S) {
+    let data = get_data::<S, i16x16<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
+}
+
+#[simd_test]
+fn swap_bytes_i16x32<S: Simd>(simd: S) {
+    let data = get_data::<S, i16x32<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
+}
+
+#[simd_test]
+fn swap_bytes_u32x4<S: Simd>(simd: S) {
+    let data = get_data::<S, u32x4<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
+}
+
+#[simd_test]
+fn swap_bytes_u32x8<S: Simd>(simd: S) {
+    let data = get_data::<S, u32x8<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
+}
+
+#[simd_test]
+fn swap_bytes_u32x16<S: Simd>(simd: S) {
+    let data = get_data::<S, u32x16<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
+}
+
+#[simd_test]
+fn swap_bytes_i32x4<S: Simd>(simd: S) {
+    let data = get_data::<S, i32x4<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
+}
+
+#[simd_test]
+fn swap_bytes_i32x8<S: Simd>(simd: S) {
+    let data = get_data::<S, i32x8<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
+}
+
+#[simd_test]
+fn swap_bytes_i32x16<S: Simd>(simd: S) {
+    let data = get_data::<S, i32x16<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
+}
+
+#[simd_test]
+fn swap_bytes_u64x2<S: Simd>(simd: S) {
+    let data = get_data::<S, u64x2<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
+}
+
+#[simd_test]
+fn swap_bytes_u64x4<S: Simd>(simd: S) {
+    let data = get_data::<S, u64x4<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
+}
+
+#[simd_test]
+fn swap_bytes_u64x8<S: Simd>(simd: S) {
+    let data = get_data::<S, u64x8<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
+}
+
+#[simd_test]
+fn swap_bytes_i64x2<S: Simd>(simd: S) {
+    let data = get_data::<S, i64x2<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
+}
+
+#[simd_test]
+fn swap_bytes_i64x4<S: Simd>(simd: S) {
+    let data = get_data::<S, i64x4<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
+}
+
+#[simd_test]
+fn swap_bytes_i64x8<S: Simd>(simd: S) {
+    let data = get_data::<S, i64x8<S>>(simd);
+    assert_eq!(
+        *data.swap_bytes(),
+        data.to_array().map(SwapBytes::swap_bytes)
+    );
 }
