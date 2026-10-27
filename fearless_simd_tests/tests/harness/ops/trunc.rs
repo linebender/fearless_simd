@@ -129,7 +129,13 @@ fn bit_exact_f32_exhaustive<S: Simd>(simd: S) {
         let input = f32::from_bits(bits);
         let expected = input.trunc();
         let actual = f32x4::splat(simd, input).trunc()[0];
-        assert_eq!(expected.to_bits(), actual.to_bits(), "{input} ({bits:x})");
+
+        // NaN bit-patterns aren't preserved
+        if input.is_nan() {
+            assert!(actual.is_nan());
+        } else {
+            assert_eq!(expected.to_bits(), actual.to_bits(), "{input} ({bits:x})");
+        }
     }
 }
 
