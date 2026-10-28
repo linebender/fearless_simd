@@ -133,6 +133,76 @@ fn bit_exact_f32_exhaustive<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn round_ties_even_f32x16_range_boundaries<S: Simd>(simd: S) {
+    let values = [
+        8388607.5_f32,
+        -8388609.0,
+        -8388607.5,
+        8388609.0,
+        8388608.0,
+        -8388608.0,
+        0.5,
+        -0.5,
+        f32::MAX,
+        -f32::MAX,
+        f32::INFINITY,
+        f32::NEG_INFINITY,
+        f32::from_bits(0x7f80_0001),
+        f32::from_bits(0xff80_0001),
+        f32::from_bits(0x7fc0_0001),
+        f32::from_bits(0xffc0_0001),
+    ];
+    let result = f32x16::from_slice(simd, &values).round_ties_even();
+    for i in 0..16 {
+        if values[i].is_nan() {
+            assert!(result[i].is_nan());
+        } else {
+            assert_eq!(result[i].to_bits(), values[i].round_ties_even().to_bits());
+        }
+    }
+}
+
+#[simd_test]
+fn round_ties_even_f64x8_range_boundaries<S: Simd>(simd: S) {
+    let values = [
+        4503599627370495.5_f64,
+        -4503599627370497.0,
+        -4503599627370495.5,
+        4503599627370497.0,
+        4503599627370496.0,
+        -4503599627370496.0,
+        f64::MAX,
+        -f64::MAX,
+    ];
+    let expected = values.map(|value| value.round_ties_even().to_bits());
+    let result = f64x8::from_slice(simd, &values).round_ties_even();
+
+    assert_eq!((*result).map(f64::to_bits), expected);
+}
+
+#[simd_test]
+fn round_ties_even_f64x8_mixed_nan_lanes<S: Simd>(simd: S) {
+    let values = [
+        f64::from_bits(0x7ff0_0000_0000_0001),
+        -0.5,
+        1.5,
+        f64::from_bits(0xfff0_0000_0000_0001),
+        f64::from_bits(0x7ff8_0000_0000_0001),
+        -2.5,
+        3.5,
+        f64::from_bits(0xfff8_0000_0000_0001),
+    ];
+    let result = f64x8::from_slice(simd, &values).round_ties_even();
+    for i in 0..8 {
+        if values[i].is_nan() {
+            assert!(result[i].is_nan());
+        } else {
+            assert_eq!(result[i].to_bits(), values[i].round_ties_even().to_bits());
+        }
+    }
+}
+
+#[simd_test]
 fn bit_exact_f64_randomized<S: Simd>(simd: S) {
     let mut rng = fastrand::Rng::with_seed(0xa409_3822_299f_31d0);
     // exhaustively check the top K bits and randomize the rest
