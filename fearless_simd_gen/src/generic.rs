@@ -1340,20 +1340,3 @@ pub(crate) fn generic_clamp_int(method_sig: TokenStream) -> TokenStream {
         }
     }
 }
-
-pub(crate) fn generic_reverse_bits(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
-    let org_ty = vec_ty.rust();
-    let u8_n = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
-    quote! {
-        #method_sig {
-            // reverse bits in each byte
-            let bytes = a.bitcast::<#u8_n<_>>();
-            let rev = ((bytes >> 1) & 0x55) | ((bytes << 1) & 0xAA);
-            let rev = ((rev >> 2) & 0x33) | ((rev << 2) & 0xCC);
-            let rev = (rev >> 4) | (rev << 4);
-
-            // swap bytes in original type
-            rev.bitcast::<#org_ty<_>>().swap_bytes()
-        }
-    }
-}

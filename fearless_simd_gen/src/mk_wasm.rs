@@ -9,7 +9,7 @@ use crate::generic::{
     CompactOptions, byte_compact_op, compact_128_op, composed_compact_op,
     concat_swizzle_dyn_precise_body, count_zeros_method, fallback_method, generic_block_combine,
     generic_block_split, generic_clamp_int, generic_classify, generic_mask_from_vector,
-    generic_mask_set, generic_mask_to_vector, generic_op_name, generic_reverse_bits, generic_round,
+    generic_mask_set, generic_mask_to_vector, generic_op_name, generic_round,
     generic_to_degrees_radians, integer_lane_mask_rotate, integer_lane_mask_splat_arg,
     recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
 };
@@ -532,7 +532,26 @@ impl Level for WasmSimd128 {
                 }
 
                 if method == "reverse_bits" {
-                    return generic_reverse_bits(method_sig, vec_ty);
+                    let vec_id = vec_ty.rust();
+                    return quote! {
+                        #method_sig {
+                            let value = a.into();
+                            let nibble_mask = u8x16_splat(0x0f);
+                            let lookup_low =
+                                u8x16(0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15);
+                            // Precompute reversed nibbles in both output positions.
+                            let lookup_high = u16x8_shl(lookup_low, 4);
+                            let low = v128_and(value, nibble_mask);
+                            // Clear bits shifted in from the neighboring byte so
+                            // every swizzle index is in the range 0..16.
+                            let high = v128_and(u16x8_shr(value, 4), nibble_mask);
+                            let rev: #vec_id<_> = v128_or(
+                                u8x16_swizzle(lookup_high, low),
+                                u8x16_swizzle(lookup_low, high),
+                            ).simd_into(self);
+                            rev.swap_bytes()
+                        }
+                    };
                 }
 
                 if method == "round" {
