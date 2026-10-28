@@ -850,9 +850,9 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: i8x16<Neon>) -> i8x16<Neon> {
-                vreinterpretq_s8_u8(vrbitq_u8(vreinterpretq_u8_s8(a.into())))
-                    .simd_into(token)
-                    .swap_bytes()
+                let bytes = a.bitcast::<u8x16<_>>();
+                let rev: u8x16<_> = vrbitq_u8(bytes.into()).simd_into(token);
+                rev.bitcast::<i8x16<_>>().swap_bytes()
             }
         );
         kernel(self, a)
@@ -1503,9 +1503,9 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: u8x16<Neon>) -> u8x16<Neon> {
-                vreinterpretq_u8_u8(vrbitq_u8(vreinterpretq_u8_u8(a.into())))
-                    .simd_into(token)
-                    .swap_bytes()
+                let bytes = a.bitcast::<u8x16<_>>();
+                let rev: u8x16<_> = vrbitq_u8(bytes.into()).simd_into(token);
+                rev.bitcast::<u8x16<_>>().swap_bytes()
             }
         );
         kernel(self, a)
@@ -2303,9 +2303,9 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: i16x8<Neon>) -> i16x8<Neon> {
-                vreinterpretq_s16_u8(vrbitq_u8(vreinterpretq_u8_s16(a.into())))
-                    .simd_into(token)
-                    .swap_bytes()
+                let bytes = a.bitcast::<u8x16<_>>();
+                let rev: u8x16<_> = vrbitq_u8(bytes.into()).simd_into(token);
+                rev.bitcast::<i16x8<_>>().swap_bytes()
             }
         );
         kernel(self, a)
@@ -2890,9 +2890,9 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: u16x8<Neon>) -> u16x8<Neon> {
-                vreinterpretq_u16_u8(vrbitq_u8(vreinterpretq_u8_u16(a.into())))
-                    .simd_into(token)
-                    .swap_bytes()
+                let bytes = a.bitcast::<u8x16<_>>();
+                let rev: u8x16<_> = vrbitq_u8(bytes.into()).simd_into(token);
+                rev.bitcast::<u16x8<_>>().swap_bytes()
             }
         );
         kernel(self, a)
@@ -3727,9 +3727,9 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: i32x4<Neon>) -> i32x4<Neon> {
-                vreinterpretq_s32_u8(vrbitq_u8(vreinterpretq_u8_s32(a.into())))
-                    .simd_into(token)
-                    .swap_bytes()
+                let bytes = a.bitcast::<u8x16<_>>();
+                let rev: u8x16<_> = vrbitq_u8(bytes.into()).simd_into(token);
+                rev.bitcast::<i32x4<_>>().swap_bytes()
             }
         );
         kernel(self, a)
@@ -4323,9 +4323,9 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: u32x4<Neon>) -> u32x4<Neon> {
-                vreinterpretq_u32_u8(vrbitq_u8(vreinterpretq_u8_u32(a.into())))
-                    .simd_into(token)
-                    .swap_bytes()
+                let bytes = a.bitcast::<u8x16<_>>();
+                let rev: u8x16<_> = vrbitq_u8(bytes.into()).simd_into(token);
+                rev.bitcast::<u32x4<_>>().swap_bytes()
             }
         );
         kernel(self, a)
@@ -5790,9 +5790,9 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: i64x2<Neon>) -> i64x2<Neon> {
-                vreinterpretq_s64_u8(vrbitq_u8(vreinterpretq_u8_s64(a.into())))
-                    .simd_into(token)
-                    .swap_bytes()
+                let bytes = a.bitcast::<u8x16<_>>();
+                let rev: u8x16<_> = vrbitq_u8(bytes.into()).simd_into(token);
+                rev.bitcast::<i64x2<_>>().swap_bytes()
             }
         );
         kernel(self, a)
@@ -6305,9 +6305,9 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: u64x2<Neon>) -> u64x2<Neon> {
-                vreinterpretq_u64_u8(vrbitq_u8(vreinterpretq_u8_u64(a.into())))
-                    .simd_into(token)
-                    .swap_bytes()
+                let bytes = a.bitcast::<u8x16<_>>();
+                let rev: u8x16<_> = vrbitq_u8(bytes.into()).simd_into(token);
+                rev.bitcast::<u64x2<_>>().swap_bytes()
             }
         );
         kernel(self, a)

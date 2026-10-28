@@ -330,16 +330,14 @@ impl Level for Neon {
                 }
 
                 if method == "reverse_bits" {
-                    let signed = if vec_ty.scalar == ScalarType::Int {
-                        "s"
-                    } else {
-                        "u"
-                    };
-                    let to_u8 = format_ident!("vreinterpretq_u8_{}{}", signed, vec_ty.scalar_bits);
-                    let to_scalar =
-                        format_ident!("vreinterpretq_{}{}_u8", signed, vec_ty.scalar_bits);
+                    let org_ty = vec_ty.rust();
+                    let u8_n = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
                     return self.kernel_method(op, vec_ty, |token| {
-                        quote! { #to_scalar(vrbitq_u8(#to_u8(a.into()))).simd_into(#token).swap_bytes() }
+                        quote! {
+                            let bytes = a.bitcast::<#u8_n<_>>();
+                            let rev: #u8_n<_> = vrbitq_u8(bytes.into()).simd_into(#token);
+                            rev.bitcast::<#org_ty<_>>().swap_bytes()
+                        }
                     });
                 }
 
