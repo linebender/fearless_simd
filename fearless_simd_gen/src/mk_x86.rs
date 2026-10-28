@@ -10,9 +10,9 @@ use crate::generic::{
     byte_compact_op, compact_128_op, concat_swizzle_dyn_precise_body, count_zeros_method,
     fallback_method, generic_block_combine, generic_block_split, generic_clamp_int,
     generic_classify, generic_mask_from_bitmask, generic_mask_from_vector, generic_mask_set,
-    generic_mask_to_vector, generic_op, generic_op_name, generic_round, generic_to_degrees_radians,
-    integer_lane_mask_rotate, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
-    reverse_method, reverse_vector_mask_method,
+    generic_mask_to_vector, generic_op, generic_op_name, generic_reverse_bits, generic_round,
+    generic_to_degrees_radians, integer_lane_mask_rotate, integer_lane_mask_splat_arg,
+    recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{
@@ -2792,6 +2792,28 @@ impl X86 {
 
         if method == "swap_bytes" {
             return self.handle_swap_bytes(op, vec_ty);
+        }
+
+        if method == "reverse_bits" && *self == Self::Avx512 {
+            // Use the gf2p8affine family of intrinsics for efficient bit reversal on AVX512.
+            // https://wunkolo.github.io/post/2020/11/gf2p8affineqb-bit-reversal/
+            let gf2p8affine = intrinsic_ident("gf2p8affine", "epi64_epi8", vec_ty.n_bits());
+            let set1 = set1_intrinsic(&VecType::new(
+                ScalarType::Unsigned,
+                64,
+                vec_ty.n_bits() / 64,
+            ));
+            let vec_id = vec_ty.rust();
+            return self.kernel_method(op, vec_ty, |token| {
+                quote! {
+                    let matrix = #set1(0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64.cast_signed());
+                    let rev: #vec_id<_> = #gf2p8affine(a.into(), matrix, 0x00).simd_into(#token);
+                    rev.swap_bytes()
+                }
+            });
+        }
+        if method == "reverse_bits" {
+            return generic_reverse_bits(method_sig, vec_ty);
         }
 
         if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask {

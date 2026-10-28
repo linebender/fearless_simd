@@ -1322,6 +1322,19 @@ assert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_0
 ```",
     ),
     Op::new(
+        "reverse_bits",
+        OpKind::VecTraitMethod,
+        OpSig::Unary,
+        "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n\
+```
+# use fearless_simd::*;
+# dispatch!(Level::new(), simd => {
+let i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);
+assert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);
+# });
+```",
+    ),
+    Op::new(
         "add",
         OpKind::Overloaded(CoreOpTrait::Add),
         OpSig::Binary,

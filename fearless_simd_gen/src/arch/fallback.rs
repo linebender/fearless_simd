@@ -67,6 +67,7 @@ pub(crate) fn translate_op(op: &str, is_float: bool) -> Option<&'static str> {
         "shr" | "shrv" => "wrapping_shr",
         "shl" | "shlv" => "wrapping_shl",
         "swap_bytes" => "swap_bytes",
+        "reverse_bits" => "reverse_bits",
         "max" => "max",
         "min" => "min",
         "max_precise" => "max",

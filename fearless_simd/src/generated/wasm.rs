@@ -638,6 +638,14 @@ impl Simd for WasmSimd128 {
         a
     }
     #[inline(always)]
+    fn reverse_bits_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        let bytes = a.bitcast::<u8x16<_>>();
+        let rev = ((bytes >> 1) & 0x55) | ((bytes << 1) & 0xAA);
+        let rev = ((rev >> 2) & 0x33) | ((rev << 2) & 0xCC);
+        let rev = (rev >> 4) | (rev << 4);
+        rev.bitcast::<i8x16<_>>().swap_bytes()
+    }
+    #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         i8x16_add(a.into(), b.into()).simd_into(self)
     }
@@ -1189,6 +1197,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn swap_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
         a
+    }
+    #[inline(always)]
+    fn reverse_bits_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        let bytes = a.bitcast::<u8x16<_>>();
+        let rev = ((bytes >> 1) & 0x55) | ((bytes << 1) & 0xAA);
+        let rev = ((rev >> 2) & 0x33) | ((rev << 2) & 0xCC);
+        let rev = (rev >> 4) | (rev << 4);
+        rev.bitcast::<u8x16<_>>().swap_bytes()
     }
     #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -1793,6 +1809,14 @@ impl Simd for WasmSimd128 {
             .simd_into(self)
     }
     #[inline(always)]
+    fn reverse_bits_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        let bytes = a.bitcast::<u8x16<_>>();
+        let rev = ((bytes >> 1) & 0x55) | ((bytes << 1) & 0xAA);
+        let rev = ((rev >> 2) & 0x33) | ((rev << 2) & 0xCC);
+        let rev = (rev >> 4) | (rev << 4);
+        rev.bitcast::<i16x8<_>>().swap_bytes()
+    }
+    #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         i16x8_add(a.into(), b.into()).simd_into(self)
     }
@@ -2156,6 +2180,14 @@ impl Simd for WasmSimd128 {
     fn swap_bytes_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
         u8x16_shuffle::<1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14>(a.into(), a.into())
             .simd_into(self)
+    }
+    #[inline(always)]
+    fn reverse_bits_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        let bytes = a.bitcast::<u8x16<_>>();
+        let rev = ((bytes >> 1) & 0x55) | ((bytes << 1) & 0xAA);
+        let rev = ((rev >> 2) & 0x33) | ((rev << 2) & 0xCC);
+        let rev = (rev >> 4) | (rev << 4);
+        rev.bitcast::<u16x8<_>>().swap_bytes()
     }
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -2684,6 +2716,14 @@ impl Simd for WasmSimd128 {
             .simd_into(self)
     }
     #[inline(always)]
+    fn reverse_bits_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        let bytes = a.bitcast::<u8x16<_>>();
+        let rev = ((bytes >> 1) & 0x55) | ((bytes << 1) & 0xAA);
+        let rev = ((rev >> 2) & 0x33) | ((rev << 2) & 0xCC);
+        let rev = (rev >> 4) | (rev << 4);
+        rev.bitcast::<i32x4<_>>().swap_bytes()
+    }
+    #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         i32x4_add(a.into(), b.into()).simd_into(self)
     }
@@ -3048,6 +3088,14 @@ impl Simd for WasmSimd128 {
     fn swap_bytes_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
         u8x16_shuffle::<3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12>(a.into(), a.into())
             .simd_into(self)
+    }
+    #[inline(always)]
+    fn reverse_bits_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        let bytes = a.bitcast::<u8x16<_>>();
+        let rev = ((bytes >> 1) & 0x55) | ((bytes << 1) & 0xAA);
+        let rev = ((rev >> 2) & 0x33) | ((rev << 2) & 0xCC);
+        let rev = (rev >> 4) | (rev << 4);
+        rev.bitcast::<u32x4<_>>().swap_bytes()
     }
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -3981,6 +4029,14 @@ impl Simd for WasmSimd128 {
             .simd_into(self)
     }
     #[inline(always)]
+    fn reverse_bits_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        let bytes = a.bitcast::<u8x16<_>>();
+        let rev = ((bytes >> 1) & 0x55) | ((bytes << 1) & 0xAA);
+        let rev = ((rev >> 2) & 0x33) | ((rev << 2) & 0xCC);
+        let rev = (rev >> 4) | (rev << 4);
+        rev.bitcast::<i64x2<_>>().swap_bytes()
+    }
+    #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         i64x2_add(a.into(), b.into()).simd_into(self)
     }
@@ -4313,6 +4369,14 @@ impl Simd for WasmSimd128 {
     fn swap_bytes_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
         u8x16_shuffle::<7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8>(a.into(), a.into())
             .simd_into(self)
+    }
+    #[inline(always)]
+    fn reverse_bits_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        let bytes = a.bitcast::<u8x16<_>>();
+        let rev = ((bytes >> 1) & 0x55) | ((bytes << 1) & 0xAA);
+        let rev = ((rev >> 2) & 0x33) | ((rev << 2) & 0xCC);
+        let rev = (rev >> 4) | (rev << 4);
+        rev.bitcast::<u64x2<_>>().swap_bytes()
     }
     #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {

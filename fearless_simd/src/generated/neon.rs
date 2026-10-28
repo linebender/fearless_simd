@@ -846,6 +846,18 @@ impl Simd for Neon {
         a
     }
     #[inline(always)]
+    fn reverse_bits_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>) -> i8x16<Neon> {
+                vreinterpretq_s8_u8(vrbitq_u8(vreinterpretq_u8_s8(a.into())))
+                    .simd_into(token)
+                    .swap_bytes()
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1485,6 +1497,18 @@ impl Simd for Neon {
     #[inline(always)]
     fn swap_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
         a
+    }
+    #[inline(always)]
+    fn reverse_bits_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>) -> u8x16<Neon> {
+                vreinterpretq_u8_u8(vrbitq_u8(vreinterpretq_u8_u8(a.into())))
+                    .simd_into(token)
+                    .swap_bytes()
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -2275,6 +2299,18 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reverse_bits_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>) -> i16x8<Neon> {
+                vreinterpretq_s16_u8(vrbitq_u8(vreinterpretq_u8_s16(a.into())))
+                    .simd_into(token)
+                    .swap_bytes()
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2845,6 +2881,18 @@ impl Simd for Neon {
             #[inline(always)]
             fn kernel(token: Neon, a: u16x8<Neon>) -> u16x8<Neon> {
                 vreinterpretq_u16_u8(vrev16q_u8(vreinterpretq_u8_u16(a.into()))).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reverse_bits_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>) -> u16x8<Neon> {
+                vreinterpretq_u16_u8(vrbitq_u8(vreinterpretq_u8_u16(a.into())))
+                    .simd_into(token)
+                    .swap_bytes()
             }
         );
         kernel(self, a)
@@ -3675,6 +3723,18 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reverse_bits_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>) -> i32x4<Neon> {
+                vreinterpretq_s32_u8(vrbitq_u8(vreinterpretq_u8_s32(a.into())))
+                    .simd_into(token)
+                    .swap_bytes()
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4254,6 +4314,18 @@ impl Simd for Neon {
             #[inline(always)]
             fn kernel(token: Neon, a: u32x4<Neon>) -> u32x4<Neon> {
                 vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(a.into()))).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reverse_bits_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>) -> u32x4<Neon> {
+                vreinterpretq_u32_u8(vrbitq_u8(vreinterpretq_u8_u32(a.into())))
+                    .simd_into(token)
+                    .swap_bytes()
             }
         );
         kernel(self, a)
@@ -5714,6 +5786,18 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
+    fn reverse_bits_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i64x2<Neon>) -> i64x2<Neon> {
+                vreinterpretq_s64_u8(vrbitq_u8(vreinterpretq_u8_s64(a.into())))
+                    .simd_into(token)
+                    .swap_bytes()
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6212,6 +6296,18 @@ impl Simd for Neon {
             #[inline(always)]
             fn kernel(token: Neon, a: u64x2<Neon>) -> u64x2<Neon> {
                 vreinterpretq_u64_u8(vrev64q_u8(vreinterpretq_u8_u64(a.into()))).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reverse_bits_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u64x2<Neon>) -> u64x2<Neon> {
+                vreinterpretq_u64_u8(vrbitq_u8(vreinterpretq_u8_u64(a.into())))
+                    .simd_into(token)
+                    .swap_bytes()
             }
         );
         kernel(self, a)

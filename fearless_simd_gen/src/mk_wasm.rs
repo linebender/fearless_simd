@@ -9,7 +9,7 @@ use crate::generic::{
     CompactOptions, byte_compact_op, compact_128_op, composed_compact_op,
     concat_swizzle_dyn_precise_body, count_zeros_method, fallback_method, generic_block_combine,
     generic_block_split, generic_clamp_int, generic_classify, generic_mask_from_vector,
-    generic_mask_set, generic_mask_to_vector, generic_op_name, generic_round,
+    generic_mask_set, generic_mask_to_vector, generic_op_name, generic_reverse_bits, generic_round,
     generic_to_degrees_radians, integer_lane_mask_rotate, integer_lane_mask_splat_arg,
     recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
 };
@@ -529,6 +529,10 @@ impl Level for WasmSimd128 {
                             u8x16_shuffle::<#indexes_128>(a.into(), a.into()).simd_into(self)
                         }
                     };
+                }
+
+                if method == "reverse_bits" {
+                    return generic_reverse_bits(method_sig, vec_ty);
                 }
 
                 if method == "round" {
