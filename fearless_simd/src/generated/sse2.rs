@@ -605,13 +605,11 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn round_ties_even_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        [
-            f32::round_ties_even(a[0usize]),
-            f32::round_ties_even(a[1usize]),
-            f32::round_ties_even(a[2usize]),
-            f32::round_ties_even(a[3usize]),
-        ]
-        .simd_into(self)
+        let abs = a.abs();
+        let bias = f32x4::splat(a.simd, 8388608.0_f32);
+        let mask = abs.simd_lt(bias);
+        let res = ((abs + bias) - bias).copysign(a);
+        mask.select(res, a)
     }
     #[inline(always)]
     fn round_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -6448,11 +6446,11 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn round_ties_even_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        [
-            f64::round_ties_even(a[0usize]),
-            f64::round_ties_even(a[1usize]),
-        ]
-        .simd_into(self)
+        let abs = a.abs();
+        let bias = f64x2::splat(a.simd, 4503599627370496.0_f64);
+        let mask = abs.simd_lt(bias);
+        let res = ((abs + bias) - bias).copysign(a);
+        mask.select(res, a)
     }
     #[inline(always)]
     fn round_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {

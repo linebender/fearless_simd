@@ -2815,7 +2815,7 @@ impl X86 {
         }
         if *self == Self::Sse2 && vec_ty.scalar == ScalarType::Float && method == "round_ties_even"
         {
-            return fallback_method(op, vec_ty);
+            return self.see2_round_ties_even_fallback(op, vec_ty);
         }
 
         match method {
@@ -6859,6 +6859,44 @@ impl X86 {
                 let res = #compute_res;
 
                 return_res.select(res, a)
+            }
+        }
+    }
+
+    /// SSE2 doesn't have have a native round-to-nearest-even instruction and the sclarized
+    /// fallback easily takes 300+ cycles per vector. This fallback emulates `fN::round_ties_even`.
+    ///
+    /// ## How it works
+    ///
+    /// The main trick is the old "add a large bias and subtract it" method. This almost works but
+    /// has two issues that keep it from being bit-exact:
+    ///
+    /// 1. Signed zero. `(-0.0 + bias) - bias == +0.0` which is incorrect. This is solved by adding
+    ///    the bias to the absolute value and restoring the original sign at the end.
+    /// 2. Large integers. Certain large integers are incorrectly "rounded" due to limited
+    ///    precision. E.g. let `x = bias + 1.0`, then `(x + bias) - bias == bias` even though x is
+    ///    an integer and `x > bias`. This is fixed by returning all values smaller than the bias as is.
+    fn see2_round_ties_even_fallback(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        assert_eq!(vec_ty.scalar, ScalarType::Float);
+        assert_eq!(vec_ty.n_bits(), 128);
+
+        // This is 2^23 for f32 and 2^52 for f64
+        let bias = match vec_ty.scalar_bits {
+            32 => quote! { 8388608.0_f32 },
+            64 => quote! { 4503599627370496.0_f64 },
+            _ => panic!("Unsupported float bit width"),
+        };
+
+        let float_ident = vec_ty.rust();
+        let method_sig = op.simd_trait_method_sig(vec_ty);
+
+        quote! {
+            #method_sig {
+                let abs = a.abs();
+                let bias = #float_ident::splat(a.simd, #bias);
+                let mask = abs.simd_lt(bias);
+                let res = ((abs + bias) - bias).copysign(a);
+                mask.select(res, a)
             }
         }
     }
