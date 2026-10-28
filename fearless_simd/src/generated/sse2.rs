@@ -1010,6 +1010,10 @@ impl Simd for Sse2 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn swap_bytes_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        a
+    }
+    #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1936,6 +1940,10 @@ impl Simd for Sse2 {
             u8::try_from(a[15usize].count_zeros()).unwrap(),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn swap_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        a
     }
     #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -2895,6 +2903,20 @@ impl Simd for Sse2 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn swap_bytes_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        [
+            i16::swap_bytes(a[0usize]),
+            i16::swap_bytes(a[1usize]),
+            i16::swap_bytes(a[2usize]),
+            i16::swap_bytes(a[3usize]),
+            i16::swap_bytes(a[4usize]),
+            i16::swap_bytes(a[5usize]),
+            i16::swap_bytes(a[6usize]),
+            i16::swap_bytes(a[7usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3524,6 +3546,20 @@ impl Simd for Sse2 {
             u16::try_from(a[5usize].count_zeros()).unwrap(),
             u16::try_from(a[6usize].count_zeros()).unwrap(),
             u16::try_from(a[7usize].count_zeros()).unwrap(),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn swap_bytes_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        [
+            u16::swap_bytes(a[0usize]),
+            u16::swap_bytes(a[1usize]),
+            u16::swap_bytes(a[2usize]),
+            u16::swap_bytes(a[3usize]),
+            u16::swap_bytes(a[4usize]),
+            u16::swap_bytes(a[5usize]),
+            u16::swap_bytes(a[6usize]),
+            u16::swap_bytes(a[7usize]),
         ]
         .simd_into(self)
     }
@@ -4517,6 +4553,16 @@ impl Simd for Sse2 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn swap_bytes_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        [
+            i32::swap_bytes(a[0usize]),
+            i32::swap_bytes(a[1usize]),
+            i32::swap_bytes(a[2usize]),
+            i32::swap_bytes(a[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5164,6 +5210,16 @@ impl Simd for Sse2 {
             a[1usize].count_zeros(),
             a[2usize].count_zeros(),
             a[3usize].count_zeros(),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn swap_bytes_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        [
+            u32::swap_bytes(a[0usize]),
+            u32::swap_bytes(a[1usize]),
+            u32::swap_bytes(a[2usize]),
+            u32::swap_bytes(a[3usize]),
         ]
         .simd_into(self)
     }
@@ -6758,6 +6814,10 @@ impl Simd for Sse2 {
         .simd_into(self)
     }
     #[inline(always)]
+    fn swap_bytes_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        [i64::swap_bytes(a[0usize]), i64::swap_bytes(a[1usize])].simd_into(self)
+    }
+    #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -7267,6 +7327,10 @@ impl Simd for Sse2 {
             u64::from(a[1usize].count_zeros()),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn swap_bytes_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        [u64::swap_bytes(a[0usize]), u64::swap_bytes(a[1usize])].simd_into(self)
     }
     #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {

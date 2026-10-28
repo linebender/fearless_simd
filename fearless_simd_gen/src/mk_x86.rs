@@ -2027,6 +2027,43 @@ impl X86 {
         }
     }
 
+    fn handle_swap_bytes(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        let method_sig = op.simd_trait_method_sig(vec_ty);
+        // swap_bytes is a noop for i8/u8
+        if vec_ty.scalar_bits == 8 {
+            return quote! { #method_sig { a } };
+        }
+
+        if *self == Self::Sse2 {
+            // SSE2 approach swizzle_dyn_within_blocks isn't efficient on SSE2, so we're better
+            // with a scalar fallback and letting the compiler auto-vectorize
+            return fallback_method(op, vec_ty);
+        }
+
+        let bytes_vec = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
+        let bytes_ty = quote! { #bytes_vec<Self> };
+
+        let block_indexes = match vec_ty.scalar_bits {
+            16 => quote! { 1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14 },
+            32 => quote! { 3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12 },
+            64 => quote! { 7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8 },
+            _ => unreachable!(),
+        };
+        let indexes = match vec_ty.n_bits() {
+            128 => block_indexes,
+            256 => quote! { #block_indexes, #block_indexes },
+            512 => quote! { #block_indexes, #block_indexes, #block_indexes, #block_indexes },
+            _ => unreachable!(),
+        };
+
+        quote! {
+            #method_sig {
+                let indexes = <#bytes_ty>::simd_from(self, [#indexes]);
+                a.swizzle_dyn_within_blocks(indexes)
+            }
+        }
+    }
+
     pub(crate) fn handle_reduce_min_max(
         &self,
         op: Op,
@@ -2751,6 +2788,10 @@ impl X86 {
 
         if method == "count_ones" {
             return self.handle_count_ones(op, vec_ty);
+        }
+
+        if method == "swap_bytes" {
+            return self.handle_swap_bytes(op, vec_ty);
         }
 
         if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask {

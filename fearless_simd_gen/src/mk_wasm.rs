@@ -514,6 +514,23 @@ impl Level for WasmSimd128 {
                     return count_ones_method(op, vec_ty);
                 }
 
+                if method == "swap_bytes" {
+                    if vec_ty.scalar_bits == 8 {
+                        return quote! { #method_sig { a } };
+                    }
+                    let indexes_128 = match vec_ty.scalar_bits {
+                        16 => quote! { 1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14 },
+                        32 => quote! { 3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12 },
+                        64 => quote! { 7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8 },
+                        _ => unreachable!(),
+                    };
+                    return quote! {
+                        #method_sig {
+                            u8x16_shuffle::<#indexes_128>(a.into(), a.into()).simd_into(self)
+                        }
+                    };
+                }
+
                 if method == "round" {
                     return generic_round(method_sig, vec_ty);
                 }

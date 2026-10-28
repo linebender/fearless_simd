@@ -151,6 +151,10 @@ impl Level for Fallback {
                     return count_bits_method(op, vec_ty);
                 }
 
+                if method == "swap_bytes" && vec_ty.scalar_bits == 8 {
+                    return quote! { #method_sig { a } };
+                }
+
                 if method == "approximate_recip" {
                     return quote! {
                         #method_sig {

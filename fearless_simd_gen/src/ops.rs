@@ -1303,6 +1303,25 @@ const INT_OPS: &[Op] = &[
         "Return the number of zeros in the binary representation of each element.",
     ),
     Op::new(
+        "swap_bytes",
+        OpKind::VecTraitMethod,
+        OpSig::Unary,
+        "Reverses the byte order of the integer.\n\n# Examples\n\n\
+```
+# use fearless_simd::*;
+# dispatch!(Level::new(), simd => {
+let a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);
+assert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);
+
+let b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);
+assert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);
+
+let c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);
+assert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);
+# });
+```",
+    ),
+    Op::new(
         "add",
         OpKind::Overloaded(CoreOpTrait::Add),
         OpSig::Binary,
