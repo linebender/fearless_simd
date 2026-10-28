@@ -1280,6 +1280,22 @@ impl Simd for Avx512 {
         a
     }
     #[inline(always)]
+    fn reverse_bits_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>) -> i8x16<Avx512> {
+                let matrix = _mm_set1_epi64x(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: i8x16<_> =
+                    _mm_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2066,6 +2082,22 @@ impl Simd for Avx512 {
     #[inline(always)]
     fn swap_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
         a
+    }
+    #[inline(always)]
+    fn reverse_bits_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>) -> u8x16<Avx512> {
+                let matrix = _mm_set1_epi64x(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: u8x16<_> =
+                    _mm_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -2929,6 +2961,22 @@ impl Simd for Avx512 {
         a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
+    fn reverse_bits_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>) -> i16x8<Avx512> {
+                let matrix = _mm_set1_epi64x(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: i16x8<_> =
+                    _mm_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3602,6 +3650,22 @@ impl Simd for Avx512 {
         let indexes =
             <u8x16<Self>>::simd_from(self, [1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14]);
         a.swizzle_dyn_within_blocks(indexes)
+    }
+    #[inline(always)]
+    fn reverse_bits_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>) -> u16x8<Avx512> {
+                let matrix = _mm_set1_epi64x(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: u16x8<_> =
+                    _mm_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -4462,6 +4526,22 @@ impl Simd for Avx512 {
         a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
+    fn reverse_bits_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>) -> i32x4<Avx512> {
+                let matrix = _mm_set1_epi64x(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: i32x4<_> =
+                    _mm_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5102,6 +5182,22 @@ impl Simd for Avx512 {
         let indexes =
             <u8x16<Self>>::simd_from(self, [3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12]);
         a.swizzle_dyn_within_blocks(indexes)
+    }
+    #[inline(always)]
+    fn reverse_bits_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>) -> u32x4<Avx512> {
+                let matrix = _mm_set1_epi64x(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: u32x4<_> =
+                    _mm_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -6692,6 +6788,22 @@ impl Simd for Avx512 {
         a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
+    fn reverse_bits_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x2<Avx512>) -> i64x2<Avx512> {
+                let matrix = _mm_set1_epi64x(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: i64x2<_> =
+                    _mm_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -7260,6 +7372,22 @@ impl Simd for Avx512 {
         let indexes =
             <u8x16<Self>>::simd_from(self, [7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8]);
         a.swizzle_dyn_within_blocks(indexes)
+    }
+    #[inline(always)]
+    fn reverse_bits_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x2<Avx512>) -> u64x2<Avx512> {
+                let matrix = _mm_set1_epi64x(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: u64x2<_> =
+                    _mm_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -8789,6 +8917,22 @@ impl Simd for Avx512 {
         a
     }
     #[inline(always)]
+    fn reverse_bits_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>) -> i8x32<Avx512> {
+                let matrix = _mm256_set1_epi64x(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: i8x32<_> =
+                    _mm256_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9553,6 +9697,22 @@ impl Simd for Avx512 {
     #[inline(always)]
     fn swap_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
         a
+    }
+    #[inline(always)]
+    fn reverse_bits_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>) -> u8x32<Avx512> {
+                let matrix = _mm256_set1_epi64x(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: u8x32<_> =
+                    _mm256_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
@@ -10417,6 +10577,22 @@ impl Simd for Avx512 {
         a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
+    fn reverse_bits_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>) -> i16x16<Avx512> {
+                let matrix = _mm256_set1_epi64x(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: i16x16<_> =
+                    _mm256_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11083,6 +11259,22 @@ impl Simd for Avx512 {
             ],
         );
         a.swizzle_dyn_within_blocks(indexes)
+    }
+    #[inline(always)]
+    fn reverse_bits_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>) -> u16x16<Avx512> {
+                let matrix = _mm256_set1_epi64x(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: u16x16<_> =
+                    _mm256_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
@@ -11945,6 +12137,22 @@ impl Simd for Avx512 {
         a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
+    fn reverse_bits_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>) -> i32x8<Avx512> {
+                let matrix = _mm256_set1_epi64x(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: i32x8<_> =
+                    _mm256_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12575,6 +12783,22 @@ impl Simd for Avx512 {
             ],
         );
         a.swizzle_dyn_within_blocks(indexes)
+    }
+    #[inline(always)]
+    fn reverse_bits_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>) -> u32x8<Avx512> {
+                let matrix = _mm256_set1_epi64x(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: u32x8<_> =
+                    _mm256_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
@@ -14127,6 +14351,22 @@ impl Simd for Avx512 {
         a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
+    fn reverse_bits_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x4<Avx512>) -> i64x4<Avx512> {
+                let matrix = _mm256_set1_epi64x(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: i64x4<_> =
+                    _mm256_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -14693,6 +14933,22 @@ impl Simd for Avx512 {
             ],
         );
         a.swizzle_dyn_within_blocks(indexes)
+    }
+    #[inline(always)]
+    fn reverse_bits_u64x4(self, a: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x4<Avx512>) -> u64x4<Avx512> {
+                let matrix = _mm256_set1_epi64x(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: u64x4<_> =
+                    _mm256_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn add_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
@@ -16211,6 +16467,22 @@ impl Simd for Avx512 {
         a
     }
     #[inline(always)]
+    fn reverse_bits_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>) -> i8x64<Avx512> {
+                let matrix = _mm512_set1_epi64(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: i8x64<_> =
+                    _mm512_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -16964,6 +17236,22 @@ impl Simd for Avx512 {
     #[inline(always)]
     fn swap_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
         a
+    }
+    #[inline(always)]
+    fn reverse_bits_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>) -> u8x64<Avx512> {
+                let matrix = _mm512_set1_epi64(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: u8x64<_> =
+                    _mm512_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
@@ -17810,6 +18098,22 @@ impl Simd for Avx512 {
         a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
+    fn reverse_bits_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>) -> i16x32<Avx512> {
+                let matrix = _mm512_set1_epi64(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: i16x32<_> =
+                    _mm512_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -18480,6 +18784,22 @@ impl Simd for Avx512 {
             ],
         );
         a.swizzle_dyn_within_blocks(indexes)
+    }
+    #[inline(always)]
+    fn reverse_bits_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>) -> u16x32<Avx512> {
+                let matrix = _mm512_set1_epi64(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: u16x32<_> =
+                    _mm512_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -19363,6 +19683,22 @@ impl Simd for Avx512 {
         a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
+    fn reverse_bits_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>) -> i32x16<Avx512> {
+                let matrix = _mm512_set1_epi64(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: i32x16<_> =
+                    _mm512_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -20016,6 +20352,22 @@ impl Simd for Avx512 {
             ],
         );
         a.swizzle_dyn_within_blocks(indexes)
+    }
+    #[inline(always)]
+    fn reverse_bits_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>) -> u32x16<Avx512> {
+                let matrix = _mm512_set1_epi64(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: u32x16<_> =
+                    _mm512_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
@@ -21591,6 +21943,22 @@ impl Simd for Avx512 {
         a.swizzle_dyn_within_blocks(indexes)
     }
     #[inline(always)]
+    fn reverse_bits_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x8<Avx512>) -> i64x8<Avx512> {
+                let matrix = _mm512_set1_epi64(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: i64x8<_> =
+                    _mm512_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn add_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -22167,6 +22535,22 @@ impl Simd for Avx512 {
             ],
         );
         a.swizzle_dyn_within_blocks(indexes)
+    }
+    #[inline(always)]
+    fn reverse_bits_u64x8(self, a: u64x8<Self>) -> u64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x8<Avx512>) -> u64x8<Avx512> {
+                let matrix = _mm512_set1_epi64(
+                    0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64
+                        .cast_signed(),
+                );
+                let rev: u64x8<_> =
+                    _mm512_gf2p8affine_epi64_epi8(a.into(), matrix, 0x00).simd_into(token);
+                rev.swap_bytes()
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn add_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {

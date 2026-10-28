@@ -2794,6 +2794,66 @@ impl X86 {
             return self.handle_swap_bytes(op, vec_ty);
         }
 
+        if method == "reverse_bits" {
+            if *self == Self::Avx512 {
+                // Use the gf2p8affine family of intrinsics for efficient bit reversal on AVX512.
+                // https://wunkolo.github.io/post/2020/11/gf2p8affineqb-bit-reversal/
+                let gf2p8affine = intrinsic_ident("gf2p8affine", "epi64_epi8", vec_ty.n_bits());
+                let set1 = set1_intrinsic(&VecType::new(
+                    ScalarType::Unsigned,
+                    64,
+                    vec_ty.n_bits() / 64,
+                ));
+                let vec_id = vec_ty.rust();
+                return self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        let matrix = #set1(0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001_u64.cast_signed());
+                        let rev: #vec_id<_> = #gf2p8affine(a.into(), matrix, 0x00).simd_into(#token);
+                        rev.swap_bytes()
+                    }
+                });
+            }
+            if *self == Self::Sse2 {
+                return fallback_method(op, vec_ty);
+            }
+
+            let bits = vec_ty.n_bits();
+            let set1_epi8 = intrinsic_ident("set1", "epi8", bits);
+            let and = intrinsic_ident("and", coarse_type(vec_ty), bits);
+            let or = intrinsic_ident("or", coarse_type(vec_ty), bits);
+            let shift_right = intrinsic_ident("srli", "epi16", bits);
+            let shift_left = intrinsic_ident("slli", "epi16", bits);
+            let shuffle = intrinsic_ident("shuffle", "epi8", bits);
+            let lookup = quote! {
+                _mm_setr_epi8(0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15)
+            };
+            let lookup = match bits {
+                128 => lookup,
+                // PSHUFB performs an independent lookup in each 128-bit block.
+                256 => quote! { _mm256_broadcastsi128_si256(#lookup) },
+                _ => unreachable!(),
+            };
+            let vec_id = vec_ty.rust();
+            return self.kernel_method(op, vec_ty, |token| {
+                quote! {
+                    let value = a.into();
+                    let nibble_mask = #set1_epi8(0x0f);
+                    let lookup_low = #lookup;
+                    // Precompute reversed nibbles in both output positions.
+                    let lookup_high = #shift_left::<4>(lookup_low);
+                    let low = #and(value, nibble_mask);
+                    // Clear bits shifted in from the neighboring byte, including
+                    // PSHUFB's high-bit flag that would zero the lookup result.
+                    let high = #and(#shift_right::<4>(value), nibble_mask);
+                    let rev: #vec_id<_> = #or(
+                        #shuffle(lookup_high, low),
+                        #shuffle(lookup_low, high),
+                    ).simd_into(#token);
+                    rev.swap_bytes()
+                }
+            });
+        }
+
         if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask {
             let body = match method {
                 "not" => {

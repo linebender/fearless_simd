@@ -529,6 +529,8 @@ pub trait Simd:
     fn count_zeros_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     fn swap_bytes_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    fn reverse_bits_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
@@ -692,6 +694,8 @@ pub trait Simd:
     fn count_zeros_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     fn swap_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    fn reverse_bits_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
@@ -931,6 +935,8 @@ pub trait Simd:
     fn count_zeros_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     fn swap_bytes_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    fn reverse_bits_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
@@ -1123,6 +1129,8 @@ pub trait Simd:
     fn count_zeros_u16x8(self, a: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     fn swap_bytes_u16x8(self, a: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    fn reverse_bits_u16x8(self, a: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
@@ -1370,6 +1378,8 @@ pub trait Simd:
     fn count_zeros_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     fn swap_bytes_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    fn reverse_bits_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
@@ -1564,6 +1574,8 @@ pub trait Simd:
     fn count_zeros_u32x4(self, a: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     fn swap_bytes_u32x4(self, a: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    fn reverse_bits_u32x4(self, a: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
@@ -2028,6 +2040,8 @@ pub trait Simd:
     fn count_zeros_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     fn swap_bytes_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    fn reverse_bits_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
@@ -2212,6 +2226,8 @@ pub trait Simd:
     fn count_zeros_u64x2(self, a: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     fn swap_bytes_u64x2(self, a: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    fn reverse_bits_u64x2(self, a: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
@@ -2958,6 +2974,12 @@ pub trait Simd:
         let (a0, a1) = self.split_i8x32(a);
         self.combine_i8x16(self.swap_bytes_i8x16(a0), self.swap_bytes_i8x16(a1))
     }
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    #[inline(always)]
+    fn reverse_bits_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        self.combine_i8x16(self.reverse_bits_i8x16(a0), self.reverse_bits_i8x16(a1))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
@@ -3355,6 +3377,12 @@ pub trait Simd:
     fn swap_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
         let (a0, a1) = self.split_u8x32(a);
         self.combine_u8x16(self.swap_bytes_u8x16(a0), self.swap_bytes_u8x16(a1))
+    }
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    #[inline(always)]
+    fn reverse_bits_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        self.combine_u8x16(self.reverse_bits_u8x16(a0), self.reverse_bits_u8x16(a1))
     }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
@@ -3905,6 +3933,12 @@ pub trait Simd:
         let (a0, a1) = self.split_i16x16(a);
         self.combine_i16x8(self.swap_bytes_i16x8(a0), self.swap_bytes_i16x8(a1))
     }
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    #[inline(always)]
+    fn reverse_bits_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        self.combine_i16x8(self.reverse_bits_i16x8(a0), self.reverse_bits_i16x8(a1))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
@@ -4348,6 +4382,12 @@ pub trait Simd:
     fn swap_bytes_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
         let (a0, a1) = self.split_u16x16(a);
         self.combine_u16x8(self.swap_bytes_u16x8(a0), self.swap_bytes_u16x8(a1))
+    }
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    #[inline(always)]
+    fn reverse_bits_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        self.combine_u16x8(self.reverse_bits_u16x8(a0), self.reverse_bits_u16x8(a1))
     }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
@@ -4928,6 +4968,12 @@ pub trait Simd:
         let (a0, a1) = self.split_i32x8(a);
         self.combine_i32x4(self.swap_bytes_i32x4(a0), self.swap_bytes_i32x4(a1))
     }
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    #[inline(always)]
+    fn reverse_bits_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        self.combine_i32x4(self.reverse_bits_i32x4(a0), self.reverse_bits_i32x4(a1))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
@@ -5373,6 +5419,12 @@ pub trait Simd:
     fn swap_bytes_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
         let (a0, a1) = self.split_u32x8(a);
         self.combine_u32x4(self.swap_bytes_u32x4(a0), self.swap_bytes_u32x4(a1))
+    }
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    #[inline(always)]
+    fn reverse_bits_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        self.combine_u32x4(self.reverse_bits_u32x4(a0), self.reverse_bits_u32x4(a1))
     }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
@@ -6458,6 +6510,12 @@ pub trait Simd:
         let (a0, a1) = self.split_i64x4(a);
         self.combine_i64x2(self.swap_bytes_i64x2(a0), self.swap_bytes_i64x2(a1))
     }
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    #[inline(always)]
+    fn reverse_bits_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        self.combine_i64x2(self.reverse_bits_i64x2(a0), self.reverse_bits_i64x2(a1))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
@@ -6852,6 +6910,12 @@ pub trait Simd:
     fn swap_bytes_u64x4(self, a: u64x4<Self>) -> u64x4<Self> {
         let (a0, a1) = self.split_u64x4(a);
         self.combine_u64x2(self.swap_bytes_u64x2(a0), self.swap_bytes_u64x2(a1))
+    }
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    #[inline(always)]
+    fn reverse_bits_u64x4(self, a: u64x4<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        self.combine_u64x2(self.reverse_bits_u64x2(a0), self.reverse_bits_u64x2(a1))
     }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
@@ -7868,6 +7932,12 @@ pub trait Simd:
         let (a0, a1) = self.split_i8x64(a);
         self.combine_i8x32(self.swap_bytes_i8x32(a0), self.swap_bytes_i8x32(a1))
     }
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    #[inline(always)]
+    fn reverse_bits_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        self.combine_i8x32(self.reverse_bits_i8x32(a0), self.reverse_bits_i8x32(a1))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -8263,6 +8333,12 @@ pub trait Simd:
     fn swap_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
         let (a0, a1) = self.split_u8x64(a);
         self.combine_u8x32(self.swap_bytes_u8x32(a0), self.swap_bytes_u8x32(a1))
+    }
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    #[inline(always)]
+    fn reverse_bits_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        self.combine_u8x32(self.reverse_bits_u8x32(a0), self.reverse_bits_u8x32(a1))
     }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
@@ -8809,6 +8885,12 @@ pub trait Simd:
         let (a0, a1) = self.split_i16x32(a);
         self.combine_i16x16(self.swap_bytes_i16x16(a0), self.swap_bytes_i16x16(a1))
     }
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    #[inline(always)]
+    fn reverse_bits_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        self.combine_i16x16(self.reverse_bits_i16x16(a0), self.reverse_bits_i16x16(a1))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -9256,6 +9338,12 @@ pub trait Simd:
     fn swap_bytes_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
         let (a0, a1) = self.split_u16x32(a);
         self.combine_u16x16(self.swap_bytes_u16x16(a0), self.swap_bytes_u16x16(a1))
+    }
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    #[inline(always)]
+    fn reverse_bits_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        self.combine_u16x16(self.reverse_bits_u16x16(a0), self.reverse_bits_u16x16(a1))
     }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
@@ -9845,6 +9933,12 @@ pub trait Simd:
         let (a0, a1) = self.split_i32x16(a);
         self.combine_i32x8(self.swap_bytes_i32x8(a0), self.swap_bytes_i32x8(a1))
     }
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    #[inline(always)]
+    fn reverse_bits_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        self.combine_i32x8(self.reverse_bits_i32x8(a0), self.reverse_bits_i32x8(a1))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -10292,6 +10386,12 @@ pub trait Simd:
     fn swap_bytes_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
         let (a0, a1) = self.split_u32x16(a);
         self.combine_u32x8(self.swap_bytes_u32x8(a0), self.swap_bytes_u32x8(a1))
+    }
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    #[inline(always)]
+    fn reverse_bits_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        self.combine_u32x8(self.reverse_bits_u32x8(a0), self.reverse_bits_u32x8(a1))
     }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
@@ -11371,6 +11471,12 @@ pub trait Simd:
         let (a0, a1) = self.split_i64x8(a);
         self.combine_i64x4(self.swap_bytes_i64x4(a0), self.swap_bytes_i64x4(a1))
     }
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    #[inline(always)]
+    fn reverse_bits_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        self.combine_i64x4(self.reverse_bits_i64x4(a0), self.reverse_bits_i64x4(a1))
+    }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
@@ -11763,6 +11869,12 @@ pub trait Simd:
     fn swap_bytes_u64x8(self, a: u64x8<Self>) -> u64x8<Self> {
         let (a0, a1) = self.split_u64x8(a);
         self.combine_u64x4(self.swap_bytes_u64x4(a0), self.swap_bytes_u64x4(a1))
+    }
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    #[inline(always)]
+    fn reverse_bits_u64x8(self, a: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        self.combine_u64x4(self.reverse_bits_u64x4(a0), self.reverse_bits_u64x4(a1))
     }
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
@@ -12939,6 +13051,8 @@ pub trait SimdInt<S: Simd>:
     fn count_zeros(self) -> Self;
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     fn swap_bytes(self) -> Self;
+    #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
+    fn reverse_bits(self) -> Self;
     #[doc = "Add two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping addition on x86."]
     fn saturating_add(self, rhs: impl SimdInto<Self, S>) -> Self;
     #[doc = "Subtract two vectors element-wise, saturating on overflow.\n\n\"Saturating\" means that if the result is not representable, the closest representable value (either `Element::MAX` or `Element::MIN`) is returned.\n\nOn x86 it is implemented in hardware only for 8-bit and 16-bit elements. For 32-bit and 64-bit vectors this operation is slower than wrapping subtraction on x86."]

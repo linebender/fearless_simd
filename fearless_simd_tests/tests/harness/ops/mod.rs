@@ -73,6 +73,7 @@ mod reduce_min_precise;
 mod reduce_product;
 mod reduce_sum;
 mod reverse;
+mod reverse_bits;
 mod rotate_elements_left;
 mod rotate_elements_right;
 mod round;

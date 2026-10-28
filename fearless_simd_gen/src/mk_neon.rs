@@ -329,6 +329,18 @@ impl Level for Neon {
                     });
                 }
 
+                if method == "reverse_bits" {
+                    let org_ty = vec_ty.rust();
+                    let u8_n = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
+                    return self.kernel_method(op, vec_ty, |token| {
+                        quote! {
+                            let bytes = a.bitcast::<#u8_n<_>>();
+                            let rev: #u8_n<_> = vrbitq_u8(bytes.into()).simd_into(#token);
+                            rev.bitcast::<#org_ty<_>>().swap_bytes()
+                        }
+                    });
+                }
+
                 if matches!(method, "to_degrees" | "to_radians") {
                     return generic_to_degrees_radians(method_sig, method, vec_ty);
                 }
