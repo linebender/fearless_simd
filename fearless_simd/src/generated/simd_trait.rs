@@ -13038,12 +13038,58 @@ pub trait SimdInt<S: Simd>:
     + core::ops::Shr<Output = Self>
     + core::ops::ShrAssign
 {
+    #[doc = r" Corresponding unsigned integer SIMD vector type. E.g. `u8x16` for `i8x16`."]
+    #[doc = r""]
+    #[doc = r" This type is `Self` if the SIMD vector is already unsigned."]
+    type Unsigned: SimdInt<
+            S,
+            Element = <Self::Element as SimdIntElement>::Unsigned,
+            ByteVector = Self::ByteVector,
+        >;
+    #[doc = r" Corresponding signed integer SIMD vector type. E.g. `i8x16` for `u8x16`."]
+    #[doc = r""]
+    #[doc = r" This type is `Self` if the SIMD vector is already signed."]
+    type Signed: SimdInt<
+            S,
+            Element = <Self::Element as SimdIntElement>::Signed,
+            ByteVector = Self::ByteVector,
+        >;
+    #[doc = r" Reinterpret this integer SIMD vector as its corresponding signed type."]
+    #[inline(always)]
+    fn cast_signed(self) -> Self::Signed {
+        self.bitcast()
+    }
+    #[doc = r" Reinterpret this integer SIMD vector as its corresponding unsigned type."]
+    #[inline(always)]
+    fn cast_unsigned(self) -> Self::Unsigned {
+        self.bitcast()
+    }
     #[doc = r" Convert this integer type to a floating-point type. This is a convenience method"]
     #[doc = r" that delegates to [`SimdCvtFloat::float_from`], and can only be called if there"]
     #[doc = r" actually exists a target type of the same bit width (`f32` or `f64`)."]
     #[inline(always)]
     fn to_float<T: SimdCvtFloat<Self>>(self) -> T {
         T::float_from(self)
+    }
+    #[doc = r" Return the absolute value of `self` without any wrapping."]
+    #[doc = r""]
+    #[doc = r" If `Self` is an unsigned SIMD vector, this always produces the same result as `self.abs()`."]
+    #[doc = r""]
+    #[doc = r" ## Example"]
+    #[doc = r""]
+    #[doc = r" ```"]
+    #[doc = r" # use fearless_simd::*;"]
+    #[doc = r" # dispatch!(Level::new(), simd => {"]
+    #[doc = r" let i = i32x4::from_slice(simd, &[100, -100, i32::MAX, i32::MIN]);"]
+    #[doc = r" assert_eq!("]
+    #[doc = r"     *i.unsigned_abs(),"]
+    #[doc = r"     [100, 100, 2147483647, 2147483648],"]
+    #[doc = r" );"]
+    #[doc = r" # });"]
+    #[doc = r" ```"]
+    #[inline(always)]
+    fn unsigned_abs(self) -> Self::Unsigned {
+        self.abs().cast_unsigned()
     }
     #[doc = "Return the number of ones in the binary representation of each element."]
     fn count_ones(self) -> Self;
