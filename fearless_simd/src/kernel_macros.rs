@@ -449,6 +449,8 @@ macro_rules! __fearless_simd_kernel_impl {
                     reason = "WASM has no target feature requirements and is safe to call"
                 )]
                 unsafe {
+                    // Expand const generic args as { ARG }, a naked ARG could be ambiguous with a
+                    // type named ARG, if it existed.
                     __fearless_simd_kernel::<$($($({ $const_param }),+)?)?>($token $(, $arg)*)
                 }
             }
