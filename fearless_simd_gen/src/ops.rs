@@ -199,6 +199,7 @@ pub(crate) struct Op {
 
 struct SimdTraitSigParts {
     const_params: TokenStream,
+    const_args: TokenStream,
     arg_names: Vec<Ident>,
     arg_tys: Vec<TokenStream>,
     ret: TokenStream,
@@ -261,37 +262,34 @@ impl Op {
     /// Generate a `Simd` trait method that delegates its body to a local `kernel!` function.
     ///
     /// The generated method keeps the trait signature using `Self`, while the local kernel uses
-    /// the concrete SIMD token type required by `kernel!`. Const-generic operations are rejected
-    /// because `kernel!` currently only accepts plain non-generic functions.
+    /// the concrete SIMD token type required by `kernel!`. The method's const parameters are
+    /// forwarded to the kernel.
     pub(crate) fn simd_trait_kernel_method(
         &self,
         level: Ident,
         vec_ty: &VecType,
         body: impl FnOnce(&Ident) -> TokenStream,
     ) -> TokenStream {
-        assert!(
-            !matches!(self.sig, OpSig::Slide { .. } | OpSig::RotateElements { .. }),
-            "kernel! does not support const-generic methods"
-        );
-
         let method_sig = self.simd_trait_method_sig(vec_ty);
         let token = Ident::new("token", Span::call_site());
         let kernel_body = body(&token);
         let sig = self.simd_trait_sig_parts(vec_ty, quote! { #level });
+        let const_params = &sig.const_params;
+        let const_args = &sig.const_args;
         let arg_decls = sig.arg_decls();
         let call_args = &sig.arg_names;
         let ret = &sig.ret;
         let kernel_call = if matches!(self.sig, OpSig::StoreInterleaved { .. }) {
-            quote! { kernel(self #(, #call_args)*); }
+            quote! { kernel #const_args(self #(, #call_args)*); }
         } else {
-            quote! { kernel(self #(, #call_args)*) }
+            quote! { kernel #const_args(self #(, #call_args)*) }
         };
 
         quote! {
             #method_sig {
                 crate::kernel!(
                     #[inline(always)]
-                    fn kernel(#token: #level #(, #arg_decls)*) -> #ret {
+                    fn kernel #const_params(#token: #level #(, #arg_decls)*) -> #ret {
                         #kernel_body
                     }
                 );
@@ -310,10 +308,12 @@ impl Op {
             .map(|n| Ident::new(n, Span::call_site()))
             .collect::<Vec<_>>();
         let vec = quote! { #ty<#simd_ty> };
-        let const_params = match self.sig {
-            OpSig::Slide { .. } => quote! { <const SHIFT: usize> },
-            OpSig::RotateElements { .. } => quote! { <const OFFSET: usize> },
-            _ => TokenStream::new(),
+        let (const_params, const_args) = match self.sig {
+            OpSig::Slide { .. } => (quote! { <const SHIFT: usize> }, quote! { ::<SHIFT> }),
+            OpSig::RotateElements { .. } => {
+                (quote! { <const OFFSET: usize> }, quote! { ::<OFFSET> })
+            }
+            _ => (TokenStream::new(), TokenStream::new()),
         };
 
         let (arg_tys, ret) = match &self.sig {
@@ -443,6 +443,7 @@ impl Op {
 
         SimdTraitSigParts {
             const_params,
+            const_args,
             arg_names,
             arg_tys,
             ret,

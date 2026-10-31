@@ -51,8 +51,12 @@
 ///
 /// ## Limitations
 ///
-/// The macro only accepts a single plain, safe, non-generic function item with simple named parameters.
+/// The macro only accepts a single plain, safe function item with simple named parameters.
 /// However, the body of the function can be as complex as you like.
+///
+/// Generic parameters can be lifetimes, with lifetime bounds, and const parameters, as in
+/// `<'a, 'b: 'a, const N: usize>`. Type parameters and where clauses aren't supported; use
+/// `impl Trait` argument types instead.
 ///
 /// The SIMD token type must be written as a bare supported name:
 /// literally `Neon`, `WasmSimd128`, `Sse2`, `Sse4_2`, `Avx2`, or `Avx512`. No paths or aliases.
@@ -66,9 +70,14 @@
 /// ```
 #[macro_export]
 macro_rules! kernel {
+    // Generics starting with lifetimes. Separate case because of the comma, otherwise
+    // 'a const T: u32 would be accepted, or a forced trailing comma would be required.
     (
         $(#[$meta:meta])*
-        $vis:vis fn $name:ident(
+        $vis:vis fn $name:ident <
+            $($lifetime:lifetime $(: $lt_bound:lifetime $(+ $lt_bounds:lifetime)*)?),+
+            $(, $(const $const_param:ident : $const_ty:ty),+)? $(,)?
+        > (
             $token:ident : $token_ty:ident $(, $arg:ident : $arg_ty:ty)* $(,)?
         ) $(-> $ret:ty)? {
             $($kernel_body:tt)*
@@ -77,7 +86,32 @@ macro_rules! kernel {
         $crate::__fearless_simd_kernel_impl! {
             @level $token_ty;
             $(#[$meta])*
-            $vis fn $name(
+            $vis fn $name <
+                $($lifetime $(: $lt_bound $(+ $lt_bounds)*)?,)+
+                $($(const $const_param: $const_ty),+)?
+            > (
+                $token $(, $arg: $arg_ty)*
+            ) $(-> $ret)? {
+                $($kernel_body)*
+            }
+        }
+    };
+
+    // Generics without lifetimes, or no generics at all.
+    (
+        $(#[$meta:meta])*
+        $vis:vis fn $name:ident $(<
+            $($(const $const_param:ident : $const_ty:ty),+ $(,)?)?
+        >)? (
+            $token:ident : $token_ty:ident $(, $arg:ident : $arg_ty:ty)* $(,)?
+        ) $(-> $ret:ty)? {
+            $($kernel_body:tt)*
+        }
+    ) => {
+        $crate::__fearless_simd_kernel_impl! {
+            @level $token_ty;
+            $(#[$meta])*
+            $vis fn $name $(<$($(const $const_param: $const_ty),+)?>)? (
                 $token $(, $arg: $arg_ty)*
             ) $(-> $ret)? {
                 $($kernel_body)*
@@ -98,6 +132,38 @@ macro_rules! kernel {
             "one of `Neon`, `WasmSimd128`, `Sse2`, `Sse4_2`, `Avx2`, or `Avx512`; got `",
             stringify!($token_ty),
             "`",
+        ));
+    };
+
+    // There is an error somewhere if we reach here - first we try to validate the generics,
+    // if they're valid we strip them and check again.
+    (
+        $(#[$meta:meta])*
+        $vis:vis fn $name:ident <
+            $($lifetime:lifetime $(: $lt_bound:lifetime $(+ $lt_bounds:lifetime)*)?),+
+            $(, $(const $const_param:ident : $const_ty:ty),+)? $(,)?
+        > ($($params:tt)*) $($rest:tt)*
+    ) => {
+        $crate::kernel!($(#[$meta])* $vis fn $name($($params)*) $($rest)*);
+    };
+
+    (
+        $(#[$meta:meta])*
+        $vis:vis fn $name:ident <
+            $($(const $const_param:ident : $const_ty:ty),+ $(,)?)?
+        > ($($params:tt)*) $($rest:tt)*
+    ) => {
+        $crate::kernel!($(#[$meta])* $vis fn $name($($params)*) $($rest)*);
+    };
+
+    // Generics didn't validate, error must be in them.
+    (
+        $(#[$meta:meta])*
+        $vis:vis fn $name:ident < $($rest:tt)*
+    ) => {
+        compile_error!(concat!(
+            "fearless_simd::kernel! only accepts lifetimes and const parameters as generics, ",
+            "like `fn name<'a, 'b: 'a, const N: usize>(token: Avx2, arg: &'b [u8; N]) { ... }`",
         ));
     };
 }
@@ -344,7 +410,10 @@ macro_rules! __fearless_simd_kernel_impl {
     (
         @level $level:ident;
         $(#[$meta:meta])*
-        $vis:vis fn $name:ident(
+        $vis:vis fn $name:ident $(<
+            $($lifetime:lifetime $(: $lt_bound:lifetime $(+ $lt_bounds:lifetime)*)?,)*
+            $($(const $const_param:ident : $const_ty:ty),+ $(,)?)?
+        >)? (
             $token:ident $(, $arg:ident : $arg_ty:ty)* $(,)?
         ) $(-> $ret:ty)? {
             $($kernel_body:tt)*
@@ -353,13 +422,23 @@ macro_rules! __fearless_simd_kernel_impl {
         $crate::__fearless_simd_kernel_cfg! {
             $level,
             $(#[$meta])*
-            $vis fn $name(
+            $vis fn $name $(<
+                $($lifetime $(: $lt_bound $(+ $lt_bounds)*)?,)*
+                $($(const $const_param: $const_ty),+)?
+            >)? (
                 $token: $crate::$level $(, $arg: $arg_ty)*
             ) $(-> $ret)? {
+                // Note: `__fearless_simd_kernel_target_fn` only adds a `#[target_feature]`
+                // annotation - it does not mark `__fearless_simd_kernel` itself as `unsafe`.
+                // Therefore the body is still considered safe code, even though it requires
+                // `unsafe {}` to call on some platforms due to the `#[target_feature]`.
                 $crate::__fearless_simd_kernel_target_fn! {
                     $level,
                     #[inline] // can't use `#[inline(always)]` with target features
-                    fn __fearless_simd_kernel(
+                    fn __fearless_simd_kernel $(<
+                        $($lifetime $(: $lt_bound $(+ $lt_bounds)*)?,)*
+                        $($(const $const_param: $const_ty),+)?
+                    >)? (
                         $token: $crate::$level $(, $arg: $arg_ty)*
                     ) $(-> $ret)? {
                         let _ = $token;
@@ -368,12 +447,21 @@ macro_rules! __fearless_simd_kernel_impl {
                 }
 
                 // SAFETY: the fixed level mapping gives this inner function exactly the target
-                // features proved by the SIMD token type used by both functions.
+                // features proved by the SIMD token type used by both functions. As per the note
+                // above, `__fearless_simd_kernel` only has this singular safety requirement.
+                //
+                // All macro parameters expanded in the `unsafe {}` block are `ident` parameters
+                // bound to const generic parameters or function arguments and are therefore
+                // harmless.
                 #[allow(
                     unused_unsafe,
                     reason = "WASM has no target feature requirements and is safe to call"
                 )]
-                unsafe { __fearless_simd_kernel($token $(, $arg)*) }
+                unsafe {
+                    // Expand const generic args as `{ ARG }`, a naked `ARG` would be interpreted as
+                    // a type named `ARG`, if it existed.
+                    __fearless_simd_kernel::<$($($({ $const_param }),+)?)?>($token $(, $arg)*)
+                }
             }
         }
     };
@@ -460,6 +548,16 @@ mod tests {
 
     impl AssociatedKernelTrait for AssociatedKernels {}
 
+    crate::kernel!(
+        fn generic_sse2<'a, 'b: 'a, const N: u64>(
+            _sse2: Sse2,
+            b: &'b str,
+            u: impl Into<u64>,
+        ) -> (&'a str, u64) {
+            (b, u.into() + N)
+        }
+    );
+
     #[cfg(target_arch = "aarch64")]
     #[test]
     fn kernel_instantiates_for_neon() {
@@ -526,6 +624,17 @@ mod tests {
             <AssociatedKernels as AssociatedKernelTrait>::trait_sse2(sse2, 40),
             42
         );
+    }
+
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[test]
+    fn kernel_can_be_generic() {
+        let Some(sse2) = crate::Level::new().as_sse2() else {
+            return;
+        };
+
+        // `N` can't be inferred, so it has to be forwarded to the inner function.
+        assert_eq!(generic_sse2::<3>(sse2, "b", 2_u8), ("b", 5));
     }
 
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
