@@ -142,18 +142,18 @@ macro_rules! kernel {
         $vis:vis fn $name:ident <
             $($lifetime:lifetime $(: $lt_bound:lifetime $(+ $lt_bounds:lifetime)*)?),+
             $(, $(const $const_param:ident : $const_ty:ty),+)? $(,)?
-        > $($rest:tt)*
+        > ($($params:tt)*) $($rest:tt)*
     ) => {
-        $crate::kernel!($(#[$meta])* $vis fn $name $($rest)*);
+        $crate::kernel!($(#[$meta])* $vis fn $name($($params)*) $($rest)*);
     };
 
     (
         $(#[$meta:meta])*
         $vis:vis fn $name:ident <
             $($(const $const_param:ident : $const_ty:ty),+ $(,)?)?
-        > $($rest:tt)*
+        > ($($params:tt)*) $($rest:tt)*
     ) => {
-        $crate::kernel!($(#[$meta])* $vis fn $name $($rest)*);
+        $crate::kernel!($(#[$meta])* $vis fn $name($($params)*) $($rest)*);
     };
 
     // Generics didn't validate, error must be in them.
