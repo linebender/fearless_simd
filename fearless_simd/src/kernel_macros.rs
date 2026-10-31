@@ -428,6 +428,10 @@ macro_rules! __fearless_simd_kernel_impl {
             >)? (
                 $token: $crate::$level $(, $arg: $arg_ty)*
             ) $(-> $ret)? {
+                // Note: `__fearless_simd_kernel_target_fn` only adds a `#[target_feature]`
+                // annotation - it does not mark `__fearless_simd_kernel` itself as `unsafe`.
+                // Therefore the body is still considered safe code, even though it requires
+                // `unsafe {}` to call on some platforms due to the `#[target_feature]`.
                 $crate::__fearless_simd_kernel_target_fn! {
                     $level,
                     #[inline] // can't use `#[inline(always)]` with target features
@@ -443,14 +447,19 @@ macro_rules! __fearless_simd_kernel_impl {
                 }
 
                 // SAFETY: the fixed level mapping gives this inner function exactly the target
-                // features proved by the SIMD token type used by both functions.
+                // features proved by the SIMD token type used by both functions. As per the note
+                // above, `__fearless_simd_kernel` only has this singular safety requirement.
+                //
+                // All macro parameters expanded in the `unsafe {}` block are `ident` parameters
+                // bound to const generic parameters or function arguments and are therefore
+                // harmless.
                 #[allow(
                     unused_unsafe,
                     reason = "WASM has no target feature requirements and is safe to call"
                 )]
                 unsafe {
-                    // Expand const generic args as { ARG }, a naked ARG could be ambiguous with a
-                    // type named ARG, if it existed.
+                    // Expand const generic args as `{ ARG }`, a naked `ARG` would be interpreted as
+                    // a type named `ARG`, if it existed.
                     __fearless_simd_kernel::<$($($({ $const_param }),+)?)?>($token $(, $arg)*)
                 }
             }
