@@ -1152,7 +1152,7 @@ const FLOAT_OPS: &[Op] = &[
         OpKind::VecTraitMethod,
         OpSig::Ternary,
         "Compute `({arg0} * {arg1}) + {arg2}` (potentially fused multiply-add) for each element.\n\n\
-        Depending on platform support, the result may be computed with only one rounding error or as regular multiply followed by an add, resulting in two rounding errors. Whichever can be computed faster on the current platform will be used.\n\n
+        Depending on platform support, the result may be computed with only one rounding error or as regular multiply followed by an add, resulting in two rounding errors. Whichever can be computed faster on the current platform will be used.\n\n\
         # Precision\n\n\
         The following platforms will return results with only one rounding error: ARM NEON, x86 AVX2, and x86 AVX512. All other platforms may have two rounding errors.",
     ).with_custom_vec_trait_arg_names(&["self", "a", "b"]),
@@ -1173,7 +1173,7 @@ const FLOAT_OPS: &[Op] = &[
         OpKind::VecTraitMethod,
         OpSig::Ternary,
         "Compute `({arg0} * {arg1}) - {arg2}` (potentially fused multiply-subtract) for each element.\n\n\
-        Depending on platform support, the result may be computed with only one rounding error or as regular multiply followed by a subtract, resulting in two rounding errors. Whichever can be computed faster on the current platform will be used.\n\n
+        Depending on platform support, the result may be computed with only one rounding error or as regular multiply followed by a subtract, resulting in two rounding errors. Whichever can be computed faster on the current platform will be used.\n\n\
         # Precision\n\n\
         The following platforms will return results with only one rounding error: ARM NEON, x86 AVX2, and x86 AVX512. All other platforms may have two rounding errors.",
     ).with_custom_vec_trait_arg_names(&["self", "a", "b"]),
