@@ -1155,7 +1155,7 @@ const FLOAT_OPS: &[Op] = &[
         Depending on platform support, the result may be computed with only one rounding error or as regular multiply followed by an add, resulting in two rounding errors. Whichever can be computed faster on the current platform will be used.\n\n
         # Precision\n\n\
         The following platforms will return results with only one rounding error: ARM NEON, x86 AVX2, and x86 AVX512. All other platforms may have two rounding errors.",
-    ).with_custom_vec_trait_arg_names(&["self", "mul", "add"]),
+    ).with_custom_vec_trait_arg_names(&["self", "a", "b"]),
     Op::new(
         "mul_add_precise",
         OpKind::VecTraitMethod,
@@ -1167,7 +1167,7 @@ const FLOAT_OPS: &[Op] = &[
         and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\n\
         On the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\n\
         The exact `NaN` payloads as well as signaling `NaN`s are not preserved.",
-    ).with_custom_vec_trait_arg_names(&["self", "mul", "add"]),
+    ).with_custom_vec_trait_arg_names(&["self", "a", "b"]),
     Op::new(
         "mul_sub",
         OpKind::VecTraitMethod,
@@ -1176,7 +1176,7 @@ const FLOAT_OPS: &[Op] = &[
         Depending on platform support, the result may be computed with only one rounding error or as regular multiply followed by a subtract, resulting in two rounding errors. Whichever can be computed faster on the current platform will be used.\n\n
         # Precision\n\n\
         The following platforms will return results with only one rounding error: ARM NEON, x86 AVX2, and x86 AVX512. All other platforms may have two rounding errors.",
-    ).with_custom_vec_trait_arg_names(&["self", "mul", "sub"]),
+    ).with_custom_vec_trait_arg_names(&["self", "a", "b"]),
     Op::new(
         "mul_sub_precise",
         OpKind::VecTraitMethod,
@@ -1188,7 +1188,7 @@ const FLOAT_OPS: &[Op] = &[
         and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\n\
         On the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\n\
         The exact `NaN` payloads as well as signaling `NaN`s are not preserved.",
-    ).with_custom_vec_trait_arg_names(&["self", "mul", "sub"]),
+    ).with_custom_vec_trait_arg_names(&["self", "a", "b"]),
     Op::new(
         "floor",
         OpKind::VecTraitMethod,
