@@ -558,6 +558,18 @@ mod tests {
         }
     );
 
+    crate::kernel!(
+        fn lifetime_sse2<'a>(_sse2: Sse2, value: &'a u32) -> &'a u32 {
+            value
+        }
+    );
+
+    crate::kernel!(
+        fn const_in_arg_type_sse2<const N: usize>(_sse2: Sse2, values: [u32; N]) -> (usize, u32) {
+            (N, values[0])
+        }
+    );
+
     #[cfg(target_arch = "aarch64")]
     #[test]
     fn kernel_instantiates_for_neon() {
@@ -633,8 +645,31 @@ mod tests {
             return;
         };
 
-        // `N` can't be inferred, so it has to be forwarded to the inner function.
+        // `N` can't be inferred from the arguments, so the caller has to name it explicitly.
+        // `kernel!` forwards it to the inner function with the target features.
         assert_eq!(generic_sse2::<3>(sse2, "b", 2_u8), ("b", 5));
+    }
+
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[test]
+    fn kernel_can_take_lifetime_parameters() {
+        let Some(sse2) = crate::Level::new().as_sse2() else {
+            return;
+        };
+
+        let value = 42;
+        assert_eq!(*lifetime_sse2(sse2, &value), 42);
+    }
+
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[test]
+    fn kernel_can_take_const_parameter_in_argument_type() {
+        let Some(sse2) = crate::Level::new().as_sse2() else {
+            return;
+        };
+
+        // `N` is inferred from the array length, so the caller doesn't need a turbofish.
+        assert_eq!(const_in_arg_type_sse2(sse2, [7, 8, 9]), (3, 7));
     }
 
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
