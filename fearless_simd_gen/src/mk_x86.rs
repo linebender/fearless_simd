@@ -9,10 +9,10 @@ use crate::arch::x86::{
 use crate::generic::{
     byte_compact_op, compact_128_op, concat_swizzle_dyn_precise_body, count_zeros_method,
     fallback_method, generic_block_combine, generic_block_split, generic_clamp_int,
-    generic_classify, generic_mask_from_bitmask, generic_mask_from_vector, generic_mask_set,
-    generic_mask_to_vector, generic_op, generic_op_name, generic_round, generic_to_degrees_radians,
-    integer_lane_mask_rotate, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
-    reverse_method, reverse_vector_mask_method,
+    generic_classify, generic_impl_mask_casts, generic_mask_from_bitmask, generic_mask_from_vector,
+    generic_mask_set, generic_mask_to_vector, generic_op, generic_op_name, generic_round,
+    generic_to_degrees_radians, integer_lane_mask_rotate, integer_lane_mask_splat_arg,
+    recursive_swizzle_dyn_precise_body, reverse_method, reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{
@@ -107,6 +107,23 @@ impl Level for X86 {
         }
 
         Some(self.avx512_mask_array_conversion(vec_ty))
+    }
+
+    fn custom_mask_casts(&self) -> Vec<TokenStream> {
+        generic_impl_mask_casts(false, |_from_ty, to_ty| {
+            if *self != Self::Avx512 {
+                return None;
+            }
+            // AVX512 masks are bitmasks, so masks of the same length are all the same.
+            // This makes mask casts no-ops.
+            let to_name = to_ty.rust();
+            Some(quote! {
+                #to_name {
+                    val: from.val,
+                    simd: from.simd,
+                }
+            })
+        })
     }
 
     fn token_doc(&self) -> &'static str {

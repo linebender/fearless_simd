@@ -5,7 +5,10 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
-    generic::{byte_swizzle_op, generic_op, generic_op_name, reversed_compare_op},
+    generic::{
+        byte_swizzle_op, generic_impl_mask_casts, generic_mask_cast, generic_op, generic_op_name,
+        reversed_compare_op,
+    },
     ops::{
         CoreOpTrait, OpKind, OpSig, TyFlavor, base_trait_ops, ops_for_type, overloaded_ops_for,
         vec_trait_ops_for,
@@ -16,6 +19,7 @@ use crate::{
 pub(crate) fn mk_simd_trait() -> TokenStream {
     let imports = type_imports();
     let mut methods = vec![];
+
     // Float methods
     for vec_ty in SIMD_TYPES {
         for op in ops_for_type(vec_ty) {
@@ -74,6 +78,18 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
             }
         }
     }
+
+    // mask casts
+    let mask_casts = generic_impl_mask_casts(true, |from_ty, to_ty| {
+        Some(generic_mask_cast(from_ty, to_ty))
+    });
+    methods.extend(quote! {
+        #(
+            #[inline(always)]
+            #mask_casts
+        )*
+    });
+
     let mut code = quote! {
         use core::fmt::Debug;
         use crate::{seal::Seal, Level, ExtractToken, SimdElement, SimdIntElement, SimdFloatElement, SimdFrom, SimdInto, SimdCvtTruncate, SimdCvtFloat, SimdWiden, SimdIntWiden, SimdNarrow, MaskWiden, MaskNarrow, Select, Bytes};

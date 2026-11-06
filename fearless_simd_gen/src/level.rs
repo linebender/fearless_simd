@@ -85,6 +85,11 @@ pub(crate) trait Level {
     fn custom_mask_array_conversion(&self, _vec_ty: &VecType) -> Option<TokenStream> {
         None
     }
+    /// Override the default default mask casts.
+    /// Use [`generic_impl_mask_casts`](crate::generic::generic_impl_mask_casts).
+    fn custom_mask_casts(&self) -> Vec<TokenStream> {
+        Vec::new()
+    }
 
     fn impl_arch_types(&self) -> TokenStream {
         let mut assoc_types = vec![];
@@ -168,6 +173,8 @@ pub(crate) trait Level {
                 methods.push(method);
             }
         }
+
+        methods.extend(self.custom_mask_casts());
 
         let vectorize_body = if let Some(target_features) = self.enabled_target_features() {
             let vectorize = format_ident!("vectorize_{}", self.name().to_ascii_lowercase());

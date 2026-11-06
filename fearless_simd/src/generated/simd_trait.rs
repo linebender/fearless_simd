@@ -12282,6 +12282,142 @@ pub trait Simd:
         let (b0, b1) = self.split_mask64x8(b);
         self.combine_mask32x8(self.narrow_mask64x4(a0, a1), self.narrow_mask64x4(b0, b1))
     }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask8x16` to the boolean lanes of `mask16x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask8x16_to_mask16x16(self, from: mask8x16<Self>) -> mask16x16<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.widen_mask8x16(from);
+        let from = self.combine_mask16x8(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask8x16` to the boolean lanes of `mask32x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask8x16_to_mask32x16(self, from: mask8x16<Self>) -> mask32x16<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.widen_mask8x16(from);
+        let from = self.combine_mask16x8(low, high);
+        let (low, high) = self.widen_mask16x16(from);
+        let from = self.combine_mask32x8(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask16x8` to the boolean lanes of `mask32x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask16x8_to_mask32x8(self, from: mask16x8<Self>) -> mask32x8<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.widen_mask16x8(from);
+        let from = self.combine_mask32x4(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask16x8` to the boolean lanes of `mask64x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask16x8_to_mask64x8(self, from: mask16x8<Self>) -> mask64x8<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.widen_mask16x8(from);
+        let from = self.combine_mask32x4(low, high);
+        let (low, high) = self.widen_mask32x8(from);
+        let from = self.combine_mask64x4(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask32x4` to the boolean lanes of `mask64x4`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask32x4_to_mask64x4(self, from: mask32x4<Self>) -> mask64x4<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.widen_mask32x4(from);
+        let from = self.combine_mask64x2(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask8x32` to the boolean lanes of `mask16x32`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask8x32_to_mask16x32(self, from: mask8x32<Self>) -> mask16x32<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.widen_mask8x32(from);
+        let from = self.combine_mask16x16(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask16x16` to the boolean lanes of `mask8x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask16x16_to_mask8x16(self, from: mask16x16<Self>) -> mask8x16<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.split_mask16x16(from);
+        let from = self.narrow_mask16x8(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask16x16` to the boolean lanes of `mask32x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask16x16_to_mask32x16(self, from: mask16x16<Self>) -> mask32x16<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.widen_mask16x16(from);
+        let from = self.combine_mask32x8(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask32x8` to the boolean lanes of `mask16x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask32x8_to_mask16x8(self, from: mask32x8<Self>) -> mask16x8<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.split_mask32x8(from);
+        let from = self.narrow_mask32x4(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask32x8` to the boolean lanes of `mask64x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask32x8_to_mask64x8(self, from: mask32x8<Self>) -> mask64x8<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.widen_mask32x8(from);
+        let from = self.combine_mask64x4(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask64x4` to the boolean lanes of `mask32x4`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask64x4_to_mask32x4(self, from: mask64x4<Self>) -> mask32x4<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.split_mask64x4(from);
+        let from = self.narrow_mask64x2(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask16x32` to the boolean lanes of `mask8x32`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask16x32_to_mask8x32(self, from: mask16x32<Self>) -> mask8x32<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.split_mask16x32(from);
+        let from = self.narrow_mask16x16(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask32x16` to the boolean lanes of `mask8x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask32x16_to_mask8x16(self, from: mask32x16<Self>) -> mask8x16<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.split_mask32x16(from);
+        let from = self.narrow_mask32x8(low, high);
+        let (low, high) = self.split_mask16x16(from);
+        let from = self.narrow_mask16x8(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask32x16` to the boolean lanes of `mask16x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask32x16_to_mask16x16(self, from: mask32x16<Self>) -> mask16x16<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.split_mask32x16(from);
+        let from = self.narrow_mask32x8(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask64x8` to the boolean lanes of `mask16x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask64x8_to_mask16x8(self, from: mask64x8<Self>) -> mask16x8<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.split_mask64x8(from);
+        let from = self.narrow_mask64x4(low, high);
+        let (low, high) = self.split_mask32x8(from);
+        let from = self.narrow_mask32x4(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask64x8` to the boolean lanes of `mask32x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask64x8_to_mask32x8(self, from: mask64x8<Self>) -> mask32x8<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.split_mask64x8(from);
+        let from = self.narrow_mask64x4(low, high);
+        from
+    }
 }
 pub(crate) mod arch_types {
     use crate::transmute::SimdPod;

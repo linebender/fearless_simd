@@ -23118,6 +23118,118 @@ impl Simd for Avx512 {
             simd: self,
         }
     }
+    #[inline(always)]
+    fn cast_mask8x16_to_mask16x16(self, from: mask8x16<Self>) -> mask16x16<Self> {
+        mask16x16 {
+            val: from.val,
+            simd: from.simd,
+        }
+    }
+    #[inline(always)]
+    fn cast_mask8x16_to_mask32x16(self, from: mask8x16<Self>) -> mask32x16<Self> {
+        mask32x16 {
+            val: from.val,
+            simd: from.simd,
+        }
+    }
+    #[inline(always)]
+    fn cast_mask16x8_to_mask32x8(self, from: mask16x8<Self>) -> mask32x8<Self> {
+        mask32x8 {
+            val: from.val,
+            simd: from.simd,
+        }
+    }
+    #[inline(always)]
+    fn cast_mask16x8_to_mask64x8(self, from: mask16x8<Self>) -> mask64x8<Self> {
+        mask64x8 {
+            val: from.val,
+            simd: from.simd,
+        }
+    }
+    #[inline(always)]
+    fn cast_mask32x4_to_mask64x4(self, from: mask32x4<Self>) -> mask64x4<Self> {
+        mask64x4 {
+            val: from.val,
+            simd: from.simd,
+        }
+    }
+    #[inline(always)]
+    fn cast_mask8x32_to_mask16x32(self, from: mask8x32<Self>) -> mask16x32<Self> {
+        mask16x32 {
+            val: from.val,
+            simd: from.simd,
+        }
+    }
+    #[inline(always)]
+    fn cast_mask16x16_to_mask8x16(self, from: mask16x16<Self>) -> mask8x16<Self> {
+        mask8x16 {
+            val: from.val,
+            simd: from.simd,
+        }
+    }
+    #[inline(always)]
+    fn cast_mask16x16_to_mask32x16(self, from: mask16x16<Self>) -> mask32x16<Self> {
+        mask32x16 {
+            val: from.val,
+            simd: from.simd,
+        }
+    }
+    #[inline(always)]
+    fn cast_mask32x8_to_mask16x8(self, from: mask32x8<Self>) -> mask16x8<Self> {
+        mask16x8 {
+            val: from.val,
+            simd: from.simd,
+        }
+    }
+    #[inline(always)]
+    fn cast_mask32x8_to_mask64x8(self, from: mask32x8<Self>) -> mask64x8<Self> {
+        mask64x8 {
+            val: from.val,
+            simd: from.simd,
+        }
+    }
+    #[inline(always)]
+    fn cast_mask64x4_to_mask32x4(self, from: mask64x4<Self>) -> mask32x4<Self> {
+        mask32x4 {
+            val: from.val,
+            simd: from.simd,
+        }
+    }
+    #[inline(always)]
+    fn cast_mask16x32_to_mask8x32(self, from: mask16x32<Self>) -> mask8x32<Self> {
+        mask8x32 {
+            val: from.val,
+            simd: from.simd,
+        }
+    }
+    #[inline(always)]
+    fn cast_mask32x16_to_mask8x16(self, from: mask32x16<Self>) -> mask8x16<Self> {
+        mask8x16 {
+            val: from.val,
+            simd: from.simd,
+        }
+    }
+    #[inline(always)]
+    fn cast_mask32x16_to_mask16x16(self, from: mask32x16<Self>) -> mask16x16<Self> {
+        mask16x16 {
+            val: from.val,
+            simd: from.simd,
+        }
+    }
+    #[inline(always)]
+    fn cast_mask64x8_to_mask16x8(self, from: mask64x8<Self>) -> mask16x8<Self> {
+        mask16x8 {
+            val: from.val,
+            simd: from.simd,
+        }
+    }
+    #[inline(always)]
+    fn cast_mask64x8_to_mask32x8(self, from: mask64x8<Self>) -> mask32x8<Self> {
+        mask32x8 {
+            val: from.val,
+            simd: from.simd,
+        }
+    }
 }
 impl<S: Simd> SimdFrom<__mmask16, S> for mask8x16<S> {
     #[inline(always)]
