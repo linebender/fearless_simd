@@ -111,7 +111,7 @@ macro_rules! kernel {
         $crate::__fearless_simd_kernel_impl! {
             @level $token_ty;
             $(#[$meta])*
-            $vis fn $name $(<$($(const $const_param: $const_ty),+)?>)? (
+            $vis fn $name <$($($(const $const_param: $const_ty),+)?)?> (
                 $token $(, $arg: $arg_ty)*
             ) $(-> $ret)? {
                 $($kernel_body)*
@@ -398,7 +398,7 @@ macro_rules! __fearless_simd_dispatch_entry {
 /// ```compile_fail
 /// fearless_simd::__fearless_simd_kernel_impl! {
 ///     @level Fallback;
-///     fn arbitrary(token) {}
+///     fn arbitrary<>(token) {}
 /// }
 /// ```
 #[doc(hidden)]
@@ -410,10 +410,10 @@ macro_rules! __fearless_simd_kernel_impl {
     (
         @level $level:ident;
         $(#[$meta:meta])*
-        $vis:vis fn $name:ident $(<
+        $vis:vis fn $name:ident <
             $($lifetime:lifetime $(: $lt_bound:lifetime $(+ $lt_bounds:lifetime)*)?,)*
-            $($(const $const_param:ident : $const_ty:ty),+ $(,)?)?
-        >)? (
+            $(const $const_param:ident : $const_ty:ty),* $(,)?
+        > (
             $token:ident $(, $arg:ident : $arg_ty:ty)* $(,)?
         ) $(-> $ret:ty)? {
             $($kernel_body:tt)*
@@ -422,10 +422,10 @@ macro_rules! __fearless_simd_kernel_impl {
         $crate::__fearless_simd_kernel_cfg! {
             $level,
             $(#[$meta])*
-            $vis fn $name $(<
+            $vis fn $name <
                 $($lifetime $(: $lt_bound $(+ $lt_bounds)*)?,)*
-                $($(const $const_param: $const_ty),+)?
-            >)? (
+                $(const $const_param: $const_ty,)*
+            > (
                 $token: $crate::$level $(, $arg: $arg_ty)*
             ) $(-> $ret)? {
                 // Note: `__fearless_simd_kernel_target_fn` only adds a `#[target_feature]`
@@ -435,10 +435,10 @@ macro_rules! __fearless_simd_kernel_impl {
                 $crate::__fearless_simd_kernel_target_fn! {
                     $level,
                     #[inline] // can't use `#[inline(always)]` with target features
-                    fn __fearless_simd_kernel $(<
+                    fn __fearless_simd_kernel <
                         $($lifetime $(: $lt_bound $(+ $lt_bounds)*)?,)*
-                        $($(const $const_param: $const_ty),+)?
-                    >)? (
+                        $(const $const_param: $const_ty,)*
+                    > (
                         $token: $crate::$level $(, $arg: $arg_ty)*
                     ) $(-> $ret)? {
                         let _ = $token;
@@ -460,7 +460,7 @@ macro_rules! __fearless_simd_kernel_impl {
                 unsafe {
                     // Expand const generic args as `{ ARG }`, a naked `ARG` would be interpreted as
                     // a type named `ARG`, if it existed.
-                    __fearless_simd_kernel::<$($($({ $const_param }),+)?)?>($token $(, $arg)*)
+                    __fearless_simd_kernel::<$({ $const_param }),*>($token $(, $arg)*)
                 }
             }
         }
