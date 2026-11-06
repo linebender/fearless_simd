@@ -1340,6 +1340,20 @@ impl<S: Simd> MaskWiden<S> for mask8x16<S> {
         self.simd.widen_mask8x16(self)
     }
 }
+impl<S: Simd> From<mask16x16<S>> for mask8x16<S> {
+    #[doc = "Convert the boolean lanes of `mask16x16` to the boolean lanes of `mask8x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    #[inline(always)]
+    fn from(value: mask16x16<S>) -> Self {
+        value.simd.cast_mask16x16_to_mask8x16(value)
+    }
+}
+impl<S: Simd> From<mask32x16<S>> for mask8x16<S> {
+    #[doc = "Convert the boolean lanes of `mask32x16` to the boolean lanes of `mask8x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    #[inline(always)]
+    fn from(value: mask32x16<S>) -> Self {
+        value.simd.cast_mask32x16_to_mask8x16(value)
+    }
+}
 impl<S: Simd> ExtractToken for i16x8<S> {
     type S = S;
     #[inline]
@@ -2264,6 +2278,20 @@ impl<S: Simd> MaskNarrow<S> for mask16x8<S> {
         self.simd.narrow_mask16x8(self, high)
     }
 }
+impl<S: Simd> From<mask32x8<S>> for mask16x8<S> {
+    #[doc = "Convert the boolean lanes of `mask32x8` to the boolean lanes of `mask16x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    #[inline(always)]
+    fn from(value: mask32x8<S>) -> Self {
+        value.simd.cast_mask32x8_to_mask16x8(value)
+    }
+}
+impl<S: Simd> From<mask64x8<S>> for mask16x8<S> {
+    #[doc = "Convert the boolean lanes of `mask64x8` to the boolean lanes of `mask16x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    #[inline(always)]
+    fn from(value: mask64x8<S>) -> Self {
+        value.simd.cast_mask64x8_to_mask16x8(value)
+    }
+}
 impl<S: Simd> ExtractToken for i32x4<S> {
     type S = S;
     #[inline]
@@ -3186,6 +3214,13 @@ impl<S: Simd> MaskNarrow<S> for mask32x4<S> {
     #[inline(always)]
     fn narrow(self, high: Self) -> Self::Narrowed {
         self.simd.narrow_mask32x4(self, high)
+    }
+}
+impl<S: Simd> From<mask64x4<S>> for mask32x4<S> {
+    #[doc = "Convert the boolean lanes of `mask64x4` to the boolean lanes of `mask32x4`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    #[inline(always)]
+    fn from(value: mask64x4<S>) -> Self {
+        value.simd.cast_mask64x4_to_mask32x4(value)
     }
 }
 impl<S: Simd> ExtractToken for f64x2<S> {
@@ -5851,6 +5886,13 @@ impl<S: Simd> MaskWiden<S> for mask8x32<S> {
         self.simd.widen_mask8x32(self)
     }
 }
+impl<S: Simd> From<mask16x32<S>> for mask8x32<S> {
+    #[doc = "Convert the boolean lanes of `mask16x32` to the boolean lanes of `mask8x32`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    #[inline(always)]
+    fn from(value: mask16x32<S>) -> Self {
+        value.simd.cast_mask16x32_to_mask8x32(value)
+    }
+}
 impl<S: Simd> ExtractToken for i16x16<S> {
     type S = S;
     #[inline]
@@ -6785,6 +6827,20 @@ impl<S: Simd> MaskNarrow<S> for mask16x16<S> {
     #[inline(always)]
     fn narrow(self, high: Self) -> Self::Narrowed {
         self.simd.narrow_mask16x16(self, high)
+    }
+}
+impl<S: Simd> From<mask8x16<S>> for mask16x16<S> {
+    #[doc = "Convert the boolean lanes of `mask8x16` to the boolean lanes of `mask16x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    #[inline(always)]
+    fn from(value: mask8x16<S>) -> Self {
+        value.simd.cast_mask8x16_to_mask16x16(value)
+    }
+}
+impl<S: Simd> From<mask32x16<S>> for mask16x16<S> {
+    #[doc = "Convert the boolean lanes of `mask32x16` to the boolean lanes of `mask16x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    #[inline(always)]
+    fn from(value: mask32x16<S>) -> Self {
+        value.simd.cast_mask32x16_to_mask16x16(value)
     }
 }
 impl<S: Simd> ExtractToken for i32x8<S> {
@@ -7723,6 +7779,20 @@ impl<S: Simd> MaskNarrow<S> for mask32x8<S> {
     #[inline(always)]
     fn narrow(self, high: Self) -> Self::Narrowed {
         self.simd.narrow_mask32x8(self, high)
+    }
+}
+impl<S: Simd> From<mask16x8<S>> for mask32x8<S> {
+    #[doc = "Convert the boolean lanes of `mask16x8` to the boolean lanes of `mask32x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    #[inline(always)]
+    fn from(value: mask16x8<S>) -> Self {
+        value.simd.cast_mask16x8_to_mask32x8(value)
+    }
+}
+impl<S: Simd> From<mask64x8<S>> for mask32x8<S> {
+    #[doc = "Convert the boolean lanes of `mask64x8` to the boolean lanes of `mask32x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    #[inline(always)]
+    fn from(value: mask64x8<S>) -> Self {
+        value.simd.cast_mask64x8_to_mask32x8(value)
     }
 }
 impl<S: Simd> ExtractToken for f64x4<S> {
@@ -9010,6 +9080,13 @@ impl<S: Simd> MaskNarrow<S> for mask64x4<S> {
     #[inline(always)]
     fn narrow(self, high: Self) -> Self::Narrowed {
         self.simd.narrow_mask64x4(self, high)
+    }
+}
+impl<S: Simd> From<mask32x4<S>> for mask64x4<S> {
+    #[doc = "Convert the boolean lanes of `mask32x4` to the boolean lanes of `mask64x4`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    #[inline(always)]
+    fn from(value: mask32x4<S>) -> Self {
+        value.simd.cast_mask32x4_to_mask64x4(value)
     }
 }
 impl<S: Simd> ExtractToken for f32x16<S> {
@@ -11384,6 +11461,13 @@ impl<S: Simd> MaskNarrow<S> for mask16x32<S> {
         self.simd.narrow_mask16x32(self, high)
     }
 }
+impl<S: Simd> From<mask8x32<S>> for mask16x32<S> {
+    #[doc = "Convert the boolean lanes of `mask8x32` to the boolean lanes of `mask16x32`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    #[inline(always)]
+    fn from(value: mask8x32<S>) -> Self {
+        value.simd.cast_mask8x32_to_mask16x32(value)
+    }
+}
 impl<S: Simd> ExtractToken for i32x16<S> {
     type S = S;
     #[inline]
@@ -12330,6 +12414,20 @@ impl<S: Simd> MaskNarrow<S> for mask32x16<S> {
     #[inline(always)]
     fn narrow(self, high: Self) -> Self::Narrowed {
         self.simd.narrow_mask32x16(self, high)
+    }
+}
+impl<S: Simd> From<mask8x16<S>> for mask32x16<S> {
+    #[doc = "Convert the boolean lanes of `mask8x16` to the boolean lanes of `mask32x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    #[inline(always)]
+    fn from(value: mask8x16<S>) -> Self {
+        value.simd.cast_mask8x16_to_mask32x16(value)
+    }
+}
+impl<S: Simd> From<mask16x16<S>> for mask32x16<S> {
+    #[doc = "Convert the boolean lanes of `mask16x16` to the boolean lanes of `mask32x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    #[inline(always)]
+    fn from(value: mask16x16<S>) -> Self {
+        value.simd.cast_mask16x16_to_mask32x16(value)
     }
 }
 impl<S: Simd> ExtractToken for f64x8<S> {
@@ -13635,5 +13733,19 @@ impl<S: Simd> MaskNarrow<S> for mask64x8<S> {
     #[inline(always)]
     fn narrow(self, high: Self) -> Self::Narrowed {
         self.simd.narrow_mask64x8(self, high)
+    }
+}
+impl<S: Simd> From<mask16x8<S>> for mask64x8<S> {
+    #[doc = "Convert the boolean lanes of `mask16x8` to the boolean lanes of `mask64x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    #[inline(always)]
+    fn from(value: mask16x8<S>) -> Self {
+        value.simd.cast_mask16x8_to_mask64x8(value)
+    }
+}
+impl<S: Simd> From<mask32x8<S>> for mask64x8<S> {
+    #[doc = "Convert the boolean lanes of `mask32x8` to the boolean lanes of `mask64x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    #[inline(always)]
+    fn from(value: mask32x8<S>) -> Self {
+        value.simd.cast_mask32x8_to_mask64x8(value)
     }
 }

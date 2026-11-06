@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use proc_macro2::{Ident, Literal, Span, TokenStream};
-use quote::{ToTokens, quote};
+use quote::{ToTokens, format_ident, quote};
 
 use crate::{
     level::Level,
     ops::{ElementDirection, Op, OpSig, SlideGranularity},
-    types::{ScalarType, VecType},
+    types::{ScalarType, VecType, simd_mask_types},
 };
 
 pub(crate) fn generic_op_name(op: &str, ty: &VecType) -> Ident {
@@ -1338,5 +1338,95 @@ pub(crate) fn generic_clamp_int(method_sig: TokenStream) -> TokenStream {
             debug_assert!(b.simd_le(c).all_true(), "clamp requires min <= max for all elements");
             a.max(b).min(c)
         }
+    }
+}
+
+/// A generic implementation for mask casts using integer narrowing and widening
+pub(crate) fn generic_mask_cast(from_ty: &VecType, to_ty: &VecType) -> TokenStream {
+    let mut narrow_or_widen = TokenStream::new();
+
+    let mut from_ty = *from_ty;
+    while from_ty != *to_ty {
+        if from_ty.scalar_bits > to_ty.scalar_bits {
+            let new_from_ty = VecType::new(ScalarType::Mask, from_ty.scalar_bits / 2, from_ty.len);
+
+            let split = format_ident!("split_{}", from_ty.rust_name());
+            let narrow = format_ident!("narrow_mask{}x{}", from_ty.scalar_bits, from_ty.len / 2);
+            narrow_or_widen.extend(quote! {
+                let (low, high) = self.#split(from);
+                let from = self.#narrow(low, high);
+            });
+
+            from_ty = new_from_ty;
+        } else {
+            let new_from_ty = VecType::new(ScalarType::Mask, from_ty.scalar_bits * 2, from_ty.len);
+
+            let widen = format_ident!("widen_{}", from_ty.rust_name());
+            let combine = format_ident!(
+                "combine_mask{}x{}",
+                new_from_ty.scalar_bits,
+                new_from_ty.len / 2
+            );
+            narrow_or_widen.extend(quote! {
+                let (low, high) = self.#widen(from);
+                let from = self.#combine(low, high);
+            });
+
+            from_ty = new_from_ty;
+        }
+    }
+
+    quote! {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        #narrow_or_widen
+        from
+    }
+}
+/// Allows levels to overwrite the default mask conversion implementations.
+/// Return `None` to use the generic implementation.
+pub(crate) fn generic_impl_mask_casts(
+    is_trait_definition: bool,
+    mut impl_fn: impl FnMut(&VecType, &VecType) -> Option<TokenStream>,
+) -> Vec<TokenStream> {
+    let mut methods = Vec::new();
+
+    for from_ty in simd_mask_types() {
+        for to_ty in simd_mask_types() {
+            if from_ty == to_ty || from_ty.len != to_ty.len {
+                continue;
+            }
+
+            let from_name = from_ty.rust();
+            let to_name = to_ty.rust();
+            let op = format_ident!("cast_{}_to_{}", from_ty.rust_name(), to_ty.rust_name());
+
+            if let Some(inner) = impl_fn(from_ty, to_ty) {
+                // only emit docs in the trait definition
+                let doc = if is_trait_definition {
+                    generic_mask_doc(from_ty, to_ty)
+                } else {
+                    TokenStream::new()
+                };
+
+                methods.push(quote! {
+                    #doc
+                    fn #op(self, from: #from_name<Self>) -> #to_name<Self> {
+                        #inner
+                    }
+                });
+            }
+        }
+    }
+
+    methods
+}
+pub(crate) fn generic_mask_doc(from_ty: &VecType, to_ty: &VecType) -> TokenStream {
+    let doc = format!(
+        "Convert the boolean lanes of `{}` to the boolean lanes of `{}`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior.",
+        from_ty.rust_name(),
+        to_ty.rust_name()
+    );
+    quote! {
+        #[doc = #doc]
     }
 }
