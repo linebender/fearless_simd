@@ -1152,9 +1152,9 @@ const FLOAT_OPS: &[Op] = &[
         "mul_add",
         OpKind::VecTraitMethod,
         OpSig::Ternary,
-        "Compute `({arg0} * {arg1}) + {arg2}` (fused multiply-add) for each element.\n\n\
-        Depending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors.",
-    ),
+        "Compute `({arg0} * {arg1}) + {arg2}` (potentially fused multiply-add) for each element.\n\n\
+        The result may be computed with one or two rounding errors depending on which can be computed faster on the current platform.",
+    ).with_custom_vec_trait_arg_names(&["self", "a", "b"]),
     Op::new(
         "mul_add_precise",
         OpKind::VecTraitMethod,
@@ -1165,27 +1165,31 @@ const FLOAT_OPS: &[Op] = &[
         This function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library \
         and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\n\
         On the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\n\
-        The exact `NaN` payloads as well as signaling `NaN`s are not preserved.",
-    ),
+        The exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n\
+        # Performance\n\n\
+        The following platforms will use a single fused multiply-add instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512.",
+    ).with_custom_vec_trait_arg_names(&["self", "a", "b"]),
     Op::new(
         "mul_sub",
         OpKind::VecTraitMethod,
         OpSig::Ternary,
-        "Compute `({arg0} * {arg1}) - {arg2}` (fused multiply-subtract) for each element.\n\n\
-        Depending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors.",
-    ),
+        "Compute `({arg0} * {arg1}) - {arg2}` (potentially fused multiply-subtract) for each element.\n\n\
+        The result may be computed with one or two rounding errors depending on which can be computed faster on the current platform.",
+    ).with_custom_vec_trait_arg_names(&["self", "a", "b"]),
     Op::new(
         "mul_sub_precise",
         OpKind::VecTraitMethod,
         OpSig::Ternary,
         "Compute `({arg0} * {arg1}) - {arg2}` for each element, with a single rounding at the end.\n\n\
-        The result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.
+        The result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.\n\n\
         # Precision guarantees\n\n\
         This function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library \
         and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\n\
         On the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\n\
-        The exact `NaN` payloads as well as signaling `NaN`s are not preserved.",
-    ),
+        The exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n\
+        # Performance\n\n\
+        The following platforms will use a single fused multiply-subtract instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512.",
+    ).with_custom_vec_trait_arg_names(&["self", "a", "b"]),
     Op::new(
         "floor",
         OpKind::VecTraitMethod,
