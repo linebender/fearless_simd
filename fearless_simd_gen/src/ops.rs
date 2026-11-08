@@ -921,10 +921,8 @@ const COMMON_BASE_OPS: &[Op] = &[
         OpSig::Binary,
         "Return the element-wise maximum of two vectors.\n\n\
         For integer vectors, this operation is the same as `max`.\n\n\
-        For floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\n\
-        If one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n\
-        If a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\n\
-        Signaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them.",
+        For floating-point vectors, if one operand is NaN and the other is not, this operation will choose the non-NaN operand. If both operands are NaN, the result is NaN.\n\n\
+        If one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.",
     ),
     Op::new(
         "min_precise",
@@ -932,10 +930,8 @@ const COMMON_BASE_OPS: &[Op] = &[
         OpSig::Binary,
         "Return the element-wise minimum of two vectors.\n\n\
         For integer vectors, this operation is the same as `min`.\n\n\
-        For floating-point vectors, if one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\n\
-        If one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n\
-        If a floating-point operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\n\
-        Signaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them.",
+        For floating-point vectors, if one operand is NaN and the other is not, this operation will choose the non-NaN operand. If both operands are NaN, the result is NaN.\n\n\
+        If one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.",
     ),
     Op::new(
         "clamp",

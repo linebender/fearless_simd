@@ -573,6 +573,22 @@ impl Level for Neon {
                             #expr.simd_into(#token)
                         }
                     }
+                    "max_precise" | "min_precise" if vec_ty.scalar == ScalarType::Float => {
+                        // max_precise and min_precise operations use vmaxnm and vminnm respectively.
+                        // However, these instructions return qNaN if one or both operands are sNaN.
+                        // To work around this, we use vmaxnm(a, a) (and similar) to turn all
+                        // sNaN values into qNaN values, guaranteeing correct behavior for all possible inputs.
+                        let a =
+                            neon::expr(method, vec_ty, &[quote! { a.into() }, quote! { a.into() }]);
+                        let b =
+                            neon::expr(method, vec_ty, &[quote! { b.into() }, quote! { b.into() }]);
+                        let expr = neon::expr(method, vec_ty, &[quote! { a }, quote! { b }]);
+                        quote! {
+                            let a = #a;
+                            let b = #b;
+                            #expr.simd_into(#token)
+                        }
+                    }
                     "copysign" => {
                         let shift_amt = Literal::usize_unsuffixed(vec_ty.scalar_bits - 1);
                         let unsigned_ty = vec_ty.cast(ScalarType::Unsigned);

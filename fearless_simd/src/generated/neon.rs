@@ -411,7 +411,9 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> f32x4<Neon> {
-                vmaxnmq_f32(a.into(), b.into()).simd_into(token)
+                let a = vmaxnmq_f32(a.into(), a.into());
+                let b = vmaxnmq_f32(b.into(), b.into());
+                vmaxnmq_f32(a, b).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -421,7 +423,9 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> f32x4<Neon> {
-                vminnmq_f32(a.into(), b.into()).simd_into(token)
+                let a = vminnmq_f32(a.into(), a.into());
+                let b = vminnmq_f32(b.into(), b.into());
+                vminnmq_f32(a, b).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -5303,7 +5307,9 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> f64x2<Neon> {
-                vmaxnmq_f64(a.into(), b.into()).simd_into(token)
+                let a = vmaxnmq_f64(a.into(), a.into());
+                let b = vmaxnmq_f64(b.into(), b.into());
+                vmaxnmq_f64(a, b).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -5313,7 +5319,9 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> f64x2<Neon> {
-                vminnmq_f64(a.into(), b.into()).simd_into(token)
+                let a = vminnmq_f64(a.into(), a.into());
+                let b = vminnmq_f64(b.into(), b.into());
+                vminnmq_f64(a, b).simd_into(token)
             }
         );
         kernel(self, a, b)
