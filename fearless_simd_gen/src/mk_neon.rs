@@ -354,6 +354,10 @@ impl Level for Neon {
                 })
             }
             OpSig::Reduce { lane_op } => {
+                if matches!(lane_op, "min_precise" | "max_precise") {
+                    return self.handle_min_max_precise(op, vec_ty);
+                }
+
                 assert_eq!(
                     vec_ty.n_bits(),
                     128,
@@ -372,26 +376,14 @@ impl Level for Neon {
                     return self.kernel_method(op, vec_ty, |_| reduce);
                 }
 
-                let preprocess = if matches!(lane_op, "min_precise" | "max_precise") {
-                    let expr =
-                        neon::expr(lane_op, vec_ty, &[quote! { a.into() }, quote! { a.into() }]);
-                    quote! {
-                        let a = #expr;
-                    }
-                } else {
-                    TokenStream::new()
-                };
-
                 let intrinsic = match lane_op {
                     "add" => "vaddv",
                     "min" => "vminv",
                     "max" => "vmaxv",
-                    "min_precise" => "vminnmv",
-                    "max_precise" => "vmaxnmv",
                     _ => unreachable!("unsupported reduction lane operation"),
                 };
                 let reduce = simple_intrinsic(intrinsic, vec_ty);
-                self.kernel_method(op, vec_ty, |_| quote! { #preprocess #reduce(a.into()) })
+                self.kernel_method(op, vec_ty, |_| quote! { #reduce(a.into()) })
             }
             OpSig::RotateElements { .. } => integer_lane_mask_rotate(op, vec_ty),
             OpSig::LoadInterleaved {
@@ -1059,7 +1051,13 @@ impl Level for Neon {
     }
 
     fn should_use_generic_op(&self, op: &Op, vec_ty: &VecType) -> bool {
-        if matches!(op.sig, OpSig::MaskToBitmask) {
+        if matches!(
+            op.sig,
+            OpSig::MaskToBitmask
+                | OpSig::Reduce {
+                    lane_op: "min_precise" | "max_precise"
+                }
+        ) {
             false
         } else {
             op.sig.should_use_generic_op(vec_ty, self.native_width())
@@ -1267,6 +1265,74 @@ impl Neon {
                 #token.#reduced_method(reduced.simd_into(#token))
             }
         })
+    }
+
+    fn handle_min_max_precise(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        let lane_op = match op.sig {
+            OpSig::Reduce { lane_op } if matches!(lane_op, "min_precise" | "max_precise") => {
+                lane_op
+            }
+            _ => unimplemented!("unsupported reduction lane operation"),
+        };
+
+        // native-width 128-bit vector type
+        let vec_ty_128 = VecType::new(vec_ty.scalar, vec_ty.scalar_bits, 128 / vec_ty.scalar_bits);
+
+        // Instruction for native-width element-wise min/max operation.
+        // This will return qNaN if one operand is sNaN.
+        // We work around this using `min_max_128(x, x)` to convert all sNaNs to qNaNs.
+        let min_max_128 = simple_intrinsic(
+            match lane_op {
+                "min_precise" => "vminnm",
+                "max_precise" => "vmaxnm",
+                _ => unreachable!("unsupported reduction lane operation"),
+            },
+            &vec_ty_128,
+        );
+
+        // Reduce from original vector to native-width 128-bit vector
+        // The reduced vector is guaranteed to not contain sNaNs.
+        let vector_reduction = match vec_ty.n_bits() {
+            128 => quote! {
+                // convert sNaNs to qNaNs
+                let a = #min_max_128(a.into(), a.into());
+            },
+            256 => quote! {
+                let (a0, a1) = a.split();
+                // convert sNaNs to qNaNs
+                let a0 = #min_max_128(a0.into(), a0.into());
+                let a1 = #min_max_128(a1.into(), a1.into());
+                // min/max
+                let a = #min_max_128(a0, a1);
+            },
+            512 => quote! {
+                let (a0, a1) = a.split();
+                let (a00, a01) = a0.split();
+                let (a10, a11) = a1.split();
+                // convert sNaNs to qNaNs
+                let a00 = #min_max_128(a00.into(), a00.into());
+                let a01 = #min_max_128(a01.into(), a01.into());
+                let a10 = #min_max_128(a10.into(), a10.into());
+                let a11 = #min_max_128(a11.into(), a11.into());
+                // min/max
+                let a0 = #min_max_128(a00, a01);
+                let a1 = #min_max_128(a10, a11);
+                let a = #min_max_128(a0, a1);
+            },
+            _ => unimplemented!("unsupported vector width"),
+        };
+
+        // Final reduction from native-width to scalar.
+        // This relies on the vector not containing sNaNs.
+        let reduce_128 = simple_intrinsic(
+            match lane_op {
+                "min_precise" => "vminnmv",
+                "max_precise" => "vmaxnmv",
+                _ => unreachable!("unsupported reduction lane operation"),
+            },
+            &vec_ty_128,
+        );
+        self.kernel_method(op, vec_ty, |_| quote! { #vector_reduction #reduce_128(a) })
     }
 }
 
