@@ -4,28 +4,33 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
+const Q_NAN_F32: f32 = f32::NAN;
+const Q_NAN_F64: f64 = f64::NAN;
+const S_NAN_F32: f32 = f32::from_bits(0x7FFF_FFFF);
+const S_NAN_F64: f64 = f64::from_bits(0x7FFF_FFFF_FFFF_FFFF);
+
 #[simd_test]
 fn reduce_max_precise_f32x4<S: Simd>(simd: S) {
-    let nan = f32::from_bits(0x7fc0_1234);
     assert_eq!(
-        f32x4::from_slice(simd, &[nan, 4.0, 12.0, 7.0]).reduce_max_precise(),
+        f32x4::from_slice(simd, &[Q_NAN_F32, 4.0, 12.0, 7.0]).reduce_max_precise(),
         12.0
     );
     assert_eq!(
-        f32x4::from_slice(simd, &[4.0, 12.0, 7.0, nan]).reduce_max_precise(),
+        f32x4::from_slice(simd, &[4.0, 12.0, 7.0, S_NAN_F32]).reduce_max_precise(),
         12.0
     );
     assert_eq!(
-        f32x4::from_slice(simd, &[nan, 4.0, nan, 12.0]).reduce_max_precise(),
+        f32x4::from_slice(simd, &[Q_NAN_F32, 4.0, S_NAN_F32, 12.0]).reduce_max_precise(),
         12.0
     );
     assert!(
-        f32x4::from_slice(simd, &[nan; 4])
+        f32x4::from_slice(simd, &[S_NAN_F32; 4])
             .reduce_max_precise()
             .is_nan()
     );
     assert_eq!(
-        f32x4::from_slice(simd, &[f32::NEG_INFINITY, nan, 3.0, f32::INFINITY]).reduce_max_precise(),
+        f32x4::from_slice(simd, &[f32::NEG_INFINITY, S_NAN_F32, 3.0, f32::INFINITY])
+            .reduce_max_precise(),
         f32::INFINITY
     );
     assert_eq!(
@@ -36,17 +41,16 @@ fn reduce_max_precise_f32x4<S: Simd>(simd: S) {
 
 #[simd_test]
 fn reduce_max_precise_f64x2<S: Simd>(simd: S) {
-    let nan = f64::from_bits(0x7ff8_0000_0000_1234);
     assert_eq!(
-        f64x2::from_slice(simd, &[nan, 12.0]).reduce_max_precise(),
+        f64x2::from_slice(simd, &[Q_NAN_F64, 12.0]).reduce_max_precise(),
         12.0
     );
     assert_eq!(
-        f64x2::from_slice(simd, &[12.0, nan]).reduce_max_precise(),
+        f64x2::from_slice(simd, &[12.0, S_NAN_F64]).reduce_max_precise(),
         12.0
     );
     assert!(
-        f64x2::from_slice(simd, &[nan; 2])
+        f64x2::from_slice(simd, &[S_NAN_F64; 2])
             .reduce_max_precise()
             .is_nan()
     );
@@ -62,21 +66,26 @@ fn reduce_max_precise_f64x2<S: Simd>(simd: S) {
 
 #[simd_test]
 fn reduce_max_precise_f32x8<S: Simd>(simd: S) {
-    let nan = f32::from_bits(0x7fc0_1234);
     assert_eq!(
-        f32x8::from_slice(simd, &[nan, 4.0, 12.0, 7.0, 9.0, 3.0, 6.0, 8.0]).reduce_max_precise(),
+        f32x8::from_slice(simd, &[Q_NAN_F32, 4.0, 12.0, 7.0, 9.0, 3.0, 6.0, 8.0])
+            .reduce_max_precise(),
         12.0
     );
     assert_eq!(
-        f32x8::from_slice(simd, &[4.0, 12.0, 7.0, 9.0, 3.0, 6.0, 8.0, nan]).reduce_max_precise(),
+        f32x8::from_slice(simd, &[4.0, 12.0, 7.0, 9.0, 3.0, 6.0, 8.0, S_NAN_F32])
+            .reduce_max_precise(),
         12.0
     );
     assert_eq!(
-        f32x8::from_slice(simd, &[nan, 4.0, nan, 7.0, 12.0, nan, 6.0, 8.0]).reduce_max_precise(),
+        f32x8::from_slice(
+            simd,
+            &[Q_NAN_F32, 4.0, S_NAN_F32, 7.0, 12.0, S_NAN_F32, 6.0, 8.0]
+        )
+        .reduce_max_precise(),
         12.0
     );
     assert!(
-        f32x8::from_slice(simd, &[nan; 8])
+        f32x8::from_slice(simd, &[S_NAN_F32; 8])
             .reduce_max_precise()
             .is_nan()
     );
@@ -85,7 +94,7 @@ fn reduce_max_precise_f32x8<S: Simd>(simd: S) {
             simd,
             &[
                 f32::NEG_INFINITY,
-                nan,
+                S_NAN_F32,
                 3.0,
                 8.0,
                 2.0,
@@ -103,26 +112,26 @@ fn reduce_max_precise_f32x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn reduce_max_precise_f64x4<S: Simd>(simd: S) {
-    let nan = f64::from_bits(0x7ff8_0000_0000_1234);
     assert_eq!(
-        f64x4::from_slice(simd, &[nan, 4.0, 12.0, 7.0]).reduce_max_precise(),
+        f64x4::from_slice(simd, &[Q_NAN_F64, 4.0, 12.0, 7.0]).reduce_max_precise(),
         12.0
     );
     assert_eq!(
-        f64x4::from_slice(simd, &[4.0, 12.0, 7.0, nan]).reduce_max_precise(),
+        f64x4::from_slice(simd, &[4.0, 12.0, 7.0, S_NAN_F64]).reduce_max_precise(),
         12.0
     );
     assert_eq!(
-        f64x4::from_slice(simd, &[nan, 4.0, nan, 12.0]).reduce_max_precise(),
+        f64x4::from_slice(simd, &[Q_NAN_F64, 4.0, S_NAN_F64, 12.0]).reduce_max_precise(),
         12.0
     );
     assert!(
-        f64x4::from_slice(simd, &[nan; 4])
+        f64x4::from_slice(simd, &[Q_NAN_F64; 4])
             .reduce_max_precise()
             .is_nan()
     );
     assert_eq!(
-        f64x4::from_slice(simd, &[f64::NEG_INFINITY, nan, 3.0, f64::INFINITY]).reduce_max_precise(),
+        f64x4::from_slice(simd, &[f64::NEG_INFINITY, S_NAN_F64, 3.0, f64::INFINITY])
+            .reduce_max_precise(),
         f64::INFINITY
     );
     assert_eq!(
@@ -133,21 +142,20 @@ fn reduce_max_precise_f64x4<S: Simd>(simd: S) {
 
 #[simd_test]
 fn reduce_max_precise_f32x16<S: Simd>(simd: S) {
-    let nan = f32::from_bits(0x7fc0_1234);
     let mut first = [4.0; 16];
-    first[0] = nan;
+    first[0] = Q_NAN_F32;
     first[13] = 12.0;
     assert_eq!(f32x16::from_slice(simd, &first).reduce_max_precise(), 12.0);
 
     let mut last = [4.0; 16];
-    last[15] = nan;
+    last[15] = S_NAN_F32;
     last[2] = 12.0;
     assert_eq!(f32x16::from_slice(simd, &last).reduce_max_precise(), 12.0);
 
-    let multiple = f32x16::from_fn(simd, |i| if i % 3 == 0 { nan } else { i as f32 });
+    let multiple = f32x16::from_fn(simd, |i| if i % 3 == 0 { S_NAN_F32 } else { i as f32 });
     assert_eq!(multiple.reduce_max_precise(), 14.0);
     assert!(
-        f32x16::from_slice(simd, &[nan; 16])
+        f32x16::from_slice(simd, &[S_NAN_F32; 16])
             .reduce_max_precise()
             .is_nan()
     );
@@ -168,21 +176,26 @@ fn reduce_max_precise_f32x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn reduce_max_precise_f64x8<S: Simd>(simd: S) {
-    let nan = f64::from_bits(0x7ff8_0000_0000_1234);
     assert_eq!(
-        f64x8::from_slice(simd, &[nan, 4.0, 12.0, 7.0, 9.0, 3.0, 6.0, 8.0]).reduce_max_precise(),
+        f64x8::from_slice(simd, &[Q_NAN_F64, 4.0, 12.0, 7.0, 9.0, 3.0, 6.0, 8.0])
+            .reduce_max_precise(),
         12.0
     );
     assert_eq!(
-        f64x8::from_slice(simd, &[4.0, 12.0, 7.0, 9.0, 3.0, 6.0, 8.0, nan]).reduce_max_precise(),
+        f64x8::from_slice(simd, &[4.0, 12.0, 7.0, 9.0, 3.0, 6.0, 8.0, S_NAN_F64])
+            .reduce_max_precise(),
         12.0
     );
     assert_eq!(
-        f64x8::from_slice(simd, &[nan, 4.0, nan, 7.0, 12.0, nan, 6.0, 8.0]).reduce_max_precise(),
+        f64x8::from_slice(
+            simd,
+            &[Q_NAN_F64, 4.0, S_NAN_F64, 7.0, 12.0, S_NAN_F64, 6.0, 8.0]
+        )
+        .reduce_max_precise(),
         12.0
     );
     assert!(
-        f64x8::from_slice(simd, &[nan; 8])
+        f64x8::from_slice(simd, &[Q_NAN_F64; 8])
             .reduce_max_precise()
             .is_nan()
     );
@@ -191,7 +204,7 @@ fn reduce_max_precise_f64x8<S: Simd>(simd: S) {
             simd,
             &[
                 f64::NEG_INFINITY,
-                nan,
+                S_NAN_F64,
                 3.0,
                 8.0,
                 2.0,

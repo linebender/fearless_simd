@@ -857,10 +857,8 @@ const COMMON_BASE_OPS: &[Op] = &[
         },
         "Return the maximum element in the vector, ignoring quiet NaNs.\n\n\
         For integer vectors, this operation is the same as `reduce_max`.\n\n\
-        For floating-point vectors, quiet NaNs are ignored. If there is at least one numeric lane, this returns the true maximum of the numeric lanes. If all lanes are quiet NaNs, this returns NaN, with an unspecified payload and sign.\n\n\
-        If the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned.\n\n\
-        If any lane is a *signaling* NaN, the result is fully non-deterministic: it may be NaN or a numeric lane and is not guaranteed to be the true maximum.\n\
-        Signaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them.",
+        For floating-point vectors, NaNs are ignored. If there is at least one numeric lane, this returns the true maximum of the numeric lanes. If all lanes are NaNs, this returns NaN, with an unspecified payload and sign.\n\n\
+        If the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned.",
     ),
     Op::new(
         "reduce_min_precise",
@@ -870,10 +868,8 @@ const COMMON_BASE_OPS: &[Op] = &[
         },
         "Return the minimum element in the vector, ignoring quiet NaNs.\n\n\
         For integer vectors, this operation is the same as `reduce_min`.\n\n\
-        For floating-point vectors, quiet NaNs are ignored. If there is at least one numeric lane, this returns the true minimum of the numeric lanes. If all lanes are quiet NaNs, this returns NaN, with an unspecified payload and sign.\n\n\
-        If the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned.\n\n\
-        If any lane is a *signaling* NaN, the result is fully non-deterministic: it may be NaN or a numeric lane and is not guaranteed to be the true minimum.\n\
-        Signaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them.",
+        For floating-point vectors, NaNs are ignored. If there is at least one numeric lane, this returns the true minimum of the numeric lanes. If all lanes are NaNs, this returns NaN, with an unspecified payload and sign.\n\n\
+        If the floating-point vector contains both positive zero and negative zero, either sign of zero may be returned.",
     ),
     Op::new(
         "reduce_sum",

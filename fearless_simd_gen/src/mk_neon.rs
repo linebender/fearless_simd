@@ -372,6 +372,16 @@ impl Level for Neon {
                     return self.kernel_method(op, vec_ty, |_| reduce);
                 }
 
+                let preprocess = if matches!(lane_op, "min_precise" | "max_precise") {
+                    let expr =
+                        neon::expr(lane_op, vec_ty, &[quote! { a.into() }, quote! { a.into() }]);
+                    quote! {
+                        let a = #expr;
+                    }
+                } else {
+                    TokenStream::new()
+                };
+
                 let intrinsic = match lane_op {
                     "add" => "vaddv",
                     "min" => "vminv",
@@ -381,7 +391,7 @@ impl Level for Neon {
                     _ => unreachable!("unsupported reduction lane operation"),
                 };
                 let reduce = simple_intrinsic(intrinsic, vec_ty);
-                self.kernel_method(op, vec_ty, |_| quote! { #reduce(a.into()) })
+                self.kernel_method(op, vec_ty, |_| quote! { #preprocess #reduce(a.into()) })
             }
             OpSig::RotateElements { .. } => integer_lane_mask_rotate(op, vec_ty),
             OpSig::LoadInterleaved {
