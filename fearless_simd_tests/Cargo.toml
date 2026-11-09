@@ -13,6 +13,9 @@ publish = false
 # separate integration crates. The simd_ui harness is declared explicitly below.
 autotests = false
 
+[features]
+experimental_sve2 = ["fearless_simd/experimental_sve2"]
+
 [[test]]
 name = "tests"
 path = "tests/mod.rs"
