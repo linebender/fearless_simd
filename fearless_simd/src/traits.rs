@@ -334,31 +334,56 @@ pub trait SimdIntElement:
     /// Its lane count depends on both the scalar type and the backend, and is
     /// available as `T::Native::<S>::LEN` with [`SimdBase`] in scope.
     type Native<S: Simd>: SimdInt<S, Element = Self>;
+
+    /// The corresponding unsigned integer type for this signed integer type. E.g. `u8` for `i8`.
+    ///
+    /// If `Self` is already unsigned, this type will also be `Self`.
+    type Unsigned: SimdIntElement;
+    /// The corresponding signed integer type for this unsigned integer type. E.g. `i8` for `u8`.
+    ///
+    /// If `Self` is already signed, this type will also be `Self`.
+    type Signed: SimdIntElement;
 }
 
 impl SimdIntElement for u8 {
     type Native<S: Simd> = S::u8s;
+    type Unsigned = Self;
+    type Signed = i8;
 }
 impl SimdIntElement for u16 {
     type Native<S: Simd> = S::u16s;
+    type Unsigned = Self;
+    type Signed = i16;
 }
 impl SimdIntElement for u32 {
     type Native<S: Simd> = S::u32s;
+    type Unsigned = Self;
+    type Signed = i32;
 }
 impl SimdIntElement for u64 {
     type Native<S: Simd> = S::u64s;
+    type Unsigned = Self;
+    type Signed = i64;
 }
 impl SimdIntElement for i8 {
     type Native<S: Simd> = S::i8s;
+    type Unsigned = u8;
+    type Signed = Self;
 }
 impl SimdIntElement for i16 {
     type Native<S: Simd> = S::i16s;
+    type Unsigned = u16;
+    type Signed = Self;
 }
 impl SimdIntElement for i32 {
     type Native<S: Simd> = S::i32s;
+    type Unsigned = u32;
+    type Signed = Self;
 }
 impl SimdIntElement for i64 {
     type Native<S: Simd> = S::i64s;
+    type Unsigned = u64;
+    type Signed = Self;
 }
 
 /// Types that can be used as elements in float SIMD vectors.

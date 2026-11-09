@@ -509,11 +509,52 @@ fn mk_simd_int() -> TokenStream {
         pub trait SimdInt<S: Simd>: SimdBase<S, Element: SimdIntElement> + Seal
             #(+ #op_traits)*
         {
+            /// Corresponding unsigned integer SIMD vector type. E.g. `u8x16` for `i8x16`.
+            ///
+            /// This type is `Self` if the SIMD vector is already unsigned.
+            type Unsigned: SimdInt<S, Element = <Self::Element as SimdIntElement>::Unsigned, ByteVector = Self::ByteVector>;
+            /// Corresponding signed integer SIMD vector type. E.g. `i8x16` for `u8x16`.
+            ///
+            /// This type is `Self` if the SIMD vector is already signed.
+            type Signed: SimdInt<S, Element = <Self::Element as SimdIntElement>::Signed, ByteVector = Self::ByteVector>;
+
+            /// Reinterpret this integer SIMD vector as its corresponding signed type.
+            #[inline(always)]
+            fn cast_signed(self) -> Self::Signed {
+                self.bitcast()
+            }
+            /// Reinterpret this integer SIMD vector as its corresponding unsigned type.
+            #[inline(always)]
+            fn cast_unsigned(self) -> Self::Unsigned {
+                self.bitcast()
+            }
+
             /// Convert this integer type to a floating-point type. This is a convenience method
             /// that delegates to [`SimdCvtFloat::float_from`], and can only be called if there
             /// actually exists a target type of the same bit width (`f32` or `f64`).
             #[inline(always)]
             fn to_float<T: SimdCvtFloat<Self>>(self) -> T { T::float_from(self) }
+
+            /// Return the absolute value of `self` without any wrapping.
+            ///
+            /// If `Self` is an unsigned SIMD vector, this always produces the same result as `self.abs()`.
+            ///
+            /// ## Example
+            ///
+            /// ```
+            /// # use fearless_simd::*;
+            /// # dispatch!(Level::new(), simd => {
+            /// let i = i32x4::from_slice(simd, &[100, -100, i32::MAX, i32::MIN]);
+            /// assert_eq!(
+            ///     *i.unsigned_abs(),
+            ///     [100, 100, 2147483647, 2147483648],
+            /// );
+            /// # });
+            /// ```
+            #[inline(always)]
+            fn unsigned_abs(self) -> Self::Unsigned {
+                self.abs().cast_unsigned()
+            }
 
             #( #methods )*
         }

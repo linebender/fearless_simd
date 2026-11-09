@@ -705,12 +705,23 @@ fn simd_vec_scalar_type_impl(ty: &VecType) -> TokenStream {
     let vec_trait_id = Ident::new(vec_trait, Span::call_site());
 
     let mut types = vec![];
-    if ty.scalar == ScalarType::Float {
-        let bits = ty.cast(ScalarType::Unsigned).rust();
-        types.push(quote! {
-            type Bits = #bits<S>;
-        });
-    }
+    match ty.scalar {
+        ScalarType::Float => {
+            let bits = ty.cast(ScalarType::Unsigned).rust();
+            types.push(quote! {
+                type Bits = #bits<S>;
+            });
+        }
+        ScalarType::Unsigned | ScalarType::Int => {
+            let unsigned = ty.cast(ScalarType::Unsigned).rust();
+            let signed = ty.cast(ScalarType::Int).rust();
+            types.push(quote! {
+                type Unsigned = #unsigned<S>;
+                type Signed = #signed<S>;
+            });
+        }
+        ScalarType::Mask => unreachable!(),
+    };
 
     let mut methods = vec![];
     for op in vec_trait_ops_for(ty.scalar) {
