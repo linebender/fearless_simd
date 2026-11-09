@@ -488,6 +488,23 @@ fn mk_simd_float() -> TokenStream {
             #[inline(always)]
             fn to_int_precise<T: SimdCvtTruncate<Self>>(self) -> T { T::truncate_from_precise(self) }
 
+            /// Compute the reciprocal of this floating-point value, i.e. `1.0 / self`.
+            ///
+            /// # Example
+            ///
+            /// ```
+            /// # use fearless_simd::*;
+            /// # dispatch!(Level::new(), simd => {
+            /// let x = f32x4::from_slice(simd, &[1.0, 2.0, 4.0, 8.0]);
+            /// assert_eq!(*x.recip(), [1.0, 0.5, 0.25, 0.125]);
+            /// # })
+            /// ```
+            #[inline(always)]
+            fn recip(self) -> Self {
+                let one = Self::Element::from(1_u8);
+                Self::splat(self.token(), one) / self
+            }
+
             #( #methods )*
         }
     }

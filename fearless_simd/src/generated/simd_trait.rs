@@ -12967,6 +12967,22 @@ pub trait SimdFloat<S: Simd>:
     fn to_int_precise<T: SimdCvtTruncate<Self>>(self) -> T {
         T::truncate_from_precise(self)
     }
+    #[doc = r" Compute the reciprocal of this floating-point value, i.e. `1.0 / self`."]
+    #[doc = r""]
+    #[doc = r" # Example"]
+    #[doc = r""]
+    #[doc = r" ```"]
+    #[doc = r" # use fearless_simd::*;"]
+    #[doc = r" # dispatch!(Level::new(), simd => {"]
+    #[doc = r" let x = f32x4::from_slice(simd, &[1.0, 2.0, 4.0, 8.0]);"]
+    #[doc = r" assert_eq!(*x.recip(), [1.0, 0.5, 0.25, 0.125]);"]
+    #[doc = r" # })"]
+    #[doc = r" ```"]
+    #[inline(always)]
+    fn recip(self) -> Self {
+        let one = Self::Element::from(1_u8);
+        Self::splat(self.token(), one) / self
+    }
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt(self) -> Self;
     #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
