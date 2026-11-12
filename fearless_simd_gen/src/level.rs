@@ -5,7 +5,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
-    generic::generic_op,
+    generic::{generic_mask_casts_methods, generic_op},
     ops::{Op, ops_for_type},
     types::{SIMD_TYPES, ScalarType, VecType, type_imports},
 };
@@ -85,10 +85,12 @@ pub(crate) trait Level {
     fn custom_mask_array_conversion(&self, _vec_ty: &VecType) -> Option<TokenStream> {
         None
     }
-    /// Override the default default mask casts.
-    /// Use [`generic_impl_mask_casts`](crate::generic::generic_impl_mask_casts).
-    fn custom_mask_casts(&self) -> Vec<TokenStream> {
-        Vec::new()
+    /// Override the default mask casts implementation for the given mask types.
+    /// This should return only the body of the conversion implementation, not the full method.
+    /// The input parameter is called `from`.
+    fn custom_mask_cast(&self, from_ty: &VecType, to_ty: &VecType) -> Option<TokenStream> {
+        assert_eq!(from_ty.len, to_ty.len);
+        None
     }
 
     fn impl_arch_types(&self) -> TokenStream {
@@ -174,7 +176,9 @@ pub(crate) trait Level {
             }
         }
 
-        methods.extend(self.custom_mask_casts());
+        methods.extend(generic_mask_casts_methods(false, |from_ty, to_ty| {
+            self.custom_mask_cast(from_ty, to_ty)
+        }));
 
         let vectorize_body = if let Some(target_features) = self.enabled_target_features() {
             let vectorize = format_ident!("vectorize_{}", self.name().to_ascii_lowercase());

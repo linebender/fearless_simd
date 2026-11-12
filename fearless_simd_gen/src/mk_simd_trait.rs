@@ -6,8 +6,8 @@ use quote::{format_ident, quote};
 
 use crate::{
     generic::{
-        byte_swizzle_op, generic_impl_mask_casts, generic_mask_cast, generic_op, generic_op_name,
-        reversed_compare_op,
+        byte_swizzle_op, generic_mask_cast_body, generic_mask_casts_methods, generic_op,
+        generic_op_name, reversed_compare_op,
     },
     ops::{
         CoreOpTrait, OpKind, OpSig, TyFlavor, base_trait_ops, ops_for_type, overloaded_ops_for,
@@ -80,8 +80,8 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
     }
 
     // mask casts
-    let mask_casts = generic_impl_mask_casts(true, |from_ty, to_ty| {
-        Some(generic_mask_cast(from_ty, to_ty))
+    let mask_casts = generic_mask_casts_methods(true, |from_ty, to_ty| {
+        Some(generic_mask_cast_body(from_ty, to_ty))
     });
     methods.extend(quote! {
         #(

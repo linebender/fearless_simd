@@ -1342,7 +1342,7 @@ pub(crate) fn generic_clamp_int(method_sig: TokenStream) -> TokenStream {
 }
 
 /// A generic implementation for mask casts using integer narrowing and widening
-pub(crate) fn generic_mask_cast(from_ty: &VecType, to_ty: &VecType) -> TokenStream {
+pub(crate) fn generic_mask_cast_body(from_ty: &VecType, to_ty: &VecType) -> TokenStream {
     let mut narrow_or_widen = TokenStream::new();
 
     let mut from_ty = *from_ty;
@@ -1384,8 +1384,8 @@ pub(crate) fn generic_mask_cast(from_ty: &VecType, to_ty: &VecType) -> TokenStre
 }
 /// Allows levels to overwrite the default mask conversion implementations.
 /// Return `None` to use the generic implementation.
-pub(crate) fn generic_impl_mask_casts(
-    is_trait_definition: bool,
+pub(crate) fn generic_mask_casts_methods(
+    emit_docs: bool,
     mut impl_fn: impl FnMut(&VecType, &VecType) -> Option<TokenStream>,
 ) -> Vec<TokenStream> {
     let mut methods = Vec::new();
@@ -1401,8 +1401,7 @@ pub(crate) fn generic_impl_mask_casts(
             let op = format_ident!("cast_{}_to_{}", from_ty.rust_name(), to_ty.rust_name());
 
             if let Some(inner) = impl_fn(from_ty, to_ty) {
-                // only emit docs in the trait definition
-                let doc = if is_trait_definition {
+                let doc = if emit_docs {
                     generic_mask_doc(from_ty, to_ty)
                 } else {
                     TokenStream::new()
