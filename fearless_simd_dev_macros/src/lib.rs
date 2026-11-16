@@ -19,6 +19,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
 
     let fallback_name = get_ident("fallback");
     let neon_name = get_ident("neon");
+    let sve2_name = get_ident("sve2");
     let sse2_name = get_ident("sse2");
     let sse4_name = get_ident("sse4");
     let avx2_name = get_ident("avx2");
@@ -40,6 +41,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
 
     let ignore_fallback = ignore_attr(exclude_fallback);
     let ignore_neon = ignore_attr(exclude_neon);
+    let ignore_sve2 = ignore_attr(|_| false);
     let ignore_sse2 = ignore_attr(exclude_sse2);
     let ignore_sse4 = ignore_attr(exclude_sse4);
     let ignore_avx2 = ignore_attr(exclude_avx2);
@@ -73,6 +75,20 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
             if std::arch::is_aarch64_feature_detected!("neon") {
                 let neon = unsafe { fearless_simd::aarch64::Neon::assume_supported() };
                 #input_fn_name(neon);
+            }
+        }
+    };
+
+    let sve2_snippet = quote! {
+        #[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]
+        #[test]
+        #ignore_sve2
+        fn #sve2_name() {
+            // Detection and every operation remain on this test's thread.
+            if let Some(level) = fearless_simd::Level::detect_sve2() {
+                // Smaller logical vectors are tested with this same exact-width
+                // token; a different SVE2 token would require a different physical VL.
+                fearless_simd::dispatch!(level, simd => #input_fn_name(simd));
             }
         }
     };
@@ -203,6 +219,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
 
         #fallback_snippet
         #neon_snippet
+        #sve2_snippet
         #wasm_snippet
         #sse2_snippet
         #sse4_snippet

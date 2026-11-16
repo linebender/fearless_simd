@@ -18,6 +18,8 @@ mod harness;
 mod simd_macro;
 #[cfg(not(miri))] // too slow
 mod soundness;
+#[cfg(all(target_arch = "aarch64", feature = "experimental_sve2"))]
+mod sve2;
 mod token_soundness;
 mod type_layout;
 

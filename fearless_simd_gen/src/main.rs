@@ -25,6 +25,7 @@ mod mk_neon;
 mod mk_ops;
 mod mk_simd_trait;
 mod mk_simd_types;
+mod mk_sve2;
 mod mk_wasm;
 mod mk_x86;
 mod ops;
@@ -42,6 +43,9 @@ enum Module {
     Sse4_2,
     Avx2,
     Avx512,
+    Sve2_128,
+    Sve2_256,
+    Sve2_512,
 }
 
 #[derive(Parser)]
@@ -74,6 +78,9 @@ impl Module {
             Self::Sse4_2 => mk_x86::X86::Sse4_2.make_module(),
             Self::Avx2 => mk_x86::X86::Avx2.make_module(),
             Self::Avx512 => mk_x86::X86::Avx512.make_module(),
+            Self::Sve2_128 => mk_sve2::Sve2(128).make_module(),
+            Self::Sve2_256 => mk_sve2::Sve2(256).make_module(),
+            Self::Sve2_512 => mk_sve2::Sve2(512).make_module(),
         }
     }
 
@@ -115,6 +122,9 @@ impl Module {
             Self::Sse4_2 => "sse4_2",
             Self::Avx2 => "avx2",
             Self::Avx512 => "avx512",
+            Self::Sve2_128 => "sve2_128",
+            Self::Sve2_256 => "sve2_256",
+            Self::Sve2_512 => "sve2_512",
         }
     }
 }
@@ -130,6 +140,9 @@ const MODULES: &[Module] = &[
     Module::Sse4_2,
     Module::Avx2,
     Module::Avx512,
+    Module::Sve2_128,
+    Module::Sve2_256,
+    Module::Sve2_512,
 ];
 
 const FILE_BASE: &str = "./fearless_simd/src/generated";
