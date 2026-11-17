@@ -1026,6 +1026,10 @@ pub trait Simd:
         vectors: [i16x8<Self>; 4usize],
         dest: &mut [i16; 32usize],
     ) -> ();
+    #[doc = "Multiply two vectors of Q15 fixed-point numbers element-wise, rounding to nearest.\n\nA Q15 number `x` represents `x / 32768`. Lane `i` of the result is `(a[i] * b[i] + (1 << 14)) >> 15`, evaluated without intermediate overflow. The result of `i16::MIN * i16::MIN` is implementation-defined; see `mul_q15_precise` for a version that saturates it to `i16::MAX`."]
+    fn mul_q15_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Multiply two vectors of Q15 fixed-point numbers element-wise, rounding to nearest and saturating.\n\nThis operation is the same as `mul_q15`, except that `i16::MIN * i16::MIN` saturates to `i16::MAX`. It can be slower than `mul_q15`."]
+    fn mul_q15_precise_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
     fn widen_i16x8(self, a: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>);
     #[doc = "Multiply corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
@@ -4188,6 +4192,23 @@ pub trait Simd:
     fn neg_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
         let (a0, a1) = self.split_i16x16(a);
         self.combine_i16x8(self.neg_i16x8(a0), self.neg_i16x8(a1))
+    }
+    #[doc = "Multiply two vectors of Q15 fixed-point numbers element-wise, rounding to nearest.\n\nA Q15 number `x` represents `x / 32768`. Lane `i` of the result is `(a[i] * b[i] + (1 << 14)) >> 15`, evaluated without intermediate overflow. The result of `i16::MIN * i16::MIN` is implementation-defined; see `mul_q15_precise` for a version that saturates it to `i16::MAX`."]
+    #[inline(always)]
+    fn mul_q15_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(self.mul_q15_i16x8(a0, b0), self.mul_q15_i16x8(a1, b1))
+    }
+    #[doc = "Multiply two vectors of Q15 fixed-point numbers element-wise, rounding to nearest and saturating.\n\nThis operation is the same as `mul_q15`, except that `i16::MIN * i16::MIN` saturates to `i16::MAX`. It can be slower than `mul_q15`."]
+    #[inline(always)]
+    fn mul_q15_precise_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(
+            self.mul_q15_precise_i16x8(a0, b0),
+            self.mul_q15_precise_i16x8(a1, b1),
+        )
     }
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
     #[inline(always)]
@@ -9144,6 +9165,23 @@ pub trait Simd:
     fn neg_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
         let (a0, a1) = self.split_i16x32(a);
         self.combine_i16x16(self.neg_i16x16(a0), self.neg_i16x16(a1))
+    }
+    #[doc = "Multiply two vectors of Q15 fixed-point numbers element-wise, rounding to nearest.\n\nA Q15 number `x` represents `x / 32768`. Lane `i` of the result is `(a[i] * b[i] + (1 << 14)) >> 15`, evaluated without intermediate overflow. The result of `i16::MIN * i16::MIN` is implementation-defined; see `mul_q15_precise` for a version that saturates it to `i16::MAX`."]
+    #[inline(always)]
+    fn mul_q15_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(self.mul_q15_i16x16(a0, b0), self.mul_q15_i16x16(a1, b1))
+    }
+    #[doc = "Multiply two vectors of Q15 fixed-point numbers element-wise, rounding to nearest and saturating.\n\nThis operation is the same as `mul_q15`, except that `i16::MIN * i16::MIN` saturates to `i16::MAX`. It can be slower than `mul_q15`."]
+    #[inline(always)]
+    fn mul_q15_precise_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(
+            self.mul_q15_precise_i16x16(a0, b0),
+            self.mul_q15_precise_i16x16(a1, b1),
+        )
     }
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
     #[inline(always)]

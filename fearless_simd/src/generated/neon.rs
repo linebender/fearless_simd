@@ -2655,6 +2655,26 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn mul_q15_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
+                vqrdmulhq_s16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn mul_q15_precise_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
+                vqrdmulhq_s16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn widen_i16x8(self, a: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
         crate::kernel!(
             #[inline(always)]

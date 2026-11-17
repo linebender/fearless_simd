@@ -17,6 +17,7 @@ fn translate_op(op: &str) -> Option<&'static str> {
         "add" => "add",
         "saturating_add" => "add_sat",
         "saturating_sub" => "sub_sat",
+        "mul_q15" | "mul_q15_precise" => "q15mulr_sat",
         // TODO: Is wrapping sub same on WASM?
         "sub" => "sub",
         "mul" => "mul",

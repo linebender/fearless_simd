@@ -3419,6 +3419,28 @@ impl Simd for Avx512 {
         kernel(self, vectors, dest);
     }
     #[inline(always)]
+    fn mul_q15_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
+                _mm_mulhrs_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn mul_q15_precise_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
+                let product = _mm_mulhrs_epi16(a.into(), b.into());
+                _mm_xor_si128(product, _mm_cmpeq_epi16(product, _mm_set1_epi16(i16::MIN)))
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn widen_i16x8(self, a: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
         crate::kernel!(
             #[inline(always)]
@@ -10969,6 +10991,31 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn mul_q15_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i16x16<Avx512> {
+                _mm256_mulhrs_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn mul_q15_precise_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i16x16<Avx512> {
+                let product = _mm256_mulhrs_epi16(a.into(), b.into());
+                _mm256_xor_si256(
+                    product,
+                    _mm256_cmpeq_epi16(product, _mm256_set1_epi16(i16::MIN)),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn widen_i16x16(self, a: i16x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
         crate::kernel!(
             #[inline(always)]
@@ -18496,6 +18543,32 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn mul_q15_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i16x32<Avx512> {
+                _mm512_mulhrs_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn mul_q15_precise_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i16x32<Avx512> {
+                let product = _mm512_mulhrs_epi16(a.into(), b.into());
+                _mm512_mask_mov_epi16(
+                    product,
+                    _mm512_cmpeq_epi16_mask(product, _mm512_set1_epi16(i16::MIN)),
+                    _mm512_set1_epi16(i16::MAX),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn widen_i16x32(self, a: i16x32<Self>) -> (i32x16<Self>, i32x16<Self>) {

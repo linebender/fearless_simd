@@ -3407,6 +3407,36 @@ impl Simd for Sse2 {
         ];
     }
     #[inline(always)]
+    fn mul_q15_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i16x8<Sse2>, b: i16x8<Sse2>) -> i16x8<Sse2> {
+                let (a, b) = (a.into(), b.into());
+                let (low, high) = (_mm_mullo_epi16(a, b), _mm_mulhi_epi16(a, b));
+                let truncated = _mm_or_si128(_mm_slli_epi16::<1>(high), _mm_srli_epi16::<15>(low));
+                let round = _mm_and_si128(_mm_srli_epi16::<14>(low), _mm_set1_epi16(1));
+                _mm_add_epi16(truncated, round).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn mul_q15_precise_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i16x8<Sse2>, b: i16x8<Sse2>) -> i16x8<Sse2> {
+                let (a, b) = (a.into(), b.into());
+                let (low, high) = (_mm_mullo_epi16(a, b), _mm_mulhi_epi16(a, b));
+                let truncated = _mm_or_si128(_mm_slli_epi16::<1>(high), _mm_srli_epi16::<15>(low));
+                let round = _mm_and_si128(_mm_srli_epi16::<14>(low), _mm_set1_epi16(1));
+                let product = _mm_add_epi16(truncated, round);
+                _mm_xor_si128(product, _mm_cmpeq_epi16(product, _mm_set1_epi16(i16::MIN)))
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn widen_i16x8(self, a: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
         crate::kernel!(
             #[inline(always)]

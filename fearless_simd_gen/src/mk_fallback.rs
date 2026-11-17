@@ -92,6 +92,7 @@ impl Level for Fallback {
         quote! {
             use core::ops::*;
             use crate::math::ScalarExt as _;
+            use crate::math::I16Ext as _;
 
             #float_ext
         }
@@ -874,6 +875,8 @@ fn rhs_reference(method: &str) -> bool {
             | "wrapping_add"
             | "saturating_add"
             | "saturating_sub"
+            | "mul_q15"
+            | "mul_q15_precise"
             | "wrapping_shl"
             | "wrapping_shr"
     )

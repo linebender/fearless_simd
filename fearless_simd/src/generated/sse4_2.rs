@@ -3144,6 +3144,28 @@ impl Simd for Sse4_2 {
         kernel(self, vectors, dest);
     }
     #[inline(always)]
+    fn mul_q15_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i16x8<Sse4_2>, b: i16x8<Sse4_2>) -> i16x8<Sse4_2> {
+                _mm_mulhrs_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn mul_q15_precise_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i16x8<Sse4_2>, b: i16x8<Sse4_2>) -> i16x8<Sse4_2> {
+                let product = _mm_mulhrs_epi16(a.into(), b.into());
+                _mm_xor_si128(product, _mm_cmpeq_epi16(product, _mm_set1_epi16(i16::MIN)))
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
     fn widen_i16x8(self, a: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
         crate::kernel!(
             #[inline(always)]

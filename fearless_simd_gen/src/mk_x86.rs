@@ -3995,10 +3995,64 @@ impl X86 {
         }
     }
 
+    fn handle_mul_q15(&self, op: Op, vec_ty: &VecType, saturate: bool) -> TokenStream {
+        let bits = vec_ty.n_bits();
+        let set1 = intrinsic_ident("set1", "epi16", bits);
+        let (setup, product) = if *self == Self::Sse2 {
+            // SSE2 lacks `pmulhrsw` (SSSE3), so the product is rebuilt from its two halves.
+            let mullo = intrinsic_ident("mullo", "epi16", bits);
+            let mulhi = intrinsic_ident("mulhi", "epi16", bits);
+            let slli = intrinsic_ident("slli", "epi16", bits);
+            let srli = intrinsic_ident("srli", "epi16", bits);
+            let add = intrinsic_ident("add", "epi16", bits);
+            let and = intrinsic_ident("and", coarse_type(vec_ty), bits);
+            let or = intrinsic_ident("or", coarse_type(vec_ty), bits);
+            (
+                quote! {
+                    let (a, b) = (a.into(), b.into());
+                    let (low, high) = (#mullo(a, b), #mulhi(a, b));
+                    let truncated = #or(#slli::<1>(high), #srli::<15>(low));
+                    let round = #and(#srli::<14>(low), #set1(1));
+                },
+                quote! { #add(truncated, round) },
+            )
+        } else {
+            let mulhrs = intrinsic_ident("mulhrs", "epi16", bits);
+            (quote! {}, quote! { #mulhrs(a.into(), b.into()) })
+        };
+
+        self.kernel_method(op, vec_ty, |token| {
+            if !saturate {
+                return quote! {
+                    #setup
+                    #product.simd_into(#token)
+                };
+            }
+
+            // Both wrap `i16::MIN * i16::MIN` to `i16::MIN`, which no other product rounds to.
+            let saturated = if bits == 512 {
+                let cmpeq = intrinsic_ident("cmpeq", "epi16_mask", bits);
+                let mask_mov = intrinsic_ident("mask_mov", "epi16", bits);
+                quote! { #mask_mov(product, #cmpeq(product, #set1(i16::MIN)), #set1(i16::MAX)) }
+            } else {
+                let cmpeq = intrinsic_ident("cmpeq", "epi16", bits);
+                let xor = intrinsic_ident("xor", coarse_type(vec_ty), bits);
+                quote! { #xor(product, #cmpeq(product, #set1(i16::MIN))) }
+            };
+            quote! {
+                #setup
+                let product = #product;
+                #saturated.simd_into(#token)
+            }
+        })
+    }
+
     pub(crate) fn handle_binary(&self, op: Op, method: &str, vec_ty: &VecType) -> TokenStream {
         match method {
             "saturating_add" => self.handle_saturating_add_sub(op, SaturatingOp::Add, vec_ty),
             "saturating_sub" => self.handle_saturating_add_sub(op, SaturatingOp::Sub, vec_ty),
+            "mul_q15" => self.handle_mul_q15(op, vec_ty, false),
+            "mul_q15_precise" => self.handle_mul_q15(op, vec_ty, true),
             "and" | "or" | "xor" if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask => {
                 let method_sig = op.simd_trait_method_sig(vec_ty);
                 let lane_mask = avx512_mask_lane_bits(vec_ty);

@@ -2081,6 +2081,14 @@ impl Simd for WasmSimd128 {
         crate::transmute::checked_transmute_store::<v128, [i16; 8usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
+    fn mul_q15_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        i16x8_q15mulr_sat(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
+    fn mul_q15_precise_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        i16x8_q15mulr_sat(a.into(), b.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn widen_i16x8(self, a: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
         (
             i32x4_extend_low_i16x8(a.into()).simd_into(self),

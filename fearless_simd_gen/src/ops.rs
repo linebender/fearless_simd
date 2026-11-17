@@ -1895,6 +1895,26 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ));
     }
 
+    if ty.scalar == ScalarType::Int && ty.scalar_bits == 16 {
+        ops.push(Op::new(
+            "mul_q15",
+            OpKind::AssociatedOnly,
+            OpSig::Binary,
+            "Multiply two vectors of Q15 fixed-point numbers element-wise, rounding to nearest.\n\n\
+            A Q15 number `x` represents `x / 32768`. Lane `i` of the result is `(a[i] * b[i] + (1 << 14)) >> 15`, \
+            evaluated without intermediate overflow. The result of `i16::MIN * i16::MIN` is implementation-defined; \
+            see `mul_q15_precise` for a version that saturates it to `i16::MAX`.",
+        ));
+        ops.push(Op::new(
+            "mul_q15_precise",
+            OpKind::AssociatedOnly,
+            OpSig::Binary,
+            "Multiply two vectors of Q15 fixed-point numbers element-wise, rounding to nearest and saturating.\n\n\
+            This operation is the same as `mul_q15`, except that `i16::MIN * i16::MIN` saturates to `i16::MAX`. \
+            It can be slower than `mul_q15`.",
+        ));
+    }
+
     if let Some(target_ty) = ty.widened() {
         let doc = if ty.scalar == ScalarType::Mask {
             "Widen each boolean lane into two masks of the same logical width, preserving its value.\n\nThe first result contains the lower lanes and the second contains the upper lanes. Masks constructed from integer lanes other than 0 or -1 have unspecified behavior."

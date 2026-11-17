@@ -58,6 +58,7 @@ mod min_precise;
 mod mul;
 mod mul_add;
 mod mul_add_precise;
+mod mul_q15;
 mod mul_sub;
 mod mul_sub_precise;
 mod narrow;

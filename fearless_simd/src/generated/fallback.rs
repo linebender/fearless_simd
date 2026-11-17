@@ -9,6 +9,7 @@
     reason = "Generated backends use different subsets of these helpers"
 )]
 use crate::math::FloatExt as _;
+use crate::math::I16Ext as _;
 use crate::math::ScalarExt as _;
 use crate::{Level, arch_types::ArchTypes, prelude::*, seal::Seal};
 use crate::{
@@ -3937,6 +3938,34 @@ impl Simd for Fallback {
             vectors[2usize][7usize],
             vectors[3usize][7usize],
         ];
+    }
+    #[inline(always)]
+    fn mul_q15_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        [
+            i16::mul_q15(a[0usize], b[0usize]),
+            i16::mul_q15(a[1usize], b[1usize]),
+            i16::mul_q15(a[2usize], b[2usize]),
+            i16::mul_q15(a[3usize], b[3usize]),
+            i16::mul_q15(a[4usize], b[4usize]),
+            i16::mul_q15(a[5usize], b[5usize]),
+            i16::mul_q15(a[6usize], b[6usize]),
+            i16::mul_q15(a[7usize], b[7usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn mul_q15_precise_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        [
+            i16::mul_q15(a[0usize], b[0usize]),
+            i16::mul_q15(a[1usize], b[1usize]),
+            i16::mul_q15(a[2usize], b[2usize]),
+            i16::mul_q15(a[3usize], b[3usize]),
+            i16::mul_q15(a[4usize], b[4usize]),
+            i16::mul_q15(a[5usize], b[5usize]),
+            i16::mul_q15(a[6usize], b[6usize]),
+            i16::mul_q15(a[7usize], b[7usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn widen_i16x8(self, a: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {

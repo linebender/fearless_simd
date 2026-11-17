@@ -28,6 +28,19 @@ pub(crate) trait ScalarExt: Copy + PartialOrd {
 
 impl<T: Copy + PartialOrd> ScalarExt for T {}
 
+pub(crate) trait I16Ext {
+    fn mul_q15(self, rhs: Self) -> Self;
+}
+
+impl I16Ext for i16 {
+    #[inline(always)]
+    fn mul_q15(self, rhs: Self) -> Self {
+        let product = (i32::from(self) * i32::from(rhs) + (1 << 14)) >> 15;
+        // Only `i16::MIN * i16::MIN` is out of range, and only above it.
+        Self::try_from(product).unwrap_or(Self::MAX)
+    }
+}
+
 #[cfg(all(feature = "libm", not(feature = "std")))]
 pub(crate) trait FloatExt {
     fn floor(self) -> Self;
