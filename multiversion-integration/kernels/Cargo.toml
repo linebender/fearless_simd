@@ -1,0 +1,14 @@
+[package]
+name = "simd-research-kernels"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[features]
+default = ["std"]
+std = ["simd-research-runtime/std"]
+libm = ["simd-research-runtime/libm"]
+
+[dependencies]
+simd-research-macros = { path = "../macros" }
+simd-research-runtime = { path = "../runtime", default-features = false }
