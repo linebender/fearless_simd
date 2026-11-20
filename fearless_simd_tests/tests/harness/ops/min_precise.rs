@@ -6,6 +6,11 @@ use fearless_simd_dev_macros::simd_test;
 
 // One concrete test row per supported vector type.
 
+const Q_NAN_F32: f32 = f32::NAN;
+const Q_NAN_F64: f64 = f64::NAN;
+const S_NAN_F32: f32 = f32::from_bits(0x7FFF_FFFF);
+const S_NAN_F64: f64 = f64::from_bits(0x7FFF_FFFF_FFFF_FFFF);
+
 #[simd_test]
 fn min_precise_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[2.0, -3.0, 0.0, 0.5]);
@@ -15,8 +20,8 @@ fn min_precise_f32x4<S: Simd>(simd: S) {
 
 #[simd_test]
 fn min_precise_f32x4_with_nan<S: Simd>(simd: S) {
-    let a = f32x4::from_slice(simd, &[f32::NAN, -3.0, f32::INFINITY, 0.5]);
-    let b = f32x4::from_slice(simd, &[1.0, f32::NAN, 7.0, f32::NEG_INFINITY]);
+    let a = f32x4::from_slice(simd, &[Q_NAN_F32, -3.0, f32::INFINITY, 0.5]);
+    let b = f32x4::from_slice(simd, &[1.0, S_NAN_F32, 7.0, f32::NEG_INFINITY]);
     let result = a.min_precise(b);
 
     assert_eq!(result[0], 1.0);
@@ -34,8 +39,8 @@ fn min_precise_f64x2<S: Simd>(simd: S) {
 
 #[simd_test]
 fn min_precise_f64x2_with_nan<S: Simd>(simd: S) {
-    let a = f64x2::from_slice(simd, &[f64::NAN, -3.0]);
-    let b = f64x2::from_slice(simd, &[1.0, f64::NAN]);
+    let a = f64x2::from_slice(simd, &[Q_NAN_F64, -3.0]);
+    let b = f64x2::from_slice(simd, &[1.0, S_NAN_F64]);
     let result = a.min_precise(b);
 
     assert_eq!(result[0], 1.0);
@@ -53,16 +58,25 @@ fn min_precise_f32x8<S: Simd>(simd: S) {
 fn min_precise_f32x8_with_nan<S: Simd>(simd: S) {
     let a = f32x8::from_slice(
         simd,
-        &[f32::NAN, -3.0, f32::INFINITY, 0.5, 1.0, f32::NAN, 3.0, 7.0],
+        &[
+            Q_NAN_F32,
+            -3.0,
+            f32::INFINITY,
+            0.5,
+            1.0,
+            S_NAN_F32,
+            3.0,
+            7.0,
+        ],
     );
     let b = f32x8::from_slice(
         simd,
         &[
             1.0,
-            f32::NAN,
+            Q_NAN_F32,
             7.0,
             f32::NEG_INFINITY,
-            f32::NAN,
+            S_NAN_F32,
             4.0,
             6.0,
             5.0,
@@ -89,8 +103,8 @@ fn min_precise_f64x4<S: Simd>(simd: S) {
 
 #[simd_test]
 fn min_precise_f64x4_with_nan<S: Simd>(simd: S) {
-    let a = f64x4::from_slice(simd, &[f64::NAN, -3.0, f64::INFINITY, 0.5]);
-    let b = f64x4::from_slice(simd, &[1.0, f64::NAN, 7.0, f64::NEG_INFINITY]);
+    let a = f64x4::from_slice(simd, &[Q_NAN_F64, -3.0, f64::INFINITY, 0.5]);
+    let b = f64x4::from_slice(simd, &[1.0, S_NAN_F64, 7.0, f64::NEG_INFINITY]);
     let result = a.min_precise(b);
 
     assert_eq!(result[0], 1.0);
@@ -126,20 +140,20 @@ fn min_precise_f32x16_with_nan<S: Simd>(simd: S) {
     let a = f32x16::from_slice(
         simd,
         &[
-            f32::NAN,
+            Q_NAN_F32,
             -3.0,
             f32::INFINITY,
             0.5,
             1.0,
-            f32::NAN,
+            S_NAN_F32,
             3.0,
             7.0,
-            f32::NAN,
+            Q_NAN_F32,
             -3.0,
             f32::INFINITY,
             0.5,
             1.0,
-            f32::NAN,
+            S_NAN_F32,
             3.0,
             7.0,
         ],
@@ -148,18 +162,18 @@ fn min_precise_f32x16_with_nan<S: Simd>(simd: S) {
         simd,
         &[
             1.0,
-            f32::NAN,
+            Q_NAN_F32,
             7.0,
             f32::NEG_INFINITY,
-            f32::NAN,
+            S_NAN_F32,
             4.0,
             6.0,
             5.0,
             1.0,
-            f32::NAN,
+            Q_NAN_F32,
             7.0,
             f32::NEG_INFINITY,
-            f32::NAN,
+            Q_NAN_F32,
             4.0,
             6.0,
             5.0,
@@ -196,16 +210,25 @@ fn min_precise_f64x8<S: Simd>(simd: S) {
 fn min_precise_f64x8_with_nan<S: Simd>(simd: S) {
     let a = f64x8::from_slice(
         simd,
-        &[f64::NAN, -3.0, f64::INFINITY, 0.5, 1.0, f64::NAN, 3.0, 7.0],
+        &[
+            Q_NAN_F64,
+            -3.0,
+            f64::INFINITY,
+            0.5,
+            1.0,
+            S_NAN_F64,
+            3.0,
+            7.0,
+        ],
     );
     let b = f64x8::from_slice(
         simd,
         &[
             1.0,
-            f64::NAN,
+            Q_NAN_F64,
             7.0,
             f64::NEG_INFINITY,
-            f64::NAN,
+            S_NAN_F64,
             4.0,
             6.0,
             5.0,
