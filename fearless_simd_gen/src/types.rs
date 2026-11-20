@@ -341,3 +341,7 @@ pub(crate) fn type_imports() -> TokenStream {
         use crate::{ #( #imports ),* };
     }
 }
+
+pub(crate) fn simd_mask_types() -> impl Iterator<Item = &'static VecType> {
+    SIMD_TYPES.iter().filter(|ty| ty.scalar == ScalarType::Mask)
+}

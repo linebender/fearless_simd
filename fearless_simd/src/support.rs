@@ -113,12 +113,12 @@ pub(crate) mod compact_128 {
         table
     }
 
-    pub(crate) const COMPRESS_16: [Aligned128<[u8; 16]>; 256] = controls(2, false);
-    pub(crate) const EXPAND_16: [Aligned128<[u8; 16]>; 256] = controls(2, true);
-    pub(crate) const COMPRESS_32: [Aligned128<[u8; 16]>; 16] = controls(4, false);
-    pub(crate) const EXPAND_32: [Aligned128<[u8; 16]>; 16] = controls(4, true);
-    pub(crate) const COMPRESS_64: [Aligned128<[u8; 16]>; 4] = controls(8, false);
-    pub(crate) const EXPAND_64: [Aligned128<[u8; 16]>; 4] = controls(8, true);
+    pub(crate) static COMPRESS_16: [Aligned128<[u8; 16]>; 256] = controls(2, false);
+    pub(crate) static EXPAND_16: [Aligned128<[u8; 16]>; 256] = controls(2, true);
+    pub(crate) static COMPRESS_32: [Aligned128<[u8; 16]>; 16] = controls(4, false);
+    pub(crate) static EXPAND_32: [Aligned128<[u8; 16]>; 16] = controls(4, true);
+    pub(crate) static COMPRESS_64: [Aligned128<[u8; 16]>; 4] = controls(8, false);
+    pub(crate) static EXPAND_64: [Aligned128<[u8; 16]>; 4] = controls(8, true);
 }
 
 /// Dword-permutation controls for whole 32- or 64-bit elements in an AVX2 vector.
@@ -371,36 +371,36 @@ const fn compact_32_stitch_control_table() -> [Compact32StitchControls; 33] {
     dead_code,
     reason = "Used only by SIMD backends with byte-table shuffles"
 )]
-pub(crate) const COMPRESS_8_CONTROLS: [u64; 256] = compact_control_table(false);
+pub(crate) static COMPRESS_8_CONTROLS: [u64; 256] = compact_control_table(false);
 
 /// Eight-byte inverse-shuffle controls indexed by an eight-bit selection mask.
 #[allow(
     dead_code,
     reason = "Used only by SIMD backends with byte-table shuffles"
 )]
-pub(crate) const EXPAND_8_CONTROLS: [u64; 256] = compact_control_table(true);
+pub(crate) static EXPAND_8_CONTROLS: [u64; 256] = compact_control_table(true);
 
 /// Population counts indexed by an eight-bit selection mask.
 #[allow(
     dead_code,
     reason = "Used only by SIMD backends with byte-table shuffles"
 )]
-pub(crate) const COMPACT_8_COUNTS: [u8; 256] = compact_count_table();
+pub(crate) static COMPACT_8_COUNTS: [u8; 256] = compact_count_table();
 
 /// Shuffle controls that splice two independently compacted eight-byte halves.
 #[allow(dead_code, reason = "Used only by x86 byte compression")]
-pub(crate) const COMPACT_8_SPLICE_CONTROLS: [u128; 9] = compact_splice_control_table();
+pub(crate) static COMPACT_8_SPLICE_CONTROLS: [u128; 9] = compact_splice_control_table();
 
 /// Shuffle controls that append a compacted 16-byte high lane after a compacted low lane.
 #[allow(dead_code, reason = "Used only by AVX2 byte compression")]
-pub(crate) const COMPACT_16_SPLICE_CONTROLS: [Aligned256<[u8; 32]>; 17] =
+pub(crate) static COMPACT_16_SPLICE_CONTROLS: [Aligned256<[u8; 32]>; 17] =
     compact_16_splice_control_table();
 
 /// Shuffle controls that concatenate two independently compacted 32-byte vectors.
 #[allow(dead_code, reason = "Used only by AVX2 64-byte compression")]
-pub(crate) const COMPACT_32_STITCH_CONTROLS: [Compact32StitchControls; 33] =
+pub(crate) static COMPACT_32_STITCH_CONTROLS: [Compact32StitchControls; 33] =
     compact_32_stitch_control_table();
 
 /// Byte prefix masks indexed by the number of active lanes.
 #[allow(dead_code, reason = "Used only by x86 byte compression")]
-pub(crate) const COMPACT_PREFIX_MASKS: [Aligned256<[u8; 32]>; 33] = compact_prefix_mask_table();
+pub(crate) static COMPACT_PREFIX_MASKS: [Aligned256<[u8; 32]>; 33] = compact_prefix_mask_table();

@@ -199,6 +199,7 @@ pub(crate) struct Op {
 
 struct SimdTraitSigParts {
     const_params: TokenStream,
+    const_args: TokenStream,
     arg_names: Vec<Ident>,
     arg_tys: Vec<TokenStream>,
     ret: TokenStream,
@@ -261,37 +262,34 @@ impl Op {
     /// Generate a `Simd` trait method that delegates its body to a local `kernel!` function.
     ///
     /// The generated method keeps the trait signature using `Self`, while the local kernel uses
-    /// the concrete SIMD token type required by `kernel!`. Const-generic operations are rejected
-    /// because `kernel!` currently only accepts plain non-generic functions.
+    /// the concrete SIMD token type required by `kernel!`. The method's const parameters are
+    /// forwarded to the kernel.
     pub(crate) fn simd_trait_kernel_method(
         &self,
         level: Ident,
         vec_ty: &VecType,
         body: impl FnOnce(&Ident) -> TokenStream,
     ) -> TokenStream {
-        assert!(
-            !matches!(self.sig, OpSig::Slide { .. } | OpSig::RotateElements { .. }),
-            "kernel! does not support const-generic methods"
-        );
-
         let method_sig = self.simd_trait_method_sig(vec_ty);
         let token = Ident::new("token", Span::call_site());
         let kernel_body = body(&token);
         let sig = self.simd_trait_sig_parts(vec_ty, quote! { #level });
+        let const_params = &sig.const_params;
+        let const_args = &sig.const_args;
         let arg_decls = sig.arg_decls();
         let call_args = &sig.arg_names;
         let ret = &sig.ret;
         let kernel_call = if matches!(self.sig, OpSig::StoreInterleaved { .. }) {
-            quote! { kernel(self #(, #call_args)*); }
+            quote! { kernel #const_args(self #(, #call_args)*); }
         } else {
-            quote! { kernel(self #(, #call_args)*) }
+            quote! { kernel #const_args(self #(, #call_args)*) }
         };
 
         quote! {
             #method_sig {
                 crate::kernel!(
                     #[inline(always)]
-                    fn kernel(#token: #level #(, #arg_decls)*) -> #ret {
+                    fn kernel #const_params(#token: #level #(, #arg_decls)*) -> #ret {
                         #kernel_body
                     }
                 );
@@ -310,10 +308,12 @@ impl Op {
             .map(|n| Ident::new(n, Span::call_site()))
             .collect::<Vec<_>>();
         let vec = quote! { #ty<#simd_ty> };
-        let const_params = match self.sig {
-            OpSig::Slide { .. } => quote! { <const SHIFT: usize> },
-            OpSig::RotateElements { .. } => quote! { <const OFFSET: usize> },
-            _ => TokenStream::new(),
+        let (const_params, const_args) = match self.sig {
+            OpSig::Slide { .. } => (quote! { <const SHIFT: usize> }, quote! { ::<SHIFT> }),
+            OpSig::RotateElements { .. } => {
+                (quote! { <const OFFSET: usize> }, quote! { ::<OFFSET> })
+            }
+            _ => (TokenStream::new(), TokenStream::new()),
         };
 
         let (arg_tys, ret) = match &self.sig {
@@ -443,6 +443,7 @@ impl Op {
 
         SimdTraitSigParts {
             const_params,
+            const_args,
             arg_names,
             arg_tys,
             ret,
@@ -1151,9 +1152,9 @@ const FLOAT_OPS: &[Op] = &[
         "mul_add",
         OpKind::VecTraitMethod,
         OpSig::Ternary,
-        "Compute `({arg0} * {arg1}) + {arg2}` (fused multiply-add) for each element.\n\n\
-        Depending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors.",
-    ),
+        "Compute `({arg0} * {arg1}) + {arg2}` (potentially fused multiply-add) for each element.\n\n\
+        The result may be computed with one or two rounding errors depending on which can be computed faster on the current platform.",
+    ).with_custom_vec_trait_arg_names(&["self", "a", "b"]),
     Op::new(
         "mul_add_precise",
         OpKind::VecTraitMethod,
@@ -1164,27 +1165,31 @@ const FLOAT_OPS: &[Op] = &[
         This function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library \
         and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\n\
         On the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\n\
-        The exact `NaN` payloads as well as signaling `NaN`s are not preserved.",
-    ),
+        The exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n\
+        # Performance\n\n\
+        The following platforms will use a single fused multiply-add instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512.",
+    ).with_custom_vec_trait_arg_names(&["self", "a", "b"]),
     Op::new(
         "mul_sub",
         OpKind::VecTraitMethod,
         OpSig::Ternary,
-        "Compute `({arg0} * {arg1}) - {arg2}` (fused multiply-subtract) for each element.\n\n\
-        Depending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors.",
-    ),
+        "Compute `({arg0} * {arg1}) - {arg2}` (potentially fused multiply-subtract) for each element.\n\n\
+        The result may be computed with one or two rounding errors depending on which can be computed faster on the current platform.",
+    ).with_custom_vec_trait_arg_names(&["self", "a", "b"]),
     Op::new(
         "mul_sub_precise",
         OpKind::VecTraitMethod,
         OpSig::Ternary,
         "Compute `({arg0} * {arg1}) - {arg2}` for each element, with a single rounding at the end.\n\n\
-        The result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.
+        The result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.\n\n\
         # Precision guarantees\n\n\
         This function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library \
         and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\n\
         On the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\n\
-        The exact `NaN` payloads as well as signaling `NaN`s are not preserved.",
-    ),
+        The exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n\
+        # Performance\n\n\
+        The following platforms will use a single fused multiply-subtract instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512.",
+    ).with_custom_vec_trait_arg_names(&["self", "a", "b"]),
     Op::new(
         "floor",
         OpKind::VecTraitMethod,

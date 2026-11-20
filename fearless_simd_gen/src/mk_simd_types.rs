@@ -5,13 +5,13 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
-    generic::{generic_op_name, unrolled_array},
+    generic::{generic_mask_doc, generic_op_name, unrolled_array},
     ops::{
         F32_TO_I32, F32_TO_I32_PRECISE, F32_TO_U32, F32_TO_U32_PRECISE, F64_TO_I64,
         F64_TO_I64_PRECISE, F64_TO_U64, F64_TO_U64_PRECISE, I32_TO_F32, I64_TO_F64, Op, OpSig,
         TyFlavor, U32_TO_F32, U64_TO_F64, base_trait_ops, vec_trait_ops_for,
     },
-    types::{SIMD_TYPES, ScalarType, VecType},
+    types::{SIMD_TYPES, ScalarType, VecType, simd_mask_types},
 };
 
 pub(crate) fn mk_simd_types() -> TokenStream {
@@ -45,6 +45,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
             let splat = Ident::new(&format!("splat_{}", ty.rust_name()), Span::call_site());
             let impl_block = simd_mask_impl(ty);
             let conversions = mask_widen_narrow_impls(ty);
+            let from_impls = mask_from_impls(ty);
             let mask_from_array = format_ident!("{}_from_array", ty.rust_name());
             let mask_to_array = format_ident!("{}_to_array", ty.rust_name());
             result.extend(quote! {
@@ -100,6 +101,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
 
                 #impl_block
                 #conversions
+                #from_impls
             });
             continue;
         }
@@ -451,6 +453,33 @@ fn mask_widen_narrow_impls(ty: &VecType) -> TokenStream {
         }
     });
     quote! { #widen #narrow }
+}
+
+fn mask_from_impls(ty: &VecType) -> TokenStream {
+    let name = ty.rust();
+
+    let mut impls = Vec::new();
+    for from_ty in simd_mask_types().filter(|t| t.len == ty.len) {
+        if from_ty == ty {
+            continue; // skip reflexive
+        }
+
+        let from_name = from_ty.rust();
+        let cast_op = format_ident!("cast_{}_to_{}", from_ty.rust_name(), ty.rust_name());
+        let docs = generic_mask_doc(from_ty, ty);
+
+        impls.push(quote! {
+            impl<S: Simd> From<#from_name<S>> for #name<S> {
+                #docs
+                #[inline(always)]
+                fn from(value: #from_name<S>) -> Self {
+                    value.simd.#cast_op(value)
+                }
+            }
+        });
+    }
+
+    quote! { #(#impls)* }
 }
 
 fn simd_mask_impl(ty: &VecType) -> TokenStream {

@@ -109,6 +109,22 @@ impl Level for X86 {
         Some(self.avx512_mask_array_conversion(vec_ty))
     }
 
+    fn custom_mask_cast(&self, from_ty: &VecType, to_ty: &VecType) -> Option<TokenStream> {
+        if *self != Self::Avx512 {
+            return None;
+        }
+        // AVX512 masks are bitmasks, so masks of the same length are all the same.
+        // This makes mask casts no-ops.
+        assert_eq!(from_ty.len, to_ty.len);
+        let to_name = to_ty.rust();
+        Some(quote! {
+            #to_name {
+                val: from.val,
+                simd: from.simd,
+            }
+        })
+    }
+
     fn token_doc(&self) -> &'static str {
         match self {
             Self::Sse2 => {

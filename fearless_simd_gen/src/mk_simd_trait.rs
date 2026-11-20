@@ -5,7 +5,10 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
-    generic::{byte_swizzle_op, generic_op, generic_op_name, reversed_compare_op},
+    generic::{
+        byte_swizzle_op, generic_mask_cast_body, generic_mask_casts_methods, generic_op,
+        generic_op_name, reversed_compare_op,
+    },
     ops::{
         CoreOpTrait, OpKind, OpSig, TyFlavor, base_trait_ops, ops_for_type, overloaded_ops_for,
         vec_trait_ops_for,
@@ -16,6 +19,7 @@ use crate::{
 pub(crate) fn mk_simd_trait() -> TokenStream {
     let imports = type_imports();
     let mut methods = vec![];
+
     // Float methods
     for vec_ty in SIMD_TYPES {
         for op in ops_for_type(vec_ty) {
@@ -74,6 +78,18 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
             }
         }
     }
+
+    // mask casts
+    let mask_casts = generic_mask_casts_methods(true, |from_ty, to_ty| {
+        Some(generic_mask_cast_body(from_ty, to_ty))
+    });
+    methods.extend(quote! {
+        #(
+            #[inline(always)]
+            #mask_casts
+        )*
+    });
+
     let mut code = quote! {
         use core::fmt::Debug;
         use crate::{seal::Seal, Level, ExtractToken, SimdElement, SimdIntElement, SimdFloatElement, SimdFrom, SimdInto, SimdCvtTruncate, SimdCvtFloat, SimdWiden, SimdIntWiden, SimdNarrow, MaskWiden, MaskNarrow, Select, Bytes};
@@ -487,6 +503,23 @@ fn mk_simd_float() -> TokenStream {
             /// concrete `SimdCvtTruncate` implementations for integer types.
             #[inline(always)]
             fn to_int_precise<T: SimdCvtTruncate<Self>>(self) -> T { T::truncate_from_precise(self) }
+
+            /// Compute the reciprocal of this floating-point value, i.e. `1.0 / self`.
+            ///
+            /// # Example
+            ///
+            /// ```
+            /// # use fearless_simd::*;
+            /// # dispatch!(Level::new(), simd => {
+            /// let x = f32x4::from_slice(simd, &[1.0, 2.0, 4.0, 8.0]);
+            /// assert_eq!(*x.recip(), [1.0, 0.5, 0.25, 0.125]);
+            /// # })
+            /// ```
+            #[inline(always)]
+            fn recip(self) -> Self {
+                let one = Self::Element::from(1_u8);
+                Self::splat(self.token(), one) / self
+            }
 
             #( #methods )*
         }

@@ -383,13 +383,13 @@ pub trait Simd:
     fn interleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>);
-    #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
+    #[doc = "Compute `(a * b) + c` (potentially fused multiply-add) for each element.\n\nThe result may be computed with one or two rounding errors depending on which can be computed faster on the current platform."]
     fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Compute `(a * b) + c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved."]
+    #[doc = "Compute `(a * b) + c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n# Performance\n\nThe following platforms will use a single fused multiply-add instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512."]
     fn mul_add_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
+    #[doc = "Compute `(a * b) - c` (potentially fused multiply-subtract) for each element.\n\nThe result may be computed with one or two rounding errors depending on which can be computed faster on the current platform."]
     fn mul_sub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Compute `(a * b) - c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.\n        # Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved."]
+    #[doc = "Compute `(a * b) - c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n# Performance\n\nThe following platforms will use a single fused multiply-subtract instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512."]
     fn mul_sub_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Return the largest integer less than or equal to each element, that is, round towards negative infinity."]
     fn floor_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
@@ -1890,13 +1890,13 @@ pub trait Simd:
     fn interleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>);
-    #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
+    #[doc = "Compute `(a * b) + c` (potentially fused multiply-add) for each element.\n\nThe result may be computed with one or two rounding errors depending on which can be computed faster on the current platform."]
     fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Compute `(a * b) + c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved."]
+    #[doc = "Compute `(a * b) + c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n# Performance\n\nThe following platforms will use a single fused multiply-add instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512."]
     fn mul_add_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
+    #[doc = "Compute `(a * b) - c` (potentially fused multiply-subtract) for each element.\n\nThe result may be computed with one or two rounding errors depending on which can be computed faster on the current platform."]
     fn mul_sub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Compute `(a * b) - c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.\n        # Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved."]
+    #[doc = "Compute `(a * b) - c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n# Performance\n\nThe following platforms will use a single fused multiply-subtract instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512."]
     fn mul_sub_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Return the largest integer less than or equal to each element, that is, round towards negative infinity."]
     fn floor_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
@@ -2702,7 +2702,7 @@ pub trait Simd:
             self.combine_f32x4(lo_odd, hi_odd),
         )
     }
-    #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
+    #[doc = "Compute `(a * b) + c` (potentially fused multiply-add) for each element.\n\nThe result may be computed with one or two rounding errors depending on which can be computed faster on the current platform."]
     #[inline(always)]
     fn mul_add_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
@@ -2713,7 +2713,7 @@ pub trait Simd:
             self.mul_add_f32x4(a1, b1, c1),
         )
     }
-    #[doc = "Compute `(a * b) + c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved."]
+    #[doc = "Compute `(a * b) + c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n# Performance\n\nThe following platforms will use a single fused multiply-add instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512."]
     #[inline(always)]
     fn mul_add_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
@@ -2724,7 +2724,7 @@ pub trait Simd:
             self.mul_add_precise_f32x4(a1, b1, c1),
         )
     }
-    #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
+    #[doc = "Compute `(a * b) - c` (potentially fused multiply-subtract) for each element.\n\nThe result may be computed with one or two rounding errors depending on which can be computed faster on the current platform."]
     #[inline(always)]
     fn mul_sub_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
@@ -2735,7 +2735,7 @@ pub trait Simd:
             self.mul_sub_f32x4(a1, b1, c1),
         )
     }
-    #[doc = "Compute `(a * b) - c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.\n        # Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved."]
+    #[doc = "Compute `(a * b) - c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n# Performance\n\nThe following platforms will use a single fused multiply-subtract instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512."]
     #[inline(always)]
     fn mul_sub_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
@@ -6219,7 +6219,7 @@ pub trait Simd:
             self.combine_f64x2(lo_odd, hi_odd),
         )
     }
-    #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
+    #[doc = "Compute `(a * b) + c` (potentially fused multiply-add) for each element.\n\nThe result may be computed with one or two rounding errors depending on which can be computed faster on the current platform."]
     #[inline(always)]
     fn mul_add_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
         let (a0, a1) = self.split_f64x4(a);
@@ -6230,7 +6230,7 @@ pub trait Simd:
             self.mul_add_f64x2(a1, b1, c1),
         )
     }
-    #[doc = "Compute `(a * b) + c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved."]
+    #[doc = "Compute `(a * b) + c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n# Performance\n\nThe following platforms will use a single fused multiply-add instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512."]
     #[inline(always)]
     fn mul_add_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
         let (a0, a1) = self.split_f64x4(a);
@@ -6241,7 +6241,7 @@ pub trait Simd:
             self.mul_add_precise_f64x2(a1, b1, c1),
         )
     }
-    #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
+    #[doc = "Compute `(a * b) - c` (potentially fused multiply-subtract) for each element.\n\nThe result may be computed with one or two rounding errors depending on which can be computed faster on the current platform."]
     #[inline(always)]
     fn mul_sub_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
         let (a0, a1) = self.split_f64x4(a);
@@ -6252,7 +6252,7 @@ pub trait Simd:
             self.mul_sub_f64x2(a1, b1, c1),
         )
     }
-    #[doc = "Compute `(a * b) - c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.\n        # Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved."]
+    #[doc = "Compute `(a * b) - c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n# Performance\n\nThe following platforms will use a single fused multiply-subtract instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512."]
     #[inline(always)]
     fn mul_sub_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
         let (a0, a1) = self.split_f64x4(a);
@@ -7652,7 +7652,7 @@ pub trait Simd:
             self.combine_f32x8(lo_odd, hi_odd),
         )
     }
-    #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
+    #[doc = "Compute `(a * b) + c` (potentially fused multiply-add) for each element.\n\nThe result may be computed with one or two rounding errors depending on which can be computed faster on the current platform."]
     #[inline(always)]
     fn mul_add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
@@ -7663,7 +7663,7 @@ pub trait Simd:
             self.mul_add_f32x8(a1, b1, c1),
         )
     }
-    #[doc = "Compute `(a * b) + c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved."]
+    #[doc = "Compute `(a * b) + c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n# Performance\n\nThe following platforms will use a single fused multiply-add instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512."]
     #[inline(always)]
     fn mul_add_precise_f32x16(
         self,
@@ -7679,7 +7679,7 @@ pub trait Simd:
             self.mul_add_precise_f32x8(a1, b1, c1),
         )
     }
-    #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
+    #[doc = "Compute `(a * b) - c` (potentially fused multiply-subtract) for each element.\n\nThe result may be computed with one or two rounding errors depending on which can be computed faster on the current platform."]
     #[inline(always)]
     fn mul_sub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
@@ -7690,7 +7690,7 @@ pub trait Simd:
             self.mul_sub_f32x8(a1, b1, c1),
         )
     }
-    #[doc = "Compute `(a * b) - c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.\n        # Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved."]
+    #[doc = "Compute `(a * b) - c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n# Performance\n\nThe following platforms will use a single fused multiply-subtract instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512."]
     #[inline(always)]
     fn mul_sub_precise_f32x16(
         self,
@@ -11182,7 +11182,7 @@ pub trait Simd:
             self.combine_f64x4(lo_odd, hi_odd),
         )
     }
-    #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
+    #[doc = "Compute `(a * b) + c` (potentially fused multiply-add) for each element.\n\nThe result may be computed with one or two rounding errors depending on which can be computed faster on the current platform."]
     #[inline(always)]
     fn mul_add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_f64x8(a);
@@ -11193,7 +11193,7 @@ pub trait Simd:
             self.mul_add_f64x4(a1, b1, c1),
         )
     }
-    #[doc = "Compute `(a * b) + c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved."]
+    #[doc = "Compute `(a * b) + c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n# Performance\n\nThe following platforms will use a single fused multiply-add instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512."]
     #[inline(always)]
     fn mul_add_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_f64x8(a);
@@ -11204,7 +11204,7 @@ pub trait Simd:
             self.mul_add_precise_f64x4(a1, b1, c1),
         )
     }
-    #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
+    #[doc = "Compute `(a * b) - c` (potentially fused multiply-subtract) for each element.\n\nThe result may be computed with one or two rounding errors depending on which can be computed faster on the current platform."]
     #[inline(always)]
     fn mul_sub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_f64x8(a);
@@ -11215,7 +11215,7 @@ pub trait Simd:
             self.mul_sub_f64x4(a1, b1, c1),
         )
     }
-    #[doc = "Compute `(a * b) - c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.\n        # Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved."]
+    #[doc = "Compute `(a * b) - c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n# Performance\n\nThe following platforms will use a single fused multiply-subtract instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512."]
     #[inline(always)]
     fn mul_sub_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_f64x8(a);
@@ -12282,6 +12282,142 @@ pub trait Simd:
         let (b0, b1) = self.split_mask64x8(b);
         self.combine_mask32x8(self.narrow_mask64x4(a0, a1), self.narrow_mask64x4(b0, b1))
     }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask8x16` to the boolean lanes of `mask16x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask8x16_to_mask16x16(self, from: mask8x16<Self>) -> mask16x16<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.widen_mask8x16(from);
+        let from = self.combine_mask16x8(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask8x16` to the boolean lanes of `mask32x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask8x16_to_mask32x16(self, from: mask8x16<Self>) -> mask32x16<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.widen_mask8x16(from);
+        let from = self.combine_mask16x8(low, high);
+        let (low, high) = self.widen_mask16x16(from);
+        let from = self.combine_mask32x8(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask16x8` to the boolean lanes of `mask32x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask16x8_to_mask32x8(self, from: mask16x8<Self>) -> mask32x8<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.widen_mask16x8(from);
+        let from = self.combine_mask32x4(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask16x8` to the boolean lanes of `mask64x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask16x8_to_mask64x8(self, from: mask16x8<Self>) -> mask64x8<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.widen_mask16x8(from);
+        let from = self.combine_mask32x4(low, high);
+        let (low, high) = self.widen_mask32x8(from);
+        let from = self.combine_mask64x4(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask32x4` to the boolean lanes of `mask64x4`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask32x4_to_mask64x4(self, from: mask32x4<Self>) -> mask64x4<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.widen_mask32x4(from);
+        let from = self.combine_mask64x2(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask8x32` to the boolean lanes of `mask16x32`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask8x32_to_mask16x32(self, from: mask8x32<Self>) -> mask16x32<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.widen_mask8x32(from);
+        let from = self.combine_mask16x16(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask16x16` to the boolean lanes of `mask8x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask16x16_to_mask8x16(self, from: mask16x16<Self>) -> mask8x16<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.split_mask16x16(from);
+        let from = self.narrow_mask16x8(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask16x16` to the boolean lanes of `mask32x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask16x16_to_mask32x16(self, from: mask16x16<Self>) -> mask32x16<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.widen_mask16x16(from);
+        let from = self.combine_mask32x8(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask32x8` to the boolean lanes of `mask16x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask32x8_to_mask16x8(self, from: mask32x8<Self>) -> mask16x8<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.split_mask32x8(from);
+        let from = self.narrow_mask32x4(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask32x8` to the boolean lanes of `mask64x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask32x8_to_mask64x8(self, from: mask32x8<Self>) -> mask64x8<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.widen_mask32x8(from);
+        let from = self.combine_mask64x4(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask64x4` to the boolean lanes of `mask32x4`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask64x4_to_mask32x4(self, from: mask64x4<Self>) -> mask32x4<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.split_mask64x4(from);
+        let from = self.narrow_mask64x2(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask16x32` to the boolean lanes of `mask8x32`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask16x32_to_mask8x32(self, from: mask16x32<Self>) -> mask8x32<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.split_mask16x32(from);
+        let from = self.narrow_mask16x16(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask32x16` to the boolean lanes of `mask8x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask32x16_to_mask8x16(self, from: mask32x16<Self>) -> mask8x16<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.split_mask32x16(from);
+        let from = self.narrow_mask32x8(low, high);
+        let (low, high) = self.split_mask16x16(from);
+        let from = self.narrow_mask16x8(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask32x16` to the boolean lanes of `mask16x16`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask32x16_to_mask16x16(self, from: mask32x16<Self>) -> mask16x16<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.split_mask32x16(from);
+        let from = self.narrow_mask32x8(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask64x8` to the boolean lanes of `mask16x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask64x8_to_mask16x8(self, from: mask64x8<Self>) -> mask16x8<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.split_mask64x8(from);
+        let from = self.narrow_mask64x4(low, high);
+        let (low, high) = self.split_mask32x8(from);
+        let from = self.narrow_mask32x4(low, high);
+        from
+    }
+    #[inline(always)]
+    #[doc = "Convert the boolean lanes of `mask64x8` to the boolean lanes of `mask32x8`.\n\nMasks constructed from integer lanes other than 0 or -1 have unspecified behavior."]
+    fn cast_mask64x8_to_mask32x8(self, from: mask64x8<Self>) -> mask32x8<Self> {
+        #![allow(clippy::let_and_return, reason = "makes code gen easier")]
+        let (low, high) = self.split_mask64x8(from);
+        let from = self.narrow_mask64x4(low, high);
+        from
+    }
 }
 pub(crate) mod arch_types {
     use crate::transmute::SimdPod;
@@ -12967,20 +13103,36 @@ pub trait SimdFloat<S: Simd>:
     fn to_int_precise<T: SimdCvtTruncate<Self>>(self) -> T {
         T::truncate_from_precise(self)
     }
+    #[doc = r" Compute the reciprocal of this floating-point value, i.e. `1.0 / self`."]
+    #[doc = r""]
+    #[doc = r" # Example"]
+    #[doc = r""]
+    #[doc = r" ```"]
+    #[doc = r" # use fearless_simd::*;"]
+    #[doc = r" # dispatch!(Level::new(), simd => {"]
+    #[doc = r" let x = f32x4::from_slice(simd, &[1.0, 2.0, 4.0, 8.0]);"]
+    #[doc = r" assert_eq!(*x.recip(), [1.0, 0.5, 0.25, 0.125]);"]
+    #[doc = r" # })"]
+    #[doc = r" ```"]
+    #[inline(always)]
+    fn recip(self) -> Self {
+        let one = Self::Element::from(1_u8);
+        Self::splat(self.token(), one) / self
+    }
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt(self) -> Self;
     #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
     fn approximate_recip(self) -> Self;
     #[doc = "Return a vector with the magnitude of `self` and the sign of `rhs` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Compute `(self * op1) + op2` (fused multiply-add) for each element.\n\nDepending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
-    fn mul_add(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Compute `(self * op1) + op2` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved."]
-    fn mul_add_precise(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Compute `(self * op1) - op2` (fused multiply-subtract) for each element.\n\nDepending on platform support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
-    fn mul_sub(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Compute `(self * op1) - op2` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.\n        # Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved."]
-    fn mul_sub_precise(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Compute `(self * a) + b` (potentially fused multiply-add) for each element.\n\nThe result may be computed with one or two rounding errors depending on which can be computed faster on the current platform."]
+    fn mul_add(self, a: impl SimdInto<Self, S>, b: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Compute `(self * a) + b` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n# Performance\n\nThe following platforms will use a single fused multiply-add instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512."]
+    fn mul_add_precise(self, a: impl SimdInto<Self, S>, b: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Compute `(self * a) - b` (potentially fused multiply-subtract) for each element.\n\nThe result may be computed with one or two rounding errors depending on which can be computed faster on the current platform."]
+    fn mul_sub(self, a: impl SimdInto<Self, S>, b: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Compute `(self * a) - b` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-minus-subtrahend rounded once to the element type. This may be substantially slower than `mul_sub` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n# Performance\n\nThe following platforms will use a single fused multiply-subtract instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512."]
+    fn mul_sub_precise(self, a: impl SimdInto<Self, S>, b: impl SimdInto<Self, S>) -> Self;
     #[doc = "Return the largest integer less than or equal to each element, that is, round towards negative infinity."]
     fn floor(self) -> Self;
     #[doc = "Return the smallest integer greater than or equal to each element, that is, round towards positive infinity."]
