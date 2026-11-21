@@ -15,6 +15,7 @@ mod as_array;
 mod as_mut_array;
 mod bitcast;
 mod block_splat;
+mod cast_signed_unsigned;
 mod ceil;
 mod clamp;
 mod combine;
