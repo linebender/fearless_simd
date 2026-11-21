@@ -131,39 +131,39 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
         /// ```
         pub trait Simd: ExtractToken<S = Self> + Sized + Clone + Copy + Send + Sync + Debug + Seal + arch_types::ArchTypes + 'static {
             /// A native-width SIMD vector of [`f32`]s.
-            type f32s: SimdFloat<Self, Element = f32, Block = f32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s> + SimdCvtFloat<Self::u32s> + SimdCvtFloat<Self::i32s>
+            type f32s: SimdFloat<Self, Element = f32, Block = f32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s, Bits = Self::u32s> + SimdCvtFloat<Self::u32s> + SimdCvtFloat<Self::i32s>
                 + SimdWiden<Self, Widened = Self::f64s>;
             /// A native-width SIMD vector of [`f64`]s.
-            type f64s: SimdFloat<Self, Element = f64, Block = f64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>
+            type f64s: SimdFloat<Self, Element = f64, Block = f64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s, Bits = Self::u64s>
                 + SimdCvtFloat<Self::u64s> + SimdCvtFloat<Self::i64s>
                 + SimdNarrow<Self, Narrowed = Self::f32s>;
             /// A native-width SIMD vector of [`u8`]s.
-            type u8s: SimdInt<Self, Element = u8, Block = u8x16<Self>, Mask = Self::mask8s, ByteVector = Self::u8s>
+            type u8s: SimdInt<Self, Element = u8, Block = u8x16<Self>, Mask = Self::mask8s, ByteVector = Self::u8s, Unsigned = Self::u8s, Signed = Self::i8s>
                 + SimdIntWiden<Self, Widened = Self::u16s>;
             /// A native-width SIMD vector of [`i8`]s.
-            type i8s: SimdInt<Self, Element = i8, Block = i8x16<Self>, Mask = Self::mask8s, ByteVector = Self::u8s>
+            type i8s: SimdInt<Self, Element = i8, Block = i8x16<Self>, Mask = Self::mask8s, ByteVector = Self::u8s, Unsigned = Self::u8s, Signed = Self::i8s>
                 + SimdIntWiden<Self, Widened = Self::i16s> + core::ops::Neg<Output = Self::i8s>;
             /// A native-width SIMD vector of [`u16`]s.
-            type u16s: SimdInt<Self, Element = u16, Block = u16x8<Self>, Mask = Self::mask16s, ByteVector = Self::u8s>
+            type u16s: SimdInt<Self, Element = u16, Block = u16x8<Self>, Mask = Self::mask16s, ByteVector = Self::u8s, Unsigned = Self::u16s, Signed = Self::i16s>
                 + SimdNarrow<Self, Narrowed = Self::u8s> + SimdIntWiden<Self, Widened = Self::u32s>;
             /// A native-width SIMD vector of [`i16`]s.
-            type i16s: SimdInt<Self, Element = i16, Block = i16x8<Self>, Mask = Self::mask16s, ByteVector = Self::u8s>
+            type i16s: SimdInt<Self, Element = i16, Block = i16x8<Self>, Mask = Self::mask16s, ByteVector = Self::u8s, Unsigned = Self::u16s, Signed = Self::i16s>
                 + SimdNarrow<Self, Narrowed = Self::i8s> + SimdIntWiden<Self, Widened = Self::i32s>
                 + core::ops::Neg<Output = Self::i16s>;
             /// A native-width SIMD vector of [`u32`]s.
-            type u32s: SimdInt<Self, Element = u32, Block = u32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s>
+            type u32s: SimdInt<Self, Element = u32, Block = u32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s, Unsigned = Self::u32s, Signed = Self::i32s>
                 + SimdCvtTruncate<Self::f32s> + SimdNarrow<Self, Narrowed = Self::u16s>
                 + SimdIntWiden<Self, Widened = Self::u64s>;
             /// A native-width SIMD vector of [`i32`]s.
-            type i32s: SimdInt<Self, Element = i32, Block = i32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s> + SimdCvtTruncate<Self::f32s>
+            type i32s: SimdInt<Self, Element = i32, Block = i32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s, Unsigned = Self::u32s, Signed = Self::i32s> + SimdCvtTruncate<Self::f32s>
                 + SimdNarrow<Self, Narrowed = Self::i16s> + SimdIntWiden<Self, Widened = Self::i64s>
                 + core::ops::Neg<Output = Self::i32s>;
             /// A native-width SIMD vector of [`u64`]s.
-            type u64s: SimdInt<Self, Element = u64, Block = u64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>
+            type u64s: SimdInt<Self, Element = u64, Block = u64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s, Unsigned = Self::u64s, Signed = Self::i64s>
                 + SimdCvtTruncate<Self::f64s>
                 + SimdNarrow<Self, Narrowed = Self::u32s>;
             /// A native-width SIMD vector of [`i64`]s.
-            type i64s: SimdInt<Self, Element = i64, Block = i64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>
+            type i64s: SimdInt<Self, Element = i64, Block = i64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s, Unsigned = Self::u64s, Signed = Self::i64s>
                 + SimdCvtTruncate<Self::f64s>
                 + SimdNarrow<Self, Narrowed = Self::i32s>
                 + core::ops::Neg<Output = Self::i64s>;
@@ -473,7 +473,7 @@ fn mk_simd_float() -> TokenStream {
             #(+ #op_traits)*
         {
             /// Bit representation of this SIMD float vector type.
-            type Bits: SimdInt<S, Element = <Self::Element as SimdFloatElement>::Bits, ByteVector = Self::ByteVector>;
+            type Bits: SimdInt<S, Element = <Self::Element as SimdFloatElement>::Bits, ByteVector = Self::ByteVector, Mask = Self::Mask, Unsigned = Self::Bits>;
             /// Raw transmutation to an unsigned integer vector type with the same size and number of elements.
             ///
             /// This is analogous to [`f32::to_bits`] and [`f64::to_bits`].
@@ -545,11 +545,25 @@ fn mk_simd_int() -> TokenStream {
             /// Corresponding unsigned integer SIMD vector type. E.g. `u8x16` for `i8x16`.
             ///
             /// This type is `Self` if the SIMD vector is already unsigned.
-            type Unsigned: SimdInt<S, Element = <Self::Element as SimdIntElement>::Unsigned, ByteVector = Self::ByteVector>;
+            type Unsigned: SimdInt<
+                S,
+                Element = <Self::Element as SimdIntElement>::Unsigned,
+                ByteVector = Self::ByteVector,
+                Unsigned = Self::Unsigned,
+                Signed = Self::Signed,
+                Mask = Self::Mask,
+            >;
             /// Corresponding signed integer SIMD vector type. E.g. `i8x16` for `u8x16`.
             ///
             /// This type is `Self` if the SIMD vector is already signed.
-            type Signed: SimdInt<S, Element = <Self::Element as SimdIntElement>::Signed, ByteVector = Self::ByteVector>;
+            type Signed: SimdInt<
+                S,
+                Element = <Self::Element as SimdIntElement>::Signed,
+                ByteVector = Self::ByteVector,
+                Unsigned = Self::Unsigned,
+                Signed = Self::Signed,
+                Mask = Self::Mask,
+            >;
 
             /// Reinterpret this integer SIMD vector as its corresponding signed type.
             #[inline(always)]

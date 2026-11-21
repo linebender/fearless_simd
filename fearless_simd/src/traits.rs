@@ -333,16 +333,21 @@ pub trait SimdIntElement:
     ///
     /// Its lane count depends on both the scalar type and the backend, and is
     /// available as `T::Native::<S>::LEN` with [`SimdBase`] in scope.
-    type Native<S: Simd>: SimdInt<S, Element = Self>;
+    type Native<S: Simd>: SimdInt<
+            S,
+            Element = Self,
+            Unsigned = <Self::Unsigned as SimdIntElement>::Native<S>,
+            Signed = <Self::Signed as SimdIntElement>::Native<S>,
+        >;
 
     /// The corresponding unsigned integer type for this signed integer type. E.g. `u8` for `i8`.
     ///
     /// If `Self` is already unsigned, this type will also be `Self`.
-    type Unsigned: SimdIntElement;
+    type Unsigned: SimdIntElement<Mask = Self::Mask, Unsigned = Self::Unsigned, Signed = Self::Signed>;
     /// The corresponding signed integer type for this unsigned integer type. E.g. `i8` for `u8`.
     ///
     /// If `Self` is already signed, this type will also be `Self`.
-    type Signed: SimdIntElement;
+    type Signed: SimdIntElement<Mask = Self::Mask, Unsigned = Self::Unsigned, Signed = Self::Signed>;
 }
 
 impl SimdIntElement for u8 {

@@ -69,6 +69,7 @@ pub trait Simd:
             Block = f32x4<Self>,
             Mask = Self::mask32s,
             ByteVector = Self::u8s,
+            Bits = Self::u32s,
         > + SimdCvtFloat<Self::u32s>
         + SimdCvtFloat<Self::i32s>
         + SimdWiden<Self, Widened = Self::f64s>;
@@ -79,6 +80,7 @@ pub trait Simd:
             Block = f64x2<Self>,
             Mask = Self::mask64s,
             ByteVector = Self::u8s,
+            Bits = Self::u64s,
         > + SimdCvtFloat<Self::u64s>
         + SimdCvtFloat<Self::i64s>
         + SimdNarrow<Self, Narrowed = Self::f32s>;
@@ -89,6 +91,8 @@ pub trait Simd:
             Block = u8x16<Self>,
             Mask = Self::mask8s,
             ByteVector = Self::u8s,
+            Unsigned = Self::u8s,
+            Signed = Self::i8s,
         > + SimdIntWiden<Self, Widened = Self::u16s>;
     #[doc = r" A native-width SIMD vector of [`i8`]s."]
     type i8s: SimdInt<
@@ -97,6 +101,8 @@ pub trait Simd:
             Block = i8x16<Self>,
             Mask = Self::mask8s,
             ByteVector = Self::u8s,
+            Unsigned = Self::u8s,
+            Signed = Self::i8s,
         > + SimdIntWiden<Self, Widened = Self::i16s>
         + core::ops::Neg<Output = Self::i8s>;
     #[doc = r" A native-width SIMD vector of [`u16`]s."]
@@ -106,6 +112,8 @@ pub trait Simd:
             Block = u16x8<Self>,
             Mask = Self::mask16s,
             ByteVector = Self::u8s,
+            Unsigned = Self::u16s,
+            Signed = Self::i16s,
         > + SimdNarrow<Self, Narrowed = Self::u8s>
         + SimdIntWiden<Self, Widened = Self::u32s>;
     #[doc = r" A native-width SIMD vector of [`i16`]s."]
@@ -115,6 +123,8 @@ pub trait Simd:
             Block = i16x8<Self>,
             Mask = Self::mask16s,
             ByteVector = Self::u8s,
+            Unsigned = Self::u16s,
+            Signed = Self::i16s,
         > + SimdNarrow<Self, Narrowed = Self::i8s>
         + SimdIntWiden<Self, Widened = Self::i32s>
         + core::ops::Neg<Output = Self::i16s>;
@@ -125,6 +135,8 @@ pub trait Simd:
             Block = u32x4<Self>,
             Mask = Self::mask32s,
             ByteVector = Self::u8s,
+            Unsigned = Self::u32s,
+            Signed = Self::i32s,
         > + SimdCvtTruncate<Self::f32s>
         + SimdNarrow<Self, Narrowed = Self::u16s>
         + SimdIntWiden<Self, Widened = Self::u64s>;
@@ -135,6 +147,8 @@ pub trait Simd:
             Block = i32x4<Self>,
             Mask = Self::mask32s,
             ByteVector = Self::u8s,
+            Unsigned = Self::u32s,
+            Signed = Self::i32s,
         > + SimdCvtTruncate<Self::f32s>
         + SimdNarrow<Self, Narrowed = Self::i16s>
         + SimdIntWiden<Self, Widened = Self::i64s>
@@ -146,6 +160,8 @@ pub trait Simd:
             Block = u64x2<Self>,
             Mask = Self::mask64s,
             ByteVector = Self::u8s,
+            Unsigned = Self::u64s,
+            Signed = Self::i64s,
         > + SimdCvtTruncate<Self::f64s>
         + SimdNarrow<Self, Narrowed = Self::u32s>;
     #[doc = r" A native-width SIMD vector of [`i64`]s."]
@@ -155,6 +171,8 @@ pub trait Simd:
             Block = i64x2<Self>,
             Mask = Self::mask64s,
             ByteVector = Self::u8s,
+            Unsigned = Self::u64s,
+            Signed = Self::i64s,
         > + SimdCvtTruncate<Self::f64s>
         + SimdNarrow<Self, Narrowed = Self::i32s>
         + core::ops::Neg<Output = Self::i64s>;
@@ -13067,6 +13085,8 @@ pub trait SimdFloat<S: Simd>:
             S,
             Element = <Self::Element as SimdFloatElement>::Bits,
             ByteVector = Self::ByteVector,
+            Mask = Self::Mask,
+            Unsigned = Self::Bits,
         >;
     #[doc = r" Raw transmutation to an unsigned integer vector type with the same size and number of elements."]
     #[doc = r""]
@@ -13197,6 +13217,9 @@ pub trait SimdInt<S: Simd>:
             S,
             Element = <Self::Element as SimdIntElement>::Unsigned,
             ByteVector = Self::ByteVector,
+            Unsigned = Self::Unsigned,
+            Signed = Self::Signed,
+            Mask = Self::Mask,
         >;
     #[doc = r" Corresponding signed integer SIMD vector type. E.g. `i8x16` for `u8x16`."]
     #[doc = r""]
@@ -13205,6 +13228,9 @@ pub trait SimdInt<S: Simd>:
             S,
             Element = <Self::Element as SimdIntElement>::Signed,
             ByteVector = Self::ByteVector,
+            Unsigned = Self::Unsigned,
+            Signed = Self::Signed,
+            Mask = Self::Mask,
         >;
     #[doc = r" Reinterpret this integer SIMD vector as its corresponding signed type."]
     #[inline(always)]

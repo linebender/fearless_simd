@@ -90,6 +90,18 @@ fn generic_float_bits_operations<S: Simd, F: SimdFloat<S, Element = f32>>(x: F) 
     F::from_bits(bits & ABS_MASK)
 }
 
+fn generic_int_signed_cast_roundtrip<S: Simd, T: SimdInt<S>>(x: T) -> T::Signed {
+    x.cast_unsigned().cast_signed()
+}
+fn generic_int_signed_cast_idempotent<S: Simd, T: SimdInt<S>>(x: T::Unsigned) -> T::Unsigned {
+    x.cast_unsigned()
+}
+fn generic_int_signed_cast_native_i32_to_u32<S: Simd>(
+    x: <i32 as SimdIntElement>::Native<S>,
+) -> <u32 as SimdIntElement>::Native<S> {
+    x.cast_unsigned()
+}
+
 // Ensure that a generic vector's mask can select between vectors of that type
 fn generic_select<S: Simd, V: SimdBase<S>>(mask: V::Mask, if_true: V, if_false: V) -> V {
     mask.select(if_true, if_false)
