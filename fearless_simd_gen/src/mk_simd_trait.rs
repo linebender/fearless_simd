@@ -7,7 +7,7 @@ use quote::{format_ident, quote};
 use crate::{
     generic::{
         byte_swizzle_op, generic_mask_cast_body, generic_mask_casts_methods, generic_op,
-        generic_op_name, reversed_compare_op,
+        generic_op_name, reversed_compare_op, trait_default_op,
     },
     ops::{
         CoreOpTrait, OpKind, OpSig, TyFlavor, base_trait_ops, ops_for_type, overloaded_ops_for,
@@ -55,6 +55,13 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
                     #method
                 });
             } else if let Some(method) = reversed_compare_op(&op, vec_ty) {
+                methods.extend(quote! {
+                    #[doc = #doc]
+                    #doc_alias
+                    #[inline(always)]
+                    #method
+                });
+            } else if let Some(method) = trait_default_op(&op, vec_ty) {
                 methods.extend(quote! {
                     #[doc = #doc]
                     #doc_alias

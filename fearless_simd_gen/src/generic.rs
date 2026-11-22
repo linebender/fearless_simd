@@ -338,6 +338,16 @@ pub(crate) fn pairwise_dot_product_method(op: Op, ty: &VecType) -> TokenStream {
     }
 }
 
+/// Implementations that can be shared by every backend in the `Simd` trait.
+///
+/// These operations are expressed in terms of other `Simd` methods rather than
+/// platform intrinsics, so generating a copy in each backend only adds work for
+/// the compiler. Backends that have a faster platform-specific formulation
+/// override the trait default via [`crate::level::Level::overrides_trait_default`].
+pub(crate) fn trait_default_op(_op: &Op, _vec_ty: &VecType) -> Option<TokenStream> {
+    None
+}
+
 /// Generic operation implementations.
 ///
 /// Most operations are implemented using split/combine, while some forward to

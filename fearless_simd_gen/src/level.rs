@@ -5,7 +5,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
-    generic::{generic_mask_casts_methods, generic_op},
+    generic::{generic_mask_casts_methods, generic_op, trait_default_op},
     ops::{Op, ops_for_type},
     types::{SIMD_TYPES, ScalarType, VecType, type_imports},
 };
@@ -60,6 +60,12 @@ pub(crate) trait Level {
     /// Determine whether an operation should defer to the generic split/combine implementation.
     fn should_use_generic_op(&self, op: &Op, vec_ty: &VecType) -> bool {
         op.sig.should_use_generic_op(vec_ty, self.native_width())
+    }
+
+    /// Whether this backend has a faster implementation than the shared `Simd`
+    /// trait default for this operation.
+    fn overrides_trait_default(&self, _op: &Op, _vec_ty: &VecType) -> bool {
+        false
     }
 
     /// Whether this backend overrides equality-mask inversion with native inequality.
@@ -166,6 +172,8 @@ pub(crate) trait Level {
                     || op.method == "simd_ne"
                     || op.sig.should_route_swizzle_through_bytes(vec_ty)
                     || op.reversed_compare_method().is_some()
+                    || (trait_default_op(&op, vec_ty).is_some()
+                        && !self.overrides_trait_default(&op, vec_ty))
                     || self.should_use_generic_op(&op, vec_ty)
                 {
                     continue;
