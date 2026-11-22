@@ -558,18 +558,6 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
                 self.simd.#set_op(self, index, value);
             }
 
-            #[inline(always)]
-            fn from_slice(simd: S, slice: &[#scalar]) -> Self {
-                let slice: &[#scalar; #len] = slice.try_into().unwrap();
-                Self::simd_from(simd, *slice)
-            }
-
-            #[inline(always)]
-            fn store_slice(&self, slice: &mut [#scalar]) {
-                let slice: &mut [#scalar; #len] = slice.try_into().unwrap();
-                *slice = (*self).into();
-            }
-
             #( #methods )*
         }
     }
@@ -581,7 +569,6 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let byte_vector = ty.bytes_ty().rust();
     let len = Literal::usize_unsuffixed(ty.len);
     let from_fn_items = unrolled_array(ty.len, |idx| quote! { f(#idx) });
-    let splat = generic_op_name("splat", ty);
     let mut base_methods = vec![];
     for op in base_trait_ops() {
         let Op { sig, method, .. } = op;
@@ -657,31 +644,6 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
             type Mask = #mask_ty<S>;
             type Block = #block_ty<S>;
             type Array = [#scalar; #len];
-
-            #[inline(always)]
-            fn as_slice(&self) -> &[#scalar] {
-                self.as_array().as_slice()
-            }
-
-            #[inline(always)]
-            fn as_mut_slice(&mut self) -> &mut [#scalar] {
-                self.as_mut_array().as_mut_slice()
-            }
-
-            #[inline(always)]
-            fn from_slice(simd: S, slice: &[#scalar]) -> Self {
-                Self::load_array_ref(simd, slice.try_into().unwrap())
-            }
-
-            #[inline(always)]
-            fn store_slice(&self, slice: &mut [#scalar]) {
-                (*self).store_array(slice.try_into().unwrap());
-            }
-
-            #[inline(always)]
-            fn splat(simd: S, val: #scalar) -> Self {
-                simd.#splat(val)
-            }
 
             #[inline(always)]
             fn block_splat(block: Self::Block) -> Self {

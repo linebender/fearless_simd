@@ -14042,17 +14042,30 @@ pub trait SimdBase<S: Simd>:
         + IntoIterator<Item = Self::Element>
         + AsRef<[Self::Element]>
         + AsMut<[Self::Element]>
+        + for<'a> TryFrom<&'a [Self::Element]>
         + From<Self>;
-    fn as_slice(&self) -> &[Self::Element];
-    fn as_mut_slice(&mut self) -> &mut [Self::Element];
+    #[inline(always)]
+    fn as_slice(&self) -> &[Self::Element] {
+        self.as_array().as_ref()
+    }
+    #[inline(always)]
+    fn as_mut_slice(&mut self) -> &mut [Self::Element] {
+        self.as_mut_array().as_mut()
+    }
     #[doc = r" Create a SIMD vector from a slice."]
     #[doc = r""]
     #[doc = r" The slice must be exactly the size of the SIMD vector."]
-    fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        Self::load_array(simd, slice.try_into().unwrap_or_else(|_| unreachable!()))
+    }
     #[doc = r" Store a SIMD vector into a slice."]
     #[doc = r""]
     #[doc = r" The slice must be exactly the size of the SIMD vector."]
-    fn store_slice(&self, slice: &mut [Self::Element]);
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        slice.copy_from_slice(self.as_array().as_ref());
+    }
     #[doc = r" Create a SIMD vector from its corresponding lane array."]
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
@@ -14388,7 +14401,10 @@ pub trait SimdBase<S: Simd>:
     #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
     fn abs(self) -> Self;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat(simd: S, val: Self::Element) -> Self;
+    #[inline(always)]
+    fn splat(simd: S, val: Self::Element) -> Self {
+        Self::simd_from(simd, val)
+    }
     #[doc = "Reverse the order of the vector's elements."]
     fn reverse(self) -> Self;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
@@ -14692,11 +14708,17 @@ pub trait SimdMask<S: Simd>:
     #[doc = r" Create a SIMD mask from signed integer mask lanes."]
     #[doc = r""]
     #[doc = r" The slice must be exactly the size of the SIMD mask."]
-    fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        Self::from_vector(Self::Ints::from_slice(simd, slice))
+    }
     #[doc = r" Store this SIMD mask as signed integer mask lanes."]
     #[doc = r""]
     #[doc = r" The slice must be exactly the size of the SIMD mask."]
-    fn store_slice(&self, slice: &mut [Self::Element]);
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        self.to_vector().store_slice(slice);
+    }
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_left<const OFFSET: usize>(self) -> Self;
     #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]

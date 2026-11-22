@@ -106,26 +106,6 @@ impl<S: Simd> SimdBase<S> for f32x4<S> {
     type Block = f32x4<S>;
     type Array = [f32; 4];
     #[inline(always)]
-    fn as_slice(&self) -> &[f32] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [f32] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[f32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [f32]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: f32) -> Self {
-        simd.splat_f32x4(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block
     }
@@ -535,26 +515,6 @@ impl<S: Simd> SimdBase<S> for i8x16<S> {
     type Block = i8x16<S>;
     type Array = [i8; 16];
     #[inline(always)]
-    fn as_slice(&self) -> &[i8] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i8] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i8]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i8]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: i8) -> Self {
-        simd.splat_i8x16(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block
     }
@@ -922,26 +882,6 @@ impl<S: Simd> SimdBase<S> for u8x16<S> {
     type Block = u8x16<S>;
     type Array = [u8; 16];
     #[inline(always)]
-    fn as_slice(&self) -> &[u8] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [u8] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u8]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u8]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: u8) -> Self {
-        simd.splat_u8x16(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block
     }
@@ -1287,16 +1227,6 @@ impl<S: Simd> SimdMask<S> for mask8x16<S> {
         self.simd.set_mask8x16(self, index, value);
     }
     #[inline(always)]
-    fn from_slice(simd: S, slice: &[i8]) -> Self {
-        let slice: &[i8; 16] = slice.try_into().unwrap();
-        Self::simd_from(simd, *slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i8]) {
-        let slice: &mut [i8; 16] = slice.try_into().unwrap();
-        *slice = (*self).into();
-    }
-    #[inline(always)]
     fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
         self.simd.rotate_elements_left_mask8x16::<OFFSET>(self)
     }
@@ -1451,26 +1381,6 @@ impl<S: Simd> SimdBase<S> for i16x8<S> {
     type Mask = mask16x8<S>;
     type Block = i16x8<S>;
     type Array = [i16; 8];
-    #[inline(always)]
-    fn as_slice(&self) -> &[i16] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i16] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i16]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i16]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: i16) -> Self {
-        simd.splat_i16x8(val)
-    }
     #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block
@@ -1846,26 +1756,6 @@ impl<S: Simd> SimdBase<S> for u16x8<S> {
     type Block = u16x8<S>;
     type Array = [u16; 8];
     #[inline(always)]
-    fn as_slice(&self) -> &[u16] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [u16] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u16]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u16]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: u16) -> Self {
-        simd.splat_u16x8(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block
     }
@@ -2218,16 +2108,6 @@ impl<S: Simd> SimdMask<S> for mask16x8<S> {
         self.simd.set_mask16x8(self, index, value);
     }
     #[inline(always)]
-    fn from_slice(simd: S, slice: &[i16]) -> Self {
-        let slice: &[i16; 8] = slice.try_into().unwrap();
-        Self::simd_from(simd, *slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i16]) {
-        let slice: &mut [i16; 8] = slice.try_into().unwrap();
-        *slice = (*self).into();
-    }
-    #[inline(always)]
     fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
         self.simd.rotate_elements_left_mask16x8::<OFFSET>(self)
     }
@@ -2389,26 +2269,6 @@ impl<S: Simd> SimdBase<S> for i32x4<S> {
     type Mask = mask32x4<S>;
     type Block = i32x4<S>;
     type Array = [i32; 4];
-    #[inline(always)]
-    fn as_slice(&self) -> &[i32] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i32] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i32]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: i32) -> Self {
-        simd.splat_i32x4(val)
-    }
     #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block
@@ -2784,26 +2644,6 @@ impl<S: Simd> SimdBase<S> for u32x4<S> {
     type Block = u32x4<S>;
     type Array = [u32; 4];
     #[inline(always)]
-    fn as_slice(&self) -> &[u32] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [u32] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u32]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: u32) -> Self {
-        simd.splat_u32x4(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block
     }
@@ -3156,16 +2996,6 @@ impl<S: Simd> SimdMask<S> for mask32x4<S> {
         self.simd.set_mask32x4(self, index, value);
     }
     #[inline(always)]
-    fn from_slice(simd: S, slice: &[i32]) -> Self {
-        let slice: &[i32; 4] = slice.try_into().unwrap();
-        Self::simd_from(simd, *slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i32]) {
-        let slice: &mut [i32; 4] = slice.try_into().unwrap();
-        *slice = (*self).into();
-    }
-    #[inline(always)]
     fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
         self.simd.rotate_elements_left_mask32x4::<OFFSET>(self)
     }
@@ -3320,26 +3150,6 @@ impl<S: Simd> SimdBase<S> for f64x2<S> {
     type Mask = mask64x2<S>;
     type Block = f64x2<S>;
     type Array = [f64; 2];
-    #[inline(always)]
-    fn as_slice(&self) -> &[f64] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [f64] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[f64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [f64]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: f64) -> Self {
-        simd.splat_f64x2(val)
-    }
     #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block
@@ -3758,26 +3568,6 @@ impl<S: Simd> SimdBase<S> for i64x2<S> {
     type Block = i64x2<S>;
     type Array = [i64; 2];
     #[inline(always)]
-    fn as_slice(&self) -> &[i64] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i64] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i64]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: i64) -> Self {
-        simd.splat_i64x2(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block
     }
@@ -4126,26 +3916,6 @@ impl<S: Simd> SimdBase<S> for u64x2<S> {
     type Block = u64x2<S>;
     type Array = [u64; 2];
     #[inline(always)]
-    fn as_slice(&self) -> &[u64] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [u64] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u64]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: u64) -> Self {
-        simd.splat_u64x2(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block
     }
@@ -4472,16 +4242,6 @@ impl<S: Simd> SimdMask<S> for mask64x2<S> {
         self.simd.set_mask64x2(self, index, value);
     }
     #[inline(always)]
-    fn from_slice(simd: S, slice: &[i64]) -> Self {
-        let slice: &[i64; 2] = slice.try_into().unwrap();
-        Self::simd_from(simd, *slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i64]) {
-        let slice: &mut [i64; 2] = slice.try_into().unwrap();
-        *slice = (*self).into();
-    }
-    #[inline(always)]
     fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
         self.simd.rotate_elements_left_mask64x2::<OFFSET>(self)
     }
@@ -4622,26 +4382,6 @@ impl<S: Simd> SimdBase<S> for f32x8<S> {
     type Mask = mask32x8<S>;
     type Block = f32x4<S>;
     type Array = [f32; 8];
-    #[inline(always)]
-    fn as_slice(&self) -> &[f32] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [f32] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[f32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [f32]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: f32) -> Self {
-        simd.splat_f32x8(val)
-    }
     #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block.simd.combine_f32x4(block, block)
@@ -5059,26 +4799,6 @@ impl<S: Simd> SimdBase<S> for i8x32<S> {
     type Block = i8x16<S>;
     type Array = [i8; 32];
     #[inline(always)]
-    fn as_slice(&self) -> &[i8] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i8] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i8]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i8]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: i8) -> Self {
-        simd.splat_i8x32(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block.simd.combine_i8x16(block, block)
     }
@@ -5457,26 +5177,6 @@ impl<S: Simd> SimdBase<S> for u8x32<S> {
     type Block = u8x16<S>;
     type Array = [u8; 32];
     #[inline(always)]
-    fn as_slice(&self) -> &[u8] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [u8] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u8]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u8]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: u8) -> Self {
-        simd.splat_u8x32(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block.simd.combine_u8x16(block, block)
     }
@@ -5833,16 +5533,6 @@ impl<S: Simd> SimdMask<S> for mask8x32<S> {
         self.simd.set_mask8x32(self, index, value);
     }
     #[inline(always)]
-    fn from_slice(simd: S, slice: &[i8]) -> Self {
-        let slice: &[i8; 32] = slice.try_into().unwrap();
-        Self::simd_from(simd, *slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i8]) {
-        let slice: &mut [i8; 32] = slice.try_into().unwrap();
-        *slice = (*self).into();
-    }
-    #[inline(always)]
     fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
         self.simd.rotate_elements_left_mask8x32::<OFFSET>(self)
     }
@@ -5990,26 +5680,6 @@ impl<S: Simd> SimdBase<S> for i16x16<S> {
     type Mask = mask16x16<S>;
     type Block = i16x8<S>;
     type Array = [i16; 16];
-    #[inline(always)]
-    fn as_slice(&self) -> &[i16] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i16] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i16]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i16]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: i16) -> Self {
-        simd.splat_i16x16(val)
-    }
     #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block.simd.combine_i16x8(block, block)
@@ -6391,26 +6061,6 @@ impl<S: Simd> SimdBase<S> for u16x16<S> {
     type Block = u16x8<S>;
     type Array = [u16; 16];
     #[inline(always)]
-    fn as_slice(&self) -> &[u16] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [u16] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u16]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u16]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: u16) -> Self {
-        simd.splat_u16x16(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block.simd.combine_u16x8(block, block)
     }
@@ -6769,16 +6419,6 @@ impl<S: Simd> SimdMask<S> for mask16x16<S> {
         self.simd.set_mask16x16(self, index, value);
     }
     #[inline(always)]
-    fn from_slice(simd: S, slice: &[i16]) -> Self {
-        let slice: &[i16; 16] = slice.try_into().unwrap();
-        Self::simd_from(simd, *slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i16]) {
-        let slice: &mut [i16; 16] = slice.try_into().unwrap();
-        *slice = (*self).into();
-    }
-    #[inline(always)]
     fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
         self.simd.rotate_elements_left_mask16x16::<OFFSET>(self)
     }
@@ -6940,26 +6580,6 @@ impl<S: Simd> SimdBase<S> for i32x8<S> {
     type Mask = mask32x8<S>;
     type Block = i32x4<S>;
     type Array = [i32; 8];
-    #[inline(always)]
-    fn as_slice(&self) -> &[i32] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i32] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i32]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: i32) -> Self {
-        simd.splat_i32x8(val)
-    }
     #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block.simd.combine_i32x4(block, block)
@@ -7342,26 +6962,6 @@ impl<S: Simd> SimdBase<S> for u32x8<S> {
     type Block = u32x4<S>;
     type Array = [u32; 8];
     #[inline(always)]
-    fn as_slice(&self) -> &[u32] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [u32] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u32]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: u32) -> Self {
-        simd.splat_u32x8(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block.simd.combine_u32x4(block, block)
     }
@@ -7721,16 +7321,6 @@ impl<S: Simd> SimdMask<S> for mask32x8<S> {
         self.simd.set_mask32x8(self, index, value);
     }
     #[inline(always)]
-    fn from_slice(simd: S, slice: &[i32]) -> Self {
-        let slice: &[i32; 8] = slice.try_into().unwrap();
-        Self::simd_from(simd, *slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i32]) {
-        let slice: &mut [i32; 8] = slice.try_into().unwrap();
-        *slice = (*self).into();
-    }
-    #[inline(always)]
     fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
         self.simd.rotate_elements_left_mask32x8::<OFFSET>(self)
     }
@@ -7892,26 +7482,6 @@ impl<S: Simd> SimdBase<S> for f64x4<S> {
     type Mask = mask64x4<S>;
     type Block = f64x2<S>;
     type Array = [f64; 4];
-    #[inline(always)]
-    fn as_slice(&self) -> &[f64] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [f64] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[f64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [f64]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: f64) -> Self {
-        simd.splat_f64x4(val)
-    }
     #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block.simd.combine_f64x2(block, block)
@@ -8325,26 +7895,6 @@ impl<S: Simd> SimdBase<S> for i64x4<S> {
     type Block = i64x2<S>;
     type Array = [i64; 4];
     #[inline(always)]
-    fn as_slice(&self) -> &[i64] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i64] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i64]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: i64) -> Self {
-        simd.splat_i64x4(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block.simd.combine_i64x2(block, block)
     }
@@ -8688,26 +8238,6 @@ impl<S: Simd> SimdBase<S> for u64x4<S> {
     type Block = u64x2<S>;
     type Array = [u64; 4];
     #[inline(always)]
-    fn as_slice(&self) -> &[u64] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [u64] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u64]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: u64) -> Self {
-        simd.splat_u64x4(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         block.simd.combine_u64x2(block, block)
     }
@@ -9029,16 +8559,6 @@ impl<S: Simd> SimdMask<S> for mask64x4<S> {
         self.simd.set_mask64x4(self, index, value);
     }
     #[inline(always)]
-    fn from_slice(simd: S, slice: &[i64]) -> Self {
-        let slice: &[i64; 4] = slice.try_into().unwrap();
-        Self::simd_from(simd, *slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i64]) {
-        let slice: &mut [i64; 4] = slice.try_into().unwrap();
-        *slice = (*self).into();
-    }
-    #[inline(always)]
     fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
         self.simd.rotate_elements_left_mask64x4::<OFFSET>(self)
     }
@@ -9186,26 +8706,6 @@ impl<S: Simd> SimdBase<S> for f32x16<S> {
     type Mask = mask32x16<S>;
     type Block = f32x4<S>;
     type Array = [f32; 16];
-    #[inline(always)]
-    fn as_slice(&self) -> &[f32] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [f32] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[f32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [f32]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: f32) -> Self {
-        simd.splat_f32x16(val)
-    }
     #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         let block2 = block.simd.combine_f32x4(block, block);
@@ -9626,26 +9126,6 @@ impl<S: Simd> SimdBase<S> for i8x64<S> {
     type Block = i8x16<S>;
     type Array = [i8; 64];
     #[inline(always)]
-    fn as_slice(&self) -> &[i8] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i8] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i8]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i8]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: i8) -> Self {
-        simd.splat_i8x64(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         let block2 = block.simd.combine_i8x16(block, block);
         block2.simd.combine_i8x32(block2, block2)
@@ -10050,26 +9530,6 @@ impl<S: Simd> SimdBase<S> for u8x64<S> {
     type Block = u8x16<S>;
     type Array = [u8; 64];
     #[inline(always)]
-    fn as_slice(&self) -> &[u8] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [u8] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u8]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u8]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: u8) -> Self {
-        simd.splat_u8x64(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         let block2 = block.simd.combine_u8x16(block, block);
         block2.simd.combine_u8x32(block2, block2)
@@ -10452,16 +9912,6 @@ impl<S: Simd> SimdMask<S> for mask8x64<S> {
         self.simd.set_mask8x64(self, index, value);
     }
     #[inline(always)]
-    fn from_slice(simd: S, slice: &[i8]) -> Self {
-        let slice: &[i8; 64] = slice.try_into().unwrap();
-        Self::simd_from(simd, *slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i8]) {
-        let slice: &mut [i8; 64] = slice.try_into().unwrap();
-        *slice = (*self).into();
-    }
-    #[inline(always)]
     fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
         self.simd.rotate_elements_left_mask8x64::<OFFSET>(self)
     }
@@ -10602,26 +10052,6 @@ impl<S: Simd> SimdBase<S> for i16x32<S> {
     type Mask = mask16x32<S>;
     type Block = i16x8<S>;
     type Array = [i16; 32];
-    #[inline(always)]
-    fn as_slice(&self) -> &[i16] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i16] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i16]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i16]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: i16) -> Self {
-        simd.splat_i16x32(val)
-    }
     #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         let block2 = block.simd.combine_i16x8(block, block);
@@ -11013,26 +10443,6 @@ impl<S: Simd> SimdBase<S> for u16x32<S> {
     type Block = u16x8<S>;
     type Array = [u16; 32];
     #[inline(always)]
-    fn as_slice(&self) -> &[u16] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [u16] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u16]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u16]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: u16) -> Self {
-        simd.splat_u16x32(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         let block2 = block.simd.combine_u16x8(block, block);
         block2.simd.combine_u16x16(block2, block2)
@@ -11401,16 +10811,6 @@ impl<S: Simd> SimdMask<S> for mask16x32<S> {
         self.simd.set_mask16x32(self, index, value);
     }
     #[inline(always)]
-    fn from_slice(simd: S, slice: &[i16]) -> Self {
-        let slice: &[i16; 32] = slice.try_into().unwrap();
-        Self::simd_from(simd, *slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i16]) {
-        let slice: &mut [i16; 32] = slice.try_into().unwrap();
-        *slice = (*self).into();
-    }
-    #[inline(always)]
     fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
         self.simd.rotate_elements_left_mask16x32::<OFFSET>(self)
     }
@@ -11565,26 +10965,6 @@ impl<S: Simd> SimdBase<S> for i32x16<S> {
     type Mask = mask32x16<S>;
     type Block = i32x4<S>;
     type Array = [i32; 16];
-    #[inline(always)]
-    fn as_slice(&self) -> &[i32] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i32] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i32]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: i32) -> Self {
-        simd.splat_i32x16(val)
-    }
     #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         let block2 = block.simd.combine_i32x4(block, block);
@@ -11972,26 +11352,6 @@ impl<S: Simd> SimdBase<S> for u32x16<S> {
     type Block = u32x4<S>;
     type Array = [u32; 16];
     #[inline(always)]
-    fn as_slice(&self) -> &[u32] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [u32] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u32]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: u32) -> Self {
-        simd.splat_u32x16(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         let block2 = block.simd.combine_u32x4(block, block);
         block2.simd.combine_u32x8(block2, block2)
@@ -12356,16 +11716,6 @@ impl<S: Simd> SimdMask<S> for mask32x16<S> {
         self.simd.set_mask32x16(self, index, value);
     }
     #[inline(always)]
-    fn from_slice(simd: S, slice: &[i32]) -> Self {
-        let slice: &[i32; 16] = slice.try_into().unwrap();
-        Self::simd_from(simd, *slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i32]) {
-        let slice: &mut [i32; 16] = slice.try_into().unwrap();
-        *slice = (*self).into();
-    }
-    #[inline(always)]
     fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
         self.simd.rotate_elements_left_mask32x16::<OFFSET>(self)
     }
@@ -12527,26 +11877,6 @@ impl<S: Simd> SimdBase<S> for f64x8<S> {
     type Mask = mask64x8<S>;
     type Block = f64x2<S>;
     type Array = [f64; 8];
-    #[inline(always)]
-    fn as_slice(&self) -> &[f64] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [f64] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[f64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [f64]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: f64) -> Self {
-        simd.splat_f64x8(val)
-    }
     #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         let block2 = block.simd.combine_f64x2(block, block);
@@ -12966,26 +12296,6 @@ impl<S: Simd> SimdBase<S> for i64x8<S> {
     type Block = i64x2<S>;
     type Array = [i64; 8];
     #[inline(always)]
-    fn as_slice(&self) -> &[i64] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i64] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i64]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: i64) -> Self {
-        simd.splat_i64x8(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         let block2 = block.simd.combine_i64x2(block, block);
         block2.simd.combine_i64x4(block2, block2)
@@ -13335,26 +12645,6 @@ impl<S: Simd> SimdBase<S> for u64x8<S> {
     type Block = u64x2<S>;
     type Array = [u64; 8];
     #[inline(always)]
-    fn as_slice(&self) -> &[u64] {
-        self.as_array().as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [u64] {
-        self.as_mut_array().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u64]) {
-        (*self).store_array(slice.try_into().unwrap());
-    }
-    #[inline(always)]
-    fn splat(simd: S, val: u64) -> Self {
-        simd.splat_u64x8(val)
-    }
-    #[inline(always)]
     fn block_splat(block: Self::Block) -> Self {
         let block2 = block.simd.combine_u64x2(block, block);
         block2.simd.combine_u64x4(block2, block2)
@@ -13680,16 +12970,6 @@ impl<S: Simd> SimdMask<S> for mask64x8<S> {
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
         self.simd.set_mask64x8(self, index, value);
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i64]) -> Self {
-        let slice: &[i64; 8] = slice.try_into().unwrap();
-        Self::simd_from(simd, *slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i64]) {
-        let slice: &mut [i64; 8] = slice.try_into().unwrap();
-        *slice = (*self).into();
     }
     #[inline(always)]
     fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
