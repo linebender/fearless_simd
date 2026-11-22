@@ -1272,14 +1272,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        self.count_ones_i8x16(self.not_i8x16(a))
-    }
-    #[inline(always)]
-    fn swap_bytes_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        a
-    }
-    #[inline(always)]
     fn reverse_bits_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1353,40 +1345,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn and_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
-                _mm_and_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
-                _mm_or_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
-                _mm_xor_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        a ^ !0
     }
     #[inline(always)]
     fn shl_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
@@ -1558,14 +1516,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_i8x16(self, a: i8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
@@ -1814,12 +1764,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn widening_mul_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>) {
-        let (a0, a1) = self.widen_i8x16(a);
-        let (b0, b1) = self.widen_i8x16(b);
-        (self.mul_i16x8(a0, b0), self.mul_i16x8(a1, b1))
-    }
-    #[inline(always)]
     fn widening_add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>) {
         crate::kernel!(
             #[inline(always)]
@@ -1851,12 +1795,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
-    }
-    #[inline(always)]
-    fn pairwise_dot_product_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i16x8<Self> {
-        let (low, high) = self.widening_mul_i8x16(a, b);
-        let (even, odd) = self.deinterleave_i16x8(low, high);
-        self.add_i16x8(even, odd)
     }
     #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
@@ -2076,14 +2014,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        self.count_ones_u8x16(self.not_u8x16(a))
-    }
-    #[inline(always)]
-    fn swap_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        a
-    }
-    #[inline(always)]
     fn reverse_bits_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2187,10 +2117,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        a ^ !0
     }
     #[inline(always)]
     fn shl_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
@@ -2359,14 +2285,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_u8x16(self, a: u8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
@@ -2605,12 +2523,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn widening_mul_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>) {
-        let (a0, a1) = self.widen_u8x16(a);
-        let (b0, b1) = self.widen_u8x16(b);
-        (self.mul_u16x8(a0, b0), self.mul_u16x8(a1, b1))
-    }
-    #[inline(always)]
     fn widening_add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>) {
         crate::kernel!(
             #[inline(always)]
@@ -2642,12 +2554,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
-    }
-    #[inline(always)]
-    fn pairwise_dot_product_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u16x8<Self> {
-        let (low, high) = self.widening_mul_u8x16(a, b);
-        let (even, odd) = self.deinterleave_u16x8(low, high);
-        self.add_u16x8(even, odd)
     }
     #[inline(always)]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
@@ -2951,10 +2857,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
-        self.count_ones_i16x8(self.not_i16x8(a))
-    }
-    #[inline(always)]
     fn swap_bytes_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
         let indexes =
             <u8x16<Self>>::simd_from(self, [1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14]);
@@ -3025,40 +2927,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn and_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
-                _mm_and_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
-                _mm_or_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
-                _mm_xor_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
-        a ^ !0
     }
     #[inline(always)]
     fn shl_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
@@ -3189,14 +3057,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_i16x8(self, a: i16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
@@ -3642,10 +3502,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
-        self.count_ones_u16x8(self.not_u16x8(a))
-    }
-    #[inline(always)]
     fn swap_bytes_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
         let indexes =
             <u8x16<Self>>::simd_from(self, [1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14]);
@@ -3716,40 +3572,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn and_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
-                _mm_and_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
-                _mm_or_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
-                _mm_xor_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
-        a ^ !0
     }
     #[inline(always)]
     fn shl_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
@@ -3880,14 +3702,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_u16x8(self, a: u16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
@@ -4134,12 +3948,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn widening_add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
-        let (a0, a1) = self.widen_u16x8(a);
-        let (b0, b1) = self.widen_u16x8(b);
-        (self.add_u32x4(a0, b0), self.add_u32x4(a1, b1))
-    }
-    #[inline(always)]
     fn pairwise_widening_add_u16x8(self, a: u16x8<Self>) -> u32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4155,12 +3963,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
-    }
-    #[inline(always)]
-    fn pairwise_dot_product_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u32x4<Self> {
-        let (low, high) = self.widening_mul_u16x8(a, b);
-        let (even, odd) = self.deinterleave_u32x4(low, high);
-        self.add_u32x4(even, odd)
     }
     #[inline(always)]
     fn narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self> {
@@ -4516,10 +4318,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
-        self.count_ones_i32x4(self.not_i32x4(a))
-    }
-    #[inline(always)]
     fn swap_bytes_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
         let indexes =
             <u8x16<Self>>::simd_from(self, [3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12]);
@@ -4602,40 +4400,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn and_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
-                _mm_and_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
-                _mm_or_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
-                _mm_xor_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
-        a ^ !0
     }
     #[inline(always)]
     fn shl_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
@@ -4755,14 +4519,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_i32x4(self, a: i32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
@@ -4983,18 +4739,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn widening_mul_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>) {
-        let (a0, a1) = self.widen_i32x4(a);
-        let (b0, b1) = self.widen_i32x4(b);
-        (self.mul_i64x2(a0, b0), self.mul_i64x2(a1, b1))
-    }
-    #[inline(always)]
-    fn widening_add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>) {
-        let (a0, a1) = self.widen_i32x4(a);
-        let (b0, b1) = self.widen_i32x4(b);
-        (self.add_i64x2(a0, b0), self.add_i64x2(a1, b1))
-    }
-    #[inline(always)]
     fn pairwise_widening_add_i32x4(self, a: i32x4<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5010,12 +4754,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
-    }
-    #[inline(always)]
-    fn pairwise_dot_product_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i64x2<Self> {
-        let (low, high) = self.widening_mul_i32x4(a, b);
-        let (even, odd) = self.deinterleave_i64x2(low, high);
-        self.add_i64x2(even, odd)
     }
     #[inline(always)]
     fn narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self> {
@@ -5174,10 +4912,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
-        self.count_ones_u32x4(self.not_u32x4(a))
-    }
-    #[inline(always)]
     fn swap_bytes_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
         let indexes =
             <u8x16<Self>>::simd_from(self, [3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12]);
@@ -5253,40 +4987,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn and_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
-                _mm_and_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
-                _mm_or_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
-                _mm_xor_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
-        a ^ !0
     }
     #[inline(always)]
     fn shl_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
@@ -5406,14 +5106,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_u32x4(self, a: u32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
@@ -5624,18 +5316,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn widening_mul_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>) {
-        let (a0, a1) = self.widen_u32x4(a);
-        let (b0, b1) = self.widen_u32x4(b);
-        (self.mul_u64x2(a0, b0), self.mul_u64x2(a1, b1))
-    }
-    #[inline(always)]
-    fn widening_add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>) {
-        let (a0, a1) = self.widen_u32x4(a);
-        let (b0, b1) = self.widen_u32x4(b);
-        (self.add_u64x2(a0, b0), self.add_u64x2(a1, b1))
-    }
-    #[inline(always)]
     fn pairwise_widening_add_u32x4(self, a: u32x4<Self>) -> u64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5651,12 +5331,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
-    }
-    #[inline(always)]
-    fn pairwise_dot_product_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u64x2<Self> {
-        let (low, high) = self.widening_mul_u32x4(a, b);
-        let (even, odd) = self.deinterleave_u64x2(low, high);
-        self.add_u64x2(even, odd)
     }
     #[inline(always)]
     fn narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self> {
@@ -6778,10 +6452,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
-        self.count_ones_i64x2(self.not_i64x2(a))
-    }
-    #[inline(always)]
     fn swap_bytes_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
         let indexes =
             <u8x16<Self>>::simd_from(self, [7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8]);
@@ -6864,40 +6534,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn and_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x2<Avx512>, b: i64x2<Avx512>) -> i64x2<Avx512> {
-                _mm_and_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x2<Avx512>, b: i64x2<Avx512>) -> i64x2<Avx512> {
-                _mm_or_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x2<Avx512>, b: i64x2<Avx512>) -> i64x2<Avx512> {
-                _mm_xor_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
-        a ^ !0
     }
     #[inline(always)]
     fn shl_i64x2(self, a: i64x2<Self>, shift: u32) -> i64x2<Self> {
@@ -6998,14 +6634,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_i64x2(self, a: i64x2<Self>, b: i64x2<Self>, c: i64x2<Self>) -> i64x2<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
@@ -7364,10 +6992,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
-        self.count_ones_u64x2(self.not_u64x2(a))
-    }
-    #[inline(always)]
     fn swap_bytes_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
         let indexes =
             <u8x16<Self>>::simd_from(self, [7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8]);
@@ -7443,40 +7067,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn and_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x2<Avx512>, b: u64x2<Avx512>) -> u64x2<Avx512> {
-                _mm_and_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x2<Avx512>, b: u64x2<Avx512>) -> u64x2<Avx512> {
-                _mm_or_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x2<Avx512>, b: u64x2<Avx512>) -> u64x2<Avx512> {
-                _mm_xor_si128(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
-        a ^ !0
     }
     #[inline(always)]
     fn shl_u64x2(self, a: u64x2<Self>, shift: u32) -> u64x2<Self> {
@@ -7577,14 +7167,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_u64x2(self, a: u64x2<Self>, b: u64x2<Self>, c: u64x2<Self>) -> u64x2<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
@@ -8909,14 +8491,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
-        self.count_ones_i8x32(self.not_i8x32(a))
-    }
-    #[inline(always)]
-    fn swap_bytes_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
-        a
-    }
-    #[inline(always)]
     fn reverse_bits_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -8990,40 +8564,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn and_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> i8x32<Avx512> {
-                _mm256_and_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> i8x32<Avx512> {
-                _mm256_or_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> i8x32<Avx512> {
-                _mm256_xor_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
-        a ^ !0
     }
     #[inline(always)]
     fn shl_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self> {
@@ -9118,14 +8658,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_i8x32(self, a: i8x32<Self>, b: i8x32<Self>, c: i8x32<Self>) -> i8x32<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
@@ -9691,14 +9223,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        self.count_ones_u8x32(self.not_u8x32(a))
-    }
-    #[inline(always)]
-    fn swap_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        a
-    }
-    #[inline(always)]
     fn reverse_bits_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9804,10 +9328,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn not_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        a ^ !0
-    }
-    #[inline(always)]
     fn shl_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9897,14 +9417,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_u8x32(self, a: u8x32<Self>, b: u8x32<Self>, c: u8x32<Self>) -> u8x32<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
@@ -10562,10 +10074,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
-        self.count_ones_i16x16(self.not_i16x16(a))
-    }
-    #[inline(always)]
     fn swap_bytes_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
         let indexes = <u8x32<Self>>::simd_from(
             self,
@@ -10643,40 +10151,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn and_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i16x16<Avx512> {
-                _mm256_and_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i16x16<Avx512> {
-                _mm256_or_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i16x16<Avx512> {
-                _mm256_xor_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
-        a ^ !0
-    }
-    #[inline(always)]
     fn shl_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10735,14 +10209,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_i16x16(self, a: i16x16<Self>, b: i16x16<Self>, c: i16x16<Self>) -> i16x16<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
@@ -11246,10 +10712,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
-        self.count_ones_u16x16(self.not_u16x16(a))
-    }
-    #[inline(always)]
     fn swap_bytes_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
         let indexes = <u8x32<Self>>::simd_from(
             self,
@@ -11327,40 +10789,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn and_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u16x16<Avx512> {
-                _mm256_and_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u16x16<Avx512> {
-                _mm256_or_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u16x16<Avx512> {
-                _mm256_xor_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
-        a ^ !0
-    }
-    #[inline(always)]
     fn shl_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11419,14 +10847,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_u16x16(self, a: u16x16<Self>, b: u16x16<Self>, c: u16x16<Self>) -> u16x16<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
@@ -12122,10 +11542,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
-        self.count_ones_i32x8(self.not_i32x8(a))
-    }
-    #[inline(always)]
     fn swap_bytes_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
         let indexes = <u8x32<Self>>::simd_from(
             self,
@@ -12219,40 +11635,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn and_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i32x8<Avx512> {
-                _mm256_and_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i32x8<Avx512> {
-                _mm256_or_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i32x8<Avx512> {
-                _mm256_xor_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
-        a ^ !0
-    }
-    #[inline(always)]
     fn shl_i32x8(self, a: i32x8<Self>, shift: u32) -> i32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12311,14 +11693,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_i32x8(self, a: i32x8<Self>, b: i32x8<Self>, c: i32x8<Self>) -> i32x8<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
@@ -12770,10 +12144,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
-        self.count_ones_u32x8(self.not_u32x8(a))
-    }
-    #[inline(always)]
     fn swap_bytes_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
         let indexes = <u8x32<Self>>::simd_from(
             self,
@@ -12856,40 +12226,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn and_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u32x8<Avx512> {
-                _mm256_and_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u32x8<Avx512> {
-                _mm256_or_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u32x8<Avx512> {
-                _mm256_xor_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
-        a ^ !0
-    }
-    #[inline(always)]
     fn shl_u32x8(self, a: u32x8<Self>, shift: u32) -> u32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12948,14 +12284,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_u32x8(self, a: u32x8<Self>, b: u32x8<Self>, c: u32x8<Self>) -> u32x8<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
@@ -14336,10 +13664,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
-        self.count_ones_i64x4(self.not_i64x4(a))
-    }
-    #[inline(always)]
     fn swap_bytes_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
         let indexes = <u8x32<Self>>::simd_from(
             self,
@@ -14433,40 +13757,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn and_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x4<Avx512>, b: i64x4<Avx512>) -> i64x4<Avx512> {
-                _mm256_and_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x4<Avx512>, b: i64x4<Avx512>) -> i64x4<Avx512> {
-                _mm256_or_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x4<Avx512>, b: i64x4<Avx512>) -> i64x4<Avx512> {
-                _mm256_xor_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
-        a ^ !0
-    }
-    #[inline(always)]
     fn shl_i64x4(self, a: i64x4<Self>, shift: u32) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -14525,14 +13815,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_i64x4(self, a: i64x4<Self>, b: i64x4<Self>, c: i64x4<Self>) -> i64x4<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
@@ -14920,10 +14202,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_u64x4(self, a: u64x4<Self>) -> u64x4<Self> {
-        self.count_ones_u64x4(self.not_u64x4(a))
-    }
-    #[inline(always)]
     fn swap_bytes_u64x4(self, a: u64x4<Self>) -> u64x4<Self> {
         let indexes = <u8x32<Self>>::simd_from(
             self,
@@ -15006,40 +14284,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn and_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x4<Avx512>, b: u64x4<Avx512>) -> u64x4<Avx512> {
-                _mm256_and_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x4<Avx512>, b: u64x4<Avx512>) -> u64x4<Avx512> {
-                _mm256_or_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x4<Avx512>, b: u64x4<Avx512>) -> u64x4<Avx512> {
-                _mm256_xor_si256(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_u64x4(self, a: u64x4<Self>) -> u64x4<Self> {
-        a ^ !0
-    }
-    #[inline(always)]
     fn shl_u64x4(self, a: u64x4<Self>, shift: u32) -> u64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -15098,14 +14342,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_u64x4(self, a: u64x4<Self>, b: u64x4<Self>, c: u64x4<Self>) -> u64x4<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
@@ -16459,14 +15695,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
-        self.count_ones_i8x64(self.not_i8x64(a))
-    }
-    #[inline(always)]
-    fn swap_bytes_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
-        a
-    }
-    #[inline(always)]
     fn reverse_bits_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -16540,40 +15768,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn and_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> i8x64<Avx512> {
-                _mm512_and_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> i8x64<Avx512> {
-                _mm512_or_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> i8x64<Avx512> {
-                _mm512_xor_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
-        a ^ !0
     }
     #[inline(always)]
     fn shl_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self> {
@@ -16670,14 +15864,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_i8x64(self, a: i8x64<Self>, b: i8x64<Self>, c: i8x64<Self>) -> i8x64<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
@@ -17230,14 +16416,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        self.count_ones_u8x64(self.not_u8x64(a))
-    }
-    #[inline(always)]
-    fn swap_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        a
-    }
-    #[inline(always)]
     fn reverse_bits_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -17343,10 +16521,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn not_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        a ^ !0
-    }
-    #[inline(always)]
     fn shl_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -17437,14 +16611,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_u8x64(self, a: u8x64<Self>, b: u8x64<Self>, c: u8x64<Self>) -> u8x64<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
@@ -18082,10 +17248,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
-        self.count_ones_i16x32(self.not_i16x32(a))
-    }
-    #[inline(always)]
     fn swap_bytes_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
         let indexes = <u8x64<Self>>::simd_from(
             self,
@@ -18164,40 +17326,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn and_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i16x32<Avx512> {
-                _mm512_and_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i16x32<Avx512> {
-                _mm512_or_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i16x32<Avx512> {
-                _mm512_xor_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
-        a ^ !0
-    }
-    #[inline(always)]
     fn shl_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -18256,14 +17384,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_i16x32(self, a: i16x32<Self>, b: i16x32<Self>, c: i16x32<Self>) -> i16x32<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
@@ -18770,10 +17890,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
-        self.count_ones_u16x32(self.not_u16x32(a))
-    }
-    #[inline(always)]
     fn swap_bytes_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
         let indexes = <u8x64<Self>>::simd_from(
             self,
@@ -18852,40 +17968,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn and_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u16x32<Avx512> {
-                _mm512_and_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u16x32<Avx512> {
-                _mm512_or_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u16x32<Avx512> {
-                _mm512_xor_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
-        a ^ !0
-    }
-    #[inline(always)]
     fn shl_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -18944,14 +18026,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_u16x32(self, a: u16x32<Self>, b: u16x32<Self>, c: u16x32<Self>) -> u16x32<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
@@ -19667,10 +18741,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
-        self.count_ones_i32x16(self.not_i32x16(a))
-    }
-    #[inline(always)]
     fn swap_bytes_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
         let indexes = <u8x64<Self>>::simd_from(
             self,
@@ -19765,40 +18835,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn and_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i32x16<Avx512> {
-                _mm512_and_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i32x16<Avx512> {
-                _mm512_or_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i32x16<Avx512> {
-                _mm512_xor_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
-        a ^ !0
-    }
-    #[inline(always)]
     fn shl_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -19857,14 +18893,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_i32x16(self, a: i32x16<Self>, b: i32x16<Self>, c: i32x16<Self>) -> i32x16<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
@@ -20338,10 +19366,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
-        self.count_ones_u32x16(self.not_u32x16(a))
-    }
-    #[inline(always)]
     fn swap_bytes_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
         let indexes = <u8x64<Self>>::simd_from(
             self,
@@ -20425,40 +19449,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn and_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u32x16<Avx512> {
-                _mm512_and_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u32x16<Avx512> {
-                _mm512_or_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u32x16<Avx512> {
-                _mm512_xor_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
-        a ^ !0
-    }
-    #[inline(always)]
     fn shl_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -20517,14 +19507,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_u32x16(self, a: u32x16<Self>, b: u32x16<Self>, c: u32x16<Self>) -> u32x16<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
@@ -21927,10 +20909,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
-        self.count_ones_i64x8(self.not_i64x8(a))
-    }
-    #[inline(always)]
     fn swap_bytes_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
         let indexes = <u8x64<Self>>::simd_from(
             self,
@@ -22025,40 +21003,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn and_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x8<Avx512>, b: i64x8<Avx512>) -> i64x8<Avx512> {
-                _mm512_and_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x8<Avx512>, b: i64x8<Avx512>) -> i64x8<Avx512> {
-                _mm512_or_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x8<Avx512>, b: i64x8<Avx512>) -> i64x8<Avx512> {
-                _mm512_xor_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
-        a ^ !0
-    }
-    #[inline(always)]
     fn shl_i64x8(self, a: i64x8<Self>, shift: u32) -> i64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -22117,14 +21061,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_i64x8(self, a: i64x8<Self>, b: i64x8<Self>, c: i64x8<Self>) -> i64x8<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
@@ -22521,10 +21457,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_u64x8(self, a: u64x8<Self>) -> u64x8<Self> {
-        self.count_ones_u64x8(self.not_u64x8(a))
-    }
-    #[inline(always)]
     fn swap_bytes_u64x8(self, a: u64x8<Self>) -> u64x8<Self> {
         let indexes = <u8x64<Self>>::simd_from(
             self,
@@ -22608,40 +21540,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn and_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x8<Avx512>, b: u64x8<Avx512>) -> u64x8<Avx512> {
-                _mm512_and_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x8<Avx512>, b: u64x8<Avx512>) -> u64x8<Avx512> {
-                _mm512_or_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x8<Avx512>, b: u64x8<Avx512>) -> u64x8<Avx512> {
-                _mm512_xor_si512(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_u64x8(self, a: u64x8<Self>) -> u64x8<Self> {
-        a ^ !0
-    }
-    #[inline(always)]
     fn shl_u64x8(self, a: u64x8<Self>, shift: u32) -> u64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -22700,14 +21598,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn clamp_u64x8(self, a: u64x8<Self>, b: u64x8<Self>, c: u64x8<Self>) -> u64x8<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
     }
     #[inline(always)]
     fn simd_eq_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {

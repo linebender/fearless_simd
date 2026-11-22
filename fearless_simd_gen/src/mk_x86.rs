@@ -319,6 +319,41 @@ impl Level for X86 {
         *self == Self::Avx512 || vec_ty.scalar == ScalarType::Float
     }
 
+    fn overrides_trait_default(&self, op: &Op, vec_ty: &VecType) -> bool {
+        match op.sig {
+            OpSig::RotateElements { .. } => *self == Self::Avx512,
+            OpSig::Unary if op.method == "reverse" => {
+                *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask
+            }
+            OpSig::UnaryClassify => *self == Self::Avx512,
+            OpSig::Unary if op.method == "count_zeros" => *self == Self::Sse2,
+            // x86 has fused interleave/deinterleave and negation kernels; keep them
+            // instead of expanding the individual zip/unzip or splat-and-sub steps.
+            OpSig::Interleave | OpSig::Deinterleave => true,
+            OpSig::Unary if op.method == "neg" => true,
+            OpSig::WideningBinary { .. } => self.prefers_native_widening_binary(op, vec_ty),
+            OpSig::PairwiseDotProduct { .. } => {
+                vec_ty.scalar == ScalarType::Int && vec_ty.scalar_bits == 16
+            }
+            OpSig::Compress { .. } | OpSig::Expand { .. } => self.has_native_compact(op, vec_ty),
+            OpSig::Binary
+                if vec_ty.scalar == ScalarType::Mask
+                    && matches!(op.method, "and" | "or" | "xor") =>
+            {
+                *self == Self::Avx512
+            }
+            OpSig::Unary if vec_ty.scalar == ScalarType::Mask && op.method == "not" => {
+                *self == Self::Avx512
+            }
+            OpSig::MaskFromVector | OpSig::MaskToVector => *self == Self::Avx512,
+            // All x86 levels have a hand-written select; SSE4.2 and AVX2 use a
+            // single blend instruction, which the shared bitwise formula cannot
+            // reproduce.
+            OpSig::Select => true,
+            _ => false,
+        }
+    }
+
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         let Op { sig, method, .. } = op;
         let method_sig = op.simd_trait_method_sig(vec_ty);
@@ -3041,7 +3076,38 @@ impl X86 {
         })
     }
 
-    fn handle_widening_binary(&self, op: Op, vec_ty: &VecType, target_ty: VecType) -> TokenStream {
+    /// Whether this backend has a native or hand-written compact path rather
+    /// than the shared byte-forwarding/scalar implementation.
+    fn has_native_compact(&self, op: &Op, vec_ty: &VecType) -> bool {
+        if *self == Self::Avx512 {
+            return true;
+        }
+        if *self == Self::Avx2 && vec_ty.n_bits() == 512 && matches!(vec_ty.scalar_bits, 32 | 64) {
+            return true;
+        }
+        if *self == Self::Avx2 && vec_ty.n_bits() == 256 && matches!(vec_ty.scalar_bits, 32 | 64) {
+            return true;
+        }
+        if matches!(*self, Self::Sse4_2 | Self::Avx2)
+            && vec_ty.n_bits() == 128
+            && matches!(vec_ty.scalar_bits, 16 | 32 | 64)
+        {
+            return true;
+        }
+        if *vec_ty != vec_ty.bytes_ty() {
+            return false;
+        }
+        if matches!(*self, Self::Sse4_2 | Self::Avx2) && vec_ty.len == 16 {
+            return true;
+        }
+        if *self == Self::Avx2 && matches!(op.sig, OpSig::Compress { .. }) {
+            return true;
+        }
+        matches!(*self, Self::Sse4_2 | Self::Avx2)
+    }
+
+    /// Which native widening-arithmetic formulation this backend uses, if any.
+    fn native_widening_binary_kind(&self, op: &Op, vec_ty: &VecType) -> (bool, bool) {
         // PMADDUBSW with one byte operand set to 1 gives exact byte sums:
         // [-256, 254] for signed bytes, [0, 510] for unsigned bytes. Neither
         // reaches its i16 saturation limits. PMADDWD similarly sums signed words.
@@ -3063,6 +3129,17 @@ impl X86 {
                 (32, ScalarType::Int, Self::Sse4_2 | Self::Avx2) => true,
                 _ => false,
             };
+        (pairwise_add, widening_mul)
+    }
+
+    /// Whether this backend has a native formulation for widening arithmetic.
+    fn prefers_native_widening_binary(&self, op: &Op, vec_ty: &VecType) -> bool {
+        let (pairwise_add, widening_mul) = self.native_widening_binary_kind(op, vec_ty);
+        pairwise_add || widening_mul
+    }
+
+    fn handle_widening_binary(&self, op: Op, vec_ty: &VecType, target_ty: VecType) -> TokenStream {
+        let (pairwise_add, widening_mul) = self.native_widening_binary_kind(&op, vec_ty);
         if !pairwise_add && !widening_mul {
             return crate::generic::widening_binary_method(op, vec_ty);
         }

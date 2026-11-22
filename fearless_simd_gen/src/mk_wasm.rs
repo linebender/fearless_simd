@@ -483,6 +483,19 @@ impl Level for WasmSimd128 {
         true
     }
 
+    fn overrides_trait_default(&self, op: &Op, vec_ty: &VecType) -> bool {
+        (matches!(op.sig, OpSig::Unary)
+            && matches!(op.method, "not" | "neg")
+            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned))
+            || (matches!(op.sig, OpSig::PairwiseDotProduct { .. })
+                && vec_ty.scalar == ScalarType::Int
+                && vec_ty.scalar_bits == 16)
+            || matches!(
+                op.sig,
+                OpSig::Compress { .. } | OpSig::Expand { .. } | OpSig::Select
+            )
+    }
+
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         let Op { sig, method, .. } = op;
 
