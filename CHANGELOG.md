@@ -6,9 +6,29 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 -->
 
-The latest published Fearless SIMD release is [1.2.0](#120-2026-10-25) which was released on 2026-10-25.
-You can find its changes [documented below](#120-2026-10-25).
+The latest published Fearless SIMD release is [1.3.0](#130-2026-11-24) which was released on 2026-11-24.
+You can find its changes [documented below](#130-2026-11-24).
 The latest `fearless_simd_macros` release is 0.1.0 which was released on 2026-09-21.
+
+## [1.3.0][] (2026-11-24)
+
+This release has an [MSRV][] of 1.89.
+
+### Added
+
+- Added `SimdInt::swap_bytes` for all integer vectors, reversing the byte order of each lane. ([#429][] by [@RunDevelopment][])
+- Added `SimdInt::reverse_bits` for all integer vectors, reversing the bit order of each lane. ([#434][] by [@RunDevelopment][])
+- Added `SimdInt::cast_signed`, `SimdInt::cast_unsigned`, and the associated `Signed` and `Unsigned` types on `SimdInt` and `SimdIntElement`, enabling reinterpretation of integer vectors as their signed or unsigned counterparts in generic code. ([#435][] by [@RunDevelopment][])
+- Added `SimdInt::unsigned_abs`, computing the absolute value of each lane as an unsigned integer without wrapping. ([#435][] by [@RunDevelopment][])
+- Added `SimdFloat::recip`, computing the reciprocal `1.0 / x` of each lane. ([#424][] by [@RunDevelopment][])
+- Added `From` implementations for conversions between mask types with the same number of lanes, such as `mask8x16::from(mask32x16)`. Each lane keeps its boolean value. ([#440][] by [@RunDevelopment][])
+- `kernel!` now accepts functions with lifetime and const generic parameters. ([#436][] by [@orlp][])
+
+### Changed
+
+- `trunc`, `floor`, `ceil`, and `round_ties_even` now use explicit SIMD implementations on SSE2 instead of falling back to scalar code, making them substantially faster. ([#430][], [#432][] by [@RunDevelopment][])
+- Splitting and combining vectors on the fallback level now reinterprets the underlying arrays instead of copying slices, reducing binary size and improving performance when optimizing for size, particularly on WebAssembly without SIMD. ([#446][] by [@LaurenzV][])
+- The lookup tables for `compress` and `expand` are now statics, guaranteeing that they appear only once in the final binary. ([#442][] by [@Shnatsel][])
 
 ## [1.2.0][] (2026-10-25)
 
@@ -322,6 +342,7 @@ No changelog was kept for this release.
 [@RunDevelopment]: https://github.com/RunDevelopment
 [@Novum]: https://github.com/Novum
 [@mightsleep]: https://github.com/mightsleep
+[@orlp]: https://github.com/orlp
 
 [#75]: https://github.com/linebender/fearless_simd/pull/75
 [#76]: https://github.com/linebender/fearless_simd/pull/76
@@ -485,7 +506,17 @@ No changelog was kept for this release.
 [#425]: https://github.com/linebender/fearless_simd/pull/425
 [#426]: https://github.com/linebender/fearless_simd/pull/426
 [#427]: https://github.com/linebender/fearless_simd/pull/427
+[#429]: https://github.com/linebender/fearless_simd/pull/429
+[#430]: https://github.com/linebender/fearless_simd/pull/430
+[#432]: https://github.com/linebender/fearless_simd/pull/432
+[#434]: https://github.com/linebender/fearless_simd/pull/434
+[#435]: https://github.com/linebender/fearless_simd/pull/435
+[#436]: https://github.com/linebender/fearless_simd/pull/436
+[#440]: https://github.com/linebender/fearless_simd/pull/440
+[#442]: https://github.com/linebender/fearless_simd/pull/442
+[#446]: https://github.com/linebender/fearless_simd/pull/446
 
+[1.3.0]: https://github.com/linebender/fearless_simd/compare/fearless_simd-v1.2.0...fearless_simd-v1.3.0
 [1.2.0]: https://github.com/linebender/fearless_simd/compare/fearless_simd-v1.1.0...fearless_simd-v1.2.0
 [1.1.0]: https://github.com/linebender/fearless_simd/compare/v1.0.0...fearless_simd-v1.1.0
 [1.0.0]: https://github.com/linebender/fearless_simd/compare/v0.7.0...v1.0.0
