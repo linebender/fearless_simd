@@ -1,0 +1,14 @@
+[package]
+name = "simd-research-macros"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1"
+quote = "1"
+syn = { version = "=2.0.119", features = ["full", "visit", "visit-mut"] }
+
