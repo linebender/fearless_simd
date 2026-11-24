@@ -573,10 +573,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x8<Self> {
-        let mut result = [0.0; 8usize];
-        result[0..4usize].copy_from_slice(&a.val.0);
-        result[4usize..8usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [f32; 8usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn load_four_interleaved_f32x4(self, src: &[f32; 16usize]) -> [f32x4<Self>; 4usize] {
@@ -1470,10 +1468,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x32<Self> {
-        let mut result = [0; 32usize];
-        result[0..16usize].copy_from_slice(&a.val.0);
-        result[16usize..32usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [i8; 32usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn neg_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
@@ -2635,10 +2631,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self> {
-        let mut result = [0; 32usize];
-        result[0..16usize].copy_from_slice(&a.val.0);
-        result[16usize..32usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [u8; 32usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn load_four_interleaved_u8x16(self, src: &[u8; 64usize]) -> [u8x16<Self>; 4usize] {
@@ -3249,10 +3243,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x32<Self> {
-        let mut result = [0; 32usize];
-        result[0..16usize].copy_from_slice(&a.val.0);
-        result[16usize..32usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [i8; 32usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn widen_mask8x16(self, a: mask8x16<Self>) -> (mask16x8<Self>, mask16x8<Self>) {
@@ -3829,10 +3821,9 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x16<Self> {
-        let mut result = [0; 16usize];
-        result[0..8usize].copy_from_slice(&a.val.0);
-        result[8usize..16usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [i16; 16usize] =
+            crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn neg_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
@@ -4574,10 +4565,9 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x16<Self> {
-        let mut result = [0; 16usize];
-        result[0..8usize].copy_from_slice(&a.val.0);
-        result[8usize..16usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [u16; 16usize] =
+            crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn load_four_interleaved_u16x8(self, src: &[u16; 32usize]) -> [u16x8<Self>; 4usize] {
@@ -5039,10 +5029,9 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x16<Self> {
-        let mut result = [0; 16usize];
-        result[0..8usize].copy_from_slice(&a.val.0);
-        result[8usize..16usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [i16; 16usize] =
+            crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn widen_mask16x8(self, a: mask16x8<Self>) -> (mask32x4<Self>, mask32x4<Self>) {
@@ -5478,10 +5467,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x8<Self> {
-        let mut result = [0; 8usize];
-        result[0..4usize].copy_from_slice(&a.val.0);
-        result[4usize..8usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [i32; 8usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn neg_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
@@ -5992,10 +5979,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x8<Self> {
-        let mut result = [0; 8usize];
-        result[0..4usize].copy_from_slice(&a.val.0);
-        result[4usize..8usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [u32; 8usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn load_four_interleaved_u32x4(self, src: &[u32; 16usize]) -> [u32x4<Self>; 4usize] {
@@ -6305,10 +6290,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x8<Self> {
-        let mut result = [0; 8usize];
-        result[0..4usize].copy_from_slice(&a.val.0);
-        result[4usize..8usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [i32; 8usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn widen_mask32x4(self, a: mask32x4<Self>) -> (mask64x2<Self>, mask64x2<Self>) {
@@ -6672,10 +6655,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x4<Self> {
-        let mut result = [0.0; 4usize];
-        result[0..2usize].copy_from_slice(&a.val.0);
-        result[2usize..4usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [f64; 4usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn load_four_interleaved_f64x2(self, src: &[f64; 8usize]) -> [f64x2<Self>; 4usize] {
@@ -7046,10 +7027,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x4<Self> {
-        let mut result = [0; 4usize];
-        result[0..2usize].copy_from_slice(&a.val.0);
-        result[2usize..4usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [i64; 4usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn neg_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
@@ -7415,10 +7394,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x4<Self> {
-        let mut result = [0; 4usize];
-        result[0..2usize].copy_from_slice(&a.val.0);
-        result[2usize..4usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [u64; 4usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn load_four_interleaved_u64x2(self, src: &[u64; 8usize]) -> [u64x2<Self>; 4usize] {
@@ -7641,10 +7618,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x4<Self> {
-        let mut result = [0; 4usize];
-        result[0..2usize].copy_from_slice(&a.val.0);
-        result[2usize..4usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [i64; 4usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn narrow_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask32x4<Self> {
@@ -7747,18 +7722,14 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x16<Self> {
-        let mut result = [0.0; 16usize];
-        result[0..8usize].copy_from_slice(&a.val.0);
-        result[8usize..16usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [f32; 16usize] =
+            crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn split_f32x8(self, a: f32x8<Self>) -> (f32x4<Self>, f32x4<Self>) {
-        let mut b0 = [0.0; 4usize];
-        let mut b1 = [0.0; 4usize];
-        b0.copy_from_slice(&a.val.0[0..4usize]);
-        b1.copy_from_slice(&a.val.0[4usize..8usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[f32; 4usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
@@ -7819,18 +7790,13 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x64<Self> {
-        let mut result = [0; 64usize];
-        result[0..32usize].copy_from_slice(&a.val.0);
-        result[32usize..64usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [i8; 64usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn split_i8x32(self, a: i8x32<Self>) -> (i8x16<Self>, i8x16<Self>) {
-        let mut b0 = [0; 16usize];
-        let mut b1 = [0; 16usize];
-        b0.copy_from_slice(&a.val.0[0..16usize]);
-        b1.copy_from_slice(&a.val.0[16usize..32usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[i8; 16usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
@@ -7955,18 +7921,13 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self> {
-        let mut result = [0; 64usize];
-        result[0..32usize].copy_from_slice(&a.val.0);
-        result[32usize..64usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [u8; 64usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn split_u8x32(self, a: u8x32<Self>) -> (u8x16<Self>, u8x16<Self>) {
-        let mut b0 = [0; 16usize];
-        let mut b1 = [0; 16usize];
-        b0.copy_from_slice(&a.val.0[0..16usize]);
-        b1.copy_from_slice(&a.val.0[16usize..32usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[u8; 16usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn from_vector_mask8x32(self, vector: i8x32<Self>) -> mask8x32<Self> {
@@ -8025,18 +7986,13 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x64<Self> {
-        let mut result = [0; 64usize];
-        result[0..32usize].copy_from_slice(&a.val.0);
-        result[32usize..64usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [i8; 64usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn split_mask8x32(self, a: mask8x32<Self>) -> (mask8x16<Self>, mask8x16<Self>) {
-        let mut b0 = [0; 16usize];
-        let mut b1 = [0; 16usize];
-        b0.copy_from_slice(&a.val.0[0..16usize]);
-        b1.copy_from_slice(&a.val.0[16usize..32usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[i8; 16usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
@@ -8097,18 +8053,14 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x32<Self> {
-        let mut result = [0; 32usize];
-        result[0..16usize].copy_from_slice(&a.val.0);
-        result[16usize..32usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [i16; 32usize] =
+            crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn split_i16x16(self, a: i16x16<Self>) -> (i16x8<Self>, i16x8<Self>) {
-        let mut b0 = [0; 8usize];
-        let mut b1 = [0; 8usize];
-        b0.copy_from_slice(&a.val.0[0..8usize]);
-        b1.copy_from_slice(&a.val.0[8usize..16usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[i16; 8usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
@@ -8169,18 +8121,14 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x32<Self> {
-        let mut result = [0; 32usize];
-        result[0..16usize].copy_from_slice(&a.val.0);
-        result[16usize..32usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [u16; 32usize] =
+            crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn split_u16x16(self, a: u16x16<Self>) -> (u16x8<Self>, u16x8<Self>) {
-        let mut b0 = [0; 8usize];
-        let mut b1 = [0; 8usize];
-        b0.copy_from_slice(&a.val.0[0..8usize]);
-        b1.copy_from_slice(&a.val.0[8usize..16usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[u16; 8usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn from_vector_mask16x16(self, vector: i16x16<Self>) -> mask16x16<Self> {
@@ -8239,18 +8187,14 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x32<Self> {
-        let mut result = [0; 32usize];
-        result[0..16usize].copy_from_slice(&a.val.0);
-        result[16usize..32usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [i16; 32usize] =
+            crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn split_mask16x16(self, a: mask16x16<Self>) -> (mask16x8<Self>, mask16x8<Self>) {
-        let mut b0 = [0; 8usize];
-        let mut b1 = [0; 8usize];
-        b0.copy_from_slice(&a.val.0[0..8usize]);
-        b1.copy_from_slice(&a.val.0[8usize..16usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[i16; 8usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
@@ -8311,18 +8255,14 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x16<Self> {
-        let mut result = [0; 16usize];
-        result[0..8usize].copy_from_slice(&a.val.0);
-        result[8usize..16usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [i32; 16usize] =
+            crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn split_i32x8(self, a: i32x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
-        let mut b0 = [0; 4usize];
-        let mut b1 = [0; 4usize];
-        b0.copy_from_slice(&a.val.0[0..4usize]);
-        b1.copy_from_slice(&a.val.0[4usize..8usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[i32; 4usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
@@ -8383,18 +8323,14 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x16<Self> {
-        let mut result = [0; 16usize];
-        result[0..8usize].copy_from_slice(&a.val.0);
-        result[8usize..16usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [u32; 16usize] =
+            crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn split_u32x8(self, a: u32x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
-        let mut b0 = [0; 4usize];
-        let mut b1 = [0; 4usize];
-        b0.copy_from_slice(&a.val.0[0..4usize]);
-        b1.copy_from_slice(&a.val.0[4usize..8usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[u32; 4usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn from_vector_mask32x8(self, vector: i32x8<Self>) -> mask32x8<Self> {
@@ -8453,18 +8389,14 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x16<Self> {
-        let mut result = [0; 16usize];
-        result[0..8usize].copy_from_slice(&a.val.0);
-        result[8usize..16usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [i32; 16usize] =
+            crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn split_mask32x8(self, a: mask32x8<Self>) -> (mask32x4<Self>, mask32x4<Self>) {
-        let mut b0 = [0; 4usize];
-        let mut b1 = [0; 4usize];
-        b0.copy_from_slice(&a.val.0[0..4usize]);
-        b1.copy_from_slice(&a.val.0[4usize..8usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[i32; 4usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
@@ -8557,18 +8489,13 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x8<Self> {
-        let mut result = [0.0; 8usize];
-        result[0..4usize].copy_from_slice(&a.val.0);
-        result[4usize..8usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [f64; 8usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn split_f64x4(self, a: f64x4<Self>) -> (f64x2<Self>, f64x2<Self>) {
-        let mut b0 = [0.0; 2usize];
-        let mut b1 = [0.0; 2usize];
-        b0.copy_from_slice(&a.val.0[0..2usize]);
-        b1.copy_from_slice(&a.val.0[2usize..4usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[f64; 2usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_i64x4<const SHIFT: usize>(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
@@ -8629,18 +8556,13 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x8<Self> {
-        let mut result = [0; 8usize];
-        result[0..4usize].copy_from_slice(&a.val.0);
-        result[4usize..8usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [i64; 8usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn split_i64x4(self, a: i64x4<Self>) -> (i64x2<Self>, i64x2<Self>) {
-        let mut b0 = [0; 2usize];
-        let mut b1 = [0; 2usize];
-        b0.copy_from_slice(&a.val.0[0..2usize]);
-        b1.copy_from_slice(&a.val.0[2usize..4usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[i64; 2usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_u64x4<const SHIFT: usize>(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
@@ -8701,18 +8623,13 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x8<Self> {
-        let mut result = [0; 8usize];
-        result[0..4usize].copy_from_slice(&a.val.0);
-        result[4usize..8usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [u64; 8usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn split_u64x4(self, a: u64x4<Self>) -> (u64x2<Self>, u64x2<Self>) {
-        let mut b0 = [0; 2usize];
-        let mut b1 = [0; 2usize];
-        b0.copy_from_slice(&a.val.0[0..2usize]);
-        b1.copy_from_slice(&a.val.0[2usize..4usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[u64; 2usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn from_vector_mask64x4(self, vector: i64x4<Self>) -> mask64x4<Self> {
@@ -8771,18 +8688,13 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn combine_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x8<Self> {
-        let mut result = [0; 8usize];
-        result[0..4usize].copy_from_slice(&a.val.0);
-        result[4usize..8usize].copy_from_slice(&b.val.0);
-        result.simd_into(self)
+        let combined: [i64; 8usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+        combined.simd_into(self)
     }
     #[inline(always)]
     fn split_mask64x4(self, a: mask64x4<Self>) -> (mask64x2<Self>, mask64x2<Self>) {
-        let mut b0 = [0; 2usize];
-        let mut b1 = [0; 2usize];
-        b0.copy_from_slice(&a.val.0[0..2usize]);
-        b1.copy_from_slice(&a.val.0[2usize..4usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[i64; 2usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
@@ -8875,11 +8787,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn split_f32x16(self, a: f32x16<Self>) -> (f32x8<Self>, f32x8<Self>) {
-        let mut b0 = [0.0; 8usize];
-        let mut b1 = [0.0; 8usize];
-        b0.copy_from_slice(&a.val.0[0..8usize]);
-        b1.copy_from_slice(&a.val.0[8usize..16usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[f32; 8usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -8940,11 +8849,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn split_i8x64(self, a: i8x64<Self>) -> (i8x32<Self>, i8x32<Self>) {
-        let mut b0 = [0; 32usize];
-        let mut b1 = [0; 32usize];
-        b0.copy_from_slice(&a.val.0[0..32usize]);
-        b1.copy_from_slice(&a.val.0[32usize..64usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[i8; 32usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
@@ -9069,11 +8975,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>) {
-        let mut b0 = [0; 32usize];
-        let mut b1 = [0; 32usize];
-        b0.copy_from_slice(&a.val.0[0..32usize]);
-        b1.copy_from_slice(&a.val.0[32usize..64usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[u8; 32usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn from_vector_mask8x64(self, vector: i8x64<Self>) -> mask8x64<Self> {
@@ -9132,11 +9035,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn split_mask8x64(self, a: mask8x64<Self>) -> (mask8x32<Self>, mask8x32<Self>) {
-        let mut b0 = [0; 32usize];
-        let mut b1 = [0; 32usize];
-        b0.copy_from_slice(&a.val.0[0..32usize]);
-        b1.copy_from_slice(&a.val.0[32usize..64usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[i8; 32usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -9197,11 +9097,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn split_i16x32(self, a: i16x32<Self>) -> (i16x16<Self>, i16x16<Self>) {
-        let mut b0 = [0; 16usize];
-        let mut b1 = [0; 16usize];
-        b0.copy_from_slice(&a.val.0[0..16usize]);
-        b1.copy_from_slice(&a.val.0[16usize..32usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[i16; 16usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -9262,11 +9159,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>) {
-        let mut b0 = [0; 16usize];
-        let mut b1 = [0; 16usize];
-        b0.copy_from_slice(&a.val.0[0..16usize]);
-        b1.copy_from_slice(&a.val.0[16usize..32usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[u16; 16usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn from_vector_mask16x32(self, vector: i16x32<Self>) -> mask16x32<Self> {
@@ -9325,11 +9219,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn split_mask16x32(self, a: mask16x32<Self>) -> (mask16x16<Self>, mask16x16<Self>) {
-        let mut b0 = [0; 16usize];
-        let mut b1 = [0; 16usize];
-        b0.copy_from_slice(&a.val.0[0..16usize]);
-        b1.copy_from_slice(&a.val.0[16usize..32usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[i16; 16usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -9390,11 +9281,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
-        let mut b0 = [0; 8usize];
-        let mut b1 = [0; 8usize];
-        b0.copy_from_slice(&a.val.0[0..8usize]);
-        b1.copy_from_slice(&a.val.0[8usize..16usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[i32; 8usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
@@ -9455,11 +9343,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>) {
-        let mut b0 = [0; 8usize];
-        let mut b1 = [0; 8usize];
-        b0.copy_from_slice(&a.val.0[0..8usize]);
-        b1.copy_from_slice(&a.val.0[8usize..16usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[u32; 8usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn from_vector_mask32x16(self, vector: i32x16<Self>) -> mask32x16<Self> {
@@ -9518,11 +9403,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn split_mask32x16(self, a: mask32x16<Self>) -> (mask32x8<Self>, mask32x8<Self>) {
-        let mut b0 = [0; 8usize];
-        let mut b1 = [0; 8usize];
-        b0.copy_from_slice(&a.val.0[0..8usize]);
-        b1.copy_from_slice(&a.val.0[8usize..16usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[i32; 8usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
@@ -9615,11 +9497,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>) {
-        let mut b0 = [0.0; 4usize];
-        let mut b1 = [0.0; 4usize];
-        b0.copy_from_slice(&a.val.0[0..4usize]);
-        b1.copy_from_slice(&a.val.0[4usize..8usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[f64; 4usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_i64x8<const SHIFT: usize>(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
@@ -9680,11 +9559,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn split_i64x8(self, a: i64x8<Self>) -> (i64x4<Self>, i64x4<Self>) {
-        let mut b0 = [0; 4usize];
-        let mut b1 = [0; 4usize];
-        b0.copy_from_slice(&a.val.0[0..4usize]);
-        b1.copy_from_slice(&a.val.0[4usize..8usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[i64; 4usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn slide_u64x8<const SHIFT: usize>(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
@@ -9745,11 +9621,8 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn split_u64x8(self, a: u64x8<Self>) -> (u64x4<Self>, u64x4<Self>) {
-        let mut b0 = [0; 4usize];
-        let mut b1 = [0; 4usize];
-        b0.copy_from_slice(&a.val.0[0..4usize]);
-        b1.copy_from_slice(&a.val.0[4usize..8usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[u64; 4usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
     fn from_vector_mask64x8(self, vector: i64x8<Self>) -> mask64x8<Self> {
@@ -9808,10 +9681,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>) {
-        let mut b0 = [0; 4usize];
-        let mut b1 = [0; 4usize];
-        b0.copy_from_slice(&a.val.0[0..4usize]);
-        b1.copy_from_slice(&a.val.0[4usize..8usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        let [low, high]: [[i64; 4usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
+        (low.simd_into(self), high.simd_into(self))
     }
 }
