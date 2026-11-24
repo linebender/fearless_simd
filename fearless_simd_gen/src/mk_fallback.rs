@@ -404,36 +404,27 @@ impl Level for Fallback {
                     }
                 }
             }
+            // Reinterpreting the arrays instead of using `copy_from_slice` lets LLVM keep the
+            // values in locals at `opt-level = "z"`, instead of copying them through the stack.
             OpSig::Combine { combined_ty } => {
-                let n = vec_ty.len;
-                let n2 = combined_ty.len;
-                let default = match vec_ty.scalar {
-                    ScalarType::Float => quote! { 0.0 },
-                    _ => quote! { 0 },
-                };
+                let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                let n = combined_ty.len;
                 quote! {
                     #method_sig {
-                        let mut result = [#default; #n2];
-                        result[0..#n].copy_from_slice(&a.val.0);
-                        result[#n..#n2].copy_from_slice(&b.val.0);
-                        result.simd_into(self)
+                        let combined: [#scalar; #n] =
+                            crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
+                        combined.simd_into(self)
                     }
                 }
             }
             OpSig::Split { half_ty } => {
-                let n = vec_ty.len;
-                let nhalf = half_ty.len;
-                let default = match vec_ty.scalar {
-                    ScalarType::Float => quote! { 0.0 },
-                    _ => quote! { 0 },
-                };
+                let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                let n = half_ty.len;
                 quote! {
                     #method_sig {
-                        let mut b0 = [#default; #nhalf];
-                        let mut b1 = [#default; #nhalf];
-                        b0.copy_from_slice(&a.val.0[0..#nhalf]);
-                        b1.copy_from_slice(&a.val.0[#nhalf..#n]);
-                        (b0.simd_into(self), b1.simd_into(self))
+                        let [low, high]: [[#scalar; #n]; 2] =
+                            crate::transmute::checked_transmute_copy(&a.val.0);
+                        (low.simd_into(self), high.simd_into(self))
                     }
                 }
             }
