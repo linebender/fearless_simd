@@ -149,7 +149,14 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn reverse_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        [a[3usize], a[2usize], a[1usize], a[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f32x4<Sse2>) -> f32x4<Sse2> {
+                let a = a.into();
+                _mm_shuffle_ps::<0b00_01_10_11>(a, a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
@@ -892,12 +899,16 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn reverse_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        [
-            a[15usize], a[14usize], a[13usize], a[12usize], a[11usize], a[10usize], a[9usize],
-            a[8usize], a[7usize], a[6usize], a[5usize], a[4usize], a[3usize], a[2usize], a[1usize],
-            a[0usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i8x16<Sse2>) -> i8x16<Sse2> {
+                let a = _mm_shufflelo_epi16::<0b00_01_10_11>(a.into());
+                let a = _mm_shufflehi_epi16::<0b00_01_10_11>(a);
+                let a = _mm_shuffle_epi32::<0b01_00_11_10>(a);
+                _mm_or_si128(_mm_slli_epi16::<8>(a), _mm_srli_epi16::<8>(a)).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -1710,12 +1721,16 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn reverse_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        [
-            a[15usize], a[14usize], a[13usize], a[12usize], a[11usize], a[10usize], a[9usize],
-            a[8usize], a[7usize], a[6usize], a[5usize], a[4usize], a[3usize], a[2usize], a[1usize],
-            a[0usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u8x16<Sse2>) -> u8x16<Sse2> {
+                let a = _mm_shufflelo_epi16::<0b00_01_10_11>(a.into());
+                let a = _mm_shufflehi_epi16::<0b00_01_10_11>(a);
+                let a = _mm_shuffle_epi32::<0b01_00_11_10>(a);
+                _mm_or_si128(_mm_slli_epi16::<8>(a), _mm_srli_epi16::<8>(a)).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -2847,10 +2862,15 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn reverse_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
-        [
-            a[7usize], a[6usize], a[5usize], a[4usize], a[3usize], a[2usize], a[1usize], a[0usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i16x8<Sse2>) -> i16x8<Sse2> {
+                let a = _mm_shufflelo_epi16::<0b00_01_10_11>(a.into());
+                let a = _mm_shufflehi_epi16::<0b00_01_10_11>(a);
+                _mm_shuffle_epi32::<0b01_00_11_10>(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -3508,10 +3528,15 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn reverse_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
-        [
-            a[7usize], a[6usize], a[5usize], a[4usize], a[3usize], a[2usize], a[1usize], a[0usize],
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u16x8<Sse2>) -> u16x8<Sse2> {
+                let a = _mm_shufflelo_epi16::<0b00_01_10_11>(a.into());
+                let a = _mm_shufflehi_epi16::<0b00_01_10_11>(a);
+                _mm_shuffle_epi32::<0b01_00_11_10>(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -4536,7 +4561,13 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn reverse_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
-        [a[3usize], a[2usize], a[1usize], a[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i32x4<Sse2>) -> i32x4<Sse2> {
+                _mm_shuffle_epi32::<0b00_01_10_11>(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -5207,7 +5238,13 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn reverse_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
-        [a[3usize], a[2usize], a[1usize], a[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u32x4<Sse2>) -> u32x4<Sse2> {
+                _mm_shuffle_epi32::<0b00_01_10_11>(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -6168,7 +6205,14 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn reverse_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        [a[1usize], a[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: f64x2<Sse2>) -> f64x2<Sse2> {
+                let a = a.into();
+                _mm_shuffle_pd::<0b01>(a, a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
@@ -6821,7 +6865,13 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn reverse_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
-        [a[1usize], a[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i64x2<Sse2>) -> i64x2<Sse2> {
+                _mm_shuffle_epi32::<0b01_00_11_10>(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -7340,7 +7390,13 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn reverse_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
-        [a[1usize], a[0usize]].simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: u64x2<Sse2>) -> u64x2<Sse2> {
+                _mm_shuffle_epi32::<0b01_00_11_10>(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {

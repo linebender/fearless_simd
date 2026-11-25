@@ -12,7 +12,7 @@ use crate::generic::{
     generic_classify, generic_mask_from_bitmask, generic_mask_from_vector, generic_mask_set,
     generic_mask_to_vector, generic_op, generic_op_name, generic_round, generic_to_degrees_radians,
     integer_lane_mask_rotate, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
-    reverse_method, reverse_vector_mask_method,
+    reverse_vector_mask_method,
 };
 use crate::level::Level;
 use crate::ops::{
@@ -2043,6 +2043,104 @@ impl X86 {
         }
     }
 
+    fn handle_reverse(&self, op: Op, method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+        if vec_ty.scalar == ScalarType::Mask {
+            if *self == Self::Avx512 {
+                let shift = avx512_mask_register_bits(vec_ty) - vec_ty.len;
+                let result = avx512_mask_value(vec_ty, quote! { a.val.reverse_bits() >> #shift });
+                return quote! {
+                    #method_sig {
+                        #result
+                    }
+                };
+            }
+            return reverse_vector_mask_method(op, vec_ty);
+        }
+
+        // Reverse element order within each 128-bit lane while keeping byte order
+        // within each element intact.
+        let reverse_lane_bytes = |n_bytes: usize| {
+            let elem_bytes = vec_ty.scalar_bits / 8;
+            let elems_per_lane = 16 / elem_bytes;
+            (0..n_bytes).map(move |out_byte| {
+                let byte_in_lane = out_byte % 16;
+                let out_elem = byte_in_lane / elem_bytes;
+                let byte_in_elem = byte_in_lane % elem_bytes;
+                let in_byte = (elems_per_lane - 1 - out_elem) * elem_bytes + byte_in_elem;
+                signed_literal(in_byte as u64, 8)
+            })
+        };
+
+        self.kernel_method(op, vec_ty, |token| {
+            match (*self, vec_ty.n_bits(), vec_ty.scalar_bits, vec_ty.scalar) {
+                // Reverse 16-bit elements within each 64-bit half, swap the halves,
+                // and swap bytes within each 16-bit element for 8-bit lanes.
+                (Self::Sse2, 128, 8, _) => quote! {
+                    let a = _mm_shufflelo_epi16::<0b00_01_10_11>(a.into());
+                    let a = _mm_shufflehi_epi16::<0b00_01_10_11>(a);
+                    let a = _mm_shuffle_epi32::<0b01_00_11_10>(a);
+                    _mm_or_si128(_mm_slli_epi16::<8>(a), _mm_srli_epi16::<8>(a)).simd_into(#token)
+                },
+                (Self::Sse2, 128, 16, _) => quote! {
+                    let a = _mm_shufflelo_epi16::<0b00_01_10_11>(a.into());
+                    let a = _mm_shufflehi_epi16::<0b00_01_10_11>(a);
+                    _mm_shuffle_epi32::<0b01_00_11_10>(a).simd_into(#token)
+                },
+                (_, 128, 8 | 16, _) => {
+                    let mask = reverse_lane_bytes(16);
+                    quote! {
+                        _mm_shuffle_epi8(a.into(), _mm_setr_epi8(#(#mask),*)).simd_into(#token)
+                    }
+                }
+                (_, 128, 32, ScalarType::Float) => quote! {
+                    let a = a.into();
+                    _mm_shuffle_ps::<0b00_01_10_11>(a, a).simd_into(#token)
+                },
+                (_, 128, 32, ScalarType::Int | ScalarType::Unsigned) => quote! {
+                    _mm_shuffle_epi32::<0b00_01_10_11>(a.into()).simd_into(#token)
+                },
+                (_, 128, 64, ScalarType::Float) => quote! {
+                    let a = a.into();
+                    _mm_shuffle_pd::<0b01>(a, a).simd_into(#token)
+                },
+                (_, 128, 64, ScalarType::Int | ScalarType::Unsigned) => quote! {
+                    _mm_shuffle_epi32::<0b01_00_11_10>(a.into()).simd_into(#token)
+                },
+                // `vpshufb` operates within each 128-bit lane, so AVX2 swaps halves first.
+                (Self::Avx2, 256, 8 | 16, _) => {
+                    let mask = reverse_lane_bytes(32);
+                    quote! {
+                        let a = a.into();
+                        let swapped = _mm256_permute2x128_si256::<0x01>(a, a);
+                        _mm256_shuffle_epi8(swapped, _mm256_setr_epi8(#(#mask),*)).simd_into(#token)
+                    }
+                }
+                (_, 256, 32, _) => {
+                    let permute = simple_sign_unaware_intrinsic("permutevar8x32", vec_ty);
+                    let indices = avx512_index_vector(vec_ty, (0..vec_ty.len).rev());
+                    quote! {
+                        #permute(a.into(), #indices).simd_into(#token)
+                    }
+                }
+                (_, 256, 64, _) => {
+                    let permute = simple_sign_unaware_intrinsic("permute4x64", vec_ty);
+                    quote! {
+                        #permute::<0b00_01_10_11>(a.into()).simd_into(#token)
+                    }
+                }
+                // AVX-512 BW/VBMI permutes 8/16-bit elements across the full register directly.
+                (Self::Avx512, 256, 8 | 16, _) | (Self::Avx512, 512, _, _) => {
+                    let permute = avx512_permutexvar_intrinsic(vec_ty);
+                    let indices = avx512_index_vector(vec_ty, (0..vec_ty.len).rev());
+                    quote! {
+                        #permute(#indices, a.into()).simd_into(#token)
+                    }
+                }
+                _ => unreachable!(),
+            }
+        })
+    }
+
     fn handle_swap_bytes(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         let method_sig = op.simd_trait_method_sig(vec_ty);
         // swap_bytes is a noop for i8/u8
@@ -2778,24 +2876,7 @@ impl X86 {
         }
 
         if method == "reverse" {
-            if vec_ty.scalar == ScalarType::Mask {
-                if *self == Self::Avx512 {
-                    let shift = avx512_mask_register_bits(vec_ty) - vec_ty.len;
-                    let result =
-                        avx512_mask_value(vec_ty, quote! { a.val.reverse_bits() >> #shift });
-                    return quote! {
-                        #method_sig {
-                            #result
-                        }
-                    };
-                }
-                return reverse_vector_mask_method(op, vec_ty);
-            }
-            return if *self == Self::Sse2 {
-                fallback_method(op, vec_ty)
-            } else {
-                reverse_method(op, vec_ty)
-            };
+            return self.handle_reverse(op, method_sig, vec_ty);
         }
 
         if method == "count_zeros" {

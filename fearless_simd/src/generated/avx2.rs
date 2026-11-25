@@ -145,9 +145,14 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        let indices: u8x16<Self> =
-            [12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3].simd_into(self);
-        self.swizzle_dyn_f32x4(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: f32x4<Avx2>) -> f32x4<Avx2> {
+                let a = a.into();
+                _mm_shuffle_ps::<0b00_01_10_11>(a, a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
@@ -861,9 +866,17 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        let indices: u8x16<Self> =
-            [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0].simd_into(self);
-        self.swizzle_dyn_i8x16(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i8x16<Avx2>) -> i8x16<Avx2> {
+                _mm_shuffle_epi8(
+                    a.into(),
+                    _mm_setr_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -1547,9 +1560,17 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        let indices: u8x16<Self> =
-            [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0].simd_into(self);
-        self.swizzle_dyn_u8x16(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u8x16<Avx2>) -> u8x16<Avx2> {
+                _mm_shuffle_epi8(
+                    a.into(),
+                    _mm_setr_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -2597,9 +2618,17 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
-        let indices: u8x16<Self> =
-            [14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1].simd_into(self);
-        self.swizzle_dyn_i16x8(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i16x8<Avx2>) -> i16x8<Avx2> {
+                _mm_shuffle_epi8(
+                    a.into(),
+                    _mm_setr_epi8(14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -3273,9 +3302,17 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
-        let indices: u8x16<Self> =
-            [14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1].simd_into(self);
-        self.swizzle_dyn_u16x8(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u16x8<Avx2>) -> u16x8<Avx2> {
+                _mm_shuffle_epi8(
+                    a.into(),
+                    _mm_setr_epi8(14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -4199,9 +4236,13 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
-        let indices: u8x16<Self> =
-            [12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3].simd_into(self);
-        self.swizzle_dyn_i32x4(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i32x4<Avx2>) -> i32x4<Avx2> {
+                _mm_shuffle_epi32::<0b00_01_10_11>(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -4857,9 +4898,13 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
-        let indices: u8x16<Self> =
-            [12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3].simd_into(self);
-        self.swizzle_dyn_u32x4(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u32x4<Avx2>) -> u32x4<Avx2> {
+                _mm_shuffle_epi32::<0b00_01_10_11>(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -5755,9 +5800,14 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        let indices: u8x16<Self> =
-            [8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7].simd_into(self);
-        self.swizzle_dyn_f64x2(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: f64x2<Avx2>) -> f64x2<Avx2> {
+                let a = a.into();
+                _mm_shuffle_pd::<0b01>(a, a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
@@ -6471,9 +6521,13 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
-        let indices: u8x16<Self> =
-            [8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7].simd_into(self);
-        self.swizzle_dyn_i64x2(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>) -> i64x2<Avx2> {
+                _mm_shuffle_epi32::<0b01_00_11_10>(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -7080,9 +7134,13 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
-        let indices: u8x16<Self> =
-            [8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7].simd_into(self);
-        self.swizzle_dyn_u64x2(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>) -> u64x2<Avx2> {
+                _mm_shuffle_epi32::<0b01_00_11_10>(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -7928,12 +7986,14 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        let indices: u8x32<Self> = [
-            28, 29, 30, 31, 24, 25, 26, 27, 20, 21, 22, 23, 16, 17, 18, 19, 12, 13, 14, 15, 8, 9,
-            10, 11, 4, 5, 6, 7, 0, 1, 2, 3,
-        ]
-        .simd_into(self);
-        self.swizzle_dyn_f32x8(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: f32x8<Avx2>) -> f32x8<Avx2> {
+                _mm256_permutevar8x32_ps(a.into(), _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0))
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
@@ -8588,12 +8648,22 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
-        let indices: u8x32<Self> = [
-            31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10,
-            9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
-        ]
-        .simd_into(self);
-        self.swizzle_dyn_i8x32(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i8x32<Avx2>) -> i8x32<Avx2> {
+                let a = a.into();
+                let swapped = _mm256_permute2x128_si256::<0x01>(a, a);
+                _mm256_shuffle_epi8(
+                    swapped,
+                    _mm256_setr_epi8(
+                        15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11,
+                        10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
+                    ),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
@@ -9221,12 +9291,22 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        let indices: u8x32<Self> = [
-            31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10,
-            9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
-        ]
-        .simd_into(self);
-        self.swizzle_dyn_u8x32(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u8x32<Avx2>) -> u8x32<Avx2> {
+                let a = a.into();
+                let swapped = _mm256_permute2x128_si256::<0x01>(a, a);
+                _mm256_shuffle_epi8(
+                    swapped,
+                    _mm256_setr_epi8(
+                        15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11,
+                        10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
+                    ),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
@@ -10394,12 +10474,22 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
-        let indices: u8x32<Self> = [
-            30, 31, 28, 29, 26, 27, 24, 25, 22, 23, 20, 21, 18, 19, 16, 17, 14, 15, 12, 13, 10, 11,
-            8, 9, 6, 7, 4, 5, 2, 3, 0, 1,
-        ]
-        .simd_into(self);
-        self.swizzle_dyn_i16x16(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i16x16<Avx2>) -> i16x16<Avx2> {
+                let a = a.into();
+                let swapped = _mm256_permute2x128_si256::<0x01>(a, a);
+                _mm256_shuffle_epi8(
+                    swapped,
+                    _mm256_setr_epi8(
+                        14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10,
+                        11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1,
+                    ),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
@@ -11042,12 +11132,22 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
-        let indices: u8x32<Self> = [
-            30, 31, 28, 29, 26, 27, 24, 25, 22, 23, 20, 21, 18, 19, 16, 17, 14, 15, 12, 13, 10, 11,
-            8, 9, 6, 7, 4, 5, 2, 3, 0, 1,
-        ]
-        .simd_into(self);
-        self.swizzle_dyn_u16x16(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u16x16<Avx2>) -> u16x16<Avx2> {
+                let a = a.into();
+                let swapped = _mm256_permute2x128_si256::<0x01>(a, a);
+                _mm256_shuffle_epi8(
+                    swapped,
+                    _mm256_setr_epi8(
+                        14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1, 14, 15, 12, 13, 10,
+                        11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1,
+                    ),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
@@ -11955,12 +12055,14 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
-        let indices: u8x32<Self> = [
-            28, 29, 30, 31, 24, 25, 26, 27, 20, 21, 22, 23, 16, 17, 18, 19, 12, 13, 14, 15, 8, 9,
-            10, 11, 4, 5, 6, 7, 0, 1, 2, 3,
-        ]
-        .simd_into(self);
-        self.swizzle_dyn_i32x8(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i32x8<Avx2>) -> i32x8<Avx2> {
+                _mm256_permutevar8x32_epi32(a.into(), _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0))
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
@@ -12616,12 +12718,14 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
-        let indices: u8x32<Self> = [
-            28, 29, 30, 31, 24, 25, 26, 27, 20, 21, 22, 23, 16, 17, 18, 19, 12, 13, 14, 15, 8, 9,
-            10, 11, 4, 5, 6, 7, 0, 1, 2, 3,
-        ]
-        .simd_into(self);
-        self.swizzle_dyn_u32x8(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u32x8<Avx2>) -> u32x8<Avx2> {
+                _mm256_permutevar8x32_epi32(a.into(), _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0))
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
@@ -13527,12 +13631,13 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        let indices: u8x32<Self> = [
-            24, 25, 26, 27, 28, 29, 30, 31, 16, 17, 18, 19, 20, 21, 22, 23, 8, 9, 10, 11, 12, 13,
-            14, 15, 0, 1, 2, 3, 4, 5, 6, 7,
-        ]
-        .simd_into(self);
-        self.swizzle_dyn_f64x4(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: f64x4<Avx2>) -> f64x4<Avx2> {
+                _mm256_permute4x64_pd::<0b00_01_10_11>(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
@@ -14226,12 +14331,13 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
-        let indices: u8x32<Self> = [
-            24, 25, 26, 27, 28, 29, 30, 31, 16, 17, 18, 19, 20, 21, 22, 23, 8, 9, 10, 11, 12, 13,
-            14, 15, 0, 1, 2, 3, 4, 5, 6, 7,
-        ]
-        .simd_into(self);
-        self.swizzle_dyn_i64x4(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>) -> i64x4<Avx2> {
+                _mm256_permute4x64_epi64::<0b00_01_10_11>(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_i64x4<const SHIFT: usize>(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
@@ -14855,12 +14961,13 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reverse_u64x4(self, a: u64x4<Self>) -> u64x4<Self> {
-        let indices: u8x32<Self> = [
-            24, 25, 26, 27, 28, 29, 30, 31, 16, 17, 18, 19, 20, 21, 22, 23, 8, 9, 10, 11, 12, 13,
-            14, 15, 0, 1, 2, 3, 4, 5, 6, 7,
-        ]
-        .simd_into(self);
-        self.swizzle_dyn_u64x4(a, indices)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>) -> u64x4<Avx2> {
+                _mm256_permute4x64_epi64::<0b00_01_10_11>(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn slide_u64x4<const SHIFT: usize>(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
