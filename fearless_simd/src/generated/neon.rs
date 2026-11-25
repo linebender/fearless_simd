@@ -348,7 +348,8 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f32x4<Neon>) -> f32 {
-                vmaxnmvq_f32(a.into())
+                let a = vmaxnmq_f32(a.into(), a.into());
+                vmaxnmvq_f32(a)
             }
         );
         kernel(self, a)
@@ -358,7 +359,8 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f32x4<Neon>) -> f32 {
-                vminnmvq_f32(a.into())
+                let a = vminnmq_f32(a.into(), a.into());
+                vminnmvq_f32(a)
             }
         );
         kernel(self, a)
@@ -411,7 +413,9 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> f32x4<Neon> {
-                vmaxnmq_f32(a.into(), b.into()).simd_into(token)
+                let a = vmaxnmq_f32(a.into(), a.into());
+                let b = vmaxnmq_f32(b.into(), b.into());
+                vmaxnmq_f32(a, b).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -421,7 +425,9 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> f32x4<Neon> {
-                vminnmq_f32(a.into(), b.into()).simd_into(token)
+                let a = vminnmq_f32(a.into(), a.into());
+                let b = vminnmq_f32(b.into(), b.into());
+                vminnmq_f32(a, b).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -5242,7 +5248,8 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f64x2<Neon>) -> f64 {
-                vmaxnmvq_f64(a.into())
+                let a = vmaxnmq_f64(a.into(), a.into());
+                vmaxnmvq_f64(a)
             }
         );
         kernel(self, a)
@@ -5252,7 +5259,8 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f64x2<Neon>) -> f64 {
-                vminnmvq_f64(a.into())
+                let a = vminnmq_f64(a.into(), a.into());
+                vminnmvq_f64(a)
             }
         );
         kernel(self, a)
@@ -5303,7 +5311,9 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> f64x2<Neon> {
-                vmaxnmq_f64(a.into(), b.into()).simd_into(token)
+                let a = vmaxnmq_f64(a.into(), a.into());
+                let b = vmaxnmq_f64(b.into(), b.into());
+                vmaxnmq_f64(a, b).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -5313,7 +5323,9 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> f64x2<Neon> {
-                vminnmq_f64(a.into(), b.into()).simd_into(token)
+                let a = vminnmq_f64(a.into(), a.into());
+                let b = vminnmq_f64(b.into(), b.into());
+                vminnmq_f64(a, b).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -6982,6 +6994,34 @@ impl Simd for Neon {
         ))
     }
     #[inline(always)]
+    fn reduce_max_precise_f32x8(self, a: f32x8<Self>) -> f32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x8<Neon>) -> f32 {
+                let (a0, a1) = a.split();
+                let a0 = vmaxnmq_f32(a0.into(), a0.into());
+                let a1 = vmaxnmq_f32(a1.into(), a1.into());
+                let a = vmaxnmq_f32(a0, a1);
+                vmaxnmvq_f32(a)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_precise_f32x8(self, a: f32x8<Self>) -> f32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x8<Neon>) -> f32 {
+                let (a0, a1) = a.split();
+                let a0 = vminnmq_f32(a0.into(), a0.into());
+                let a1 = vminnmq_f32(a1.into(), a1.into());
+                let a = vminnmq_f32(a0, a1);
+                vminnmvq_f32(a)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn is_nan_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
         a.simd_ne(a)
     }
@@ -8195,6 +8235,34 @@ impl Simd for Neon {
         ))
     }
     #[inline(always)]
+    fn reduce_max_precise_f64x4(self, a: f64x4<Self>) -> f64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x4<Neon>) -> f64 {
+                let (a0, a1) = a.split();
+                let a0 = vmaxnmq_f64(a0.into(), a0.into());
+                let a1 = vmaxnmq_f64(a1.into(), a1.into());
+                let a = vmaxnmq_f64(a0, a1);
+                vmaxnmvq_f64(a)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_precise_f64x4(self, a: f64x4<Self>) -> f64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x4<Neon>) -> f64 {
+                let (a0, a1) = a.split();
+                let a0 = vminnmq_f64(a0.into(), a0.into());
+                let a1 = vminnmq_f64(a1.into(), a1.into());
+                let a = vminnmq_f64(a0, a1);
+                vminnmvq_f64(a)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn is_nan_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
         a.simd_ne(a)
     }
@@ -8662,6 +8730,46 @@ impl Simd for Neon {
             mask,
             Bytes::to_bytes(merge),
         ))
+    }
+    #[inline(always)]
+    fn reduce_max_precise_f32x16(self, a: f32x16<Self>) -> f32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x16<Neon>) -> f32 {
+                let (a0, a1) = a.split();
+                let (a00, a01) = a0.split();
+                let (a10, a11) = a1.split();
+                let a00 = vmaxnmq_f32(a00.into(), a00.into());
+                let a01 = vmaxnmq_f32(a01.into(), a01.into());
+                let a10 = vmaxnmq_f32(a10.into(), a10.into());
+                let a11 = vmaxnmq_f32(a11.into(), a11.into());
+                let a0 = vmaxnmq_f32(a00, a01);
+                let a1 = vmaxnmq_f32(a10, a11);
+                let a = vmaxnmq_f32(a0, a1);
+                vmaxnmvq_f32(a)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_precise_f32x16(self, a: f32x16<Self>) -> f32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x16<Neon>) -> f32 {
+                let (a0, a1) = a.split();
+                let (a00, a01) = a0.split();
+                let (a10, a11) = a1.split();
+                let a00 = vminnmq_f32(a00.into(), a00.into());
+                let a01 = vminnmq_f32(a01.into(), a01.into());
+                let a10 = vminnmq_f32(a10.into(), a10.into());
+                let a11 = vminnmq_f32(a11.into(), a11.into());
+                let a0 = vminnmq_f32(a00, a01);
+                let a1 = vminnmq_f32(a10, a11);
+                let a = vminnmq_f32(a0, a1);
+                vminnmvq_f32(a)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn is_nan_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
@@ -9932,6 +10040,46 @@ impl Simd for Neon {
             mask,
             Bytes::to_bytes(merge),
         ))
+    }
+    #[inline(always)]
+    fn reduce_max_precise_f64x8(self, a: f64x8<Self>) -> f64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x8<Neon>) -> f64 {
+                let (a0, a1) = a.split();
+                let (a00, a01) = a0.split();
+                let (a10, a11) = a1.split();
+                let a00 = vmaxnmq_f64(a00.into(), a00.into());
+                let a01 = vmaxnmq_f64(a01.into(), a01.into());
+                let a10 = vmaxnmq_f64(a10.into(), a10.into());
+                let a11 = vmaxnmq_f64(a11.into(), a11.into());
+                let a0 = vmaxnmq_f64(a00, a01);
+                let a1 = vmaxnmq_f64(a10, a11);
+                let a = vmaxnmq_f64(a0, a1);
+                vmaxnmvq_f64(a)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reduce_min_precise_f64x8(self, a: f64x8<Self>) -> f64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x8<Neon>) -> f64 {
+                let (a0, a1) = a.split();
+                let (a00, a01) = a0.split();
+                let (a10, a11) = a1.split();
+                let a00 = vminnmq_f64(a00.into(), a00.into());
+                let a01 = vminnmq_f64(a01.into(), a01.into());
+                let a10 = vminnmq_f64(a10.into(), a10.into());
+                let a11 = vminnmq_f64(a11.into(), a11.into());
+                let a0 = vminnmq_f64(a00, a01);
+                let a1 = vminnmq_f64(a10, a11);
+                let a = vminnmq_f64(a0, a1);
+                vminnmvq_f64(a)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn is_nan_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
