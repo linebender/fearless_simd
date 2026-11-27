@@ -519,14 +519,6 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn interleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>) {
-        (self.zip_low_f32x4(a, b), self.zip_high_f32x4(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>) {
-        (self.unzip_low_f32x4(a, b), self.unzip_high_f32x4(a, b))
-    }
-    #[inline(always)]
     fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -615,38 +607,6 @@ impl Simd for Neon {
     #[inline(always)]
     fn to_radians_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
         a * const { f32::to_radians(1.0) }
-    }
-    #[inline(always)]
-    fn is_nan_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
-        a.simd_ne(a)
-    }
-    #[inline(always)]
-    fn is_infinite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
-        a.abs().simd_eq(f32::INFINITY)
-    }
-    #[inline(always)]
-    fn is_finite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
-        a.abs().simd_lt(f32::INFINITY)
-    }
-    #[inline(always)]
-    fn is_subnormal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
-        let i: i32x4<Self> = a.bitcast();
-        (i & 0x7F80_0000_i32).simd_eq(0) & (i & 0x007F_FFFF_i32).simd_ne(0)
-    }
-    #[inline(always)]
-    fn is_normal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
-        let i: i32x4<Self> = a.bitcast();
-        let exp = i & 0x7F80_0000_i32;
-        exp.simd_ne(0) & exp.simd_ne(0x7F80_0000_i32)
-    }
-    #[inline(always)]
-    fn is_sign_positive_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
-        let i: i32x4<Self> = a.bitcast();
-        (i & i32::MIN).simd_eq(0)
-    }
-    #[inline(always)]
-    fn is_sign_negative_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
-        !a.is_sign_positive()
     }
     #[inline(always)]
     fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
@@ -838,14 +798,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        self.count_ones_i8x16(self.not_i8x16(a))
-    }
-    #[inline(always)]
-    fn swap_bytes_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        a
-    }
-    #[inline(always)]
     fn reverse_bits_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -903,36 +855,6 @@ impl Simd for Neon {
             #[inline(always)]
             fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
                 vmulq_s8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn and_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
-                vandq_s8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
-                vorrq_s8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
-                veorq_s8(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -1053,14 +975,6 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn clamp_i8x16(self, a: i8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
-    }
-    #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1137,14 +1051,6 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn interleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>) {
-        (self.zip_low_i8x16(a, b), self.zip_high_i8x16(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>) {
-        (self.unzip_low_i8x16(a, b), self.unzip_high_i8x16(a, b))
     }
     #[inline(always)]
     fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
@@ -1491,14 +1397,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        self.count_ones_u8x16(self.not_u8x16(a))
-    }
-    #[inline(always)]
-    fn swap_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        a
-    }
-    #[inline(always)]
     fn reverse_bits_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1706,14 +1604,6 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn clamp_u8x16(self, a: u8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
-    }
-    #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1790,14 +1680,6 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn interleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>) {
-        (self.zip_low_u8x16(a, b), self.zip_high_u8x16(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>) {
-        (self.unzip_low_u8x16(a, b), self.unzip_high_u8x16(a, b))
     }
     #[inline(always)]
     fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
@@ -1951,20 +1833,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn from_vector_mask8x16(self, vector: i8x16<Self>) -> mask8x16<Self> {
-        mask8x16 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask8x16(self, a: mask8x16<Self>) -> i8x16<Self> {
-        i8x16 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask8x16(self, a: &mut mask8x16<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 16usize,
@@ -1974,88 +1842,6 @@ impl Simd for Neon {
         let mut lanes: [i8; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask8x16<const OFFSET: usize>(
-        self,
-        a: mask8x16<Self>,
-    ) -> mask8x16<Self> {
-        let int = i8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask8x16<const OFFSET: usize>(
-        self,
-        a: mask8x16<Self>,
-    ) -> mask8x16<Self> {
-        let int = i8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: mask8x16<Neon>, b: mask8x16<Neon>) -> mask8x16<Neon> {
-                vandq_s8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: mask8x16<Neon>, b: mask8x16<Neon>) -> mask8x16<Neon> {
-                vorrq_s8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: mask8x16<Neon>, b: mask8x16<Neon>) -> mask8x16<Neon> {
-                veorq_s8(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: mask8x16<Neon>) -> mask8x16<Neon> {
-                vmvnq_s8(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reverse_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self> {
-        let lanes = i8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let reversed = self.reverse_i8x16(lanes);
-        mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&reversed.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn select_mask8x16(
@@ -2285,10 +2071,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
-        self.count_ones_i16x8(self.not_i16x8(a))
-    }
-    #[inline(always)]
     fn swap_bytes_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2356,36 +2138,6 @@ impl Simd for Neon {
             #[inline(always)]
             fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
                 vmulq_s16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn and_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
-                vandq_s16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
-                vorrq_s16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
-                veorq_s16(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -2505,14 +2257,6 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn clamp_i16x8(self, a: i16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
-    }
-    #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2589,14 +2333,6 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn interleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>) {
-        (self.zip_low_i16x8(a, b), self.zip_high_i16x8(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>) {
-        (self.unzip_low_i16x8(a, b), self.unzip_high_i16x8(a, b))
     }
     #[inline(always)]
     fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
@@ -2872,10 +2608,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
-        self.count_ones_u16x8(self.not_u16x8(a))
-    }
-    #[inline(always)]
     fn swap_bytes_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2943,36 +2675,6 @@ impl Simd for Neon {
             #[inline(always)]
             fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
                 vmulq_u16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn and_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
-                vandq_u16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
-                vorrq_u16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
-                veorq_u16(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -3092,14 +2794,6 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn clamp_u16x8(self, a: u16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
-    }
-    #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3176,14 +2870,6 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn interleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>) {
-        (self.zip_low_u16x8(a, b), self.zip_high_u16x8(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>) {
-        (self.unzip_low_u16x8(a, b), self.unzip_high_u16x8(a, b))
     }
     #[inline(always)]
     fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
@@ -3363,20 +3049,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn from_vector_mask16x8(self, vector: i16x8<Self>) -> mask16x8<Self> {
-        mask16x8 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask16x8(self, a: mask16x8<Self>) -> i16x8<Self> {
-        i16x8 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask16x8(self, a: &mut mask16x8<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 8usize,
@@ -3386,88 +3058,6 @@ impl Simd for Neon {
         let mut lanes: [i16; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask16x8<const OFFSET: usize>(
-        self,
-        a: mask16x8<Self>,
-    ) -> mask16x8<Self> {
-        let int = i16x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask16x8 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask16x8<const OFFSET: usize>(
-        self,
-        a: mask16x8<Self>,
-    ) -> mask16x8<Self> {
-        let int = i16x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask16x8 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: mask16x8<Neon>, b: mask16x8<Neon>) -> mask16x8<Neon> {
-                vandq_s16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: mask16x8<Neon>, b: mask16x8<Neon>) -> mask16x8<Neon> {
-                vorrq_s16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: mask16x8<Neon>, b: mask16x8<Neon>) -> mask16x8<Neon> {
-                veorq_s16(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: mask16x8<Neon>) -> mask16x8<Neon> {
-                vmvnq_s16(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reverse_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self> {
-        let lanes = i16x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let reversed = self.reverse_i16x8(lanes);
-        mask16x8 {
-            val: crate::transmute::checked_transmute_copy(&reversed.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn select_mask16x8(
@@ -3709,10 +3299,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
-        self.count_ones_i32x4(self.not_i32x4(a))
-    }
-    #[inline(always)]
     fn swap_bytes_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3780,36 +3366,6 @@ impl Simd for Neon {
             #[inline(always)]
             fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
                 vmulq_s32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn and_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
-                vandq_s32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
-                vorrq_s32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
-                veorq_s32(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -3928,14 +3484,6 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn clamp_i32x4(self, a: i32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
-    }
-    #[inline(always)]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4012,14 +3560,6 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn interleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>) {
-        (self.zip_low_i32x4(a, b), self.zip_high_i32x4(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>) {
-        (self.unzip_low_i32x4(a, b), self.unzip_high_i32x4(a, b))
     }
     #[inline(always)]
     fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
@@ -4305,10 +3845,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
-        self.count_ones_u32x4(self.not_u32x4(a))
-    }
-    #[inline(always)]
     fn swap_bytes_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4376,36 +3912,6 @@ impl Simd for Neon {
             #[inline(always)]
             fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
                 vmulq_u32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn and_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
-                vandq_u32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
-                vorrq_u32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
-                veorq_u32(a.into(), b.into()).simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -4524,14 +4030,6 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn clamp_u32x4(self, a: u32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
-    }
-    #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4608,14 +4106,6 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn interleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>) {
-        (self.zip_low_u32x4(a, b), self.zip_high_u32x4(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>) {
-        (self.unzip_low_u32x4(a, b), self.unzip_high_u32x4(a, b))
     }
     #[inline(always)]
     fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
@@ -4804,20 +4294,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn from_vector_mask32x4(self, vector: i32x4<Self>) -> mask32x4<Self> {
-        mask32x4 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask32x4(self, a: mask32x4<Self>) -> i32x4<Self> {
-        i32x4 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask32x4(self, a: &mut mask32x4<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 4usize,
@@ -4827,88 +4303,6 @@ impl Simd for Neon {
         let mut lanes: [i32; 4usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask32x4<const OFFSET: usize>(
-        self,
-        a: mask32x4<Self>,
-    ) -> mask32x4<Self> {
-        let int = i32x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask32x4 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask32x4<const OFFSET: usize>(
-        self,
-        a: mask32x4<Self>,
-    ) -> mask32x4<Self> {
-        let int = i32x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask32x4 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: mask32x4<Neon>, b: mask32x4<Neon>) -> mask32x4<Neon> {
-                vandq_s32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: mask32x4<Neon>, b: mask32x4<Neon>) -> mask32x4<Neon> {
-                vorrq_s32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: mask32x4<Neon>, b: mask32x4<Neon>) -> mask32x4<Neon> {
-                veorq_s32(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: mask32x4<Neon>) -> mask32x4<Neon> {
-                vmvnq_s32(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reverse_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
-        let lanes = i32x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let reversed = self.reverse_i32x4(lanes);
-        mask32x4 {
-            val: crate::transmute::checked_transmute_copy(&reversed.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn select_mask32x4(
@@ -5411,14 +4805,6 @@ impl Simd for Neon {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn interleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>) {
-        (self.zip_low_f64x2(a, b), self.zip_high_f64x2(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>) {
-        (self.unzip_low_f64x2(a, b), self.unzip_high_f64x2(a, b))
-    }
-    #[inline(always)]
     fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5507,38 +4893,6 @@ impl Simd for Neon {
     #[inline(always)]
     fn to_radians_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
         a * const { f64::to_radians(1.0) }
-    }
-    #[inline(always)]
-    fn is_nan_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
-        a.simd_ne(a)
-    }
-    #[inline(always)]
-    fn is_infinite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
-        a.abs().simd_eq(f64::INFINITY)
-    }
-    #[inline(always)]
-    fn is_finite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
-        a.abs().simd_lt(f64::INFINITY)
-    }
-    #[inline(always)]
-    fn is_subnormal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
-        let i: i64x2<Self> = a.bitcast();
-        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & (i & 0x000F_FFFF_FFFF_FFFF_i64).simd_ne(0)
-    }
-    #[inline(always)]
-    fn is_normal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
-        let i: i64x2<Self> = a.bitcast();
-        let exp = i & 0x7FF0_0000_0000_0000_i64;
-        exp.simd_ne(0) & exp.simd_ne(0x7FF0_0000_0000_0000_i64)
-    }
-    #[inline(always)]
-    fn is_sign_positive_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
-        let i: i64x2<Self> = a.bitcast();
-        (i & i64::MIN).simd_eq(0)
-    }
-    #[inline(always)]
-    fn is_sign_negative_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
-        !a.is_sign_positive()
     }
     #[inline(always)]
     fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
@@ -5772,10 +5126,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
-        self.count_ones_i64x2(self.not_i64x2(a))
-    }
-    #[inline(always)]
     fn swap_bytes_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5844,36 +5194,6 @@ impl Simd for Neon {
             i64::wrapping_mul(a[1usize], b[1usize]),
         ]
         .simd_into(self)
-    }
-    #[inline(always)]
-    fn and_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: i64x2<Neon>, b: i64x2<Neon>) -> i64x2<Neon> {
-                vandq_s64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: i64x2<Neon>, b: i64x2<Neon>) -> i64x2<Neon> {
-                vorrq_s64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: i64x2<Neon>, b: i64x2<Neon>) -> i64x2<Neon> {
-                veorq_s64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
@@ -5967,14 +5287,6 @@ impl Simd for Neon {
         .simd_into(self)
     }
     #[inline(always)]
-    fn clamp_i64x2(self, a: i64x2<Self>, b: i64x2<Self>, c: i64x2<Self>) -> i64x2<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
-    }
-    #[inline(always)]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6051,14 +5363,6 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn interleave_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> (i64x2<Self>, i64x2<Self>) {
-        (self.zip_low_i64x2(a, b), self.zip_high_i64x2(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> (i64x2<Self>, i64x2<Self>) {
-        (self.unzip_low_i64x2(a, b), self.unzip_high_i64x2(a, b))
     }
     #[inline(always)]
     fn select_i64x2(self, a: mask64x2<Self>, b: i64x2<Self>, c: i64x2<Self>) -> i64x2<Self> {
@@ -6287,10 +5591,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn count_zeros_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
-        self.count_ones_u64x2(self.not_u64x2(a))
-    }
-    #[inline(always)]
     fn swap_bytes_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6359,36 +5659,6 @@ impl Simd for Neon {
             u64::wrapping_mul(a[1usize], b[1usize]),
         ]
         .simd_into(self)
-    }
-    #[inline(always)]
-    fn and_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: u64x2<Neon>, b: u64x2<Neon>) -> u64x2<Neon> {
-                vandq_u64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: u64x2<Neon>, b: u64x2<Neon>) -> u64x2<Neon> {
-                vorrq_u64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: u64x2<Neon>, b: u64x2<Neon>) -> u64x2<Neon> {
-                veorq_u64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
@@ -6482,14 +5752,6 @@ impl Simd for Neon {
         .simd_into(self)
     }
     #[inline(always)]
-    fn clamp_u64x2(self, a: u64x2<Self>, b: u64x2<Self>, c: u64x2<Self>) -> u64x2<Self> {
-        debug_assert!(
-            b.simd_le(c).all_true(),
-            "clamp requires min <= max for all elements"
-        );
-        a.max(b).min(c)
-    }
-    #[inline(always)]
     fn simd_eq_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6566,14 +5828,6 @@ impl Simd for Neon {
             }
         );
         kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn interleave_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> (u64x2<Self>, u64x2<Self>) {
-        (self.zip_low_u64x2(a, b), self.zip_high_u64x2(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> (u64x2<Self>, u64x2<Self>) {
-        (self.unzip_low_u64x2(a, b), self.unzip_high_u64x2(a, b))
     }
     #[inline(always)]
     fn select_u64x2(self, a: mask64x2<Self>, b: u64x2<Self>, c: u64x2<Self>) -> u64x2<Self> {
@@ -6701,20 +5955,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn from_vector_mask64x2(self, vector: i64x2<Self>) -> mask64x2<Self> {
-        mask64x2 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask64x2(self, a: mask64x2<Self>) -> i64x2<Self> {
-        i64x2 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask64x2(self, a: &mut mask64x2<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 2usize,
@@ -6724,88 +5964,6 @@ impl Simd for Neon {
         let mut lanes: [i64; 2usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask64x2<const OFFSET: usize>(
-        self,
-        a: mask64x2<Self>,
-    ) -> mask64x2<Self> {
-        let int = i64x2 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask64x2 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask64x2<const OFFSET: usize>(
-        self,
-        a: mask64x2<Self>,
-    ) -> mask64x2<Self> {
-        let int = i64x2 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask64x2 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: mask64x2<Neon>, b: mask64x2<Neon>) -> mask64x2<Neon> {
-                vandq_s64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn or_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: mask64x2<Neon>, b: mask64x2<Neon>) -> mask64x2<Neon> {
-                vorrq_s64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn xor_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: mask64x2<Neon>, b: mask64x2<Neon>) -> mask64x2<Neon> {
-                veorq_s64(a.into(), b.into()).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
-    }
-    #[inline(always)]
-    fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: mask64x2<Neon>) -> mask64x2<Neon> {
-                vreinterpretq_s64_s32(vmvnq_s32(vreinterpretq_s32_s64(a.into()))).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reverse_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
-        let lanes = i64x2 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let reversed = self.reverse_i64x2(lanes);
-        mask64x2 {
-            val: crate::transmute::checked_transmute_copy(&reversed.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn select_mask64x2(
@@ -6980,38 +6138,6 @@ impl Simd for Neon {
             mask,
             Bytes::to_bytes(merge),
         ))
-    }
-    #[inline(always)]
-    fn is_nan_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
-        a.simd_ne(a)
-    }
-    #[inline(always)]
-    fn is_infinite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
-        a.abs().simd_eq(f32::INFINITY)
-    }
-    #[inline(always)]
-    fn is_finite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
-        a.abs().simd_lt(f32::INFINITY)
-    }
-    #[inline(always)]
-    fn is_subnormal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
-        let i: i32x8<Self> = a.bitcast();
-        (i & 0x7F80_0000_i32).simd_eq(0) & (i & 0x007F_FFFF_i32).simd_ne(0)
-    }
-    #[inline(always)]
-    fn is_normal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
-        let i: i32x8<Self> = a.bitcast();
-        let exp = i & 0x7F80_0000_i32;
-        exp.simd_ne(0) & exp.simd_ne(0x7F80_0000_i32)
-    }
-    #[inline(always)]
-    fn is_sign_positive_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
-        let i: i32x8<Self> = a.bitcast();
-        (i & i32::MIN).simd_eq(0)
-    }
-    #[inline(always)]
-    fn is_sign_negative_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
-        !a.is_sign_positive()
     }
     #[inline(always)]
     fn combine_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x16<Self> {
@@ -7411,20 +6537,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn from_vector_mask8x32(self, vector: i8x32<Self>) -> mask8x32<Self> {
-        mask8x32 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask8x32(self, a: mask8x32<Self>) -> i8x32<Self> {
-        i8x32 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask8x32(self, a: &mut mask8x32<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 32usize,
@@ -7434,36 +6546,6 @@ impl Simd for Neon {
         let mut lanes: [i8; 32usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask8x32<const OFFSET: usize>(
-        self,
-        a: mask8x32<Self>,
-    ) -> mask8x32<Self> {
-        let int = i8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask8x32<const OFFSET: usize>(
-        self,
-        a: mask8x32<Self>,
-    ) -> mask8x32<Self> {
-        let int = i8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn combine_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x64<Self> {
@@ -7721,20 +6803,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn from_vector_mask16x16(self, vector: i16x16<Self>) -> mask16x16<Self> {
-        mask16x16 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask16x16(self, a: mask16x16<Self>) -> i16x16<Self> {
-        i16x16 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask16x16(self, a: &mut mask16x16<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 16usize,
@@ -7744,36 +6812,6 @@ impl Simd for Neon {
         let mut lanes: [i16; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask16x16<const OFFSET: usize>(
-        self,
-        a: mask16x16<Self>,
-    ) -> mask16x16<Self> {
-        let int = i16x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask16x16 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask16x16<const OFFSET: usize>(
-        self,
-        a: mask16x16<Self>,
-    ) -> mask16x16<Self> {
-        let int = i16x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask16x16 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn combine_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x32<Self> {
@@ -8031,20 +7069,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn from_vector_mask32x8(self, vector: i32x8<Self>) -> mask32x8<Self> {
-        mask32x8 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask32x8(self, a: mask32x8<Self>) -> i32x8<Self> {
-        i32x8 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask32x8(self, a: &mut mask32x8<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 8usize,
@@ -8054,36 +7078,6 @@ impl Simd for Neon {
         let mut lanes: [i32; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask32x8<const OFFSET: usize>(
-        self,
-        a: mask32x8<Self>,
-    ) -> mask32x8<Self> {
-        let int = i32x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask32x8 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask32x8<const OFFSET: usize>(
-        self,
-        a: mask32x8<Self>,
-    ) -> mask32x8<Self> {
-        let int = i32x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask32x8 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn combine_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x16<Self> {
@@ -8193,38 +7187,6 @@ impl Simd for Neon {
             mask,
             Bytes::to_bytes(merge),
         ))
-    }
-    #[inline(always)]
-    fn is_nan_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
-        a.simd_ne(a)
-    }
-    #[inline(always)]
-    fn is_infinite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
-        a.abs().simd_eq(f64::INFINITY)
-    }
-    #[inline(always)]
-    fn is_finite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
-        a.abs().simd_lt(f64::INFINITY)
-    }
-    #[inline(always)]
-    fn is_subnormal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
-        let i: i64x4<Self> = a.bitcast();
-        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & (i & 0x000F_FFFF_FFFF_FFFF_i64).simd_ne(0)
-    }
-    #[inline(always)]
-    fn is_normal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
-        let i: i64x4<Self> = a.bitcast();
-        let exp = i & 0x7FF0_0000_0000_0000_i64;
-        exp.simd_ne(0) & exp.simd_ne(0x7FF0_0000_0000_0000_i64)
-    }
-    #[inline(always)]
-    fn is_sign_positive_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
-        let i: i64x4<Self> = a.bitcast();
-        (i & i64::MIN).simd_eq(0)
-    }
-    #[inline(always)]
-    fn is_sign_negative_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
-        !a.is_sign_positive()
     }
     #[inline(always)]
     fn combine_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x8<Self> {
@@ -8482,20 +7444,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn from_vector_mask64x4(self, vector: i64x4<Self>) -> mask64x4<Self> {
-        mask64x4 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask64x4(self, a: mask64x4<Self>) -> i64x4<Self> {
-        i64x4 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask64x4(self, a: &mut mask64x4<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 4usize,
@@ -8505,36 +7453,6 @@ impl Simd for Neon {
         let mut lanes: [i64; 4usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask64x4<const OFFSET: usize>(
-        self,
-        a: mask64x4<Self>,
-    ) -> mask64x4<Self> {
-        let int = i64x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask64x4 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask64x4<const OFFSET: usize>(
-        self,
-        a: mask64x4<Self>,
-    ) -> mask64x4<Self> {
-        let int = i64x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask64x4 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn combine_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x8<Self> {
@@ -8662,38 +7580,6 @@ impl Simd for Neon {
             mask,
             Bytes::to_bytes(merge),
         ))
-    }
-    #[inline(always)]
-    fn is_nan_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
-        a.simd_ne(a)
-    }
-    #[inline(always)]
-    fn is_infinite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
-        a.abs().simd_eq(f32::INFINITY)
-    }
-    #[inline(always)]
-    fn is_finite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
-        a.abs().simd_lt(f32::INFINITY)
-    }
-    #[inline(always)]
-    fn is_subnormal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
-        let i: i32x16<Self> = a.bitcast();
-        (i & 0x7F80_0000_i32).simd_eq(0) & (i & 0x007F_FFFF_i32).simd_ne(0)
-    }
-    #[inline(always)]
-    fn is_normal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
-        let i: i32x16<Self> = a.bitcast();
-        let exp = i & 0x7F80_0000_i32;
-        exp.simd_ne(0) & exp.simd_ne(0x7F80_0000_i32)
-    }
-    #[inline(always)]
-    fn is_sign_positive_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
-        let i: i32x16<Self> = a.bitcast();
-        (i & i32::MIN).simd_eq(0)
-    }
-    #[inline(always)]
-    fn is_sign_negative_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
-        !a.is_sign_positive()
     }
     #[inline(always)]
     fn split_f32x16(self, a: f32x16<Self>) -> (f32x8<Self>, f32x8<Self>) {
@@ -9113,20 +7999,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn from_vector_mask8x64(self, vector: i8x64<Self>) -> mask8x64<Self> {
-        mask8x64 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask8x64(self, a: mask8x64<Self>) -> i8x64<Self> {
-        i8x64 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask8x64(self, a: &mut mask8x64<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 64usize,
@@ -9136,36 +8008,6 @@ impl Simd for Neon {
         let mut lanes: [i8; 64usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask8x64<const OFFSET: usize>(
-        self,
-        a: mask8x64<Self>,
-    ) -> mask8x64<Self> {
-        let int = i8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask8x64<const OFFSET: usize>(
-        self,
-        a: mask8x64<Self>,
-    ) -> mask8x64<Self> {
-        let int = i8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn split_mask8x64(self, a: mask8x64<Self>) -> (mask8x32<Self>, mask8x32<Self>) {
@@ -9437,20 +8279,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn from_vector_mask16x32(self, vector: i16x32<Self>) -> mask16x32<Self> {
-        mask16x32 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask16x32(self, a: mask16x32<Self>) -> i16x32<Self> {
-        i16x32 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask16x32(self, a: &mut mask16x32<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 32usize,
@@ -9460,36 +8288,6 @@ impl Simd for Neon {
         let mut lanes: [i16; 32usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask16x32<const OFFSET: usize>(
-        self,
-        a: mask16x32<Self>,
-    ) -> mask16x32<Self> {
-        let int = i16x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask16x32 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask16x32<const OFFSET: usize>(
-        self,
-        a: mask16x32<Self>,
-    ) -> mask16x32<Self> {
-        let int = i16x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask16x32 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn split_mask16x32(self, a: mask16x32<Self>) -> (mask16x16<Self>, mask16x16<Self>) {
@@ -9761,20 +8559,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn from_vector_mask32x16(self, vector: i32x16<Self>) -> mask32x16<Self> {
-        mask32x16 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask32x16(self, a: mask32x16<Self>) -> i32x16<Self> {
-        i32x16 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask32x16(self, a: &mut mask32x16<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 16usize,
@@ -9784,36 +8568,6 @@ impl Simd for Neon {
         let mut lanes: [i32; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask32x16<const OFFSET: usize>(
-        self,
-        a: mask32x16<Self>,
-    ) -> mask32x16<Self> {
-        let int = i32x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask32x16 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask32x16<const OFFSET: usize>(
-        self,
-        a: mask32x16<Self>,
-    ) -> mask32x16<Self> {
-        let int = i32x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask32x16 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn split_mask32x16(self, a: mask32x16<Self>) -> (mask32x8<Self>, mask32x8<Self>) {
@@ -9932,38 +8686,6 @@ impl Simd for Neon {
             mask,
             Bytes::to_bytes(merge),
         ))
-    }
-    #[inline(always)]
-    fn is_nan_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
-        a.simd_ne(a)
-    }
-    #[inline(always)]
-    fn is_infinite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
-        a.abs().simd_eq(f64::INFINITY)
-    }
-    #[inline(always)]
-    fn is_finite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
-        a.abs().simd_lt(f64::INFINITY)
-    }
-    #[inline(always)]
-    fn is_subnormal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
-        let i: i64x8<Self> = a.bitcast();
-        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & (i & 0x000F_FFFF_FFFF_FFFF_i64).simd_ne(0)
-    }
-    #[inline(always)]
-    fn is_normal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
-        let i: i64x8<Self> = a.bitcast();
-        let exp = i & 0x7FF0_0000_0000_0000_i64;
-        exp.simd_ne(0) & exp.simd_ne(0x7FF0_0000_0000_0000_i64)
-    }
-    #[inline(always)]
-    fn is_sign_positive_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
-        let i: i64x8<Self> = a.bitcast();
-        (i & i64::MIN).simd_eq(0)
-    }
-    #[inline(always)]
-    fn is_sign_negative_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
-        !a.is_sign_positive()
     }
     #[inline(always)]
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>) {
@@ -10235,20 +8957,6 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
-    fn from_vector_mask64x8(self, vector: i64x8<Self>) -> mask64x8<Self> {
-        mask64x8 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask64x8(self, a: mask64x8<Self>) -> i64x8<Self> {
-        i64x8 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask64x8(self, a: &mut mask64x8<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 8usize,
@@ -10258,36 +8966,6 @@ impl Simd for Neon {
         let mut lanes: [i64; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask64x8<const OFFSET: usize>(
-        self,
-        a: mask64x8<Self>,
-    ) -> mask64x8<Self> {
-        let int = i64x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask64x8 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask64x8<const OFFSET: usize>(
-        self,
-        a: mask64x8<Self>,
-    ) -> mask64x8<Self> {
-        let int = i64x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask64x8 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>) {

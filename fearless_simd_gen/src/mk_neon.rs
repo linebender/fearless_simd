@@ -1039,6 +1039,20 @@ impl Level for Neon {
             op.sig.should_use_generic_op(vec_ty, self.native_width())
         }
     }
+
+    fn overrides_trait_default(&self, op: &Op, vec_ty: &VecType) -> bool {
+        (matches!(op.sig, OpSig::Unary)
+            && matches!(op.method, "not" | "neg")
+            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned))
+            || matches!(
+                op.sig,
+                OpSig::WideningBinary { .. }
+                    | OpSig::PairwiseDotProduct { .. }
+                    | OpSig::Compress { .. }
+                    | OpSig::Expand { .. }
+                    | OpSig::Select
+            )
+    }
 }
 
 impl Neon {

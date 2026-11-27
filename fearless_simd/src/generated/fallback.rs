@@ -142,56 +142,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_f32x4(self, values: f32x4<Self>, mask: mask32x4<Self>) -> f32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_f32x4(
-        self,
-        values: f32x4<Self>,
-        mask: mask32x4<Self>,
-        merge: f32x4<Self>,
-    ) -> f32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_f32x4(self, values: f32x4<Self>, mask: mask32x4<Self>) -> f32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_f32x4(
-        self,
-        values: f32x4<Self>,
-        mask: mask32x4<Self>,
-        merge: f32x4<Self>,
-    ) -> f32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
     fn neg_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
         [
             f32::neg(a[0usize]),
@@ -410,14 +360,6 @@ impl Simd for Fallback {
         [a[1usize], a[3usize], b[1usize], b[3usize]].simd_into(self)
     }
     #[inline(always)]
-    fn interleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>) {
-        (self.zip_low_f32x4(a, b), self.zip_high_f32x4(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>) {
-        (self.unzip_low_f32x4(a, b), self.unzip_high_f32x4(a, b))
-    }
-    #[inline(always)]
     fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
         a.mul(b).add(c)
     }
@@ -510,64 +452,6 @@ impl Simd for Fallback {
             f32::to_radians(a[1usize]),
             f32::to_radians(a[2usize]),
             f32::to_radians(a[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn is_nan_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
-        a.simd_ne(a)
-    }
-    #[inline(always)]
-    fn is_infinite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
-        a.abs().simd_eq(f32::INFINITY)
-    }
-    #[inline(always)]
-    fn is_finite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
-        a.abs().simd_lt(f32::INFINITY)
-    }
-    #[inline(always)]
-    fn is_subnormal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
-        let i: i32x4<Self> = a.bitcast();
-        (i & 0x7F80_0000_i32).simd_eq(0) & (i & 0x007F_FFFF_i32).simd_ne(0)
-    }
-    #[inline(always)]
-    fn is_normal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
-        let i: i32x4<Self> = a.bitcast();
-        let exp = i & 0x7F80_0000_i32;
-        exp.simd_ne(0) & exp.simd_ne(0x7F80_0000_i32)
-    }
-    #[inline(always)]
-    fn is_sign_positive_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
-        let i: i32x4<Self> = a.bitcast();
-        (i & i32::MIN).simd_eq(0)
-    }
-    #[inline(always)]
-    fn is_sign_negative_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
-        !a.is_sign_positive()
-    }
-    #[inline(always)]
-    fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        [
-            if a.val.0[0usize] != 0 {
-                b[0usize]
-            } else {
-                c[0usize]
-            },
-            if a.val.0[1usize] != 0 {
-                b[1usize]
-            } else {
-                c[1usize]
-            },
-            if a.val.0[2usize] != 0 {
-                b[2usize]
-            } else {
-                c[2usize]
-            },
-            if a.val.0[3usize] != 0 {
-                b[3usize]
-            } else {
-                c[3usize]
-            },
         ]
         .simd_into(self)
     }
@@ -700,56 +584,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_i8x16(self, values: i8x16<Self>, mask: mask8x16<Self>) -> i8x16<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_i8x16(
-        self,
-        values: i8x16<Self>,
-        mask: mask8x16<Self>,
-        merge: i8x16<Self>,
-    ) -> i8x16<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_i8x16(self, values: i8x16<Self>, mask: mask8x16<Self>) -> i8x16<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_i8x16(
-        self,
-        values: i8x16<Self>,
-        mask: mask8x16<Self>,
-        merge: i8x16<Self>,
-    ) -> i8x16<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
     fn count_ones_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
         [
             i8::try_from(a[0usize].count_ones()).unwrap(),
@@ -770,32 +604,6 @@ impl Simd for Fallback {
             i8::try_from(a[15usize].count_ones()).unwrap(),
         ]
         .simd_into(self)
-    }
-    #[inline(always)]
-    fn count_zeros_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        [
-            i8::try_from(a[0usize].count_zeros()).unwrap(),
-            i8::try_from(a[1usize].count_zeros()).unwrap(),
-            i8::try_from(a[2usize].count_zeros()).unwrap(),
-            i8::try_from(a[3usize].count_zeros()).unwrap(),
-            i8::try_from(a[4usize].count_zeros()).unwrap(),
-            i8::try_from(a[5usize].count_zeros()).unwrap(),
-            i8::try_from(a[6usize].count_zeros()).unwrap(),
-            i8::try_from(a[7usize].count_zeros()).unwrap(),
-            i8::try_from(a[8usize].count_zeros()).unwrap(),
-            i8::try_from(a[9usize].count_zeros()).unwrap(),
-            i8::try_from(a[10usize].count_zeros()).unwrap(),
-            i8::try_from(a[11usize].count_zeros()).unwrap(),
-            i8::try_from(a[12usize].count_zeros()).unwrap(),
-            i8::try_from(a[13usize].count_zeros()).unwrap(),
-            i8::try_from(a[14usize].count_zeros()).unwrap(),
-            i8::try_from(a[15usize].count_zeros()).unwrap(),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn swap_bytes_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        a
     }
     #[inline(always)]
     fn reverse_bits_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
@@ -926,94 +734,6 @@ impl Simd for Fallback {
             i8::wrapping_mul(a[13usize], b[13usize]),
             i8::wrapping_mul(a[14usize], b[14usize]),
             i8::wrapping_mul(a[15usize], b[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn and_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        [
-            i8::bitand(a[0usize], &b[0usize]),
-            i8::bitand(a[1usize], &b[1usize]),
-            i8::bitand(a[2usize], &b[2usize]),
-            i8::bitand(a[3usize], &b[3usize]),
-            i8::bitand(a[4usize], &b[4usize]),
-            i8::bitand(a[5usize], &b[5usize]),
-            i8::bitand(a[6usize], &b[6usize]),
-            i8::bitand(a[7usize], &b[7usize]),
-            i8::bitand(a[8usize], &b[8usize]),
-            i8::bitand(a[9usize], &b[9usize]),
-            i8::bitand(a[10usize], &b[10usize]),
-            i8::bitand(a[11usize], &b[11usize]),
-            i8::bitand(a[12usize], &b[12usize]),
-            i8::bitand(a[13usize], &b[13usize]),
-            i8::bitand(a[14usize], &b[14usize]),
-            i8::bitand(a[15usize], &b[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn or_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        [
-            i8::bitor(a[0usize], &b[0usize]),
-            i8::bitor(a[1usize], &b[1usize]),
-            i8::bitor(a[2usize], &b[2usize]),
-            i8::bitor(a[3usize], &b[3usize]),
-            i8::bitor(a[4usize], &b[4usize]),
-            i8::bitor(a[5usize], &b[5usize]),
-            i8::bitor(a[6usize], &b[6usize]),
-            i8::bitor(a[7usize], &b[7usize]),
-            i8::bitor(a[8usize], &b[8usize]),
-            i8::bitor(a[9usize], &b[9usize]),
-            i8::bitor(a[10usize], &b[10usize]),
-            i8::bitor(a[11usize], &b[11usize]),
-            i8::bitor(a[12usize], &b[12usize]),
-            i8::bitor(a[13usize], &b[13usize]),
-            i8::bitor(a[14usize], &b[14usize]),
-            i8::bitor(a[15usize], &b[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn xor_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        [
-            i8::bitxor(a[0usize], &b[0usize]),
-            i8::bitxor(a[1usize], &b[1usize]),
-            i8::bitxor(a[2usize], &b[2usize]),
-            i8::bitxor(a[3usize], &b[3usize]),
-            i8::bitxor(a[4usize], &b[4usize]),
-            i8::bitxor(a[5usize], &b[5usize]),
-            i8::bitxor(a[6usize], &b[6usize]),
-            i8::bitxor(a[7usize], &b[7usize]),
-            i8::bitxor(a[8usize], &b[8usize]),
-            i8::bitxor(a[9usize], &b[9usize]),
-            i8::bitxor(a[10usize], &b[10usize]),
-            i8::bitxor(a[11usize], &b[11usize]),
-            i8::bitxor(a[12usize], &b[12usize]),
-            i8::bitxor(a[13usize], &b[13usize]),
-            i8::bitxor(a[14usize], &b[14usize]),
-            i8::bitxor(a[15usize], &b[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn not_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        [
-            i8::not(a[0usize]),
-            i8::not(a[1usize]),
-            i8::not(a[2usize]),
-            i8::not(a[3usize]),
-            i8::not(a[4usize]),
-            i8::not(a[5usize]),
-            i8::not(a[6usize]),
-            i8::not(a[7usize]),
-            i8::not(a[8usize]),
-            i8::not(a[9usize]),
-            i8::not(a[10usize]),
-            i8::not(a[11usize]),
-            i8::not(a[12usize]),
-            i8::not(a[13usize]),
-            i8::not(a[14usize]),
-            i8::not(a[15usize]),
         ]
         .simd_into(self)
     }
@@ -1250,28 +970,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn clamp_i8x16(self, a: i8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
-        [
-            i8::clamp_debug(a[0usize], b[0usize], c[0usize]),
-            i8::clamp_debug(a[1usize], b[1usize], c[1usize]),
-            i8::clamp_debug(a[2usize], b[2usize], c[2usize]),
-            i8::clamp_debug(a[3usize], b[3usize], c[3usize]),
-            i8::clamp_debug(a[4usize], b[4usize], c[4usize]),
-            i8::clamp_debug(a[5usize], b[5usize], c[5usize]),
-            i8::clamp_debug(a[6usize], b[6usize], c[6usize]),
-            i8::clamp_debug(a[7usize], b[7usize], c[7usize]),
-            i8::clamp_debug(a[8usize], b[8usize], c[8usize]),
-            i8::clamp_debug(a[9usize], b[9usize], c[9usize]),
-            i8::clamp_debug(a[10usize], b[10usize], c[10usize]),
-            i8::clamp_debug(a[11usize], b[11usize], c[11usize]),
-            i8::clamp_debug(a[12usize], b[12usize], c[12usize]),
-            i8::clamp_debug(a[13usize], b[13usize], c[13usize]),
-            i8::clamp_debug(a[14usize], b[14usize], c[14usize]),
-            i8::clamp_debug(a[15usize], b[15usize], c[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
         [
             -(i8::eq(&a[0usize], &b[0usize]) as i8),
@@ -1373,125 +1071,9 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn interleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>) {
-        (self.zip_low_i8x16(a, b), self.zip_high_i8x16(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>) {
-        (self.unzip_low_i8x16(a, b), self.unzip_high_i8x16(a, b))
-    }
-    #[inline(always)]
-    fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
-        [
-            if a.val.0[0usize] != 0 {
-                b[0usize]
-            } else {
-                c[0usize]
-            },
-            if a.val.0[1usize] != 0 {
-                b[1usize]
-            } else {
-                c[1usize]
-            },
-            if a.val.0[2usize] != 0 {
-                b[2usize]
-            } else {
-                c[2usize]
-            },
-            if a.val.0[3usize] != 0 {
-                b[3usize]
-            } else {
-                c[3usize]
-            },
-            if a.val.0[4usize] != 0 {
-                b[4usize]
-            } else {
-                c[4usize]
-            },
-            if a.val.0[5usize] != 0 {
-                b[5usize]
-            } else {
-                c[5usize]
-            },
-            if a.val.0[6usize] != 0 {
-                b[6usize]
-            } else {
-                c[6usize]
-            },
-            if a.val.0[7usize] != 0 {
-                b[7usize]
-            } else {
-                c[7usize]
-            },
-            if a.val.0[8usize] != 0 {
-                b[8usize]
-            } else {
-                c[8usize]
-            },
-            if a.val.0[9usize] != 0 {
-                b[9usize]
-            } else {
-                c[9usize]
-            },
-            if a.val.0[10usize] != 0 {
-                b[10usize]
-            } else {
-                c[10usize]
-            },
-            if a.val.0[11usize] != 0 {
-                b[11usize]
-            } else {
-                c[11usize]
-            },
-            if a.val.0[12usize] != 0 {
-                b[12usize]
-            } else {
-                c[12usize]
-            },
-            if a.val.0[13usize] != 0 {
-                b[13usize]
-            } else {
-                c[13usize]
-            },
-            if a.val.0[14usize] != 0 {
-                b[14usize]
-            } else {
-                c[14usize]
-            },
-            if a.val.0[15usize] != 0 {
-                b[15usize]
-            } else {
-                c[15usize]
-            },
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn combine_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x32<Self> {
         let combined: [i8; 32usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
         combined.simd_into(self)
-    }
-    #[inline(always)]
-    fn neg_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        [
-            i8::wrapping_neg(a[0usize]),
-            i8::wrapping_neg(a[1usize]),
-            i8::wrapping_neg(a[2usize]),
-            i8::wrapping_neg(a[3usize]),
-            i8::wrapping_neg(a[4usize]),
-            i8::wrapping_neg(a[5usize]),
-            i8::wrapping_neg(a[6usize]),
-            i8::wrapping_neg(a[7usize]),
-            i8::wrapping_neg(a[8usize]),
-            i8::wrapping_neg(a[9usize]),
-            i8::wrapping_neg(a[10usize]),
-            i8::wrapping_neg(a[11usize]),
-            i8::wrapping_neg(a[12usize]),
-            i8::wrapping_neg(a[13usize]),
-            i8::wrapping_neg(a[14usize]),
-            i8::wrapping_neg(a[15usize]),
-        ]
-        .simd_into(self)
     }
     #[inline(always)]
     fn load_four_interleaved_i8x16(self, src: &[i8; 64usize]) -> [i8x16<Self>; 4usize] {
@@ -1675,18 +1257,6 @@ impl Simd for Fallback {
         )
     }
     #[inline(always)]
-    fn widening_mul_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>) {
-        let (a0, a1) = self.widen_i8x16(a);
-        let (b0, b1) = self.widen_i8x16(b);
-        (self.mul_i16x8(a0, b0), self.mul_i16x8(a1, b1))
-    }
-    #[inline(always)]
-    fn widening_add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>) {
-        let (a0, a1) = self.widen_i8x16(a);
-        let (b0, b1) = self.widen_i8x16(b);
-        (self.add_i16x8(a0, b0), self.add_i16x8(a1, b1))
-    }
-    #[inline(always)]
     fn pairwise_widening_add_i8x16(self, a: i8x16<Self>) -> i16x8<Self> {
         [
             (a[0usize] as i16) + (a[1usize] as i16),
@@ -1699,12 +1269,6 @@ impl Simd for Fallback {
             (a[14usize] as i16) + (a[15usize] as i16),
         ]
         .simd_into(self)
-    }
-    #[inline(always)]
-    fn pairwise_dot_product_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i16x8<Self> {
-        let (low, high) = self.widening_mul_i8x16(a, b);
-        let (even, odd) = self.deinterleave_i16x8(low, high);
-        self.add_i16x8(even, odd)
     }
     #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
@@ -1866,53 +1430,6 @@ impl Simd for Fallback {
         Bytes::from_bytes(result)
     }
     #[inline(always)]
-    fn compress_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self> {
-        self.compress_merge_u8x16(values, mask, u8x16::splat(self, 0))
-    }
-    #[inline(always)]
-    fn compress_merge_u8x16(
-        self,
-        values: u8x16<Self>,
-        mask: mask8x16<Self>,
-        merge: u8x16<Self>,
-    ) -> u8x16<Self> {
-        let mask = self.to_bitmask_mask8x16(mask);
-        let mut merge_padded = [0u8; 16 + 1];
-        merge_padded[..16].copy_from_slice(&*merge);
-        let mut compacted = merge_padded;
-        let mut output_lane = 0;
-        for input_lane in 0..16 {
-            compacted[output_lane] = values[input_lane];
-            output_lane += ((mask >> input_lane) & 1) as usize;
-        }
-        compacted[output_lane] = merge_padded[output_lane];
-        let mut result = merge;
-        result.copy_from_slice(&compacted[..16]);
-        result
-    }
-    #[inline(always)]
-    fn expand_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self> {
-        self.expand_merge_u8x16(values, mask, u8x16::splat(self, 0))
-    }
-    #[inline(always)]
-    fn expand_merge_u8x16(
-        self,
-        values: u8x16<Self>,
-        mask: mask8x16<Self>,
-        merge: u8x16<Self>,
-    ) -> u8x16<Self> {
-        let mask = self.to_bitmask_mask8x16(mask);
-        let mut result = merge;
-        let mut input_lane = 0;
-        for output_lane in 0..16 {
-            let bit = ((mask >> output_lane) & 1) as u8;
-            let keep = 0u8.wrapping_sub(bit);
-            result[output_lane] = (values[input_lane] & keep) | (result[output_lane] & !keep);
-            input_lane += usize::from(bit);
-        }
-        result
-    }
-    #[inline(always)]
     fn count_ones_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
         [
             u8::try_from(a[0usize].count_ones()).unwrap(),
@@ -1933,32 +1450,6 @@ impl Simd for Fallback {
             u8::try_from(a[15usize].count_ones()).unwrap(),
         ]
         .simd_into(self)
-    }
-    #[inline(always)]
-    fn count_zeros_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        [
-            u8::try_from(a[0usize].count_zeros()).unwrap(),
-            u8::try_from(a[1usize].count_zeros()).unwrap(),
-            u8::try_from(a[2usize].count_zeros()).unwrap(),
-            u8::try_from(a[3usize].count_zeros()).unwrap(),
-            u8::try_from(a[4usize].count_zeros()).unwrap(),
-            u8::try_from(a[5usize].count_zeros()).unwrap(),
-            u8::try_from(a[6usize].count_zeros()).unwrap(),
-            u8::try_from(a[7usize].count_zeros()).unwrap(),
-            u8::try_from(a[8usize].count_zeros()).unwrap(),
-            u8::try_from(a[9usize].count_zeros()).unwrap(),
-            u8::try_from(a[10usize].count_zeros()).unwrap(),
-            u8::try_from(a[11usize].count_zeros()).unwrap(),
-            u8::try_from(a[12usize].count_zeros()).unwrap(),
-            u8::try_from(a[13usize].count_zeros()).unwrap(),
-            u8::try_from(a[14usize].count_zeros()).unwrap(),
-            u8::try_from(a[15usize].count_zeros()).unwrap(),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn swap_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        a
     }
     #[inline(always)]
     fn reverse_bits_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
@@ -2155,28 +1646,6 @@ impl Simd for Fallback {
             u8::bitxor(a[13usize], &b[13usize]),
             u8::bitxor(a[14usize], &b[14usize]),
             u8::bitxor(a[15usize], &b[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn not_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        [
-            u8::not(a[0usize]),
-            u8::not(a[1usize]),
-            u8::not(a[2usize]),
-            u8::not(a[3usize]),
-            u8::not(a[4usize]),
-            u8::not(a[5usize]),
-            u8::not(a[6usize]),
-            u8::not(a[7usize]),
-            u8::not(a[8usize]),
-            u8::not(a[9usize]),
-            u8::not(a[10usize]),
-            u8::not(a[11usize]),
-            u8::not(a[12usize]),
-            u8::not(a[13usize]),
-            u8::not(a[14usize]),
-            u8::not(a[15usize]),
         ]
         .simd_into(self)
     }
@@ -2413,28 +1882,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn clamp_u8x16(self, a: u8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
-        [
-            u8::clamp_debug(a[0usize], b[0usize], c[0usize]),
-            u8::clamp_debug(a[1usize], b[1usize], c[1usize]),
-            u8::clamp_debug(a[2usize], b[2usize], c[2usize]),
-            u8::clamp_debug(a[3usize], b[3usize], c[3usize]),
-            u8::clamp_debug(a[4usize], b[4usize], c[4usize]),
-            u8::clamp_debug(a[5usize], b[5usize], c[5usize]),
-            u8::clamp_debug(a[6usize], b[6usize], c[6usize]),
-            u8::clamp_debug(a[7usize], b[7usize], c[7usize]),
-            u8::clamp_debug(a[8usize], b[8usize], c[8usize]),
-            u8::clamp_debug(a[9usize], b[9usize], c[9usize]),
-            u8::clamp_debug(a[10usize], b[10usize], c[10usize]),
-            u8::clamp_debug(a[11usize], b[11usize], c[11usize]),
-            u8::clamp_debug(a[12usize], b[12usize], c[12usize]),
-            u8::clamp_debug(a[13usize], b[13usize], c[13usize]),
-            u8::clamp_debug(a[14usize], b[14usize], c[14usize]),
-            u8::clamp_debug(a[15usize], b[15usize], c[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
         [
             -(u8::eq(&a[0usize], &b[0usize]) as i8),
@@ -2532,100 +1979,6 @@ impl Simd for Fallback {
             a[1usize], a[3usize], a[5usize], a[7usize], a[9usize], a[11usize], a[13usize],
             a[15usize], b[1usize], b[3usize], b[5usize], b[7usize], b[9usize], b[11usize],
             b[13usize], b[15usize],
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn interleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>) {
-        (self.zip_low_u8x16(a, b), self.zip_high_u8x16(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>) {
-        (self.unzip_low_u8x16(a, b), self.unzip_high_u8x16(a, b))
-    }
-    #[inline(always)]
-    fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
-        [
-            if a.val.0[0usize] != 0 {
-                b[0usize]
-            } else {
-                c[0usize]
-            },
-            if a.val.0[1usize] != 0 {
-                b[1usize]
-            } else {
-                c[1usize]
-            },
-            if a.val.0[2usize] != 0 {
-                b[2usize]
-            } else {
-                c[2usize]
-            },
-            if a.val.0[3usize] != 0 {
-                b[3usize]
-            } else {
-                c[3usize]
-            },
-            if a.val.0[4usize] != 0 {
-                b[4usize]
-            } else {
-                c[4usize]
-            },
-            if a.val.0[5usize] != 0 {
-                b[5usize]
-            } else {
-                c[5usize]
-            },
-            if a.val.0[6usize] != 0 {
-                b[6usize]
-            } else {
-                c[6usize]
-            },
-            if a.val.0[7usize] != 0 {
-                b[7usize]
-            } else {
-                c[7usize]
-            },
-            if a.val.0[8usize] != 0 {
-                b[8usize]
-            } else {
-                c[8usize]
-            },
-            if a.val.0[9usize] != 0 {
-                b[9usize]
-            } else {
-                c[9usize]
-            },
-            if a.val.0[10usize] != 0 {
-                b[10usize]
-            } else {
-                c[10usize]
-            },
-            if a.val.0[11usize] != 0 {
-                b[11usize]
-            } else {
-                c[11usize]
-            },
-            if a.val.0[12usize] != 0 {
-                b[12usize]
-            } else {
-                c[12usize]
-            },
-            if a.val.0[13usize] != 0 {
-                b[13usize]
-            } else {
-                c[13usize]
-            },
-            if a.val.0[14usize] != 0 {
-                b[14usize]
-            } else {
-                c[14usize]
-            },
-            if a.val.0[15usize] != 0 {
-                b[15usize]
-            } else {
-                c[15usize]
-            },
         ]
         .simd_into(self)
     }
@@ -2816,18 +2169,6 @@ impl Simd for Fallback {
         )
     }
     #[inline(always)]
-    fn widening_mul_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>) {
-        let (a0, a1) = self.widen_u8x16(a);
-        let (b0, b1) = self.widen_u8x16(b);
-        (self.mul_u16x8(a0, b0), self.mul_u16x8(a1, b1))
-    }
-    #[inline(always)]
-    fn widening_add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>) {
-        let (a0, a1) = self.widen_u8x16(a);
-        let (b0, b1) = self.widen_u8x16(b);
-        (self.add_u16x8(a0, b0), self.add_u16x8(a1, b1))
-    }
-    #[inline(always)]
     fn pairwise_widening_add_u8x16(self, a: u8x16<Self>) -> u16x8<Self> {
         [
             (a[0usize] as u16) + (a[1usize] as u16),
@@ -2840,12 +2181,6 @@ impl Simd for Fallback {
             (a[14usize] as u16) + (a[15usize] as u16),
         ]
         .simd_into(self)
-    }
-    #[inline(always)]
-    fn pairwise_dot_product_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u16x8<Self> {
-        let (low, high) = self.widening_mul_u8x16(a, b);
-        let (even, odd) = self.deinterleave_u16x8(low, high);
-        self.add_u16x8(even, odd)
     }
     #[inline(always)]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
@@ -2888,20 +2223,6 @@ impl Simd for Fallback {
         bits
     }
     #[inline(always)]
-    fn from_vector_mask8x16(self, vector: i8x16<Self>) -> mask8x16<Self> {
-        mask8x16 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask8x16(self, a: mask8x16<Self>) -> i8x16<Self> {
-        i8x16 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask8x16(self, a: &mut mask8x16<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 16usize,
@@ -2911,237 +2232,6 @@ impl Simd for Fallback {
         let mut lanes: [i8; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask8x16<const OFFSET: usize>(
-        self,
-        a: mask8x16<Self>,
-    ) -> mask8x16<Self> {
-        let int = i8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask8x16<const OFFSET: usize>(
-        self,
-        a: mask8x16<Self>,
-    ) -> mask8x16<Self> {
-        let int = i8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
-        [
-            i8::bitand(a.val.0[0usize], &b.val.0[0usize]),
-            i8::bitand(a.val.0[1usize], &b.val.0[1usize]),
-            i8::bitand(a.val.0[2usize], &b.val.0[2usize]),
-            i8::bitand(a.val.0[3usize], &b.val.0[3usize]),
-            i8::bitand(a.val.0[4usize], &b.val.0[4usize]),
-            i8::bitand(a.val.0[5usize], &b.val.0[5usize]),
-            i8::bitand(a.val.0[6usize], &b.val.0[6usize]),
-            i8::bitand(a.val.0[7usize], &b.val.0[7usize]),
-            i8::bitand(a.val.0[8usize], &b.val.0[8usize]),
-            i8::bitand(a.val.0[9usize], &b.val.0[9usize]),
-            i8::bitand(a.val.0[10usize], &b.val.0[10usize]),
-            i8::bitand(a.val.0[11usize], &b.val.0[11usize]),
-            i8::bitand(a.val.0[12usize], &b.val.0[12usize]),
-            i8::bitand(a.val.0[13usize], &b.val.0[13usize]),
-            i8::bitand(a.val.0[14usize], &b.val.0[14usize]),
-            i8::bitand(a.val.0[15usize], &b.val.0[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn or_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
-        [
-            i8::bitor(a.val.0[0usize], &b.val.0[0usize]),
-            i8::bitor(a.val.0[1usize], &b.val.0[1usize]),
-            i8::bitor(a.val.0[2usize], &b.val.0[2usize]),
-            i8::bitor(a.val.0[3usize], &b.val.0[3usize]),
-            i8::bitor(a.val.0[4usize], &b.val.0[4usize]),
-            i8::bitor(a.val.0[5usize], &b.val.0[5usize]),
-            i8::bitor(a.val.0[6usize], &b.val.0[6usize]),
-            i8::bitor(a.val.0[7usize], &b.val.0[7usize]),
-            i8::bitor(a.val.0[8usize], &b.val.0[8usize]),
-            i8::bitor(a.val.0[9usize], &b.val.0[9usize]),
-            i8::bitor(a.val.0[10usize], &b.val.0[10usize]),
-            i8::bitor(a.val.0[11usize], &b.val.0[11usize]),
-            i8::bitor(a.val.0[12usize], &b.val.0[12usize]),
-            i8::bitor(a.val.0[13usize], &b.val.0[13usize]),
-            i8::bitor(a.val.0[14usize], &b.val.0[14usize]),
-            i8::bitor(a.val.0[15usize], &b.val.0[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn xor_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
-        [
-            i8::bitxor(a.val.0[0usize], &b.val.0[0usize]),
-            i8::bitxor(a.val.0[1usize], &b.val.0[1usize]),
-            i8::bitxor(a.val.0[2usize], &b.val.0[2usize]),
-            i8::bitxor(a.val.0[3usize], &b.val.0[3usize]),
-            i8::bitxor(a.val.0[4usize], &b.val.0[4usize]),
-            i8::bitxor(a.val.0[5usize], &b.val.0[5usize]),
-            i8::bitxor(a.val.0[6usize], &b.val.0[6usize]),
-            i8::bitxor(a.val.0[7usize], &b.val.0[7usize]),
-            i8::bitxor(a.val.0[8usize], &b.val.0[8usize]),
-            i8::bitxor(a.val.0[9usize], &b.val.0[9usize]),
-            i8::bitxor(a.val.0[10usize], &b.val.0[10usize]),
-            i8::bitxor(a.val.0[11usize], &b.val.0[11usize]),
-            i8::bitxor(a.val.0[12usize], &b.val.0[12usize]),
-            i8::bitxor(a.val.0[13usize], &b.val.0[13usize]),
-            i8::bitxor(a.val.0[14usize], &b.val.0[14usize]),
-            i8::bitxor(a.val.0[15usize], &b.val.0[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn not_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self> {
-        [
-            i8::not(a.val.0[0usize]),
-            i8::not(a.val.0[1usize]),
-            i8::not(a.val.0[2usize]),
-            i8::not(a.val.0[3usize]),
-            i8::not(a.val.0[4usize]),
-            i8::not(a.val.0[5usize]),
-            i8::not(a.val.0[6usize]),
-            i8::not(a.val.0[7usize]),
-            i8::not(a.val.0[8usize]),
-            i8::not(a.val.0[9usize]),
-            i8::not(a.val.0[10usize]),
-            i8::not(a.val.0[11usize]),
-            i8::not(a.val.0[12usize]),
-            i8::not(a.val.0[13usize]),
-            i8::not(a.val.0[14usize]),
-            i8::not(a.val.0[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn reverse_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self> {
-        [
-            a.val.0[15usize],
-            a.val.0[14usize],
-            a.val.0[13usize],
-            a.val.0[12usize],
-            a.val.0[11usize],
-            a.val.0[10usize],
-            a.val.0[9usize],
-            a.val.0[8usize],
-            a.val.0[7usize],
-            a.val.0[6usize],
-            a.val.0[5usize],
-            a.val.0[4usize],
-            a.val.0[3usize],
-            a.val.0[2usize],
-            a.val.0[1usize],
-            a.val.0[0usize],
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn select_mask8x16(
-        self,
-        a: mask8x16<Self>,
-        b: mask8x16<Self>,
-        c: mask8x16<Self>,
-    ) -> mask8x16<Self> {
-        [
-            if a.val.0[0usize] != 0 {
-                b.val.0[0usize]
-            } else {
-                c.val.0[0usize]
-            },
-            if a.val.0[1usize] != 0 {
-                b.val.0[1usize]
-            } else {
-                c.val.0[1usize]
-            },
-            if a.val.0[2usize] != 0 {
-                b.val.0[2usize]
-            } else {
-                c.val.0[2usize]
-            },
-            if a.val.0[3usize] != 0 {
-                b.val.0[3usize]
-            } else {
-                c.val.0[3usize]
-            },
-            if a.val.0[4usize] != 0 {
-                b.val.0[4usize]
-            } else {
-                c.val.0[4usize]
-            },
-            if a.val.0[5usize] != 0 {
-                b.val.0[5usize]
-            } else {
-                c.val.0[5usize]
-            },
-            if a.val.0[6usize] != 0 {
-                b.val.0[6usize]
-            } else {
-                c.val.0[6usize]
-            },
-            if a.val.0[7usize] != 0 {
-                b.val.0[7usize]
-            } else {
-                c.val.0[7usize]
-            },
-            if a.val.0[8usize] != 0 {
-                b.val.0[8usize]
-            } else {
-                c.val.0[8usize]
-            },
-            if a.val.0[9usize] != 0 {
-                b.val.0[9usize]
-            } else {
-                c.val.0[9usize]
-            },
-            if a.val.0[10usize] != 0 {
-                b.val.0[10usize]
-            } else {
-                c.val.0[10usize]
-            },
-            if a.val.0[11usize] != 0 {
-                b.val.0[11usize]
-            } else {
-                c.val.0[11usize]
-            },
-            if a.val.0[12usize] != 0 {
-                b.val.0[12usize]
-            } else {
-                c.val.0[12usize]
-            },
-            if a.val.0[13usize] != 0 {
-                b.val.0[13usize]
-            } else {
-                c.val.0[13usize]
-            },
-            if a.val.0[14usize] != 0 {
-                b.val.0[14usize]
-            } else {
-                c.val.0[14usize]
-            },
-            if a.val.0[15usize] != 0 {
-                b.val.0[15usize]
-            } else {
-                c.val.0[15usize]
-            },
-        ]
-        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
@@ -3306,56 +2396,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_i16x8(self, values: i16x8<Self>, mask: mask16x8<Self>) -> i16x8<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_i16x8(
-        self,
-        values: i16x8<Self>,
-        mask: mask16x8<Self>,
-        merge: i16x8<Self>,
-    ) -> i16x8<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_i16x8(self, values: i16x8<Self>, mask: mask16x8<Self>) -> i16x8<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_i16x8(
-        self,
-        values: i16x8<Self>,
-        mask: mask16x8<Self>,
-        merge: i16x8<Self>,
-    ) -> i16x8<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
     fn count_ones_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
         [
             i16::try_from(a[0usize].count_ones()).unwrap(),
@@ -3366,20 +2406,6 @@ impl Simd for Fallback {
             i16::try_from(a[5usize].count_ones()).unwrap(),
             i16::try_from(a[6usize].count_ones()).unwrap(),
             i16::try_from(a[7usize].count_ones()).unwrap(),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn count_zeros_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
-        [
-            i16::try_from(a[0usize].count_zeros()).unwrap(),
-            i16::try_from(a[1usize].count_zeros()).unwrap(),
-            i16::try_from(a[2usize].count_zeros()).unwrap(),
-            i16::try_from(a[3usize].count_zeros()).unwrap(),
-            i16::try_from(a[4usize].count_zeros()).unwrap(),
-            i16::try_from(a[5usize].count_zeros()).unwrap(),
-            i16::try_from(a[6usize].count_zeros()).unwrap(),
-            i16::try_from(a[7usize].count_zeros()).unwrap(),
         ]
         .simd_into(self)
     }
@@ -3478,62 +2504,6 @@ impl Simd for Fallback {
             i16::wrapping_mul(a[5usize], b[5usize]),
             i16::wrapping_mul(a[6usize], b[6usize]),
             i16::wrapping_mul(a[7usize], b[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn and_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        [
-            i16::bitand(a[0usize], &b[0usize]),
-            i16::bitand(a[1usize], &b[1usize]),
-            i16::bitand(a[2usize], &b[2usize]),
-            i16::bitand(a[3usize], &b[3usize]),
-            i16::bitand(a[4usize], &b[4usize]),
-            i16::bitand(a[5usize], &b[5usize]),
-            i16::bitand(a[6usize], &b[6usize]),
-            i16::bitand(a[7usize], &b[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn or_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        [
-            i16::bitor(a[0usize], &b[0usize]),
-            i16::bitor(a[1usize], &b[1usize]),
-            i16::bitor(a[2usize], &b[2usize]),
-            i16::bitor(a[3usize], &b[3usize]),
-            i16::bitor(a[4usize], &b[4usize]),
-            i16::bitor(a[5usize], &b[5usize]),
-            i16::bitor(a[6usize], &b[6usize]),
-            i16::bitor(a[7usize], &b[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn xor_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        [
-            i16::bitxor(a[0usize], &b[0usize]),
-            i16::bitxor(a[1usize], &b[1usize]),
-            i16::bitxor(a[2usize], &b[2usize]),
-            i16::bitxor(a[3usize], &b[3usize]),
-            i16::bitxor(a[4usize], &b[4usize]),
-            i16::bitxor(a[5usize], &b[5usize]),
-            i16::bitxor(a[6usize], &b[6usize]),
-            i16::bitxor(a[7usize], &b[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn not_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
-        [
-            i16::not(a[0usize]),
-            i16::not(a[1usize]),
-            i16::not(a[2usize]),
-            i16::not(a[3usize]),
-            i16::not(a[4usize]),
-            i16::not(a[5usize]),
-            i16::not(a[6usize]),
-            i16::not(a[7usize]),
         ]
         .simd_into(self)
     }
@@ -3682,20 +2652,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn clamp_i16x8(self, a: i16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
-        [
-            i16::clamp_debug(a[0usize], b[0usize], c[0usize]),
-            i16::clamp_debug(a[1usize], b[1usize], c[1usize]),
-            i16::clamp_debug(a[2usize], b[2usize], c[2usize]),
-            i16::clamp_debug(a[3usize], b[3usize], c[3usize]),
-            i16::clamp_debug(a[4usize], b[4usize], c[4usize]),
-            i16::clamp_debug(a[5usize], b[5usize], c[5usize]),
-            i16::clamp_debug(a[6usize], b[6usize], c[6usize]),
-            i16::clamp_debug(a[7usize], b[7usize], c[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
         [
             -(i16::eq(&a[0usize], &b[0usize]) as i16),
@@ -3766,78 +2722,10 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn interleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>) {
-        (self.zip_low_i16x8(a, b), self.zip_high_i16x8(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>) {
-        (self.unzip_low_i16x8(a, b), self.unzip_high_i16x8(a, b))
-    }
-    #[inline(always)]
-    fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
-        [
-            if a.val.0[0usize] != 0 {
-                b[0usize]
-            } else {
-                c[0usize]
-            },
-            if a.val.0[1usize] != 0 {
-                b[1usize]
-            } else {
-                c[1usize]
-            },
-            if a.val.0[2usize] != 0 {
-                b[2usize]
-            } else {
-                c[2usize]
-            },
-            if a.val.0[3usize] != 0 {
-                b[3usize]
-            } else {
-                c[3usize]
-            },
-            if a.val.0[4usize] != 0 {
-                b[4usize]
-            } else {
-                c[4usize]
-            },
-            if a.val.0[5usize] != 0 {
-                b[5usize]
-            } else {
-                c[5usize]
-            },
-            if a.val.0[6usize] != 0 {
-                b[6usize]
-            } else {
-                c[6usize]
-            },
-            if a.val.0[7usize] != 0 {
-                b[7usize]
-            } else {
-                c[7usize]
-            },
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn combine_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x16<Self> {
         let combined: [i16; 16usize] =
             crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
         combined.simd_into(self)
-    }
-    #[inline(always)]
-    fn neg_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
-        [
-            i16::wrapping_neg(a[0usize]),
-            i16::wrapping_neg(a[1usize]),
-            i16::wrapping_neg(a[2usize]),
-            i16::wrapping_neg(a[3usize]),
-            i16::wrapping_neg(a[4usize]),
-            i16::wrapping_neg(a[5usize]),
-            i16::wrapping_neg(a[6usize]),
-            i16::wrapping_neg(a[7usize]),
-        ]
-        .simd_into(self)
     }
     #[inline(always)]
     fn load_four_interleaved_i16x8(self, src: &[i16; 32usize]) -> [i16x8<Self>; 4usize] {
@@ -3949,18 +2837,6 @@ impl Simd for Fallback {
         )
     }
     #[inline(always)]
-    fn widening_mul_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
-        let (a0, a1) = self.widen_i16x8(a);
-        let (b0, b1) = self.widen_i16x8(b);
-        (self.mul_i32x4(a0, b0), self.mul_i32x4(a1, b1))
-    }
-    #[inline(always)]
-    fn widening_add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
-        let (a0, a1) = self.widen_i16x8(a);
-        let (b0, b1) = self.widen_i16x8(b);
-        (self.add_i32x4(a0, b0), self.add_i32x4(a1, b1))
-    }
-    #[inline(always)]
     fn pairwise_widening_add_i16x8(self, a: i16x8<Self>) -> i32x4<Self> {
         [
             (a[0usize] as i32) + (a[1usize] as i32),
@@ -3969,12 +2845,6 @@ impl Simd for Fallback {
             (a[6usize] as i32) + (a[7usize] as i32),
         ]
         .simd_into(self)
-    }
-    #[inline(always)]
-    fn pairwise_dot_product_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i32x4<Self> {
-        let (low, high) = self.widening_mul_i16x8(a, b);
-        let (even, odd) = self.deinterleave_i32x4(low, high);
-        self.add_i32x4(even, odd)
     }
     #[inline(always)]
     fn narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self> {
@@ -4050,56 +2920,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_u16x8(self, values: u16x8<Self>, mask: mask16x8<Self>) -> u16x8<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_u16x8(
-        self,
-        values: u16x8<Self>,
-        mask: mask16x8<Self>,
-        merge: u16x8<Self>,
-    ) -> u16x8<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_u16x8(self, values: u16x8<Self>, mask: mask16x8<Self>) -> u16x8<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_u16x8(
-        self,
-        values: u16x8<Self>,
-        mask: mask16x8<Self>,
-        merge: u16x8<Self>,
-    ) -> u16x8<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
     fn count_ones_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
         [
             u16::try_from(a[0usize].count_ones()).unwrap(),
@@ -4110,20 +2930,6 @@ impl Simd for Fallback {
             u16::try_from(a[5usize].count_ones()).unwrap(),
             u16::try_from(a[6usize].count_ones()).unwrap(),
             u16::try_from(a[7usize].count_ones()).unwrap(),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn count_zeros_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
-        [
-            u16::try_from(a[0usize].count_zeros()).unwrap(),
-            u16::try_from(a[1usize].count_zeros()).unwrap(),
-            u16::try_from(a[2usize].count_zeros()).unwrap(),
-            u16::try_from(a[3usize].count_zeros()).unwrap(),
-            u16::try_from(a[4usize].count_zeros()).unwrap(),
-            u16::try_from(a[5usize].count_zeros()).unwrap(),
-            u16::try_from(a[6usize].count_zeros()).unwrap(),
-            u16::try_from(a[7usize].count_zeros()).unwrap(),
         ]
         .simd_into(self)
     }
@@ -4222,62 +3028,6 @@ impl Simd for Fallback {
             u16::wrapping_mul(a[5usize], b[5usize]),
             u16::wrapping_mul(a[6usize], b[6usize]),
             u16::wrapping_mul(a[7usize], b[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn and_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        [
-            u16::bitand(a[0usize], &b[0usize]),
-            u16::bitand(a[1usize], &b[1usize]),
-            u16::bitand(a[2usize], &b[2usize]),
-            u16::bitand(a[3usize], &b[3usize]),
-            u16::bitand(a[4usize], &b[4usize]),
-            u16::bitand(a[5usize], &b[5usize]),
-            u16::bitand(a[6usize], &b[6usize]),
-            u16::bitand(a[7usize], &b[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn or_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        [
-            u16::bitor(a[0usize], &b[0usize]),
-            u16::bitor(a[1usize], &b[1usize]),
-            u16::bitor(a[2usize], &b[2usize]),
-            u16::bitor(a[3usize], &b[3usize]),
-            u16::bitor(a[4usize], &b[4usize]),
-            u16::bitor(a[5usize], &b[5usize]),
-            u16::bitor(a[6usize], &b[6usize]),
-            u16::bitor(a[7usize], &b[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn xor_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        [
-            u16::bitxor(a[0usize], &b[0usize]),
-            u16::bitxor(a[1usize], &b[1usize]),
-            u16::bitxor(a[2usize], &b[2usize]),
-            u16::bitxor(a[3usize], &b[3usize]),
-            u16::bitxor(a[4usize], &b[4usize]),
-            u16::bitxor(a[5usize], &b[5usize]),
-            u16::bitxor(a[6usize], &b[6usize]),
-            u16::bitxor(a[7usize], &b[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn not_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
-        [
-            u16::not(a[0usize]),
-            u16::not(a[1usize]),
-            u16::not(a[2usize]),
-            u16::not(a[3usize]),
-            u16::not(a[4usize]),
-            u16::not(a[5usize]),
-            u16::not(a[6usize]),
-            u16::not(a[7usize]),
         ]
         .simd_into(self)
     }
@@ -4426,20 +3176,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn clamp_u16x8(self, a: u16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
-        [
-            u16::clamp_debug(a[0usize], b[0usize], c[0usize]),
-            u16::clamp_debug(a[1usize], b[1usize], c[1usize]),
-            u16::clamp_debug(a[2usize], b[2usize], c[2usize]),
-            u16::clamp_debug(a[3usize], b[3usize], c[3usize]),
-            u16::clamp_debug(a[4usize], b[4usize], c[4usize]),
-            u16::clamp_debug(a[5usize], b[5usize], c[5usize]),
-            u16::clamp_debug(a[6usize], b[6usize], c[6usize]),
-            u16::clamp_debug(a[7usize], b[7usize], c[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
         [
             -(u16::eq(&a[0usize], &b[0usize]) as i16),
@@ -4506,60 +3242,6 @@ impl Simd for Fallback {
     fn unzip_high_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         [
             a[1usize], a[3usize], a[5usize], a[7usize], b[1usize], b[3usize], b[5usize], b[7usize],
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn interleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>) {
-        (self.zip_low_u16x8(a, b), self.zip_high_u16x8(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>) {
-        (self.unzip_low_u16x8(a, b), self.unzip_high_u16x8(a, b))
-    }
-    #[inline(always)]
-    fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
-        [
-            if a.val.0[0usize] != 0 {
-                b[0usize]
-            } else {
-                c[0usize]
-            },
-            if a.val.0[1usize] != 0 {
-                b[1usize]
-            } else {
-                c[1usize]
-            },
-            if a.val.0[2usize] != 0 {
-                b[2usize]
-            } else {
-                c[2usize]
-            },
-            if a.val.0[3usize] != 0 {
-                b[3usize]
-            } else {
-                c[3usize]
-            },
-            if a.val.0[4usize] != 0 {
-                b[4usize]
-            } else {
-                c[4usize]
-            },
-            if a.val.0[5usize] != 0 {
-                b[5usize]
-            } else {
-                c[5usize]
-            },
-            if a.val.0[6usize] != 0 {
-                b[6usize]
-            } else {
-                c[6usize]
-            },
-            if a.val.0[7usize] != 0 {
-                b[7usize]
-            } else {
-                c[7usize]
-            },
         ]
         .simd_into(self)
     }
@@ -4679,18 +3361,6 @@ impl Simd for Fallback {
         )
     }
     #[inline(always)]
-    fn widening_mul_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
-        let (a0, a1) = self.widen_u16x8(a);
-        let (b0, b1) = self.widen_u16x8(b);
-        (self.mul_u32x4(a0, b0), self.mul_u32x4(a1, b1))
-    }
-    #[inline(always)]
-    fn widening_add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
-        let (a0, a1) = self.widen_u16x8(a);
-        let (b0, b1) = self.widen_u16x8(b);
-        (self.add_u32x4(a0, b0), self.add_u32x4(a1, b1))
-    }
-    #[inline(always)]
     fn pairwise_widening_add_u16x8(self, a: u16x8<Self>) -> u32x4<Self> {
         [
             (a[0usize] as u32) + (a[1usize] as u32),
@@ -4699,12 +3369,6 @@ impl Simd for Fallback {
             (a[6usize] as u32) + (a[7usize] as u32),
         ]
         .simd_into(self)
-    }
-    #[inline(always)]
-    fn pairwise_dot_product_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u32x4<Self> {
-        let (low, high) = self.widening_mul_u16x8(a, b);
-        let (even, odd) = self.deinterleave_u32x4(low, high);
-        self.add_u32x4(even, odd)
     }
     #[inline(always)]
     fn narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self> {
@@ -4794,20 +3458,6 @@ impl Simd for Fallback {
         bits
     }
     #[inline(always)]
-    fn from_vector_mask16x8(self, vector: i16x8<Self>) -> mask16x8<Self> {
-        mask16x8 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask16x8(self, a: mask16x8<Self>) -> i16x8<Self> {
-        i16x8 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask16x8(self, a: &mut mask16x8<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 8usize,
@@ -4817,157 +3467,6 @@ impl Simd for Fallback {
         let mut lanes: [i16; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask16x8<const OFFSET: usize>(
-        self,
-        a: mask16x8<Self>,
-    ) -> mask16x8<Self> {
-        let int = i16x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask16x8 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask16x8<const OFFSET: usize>(
-        self,
-        a: mask16x8<Self>,
-    ) -> mask16x8<Self> {
-        let int = i16x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask16x8 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
-        [
-            i16::bitand(a.val.0[0usize], &b.val.0[0usize]),
-            i16::bitand(a.val.0[1usize], &b.val.0[1usize]),
-            i16::bitand(a.val.0[2usize], &b.val.0[2usize]),
-            i16::bitand(a.val.0[3usize], &b.val.0[3usize]),
-            i16::bitand(a.val.0[4usize], &b.val.0[4usize]),
-            i16::bitand(a.val.0[5usize], &b.val.0[5usize]),
-            i16::bitand(a.val.0[6usize], &b.val.0[6usize]),
-            i16::bitand(a.val.0[7usize], &b.val.0[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn or_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
-        [
-            i16::bitor(a.val.0[0usize], &b.val.0[0usize]),
-            i16::bitor(a.val.0[1usize], &b.val.0[1usize]),
-            i16::bitor(a.val.0[2usize], &b.val.0[2usize]),
-            i16::bitor(a.val.0[3usize], &b.val.0[3usize]),
-            i16::bitor(a.val.0[4usize], &b.val.0[4usize]),
-            i16::bitor(a.val.0[5usize], &b.val.0[5usize]),
-            i16::bitor(a.val.0[6usize], &b.val.0[6usize]),
-            i16::bitor(a.val.0[7usize], &b.val.0[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn xor_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
-        [
-            i16::bitxor(a.val.0[0usize], &b.val.0[0usize]),
-            i16::bitxor(a.val.0[1usize], &b.val.0[1usize]),
-            i16::bitxor(a.val.0[2usize], &b.val.0[2usize]),
-            i16::bitxor(a.val.0[3usize], &b.val.0[3usize]),
-            i16::bitxor(a.val.0[4usize], &b.val.0[4usize]),
-            i16::bitxor(a.val.0[5usize], &b.val.0[5usize]),
-            i16::bitxor(a.val.0[6usize], &b.val.0[6usize]),
-            i16::bitxor(a.val.0[7usize], &b.val.0[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn not_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self> {
-        [
-            i16::not(a.val.0[0usize]),
-            i16::not(a.val.0[1usize]),
-            i16::not(a.val.0[2usize]),
-            i16::not(a.val.0[3usize]),
-            i16::not(a.val.0[4usize]),
-            i16::not(a.val.0[5usize]),
-            i16::not(a.val.0[6usize]),
-            i16::not(a.val.0[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn reverse_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self> {
-        [
-            a.val.0[7usize],
-            a.val.0[6usize],
-            a.val.0[5usize],
-            a.val.0[4usize],
-            a.val.0[3usize],
-            a.val.0[2usize],
-            a.val.0[1usize],
-            a.val.0[0usize],
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn select_mask16x8(
-        self,
-        a: mask16x8<Self>,
-        b: mask16x8<Self>,
-        c: mask16x8<Self>,
-    ) -> mask16x8<Self> {
-        [
-            if a.val.0[0usize] != 0 {
-                b.val.0[0usize]
-            } else {
-                c.val.0[0usize]
-            },
-            if a.val.0[1usize] != 0 {
-                b.val.0[1usize]
-            } else {
-                c.val.0[1usize]
-            },
-            if a.val.0[2usize] != 0 {
-                b.val.0[2usize]
-            } else {
-                c.val.0[2usize]
-            },
-            if a.val.0[3usize] != 0 {
-                b.val.0[3usize]
-            } else {
-                c.val.0[3usize]
-            },
-            if a.val.0[4usize] != 0 {
-                b.val.0[4usize]
-            } else {
-                c.val.0[4usize]
-            },
-            if a.val.0[5usize] != 0 {
-                b.val.0[5usize]
-            } else {
-                c.val.0[5usize]
-            },
-            if a.val.0[6usize] != 0 {
-                b.val.0[6usize]
-            } else {
-                c.val.0[6usize]
-            },
-            if a.val.0[7usize] != 0 {
-                b.val.0[7usize]
-            } else {
-                c.val.0[7usize]
-            },
-        ]
-        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
@@ -5100,72 +3599,12 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_i32x4(self, values: i32x4<Self>, mask: mask32x4<Self>) -> i32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_i32x4(
-        self,
-        values: i32x4<Self>,
-        mask: mask32x4<Self>,
-        merge: i32x4<Self>,
-    ) -> i32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_i32x4(self, values: i32x4<Self>, mask: mask32x4<Self>) -> i32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_i32x4(
-        self,
-        values: i32x4<Self>,
-        mask: mask32x4<Self>,
-        merge: i32x4<Self>,
-    ) -> i32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
     fn count_ones_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
         [
             a[0usize].count_ones().cast_signed(),
             a[1usize].count_ones().cast_signed(),
             a[2usize].count_ones().cast_signed(),
             a[3usize].count_ones().cast_signed(),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn count_zeros_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
-        [
-            a[0usize].count_zeros().cast_signed(),
-            a[1usize].count_zeros().cast_signed(),
-            a[2usize].count_zeros().cast_signed(),
-            a[3usize].count_zeros().cast_signed(),
         ]
         .simd_into(self)
     }
@@ -5236,46 +3675,6 @@ impl Simd for Fallback {
             i32::wrapping_mul(a[1usize], b[1usize]),
             i32::wrapping_mul(a[2usize], b[2usize]),
             i32::wrapping_mul(a[3usize], b[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn and_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        [
-            i32::bitand(a[0usize], &b[0usize]),
-            i32::bitand(a[1usize], &b[1usize]),
-            i32::bitand(a[2usize], &b[2usize]),
-            i32::bitand(a[3usize], &b[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn or_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        [
-            i32::bitor(a[0usize], &b[0usize]),
-            i32::bitor(a[1usize], &b[1usize]),
-            i32::bitor(a[2usize], &b[2usize]),
-            i32::bitor(a[3usize], &b[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn xor_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        [
-            i32::bitxor(a[0usize], &b[0usize]),
-            i32::bitxor(a[1usize], &b[1usize]),
-            i32::bitxor(a[2usize], &b[2usize]),
-            i32::bitxor(a[3usize], &b[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn not_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
-        [
-            i32::not(a[0usize]),
-            i32::not(a[1usize]),
-            i32::not(a[2usize]),
-            i32::not(a[3usize]),
         ]
         .simd_into(self)
     }
@@ -5376,16 +3775,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn clamp_i32x4(self, a: i32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
-        [
-            i32::clamp_debug(a[0usize], b[0usize], c[0usize]),
-            i32::clamp_debug(a[1usize], b[1usize], c[1usize]),
-            i32::clamp_debug(a[2usize], b[2usize], c[2usize]),
-            i32::clamp_debug(a[3usize], b[3usize], c[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
         [
             -(i32::eq(&a[0usize], &b[0usize]) as i32),
@@ -5432,53 +3821,9 @@ impl Simd for Fallback {
         [a[1usize], a[3usize], b[1usize], b[3usize]].simd_into(self)
     }
     #[inline(always)]
-    fn interleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>) {
-        (self.zip_low_i32x4(a, b), self.zip_high_i32x4(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>) {
-        (self.unzip_low_i32x4(a, b), self.unzip_high_i32x4(a, b))
-    }
-    #[inline(always)]
-    fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
-        [
-            if a.val.0[0usize] != 0 {
-                b[0usize]
-            } else {
-                c[0usize]
-            },
-            if a.val.0[1usize] != 0 {
-                b[1usize]
-            } else {
-                c[1usize]
-            },
-            if a.val.0[2usize] != 0 {
-                b[2usize]
-            } else {
-                c[2usize]
-            },
-            if a.val.0[3usize] != 0 {
-                b[3usize]
-            } else {
-                c[3usize]
-            },
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn combine_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x8<Self> {
         let combined: [i32; 8usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
         combined.simd_into(self)
-    }
-    #[inline(always)]
-    fn neg_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
-        [
-            i32::wrapping_neg(a[0usize]),
-            i32::wrapping_neg(a[1usize]),
-            i32::wrapping_neg(a[2usize]),
-            i32::wrapping_neg(a[3usize]),
-        ]
-        .simd_into(self)
     }
     #[inline(always)]
     fn load_four_interleaved_i32x4(self, src: &[i32; 16usize]) -> [i32x4<Self>; 4usize] {
@@ -5522,30 +3867,12 @@ impl Simd for Fallback {
         )
     }
     #[inline(always)]
-    fn widening_mul_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>) {
-        let (a0, a1) = self.widen_i32x4(a);
-        let (b0, b1) = self.widen_i32x4(b);
-        (self.mul_i64x2(a0, b0), self.mul_i64x2(a1, b1))
-    }
-    #[inline(always)]
-    fn widening_add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>) {
-        let (a0, a1) = self.widen_i32x4(a);
-        let (b0, b1) = self.widen_i32x4(b);
-        (self.add_i64x2(a0, b0), self.add_i64x2(a1, b1))
-    }
-    #[inline(always)]
     fn pairwise_widening_add_i32x4(self, a: i32x4<Self>) -> i64x2<Self> {
         [
             (a[0usize] as i64) + (a[1usize] as i64),
             (a[2usize] as i64) + (a[3usize] as i64),
         ]
         .simd_into(self)
-    }
-    #[inline(always)]
-    fn pairwise_dot_product_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i64x2<Self> {
-        let (low, high) = self.widening_mul_i32x4(a, b);
-        let (even, odd) = self.deinterleave_i64x2(low, high);
-        self.add_i64x2(even, odd)
     }
     #[inline(always)]
     fn narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self> {
@@ -5612,72 +3939,12 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_u32x4(self, values: u32x4<Self>, mask: mask32x4<Self>) -> u32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_u32x4(
-        self,
-        values: u32x4<Self>,
-        mask: mask32x4<Self>,
-        merge: u32x4<Self>,
-    ) -> u32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_u32x4(self, values: u32x4<Self>, mask: mask32x4<Self>) -> u32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_u32x4(
-        self,
-        values: u32x4<Self>,
-        mask: mask32x4<Self>,
-        merge: u32x4<Self>,
-    ) -> u32x4<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
     fn count_ones_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
         [
             a[0usize].count_ones(),
             a[1usize].count_ones(),
             a[2usize].count_ones(),
             a[3usize].count_ones(),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn count_zeros_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
-        [
-            a[0usize].count_zeros(),
-            a[1usize].count_zeros(),
-            a[2usize].count_zeros(),
-            a[3usize].count_zeros(),
         ]
         .simd_into(self)
     }
@@ -5748,46 +4015,6 @@ impl Simd for Fallback {
             u32::wrapping_mul(a[1usize], b[1usize]),
             u32::wrapping_mul(a[2usize], b[2usize]),
             u32::wrapping_mul(a[3usize], b[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn and_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        [
-            u32::bitand(a[0usize], &b[0usize]),
-            u32::bitand(a[1usize], &b[1usize]),
-            u32::bitand(a[2usize], &b[2usize]),
-            u32::bitand(a[3usize], &b[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn or_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        [
-            u32::bitor(a[0usize], &b[0usize]),
-            u32::bitor(a[1usize], &b[1usize]),
-            u32::bitor(a[2usize], &b[2usize]),
-            u32::bitor(a[3usize], &b[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn xor_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        [
-            u32::bitxor(a[0usize], &b[0usize]),
-            u32::bitxor(a[1usize], &b[1usize]),
-            u32::bitxor(a[2usize], &b[2usize]),
-            u32::bitxor(a[3usize], &b[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn not_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
-        [
-            u32::not(a[0usize]),
-            u32::not(a[1usize]),
-            u32::not(a[2usize]),
-            u32::not(a[3usize]),
         ]
         .simd_into(self)
     }
@@ -5888,16 +4115,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn clamp_u32x4(self, a: u32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
-        [
-            u32::clamp_debug(a[0usize], b[0usize], c[0usize]),
-            u32::clamp_debug(a[1usize], b[1usize], c[1usize]),
-            u32::clamp_debug(a[2usize], b[2usize], c[2usize]),
-            u32::clamp_debug(a[3usize], b[3usize], c[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
         [
             -(u32::eq(&a[0usize], &b[0usize]) as i32),
@@ -5942,40 +4159,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn unzip_high_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         [a[1usize], a[3usize], b[1usize], b[3usize]].simd_into(self)
-    }
-    #[inline(always)]
-    fn interleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>) {
-        (self.zip_low_u32x4(a, b), self.zip_high_u32x4(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>) {
-        (self.unzip_low_u32x4(a, b), self.unzip_high_u32x4(a, b))
-    }
-    #[inline(always)]
-    fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
-        [
-            if a.val.0[0usize] != 0 {
-                b[0usize]
-            } else {
-                c[0usize]
-            },
-            if a.val.0[1usize] != 0 {
-                b[1usize]
-            } else {
-                c[1usize]
-            },
-            if a.val.0[2usize] != 0 {
-                b[2usize]
-            } else {
-                c[2usize]
-            },
-            if a.val.0[3usize] != 0 {
-                b[3usize]
-            } else {
-                c[3usize]
-            },
-        ]
-        .simd_into(self)
     }
     #[inline(always)]
     fn combine_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x8<Self> {
@@ -6024,30 +4207,12 @@ impl Simd for Fallback {
         )
     }
     #[inline(always)]
-    fn widening_mul_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>) {
-        let (a0, a1) = self.widen_u32x4(a);
-        let (b0, b1) = self.widen_u32x4(b);
-        (self.mul_u64x2(a0, b0), self.mul_u64x2(a1, b1))
-    }
-    #[inline(always)]
-    fn widening_add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>) {
-        let (a0, a1) = self.widen_u32x4(a);
-        let (b0, b1) = self.widen_u32x4(b);
-        (self.add_u64x2(a0, b0), self.add_u64x2(a1, b1))
-    }
-    #[inline(always)]
     fn pairwise_widening_add_u32x4(self, a: u32x4<Self>) -> u64x2<Self> {
         [
             (a[0usize] as u64) + (a[1usize] as u64),
             (a[2usize] as u64) + (a[3usize] as u64),
         ]
         .simd_into(self)
-    }
-    #[inline(always)]
-    fn pairwise_dot_product_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u64x2<Self> {
-        let (low, high) = self.widening_mul_u32x4(a, b);
-        let (even, odd) = self.deinterleave_u64x2(low, high);
-        self.add_u64x2(even, odd)
     }
     #[inline(always)]
     fn narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self> {
@@ -6127,20 +4292,6 @@ impl Simd for Fallback {
         bits
     }
     #[inline(always)]
-    fn from_vector_mask32x4(self, vector: i32x4<Self>) -> mask32x4<Self> {
-        mask32x4 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask32x4(self, a: mask32x4<Self>) -> i32x4<Self> {
-        i32x4 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask32x4(self, a: &mut mask32x4<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 4usize,
@@ -6150,117 +4301,6 @@ impl Simd for Fallback {
         let mut lanes: [i32; 4usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask32x4<const OFFSET: usize>(
-        self,
-        a: mask32x4<Self>,
-    ) -> mask32x4<Self> {
-        let int = i32x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask32x4 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask32x4<const OFFSET: usize>(
-        self,
-        a: mask32x4<Self>,
-    ) -> mask32x4<Self> {
-        let int = i32x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask32x4 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
-        [
-            i32::bitand(a.val.0[0usize], &b.val.0[0usize]),
-            i32::bitand(a.val.0[1usize], &b.val.0[1usize]),
-            i32::bitand(a.val.0[2usize], &b.val.0[2usize]),
-            i32::bitand(a.val.0[3usize], &b.val.0[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn or_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
-        [
-            i32::bitor(a.val.0[0usize], &b.val.0[0usize]),
-            i32::bitor(a.val.0[1usize], &b.val.0[1usize]),
-            i32::bitor(a.val.0[2usize], &b.val.0[2usize]),
-            i32::bitor(a.val.0[3usize], &b.val.0[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn xor_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
-        [
-            i32::bitxor(a.val.0[0usize], &b.val.0[0usize]),
-            i32::bitxor(a.val.0[1usize], &b.val.0[1usize]),
-            i32::bitxor(a.val.0[2usize], &b.val.0[2usize]),
-            i32::bitxor(a.val.0[3usize], &b.val.0[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn not_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
-        [
-            i32::not(a.val.0[0usize]),
-            i32::not(a.val.0[1usize]),
-            i32::not(a.val.0[2usize]),
-            i32::not(a.val.0[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn reverse_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
-        [
-            a.val.0[3usize],
-            a.val.0[2usize],
-            a.val.0[1usize],
-            a.val.0[0usize],
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn select_mask32x4(
-        self,
-        a: mask32x4<Self>,
-        b: mask32x4<Self>,
-        c: mask32x4<Self>,
-    ) -> mask32x4<Self> {
-        [
-            if a.val.0[0usize] != 0 {
-                b.val.0[0usize]
-            } else {
-                c.val.0[0usize]
-            },
-            if a.val.0[1usize] != 0 {
-                b.val.0[1usize]
-            } else {
-                c.val.0[1usize]
-            },
-            if a.val.0[2usize] != 0 {
-                b.val.0[2usize]
-            } else {
-                c.val.0[2usize]
-            },
-            if a.val.0[3usize] != 0 {
-                b.val.0[3usize]
-            } else {
-                c.val.0[3usize]
-            },
-        ]
-        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
@@ -6332,56 +4372,6 @@ impl Simd for Fallback {
         dest[..2usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[2usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn compress_f64x2(self, values: f64x2<Self>, mask: mask64x2<Self>) -> f64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_f64x2(
-        self,
-        values: f64x2<Self>,
-        mask: mask64x2<Self>,
-        merge: f64x2<Self>,
-    ) -> f64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_f64x2(self, values: f64x2<Self>, mask: mask64x2<Self>) -> f64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_f64x2(
-        self,
-        values: f64x2<Self>,
-        mask: mask64x2<Self>,
-        merge: f64x2<Self>,
-    ) -> f64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
     }
     #[inline(always)]
     fn neg_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -6546,14 +4536,6 @@ impl Simd for Fallback {
         [a[1usize], b[1usize]].simd_into(self)
     }
     #[inline(always)]
-    fn interleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>) {
-        (self.zip_low_f64x2(a, b), self.zip_high_f64x2(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>) {
-        (self.unzip_low_f64x2(a, b), self.unzip_high_f64x2(a, b))
-    }
-    #[inline(always)]
     fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
         a.mul(b).add(c)
     }
@@ -6604,54 +4586,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn to_radians_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
         [f64::to_radians(a[0usize]), f64::to_radians(a[1usize])].simd_into(self)
-    }
-    #[inline(always)]
-    fn is_nan_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
-        a.simd_ne(a)
-    }
-    #[inline(always)]
-    fn is_infinite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
-        a.abs().simd_eq(f64::INFINITY)
-    }
-    #[inline(always)]
-    fn is_finite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
-        a.abs().simd_lt(f64::INFINITY)
-    }
-    #[inline(always)]
-    fn is_subnormal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
-        let i: i64x2<Self> = a.bitcast();
-        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & (i & 0x000F_FFFF_FFFF_FFFF_i64).simd_ne(0)
-    }
-    #[inline(always)]
-    fn is_normal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
-        let i: i64x2<Self> = a.bitcast();
-        let exp = i & 0x7FF0_0000_0000_0000_i64;
-        exp.simd_ne(0) & exp.simd_ne(0x7FF0_0000_0000_0000_i64)
-    }
-    #[inline(always)]
-    fn is_sign_positive_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
-        let i: i64x2<Self> = a.bitcast();
-        (i & i64::MIN).simd_eq(0)
-    }
-    #[inline(always)]
-    fn is_sign_negative_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
-        !a.is_sign_positive()
-    }
-    #[inline(always)]
-    fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        [
-            if a.val.0[0usize] != 0 {
-                b[0usize]
-            } else {
-                c[0usize]
-            },
-            if a.val.0[1usize] != 0 {
-                b[1usize]
-            } else {
-                c[1usize]
-            },
-        ]
-        .simd_into(self)
     }
     #[inline(always)]
     fn combine_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x4<Self> {
@@ -6744,68 +4678,10 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_i64x2(self, values: i64x2<Self>, mask: mask64x2<Self>) -> i64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_i64x2(
-        self,
-        values: i64x2<Self>,
-        mask: mask64x2<Self>,
-        merge: i64x2<Self>,
-    ) -> i64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_i64x2(self, values: i64x2<Self>, mask: mask64x2<Self>) -> i64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_i64x2(
-        self,
-        values: i64x2<Self>,
-        mask: mask64x2<Self>,
-        merge: i64x2<Self>,
-    ) -> i64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
     fn count_ones_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
         [
             i64::from(a[0usize].count_ones()),
             i64::from(a[1usize].count_ones()),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn count_zeros_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
-        [
-            i64::from(a[0usize].count_zeros()),
-            i64::from(a[1usize].count_zeros()),
         ]
         .simd_into(self)
     }
@@ -6856,34 +4732,6 @@ impl Simd for Fallback {
             i64::wrapping_mul(a[1usize], b[1usize]),
         ]
         .simd_into(self)
-    }
-    #[inline(always)]
-    fn and_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        [
-            i64::bitand(a[0usize], &b[0usize]),
-            i64::bitand(a[1usize], &b[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn or_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        [
-            i64::bitor(a[0usize], &b[0usize]),
-            i64::bitor(a[1usize], &b[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn xor_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        [
-            i64::bitxor(a[0usize], &b[0usize]),
-            i64::bitxor(a[1usize], &b[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn not_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
-        [i64::not(a[0usize]), i64::not(a[1usize])].simd_into(self)
     }
     #[inline(always)]
     fn shl_i64x2(self, a: i64x2<Self>, shift: u32) -> i64x2<Self> {
@@ -6954,14 +4802,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn clamp_i64x2(self, a: i64x2<Self>, b: i64x2<Self>, c: i64x2<Self>) -> i64x2<Self> {
-        [
-            i64::clamp_debug(a[0usize], b[0usize], c[0usize]),
-            i64::clamp_debug(a[1usize], b[1usize], c[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
         [
             -(i64::eq(&a[0usize], &b[0usize]) as i64),
@@ -7002,37 +4842,9 @@ impl Simd for Fallback {
         [a[1usize], b[1usize]].simd_into(self)
     }
     #[inline(always)]
-    fn interleave_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> (i64x2<Self>, i64x2<Self>) {
-        (self.zip_low_i64x2(a, b), self.zip_high_i64x2(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> (i64x2<Self>, i64x2<Self>) {
-        (self.unzip_low_i64x2(a, b), self.unzip_high_i64x2(a, b))
-    }
-    #[inline(always)]
-    fn select_i64x2(self, a: mask64x2<Self>, b: i64x2<Self>, c: i64x2<Self>) -> i64x2<Self> {
-        [
-            if a.val.0[0usize] != 0 {
-                b[0usize]
-            } else {
-                c[0usize]
-            },
-            if a.val.0[1usize] != 0 {
-                b[1usize]
-            } else {
-                c[1usize]
-            },
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn combine_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x4<Self> {
         let combined: [i64; 4usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
         combined.simd_into(self)
-    }
-    #[inline(always)]
-    fn neg_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
-        [i64::wrapping_neg(a[0usize]), i64::wrapping_neg(a[1usize])].simd_into(self)
     }
     #[inline(always)]
     fn load_four_interleaved_i64x2(self, src: &[i64; 8usize]) -> [i64x2<Self>; 4usize] {
@@ -7111,68 +4923,10 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_u64x2(self, values: u64x2<Self>, mask: mask64x2<Self>) -> u64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_u64x2(
-        self,
-        values: u64x2<Self>,
-        mask: mask64x2<Self>,
-        merge: u64x2<Self>,
-    ) -> u64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_u64x2(self, values: u64x2<Self>, mask: mask64x2<Self>) -> u64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_u64x2(
-        self,
-        values: u64x2<Self>,
-        mask: mask64x2<Self>,
-        merge: u64x2<Self>,
-    ) -> u64x2<Self> {
-        let mask = mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x16(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
     fn count_ones_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
         [
             u64::from(a[0usize].count_ones()),
             u64::from(a[1usize].count_ones()),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn count_zeros_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
-        [
-            u64::from(a[0usize].count_zeros()),
-            u64::from(a[1usize].count_zeros()),
         ]
         .simd_into(self)
     }
@@ -7223,34 +4977,6 @@ impl Simd for Fallback {
             u64::wrapping_mul(a[1usize], b[1usize]),
         ]
         .simd_into(self)
-    }
-    #[inline(always)]
-    fn and_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        [
-            u64::bitand(a[0usize], &b[0usize]),
-            u64::bitand(a[1usize], &b[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn or_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        [
-            u64::bitor(a[0usize], &b[0usize]),
-            u64::bitor(a[1usize], &b[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn xor_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        [
-            u64::bitxor(a[0usize], &b[0usize]),
-            u64::bitxor(a[1usize], &b[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn not_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
-        [u64::not(a[0usize]), u64::not(a[1usize])].simd_into(self)
     }
     #[inline(always)]
     fn shl_u64x2(self, a: u64x2<Self>, shift: u32) -> u64x2<Self> {
@@ -7321,14 +5047,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn clamp_u64x2(self, a: u64x2<Self>, b: u64x2<Self>, c: u64x2<Self>) -> u64x2<Self> {
-        [
-            u64::clamp_debug(a[0usize], b[0usize], c[0usize]),
-            u64::clamp_debug(a[1usize], b[1usize], c[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn simd_eq_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
         [
             -(u64::eq(&a[0usize], &b[0usize]) as i64),
@@ -7367,30 +5085,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn unzip_high_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
         [a[1usize], b[1usize]].simd_into(self)
-    }
-    #[inline(always)]
-    fn interleave_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> (u64x2<Self>, u64x2<Self>) {
-        (self.zip_low_u64x2(a, b), self.zip_high_u64x2(a, b))
-    }
-    #[inline(always)]
-    fn deinterleave_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> (u64x2<Self>, u64x2<Self>) {
-        (self.unzip_low_u64x2(a, b), self.unzip_high_u64x2(a, b))
-    }
-    #[inline(always)]
-    fn select_u64x2(self, a: mask64x2<Self>, b: u64x2<Self>, c: u64x2<Self>) -> u64x2<Self> {
-        [
-            if a.val.0[0usize] != 0 {
-                b[0usize]
-            } else {
-                c[0usize]
-            },
-            if a.val.0[1usize] != 0 {
-                b[1usize]
-            } else {
-                c[1usize]
-            },
-        ]
-        .simd_into(self)
     }
     #[inline(always)]
     fn combine_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x4<Self> {
@@ -7485,20 +5179,6 @@ impl Simd for Fallback {
         bits
     }
     #[inline(always)]
-    fn from_vector_mask64x2(self, vector: i64x2<Self>) -> mask64x2<Self> {
-        mask64x2 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask64x2(self, a: mask64x2<Self>) -> i64x2<Self> {
-        i64x2 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask64x2(self, a: &mut mask64x2<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 2usize,
@@ -7508,89 +5188,6 @@ impl Simd for Fallback {
         let mut lanes: [i64; 2usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask64x2<const OFFSET: usize>(
-        self,
-        a: mask64x2<Self>,
-    ) -> mask64x2<Self> {
-        let int = i64x2 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask64x2 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask64x2<const OFFSET: usize>(
-        self,
-        a: mask64x2<Self>,
-    ) -> mask64x2<Self> {
-        let int = i64x2 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask64x2 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
-        [
-            i64::bitand(a.val.0[0usize], &b.val.0[0usize]),
-            i64::bitand(a.val.0[1usize], &b.val.0[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn or_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
-        [
-            i64::bitor(a.val.0[0usize], &b.val.0[0usize]),
-            i64::bitor(a.val.0[1usize], &b.val.0[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn xor_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
-        [
-            i64::bitxor(a.val.0[0usize], &b.val.0[0usize]),
-            i64::bitxor(a.val.0[1usize], &b.val.0[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
-        [i64::not(a.val.0[0usize]), i64::not(a.val.0[1usize])].simd_into(self)
-    }
-    #[inline(always)]
-    fn reverse_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
-        [a.val.0[1usize], a.val.0[0usize]].simd_into(self)
-    }
-    #[inline(always)]
-    fn select_mask64x2(
-        self,
-        a: mask64x2<Self>,
-        b: mask64x2<Self>,
-        c: mask64x2<Self>,
-    ) -> mask64x2<Self> {
-        [
-            if a.val.0[0usize] != 0 {
-                b.val.0[0usize]
-            } else {
-                c.val.0[0usize]
-            },
-            if a.val.0[1usize] != 0 {
-                b.val.0[1usize]
-            } else {
-                c.val.0[1usize]
-            },
-        ]
-        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
@@ -7639,88 +5236,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_f32x8(self, values: f32x8<Self>, mask: mask32x8<Self>) -> f32x8<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_f32x8(
-        self,
-        values: f32x8<Self>,
-        mask: mask32x8<Self>,
-        merge: f32x8<Self>,
-    ) -> f32x8<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_f32x8(self, values: f32x8<Self>, mask: mask32x8<Self>) -> f32x8<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_f32x8(
-        self,
-        values: f32x8<Self>,
-        mask: mask32x8<Self>,
-        merge: f32x8<Self>,
-    ) -> f32x8<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn is_nan_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
-        a.simd_ne(a)
-    }
-    #[inline(always)]
-    fn is_infinite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
-        a.abs().simd_eq(f32::INFINITY)
-    }
-    #[inline(always)]
-    fn is_finite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
-        a.abs().simd_lt(f32::INFINITY)
-    }
-    #[inline(always)]
-    fn is_subnormal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
-        let i: i32x8<Self> = a.bitcast();
-        (i & 0x7F80_0000_i32).simd_eq(0) & (i & 0x007F_FFFF_i32).simd_ne(0)
-    }
-    #[inline(always)]
-    fn is_normal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
-        let i: i32x8<Self> = a.bitcast();
-        let exp = i & 0x7F80_0000_i32;
-        exp.simd_ne(0) & exp.simd_ne(0x7F80_0000_i32)
-    }
-    #[inline(always)]
-    fn is_sign_positive_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
-        let i: i32x8<Self> = a.bitcast();
-        (i & i32::MIN).simd_eq(0)
-    }
-    #[inline(always)]
-    fn is_sign_negative_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
-        !a.is_sign_positive()
-    }
-    #[inline(always)]
     fn combine_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x16<Self> {
         let combined: [f32; 16usize] =
             crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
@@ -7737,56 +5252,6 @@ impl Simd for Fallback {
         dest[..32usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[32usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn compress_i8x32(self, values: i8x32<Self>, mask: mask8x32<Self>) -> i8x32<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_i8x32(
-        self,
-        values: i8x32<Self>,
-        mask: mask8x32<Self>,
-        merge: i8x32<Self>,
-    ) -> i8x32<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_i8x32(self, values: i8x32<Self>, mask: mask8x32<Self>) -> i8x32<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_i8x32(
-        self,
-        values: i8x32<Self>,
-        mask: mask8x32<Self>,
-        merge: i8x32<Self>,
-    ) -> i8x32<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
     }
     #[inline(always)]
     fn combine_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x64<Self> {
@@ -7873,53 +5338,6 @@ impl Simd for Fallback {
         Bytes::from_bytes(result)
     }
     #[inline(always)]
-    fn compress_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self> {
-        self.compress_merge_u8x32(values, mask, u8x32::splat(self, 0))
-    }
-    #[inline(always)]
-    fn compress_merge_u8x32(
-        self,
-        values: u8x32<Self>,
-        mask: mask8x32<Self>,
-        merge: u8x32<Self>,
-    ) -> u8x32<Self> {
-        let mask = self.to_bitmask_mask8x32(mask);
-        let mut merge_padded = [0u8; 32 + 1];
-        merge_padded[..32].copy_from_slice(&*merge);
-        let mut compacted = merge_padded;
-        let mut output_lane = 0;
-        for input_lane in 0..32 {
-            compacted[output_lane] = values[input_lane];
-            output_lane += ((mask >> input_lane) & 1) as usize;
-        }
-        compacted[output_lane] = merge_padded[output_lane];
-        let mut result = merge;
-        result.copy_from_slice(&compacted[..32]);
-        result
-    }
-    #[inline(always)]
-    fn expand_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self> {
-        self.expand_merge_u8x32(values, mask, u8x32::splat(self, 0))
-    }
-    #[inline(always)]
-    fn expand_merge_u8x32(
-        self,
-        values: u8x32<Self>,
-        mask: mask8x32<Self>,
-        merge: u8x32<Self>,
-    ) -> u8x32<Self> {
-        let mask = self.to_bitmask_mask8x32(mask);
-        let mut result = merge;
-        let mut input_lane = 0;
-        for output_lane in 0..32 {
-            let bit = ((mask >> output_lane) & 1) as u8;
-            let keep = 0u8.wrapping_sub(bit);
-            result[output_lane] = (values[input_lane] & keep) | (result[output_lane] & !keep);
-            input_lane += usize::from(bit);
-        }
-        result
-    }
-    #[inline(always)]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self> {
         let combined: [u8; 64usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
         combined.simd_into(self)
@@ -7928,20 +5346,6 @@ impl Simd for Fallback {
     fn split_u8x32(self, a: u8x32<Self>) -> (u8x16<Self>, u8x16<Self>) {
         let [low, high]: [[u8; 16usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
         (low.simd_into(self), high.simd_into(self))
-    }
-    #[inline(always)]
-    fn from_vector_mask8x32(self, vector: i8x32<Self>) -> mask8x32<Self> {
-        mask8x32 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask8x32(self, a: mask8x32<Self>) -> i8x32<Self> {
-        i8x32 {
-            val: a.val,
-            simd: self,
-        }
     }
     #[inline(always)]
     fn set_mask8x32(self, a: &mut mask8x32<Self>, index: usize, value: bool) -> () {
@@ -7953,36 +5357,6 @@ impl Simd for Fallback {
         let mut lanes: [i8; 32usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask8x32<const OFFSET: usize>(
-        self,
-        a: mask8x32<Self>,
-    ) -> mask8x32<Self> {
-        let int = i8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask8x32<const OFFSET: usize>(
-        self,
-        a: mask8x32<Self>,
-    ) -> mask8x32<Self> {
-        let int = i8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn combine_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x64<Self> {
@@ -8000,56 +5374,6 @@ impl Simd for Fallback {
         dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[16usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn compress_i16x16(self, values: i16x16<Self>, mask: mask16x16<Self>) -> i16x16<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_i16x16(
-        self,
-        values: i16x16<Self>,
-        mask: mask16x16<Self>,
-        merge: i16x16<Self>,
-    ) -> i16x16<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_i16x16(self, values: i16x16<Self>, mask: mask16x16<Self>) -> i16x16<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_i16x16(
-        self,
-        values: i16x16<Self>,
-        mask: mask16x16<Self>,
-        merge: i16x16<Self>,
-    ) -> i16x16<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
     }
     #[inline(always)]
     fn combine_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x32<Self> {
@@ -8070,56 +5394,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_u16x16(self, values: u16x16<Self>, mask: mask16x16<Self>) -> u16x16<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_u16x16(
-        self,
-        values: u16x16<Self>,
-        mask: mask16x16<Self>,
-        merge: u16x16<Self>,
-    ) -> u16x16<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_u16x16(self, values: u16x16<Self>, mask: mask16x16<Self>) -> u16x16<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_u16x16(
-        self,
-        values: u16x16<Self>,
-        mask: mask16x16<Self>,
-        merge: u16x16<Self>,
-    ) -> u16x16<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
     fn combine_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x32<Self> {
         let combined: [u16; 32usize] =
             crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
@@ -8131,20 +5405,6 @@ impl Simd for Fallback {
         (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
-    fn from_vector_mask16x16(self, vector: i16x16<Self>) -> mask16x16<Self> {
-        mask16x16 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask16x16(self, a: mask16x16<Self>) -> i16x16<Self> {
-        i16x16 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask16x16(self, a: &mut mask16x16<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 16usize,
@@ -8154,36 +5414,6 @@ impl Simd for Fallback {
         let mut lanes: [i16; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask16x16<const OFFSET: usize>(
-        self,
-        a: mask16x16<Self>,
-    ) -> mask16x16<Self> {
-        let int = i16x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask16x16 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask16x16<const OFFSET: usize>(
-        self,
-        a: mask16x16<Self>,
-    ) -> mask16x16<Self> {
-        let int = i16x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask16x16 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn combine_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x32<Self> {
@@ -8204,56 +5434,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_i32x8(self, values: i32x8<Self>, mask: mask32x8<Self>) -> i32x8<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_i32x8(
-        self,
-        values: i32x8<Self>,
-        mask: mask32x8<Self>,
-        merge: i32x8<Self>,
-    ) -> i32x8<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_i32x8(self, values: i32x8<Self>, mask: mask32x8<Self>) -> i32x8<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_i32x8(
-        self,
-        values: i32x8<Self>,
-        mask: mask32x8<Self>,
-        merge: i32x8<Self>,
-    ) -> i32x8<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
     fn combine_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x16<Self> {
         let combined: [i32; 16usize] =
             crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
@@ -8272,56 +5452,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_u32x8(self, values: u32x8<Self>, mask: mask32x8<Self>) -> u32x8<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_u32x8(
-        self,
-        values: u32x8<Self>,
-        mask: mask32x8<Self>,
-        merge: u32x8<Self>,
-    ) -> u32x8<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_u32x8(self, values: u32x8<Self>, mask: mask32x8<Self>) -> u32x8<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_u32x8(
-        self,
-        values: u32x8<Self>,
-        mask: mask32x8<Self>,
-        merge: u32x8<Self>,
-    ) -> u32x8<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
     fn combine_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x16<Self> {
         let combined: [u32; 16usize] =
             crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
@@ -8333,20 +5463,6 @@ impl Simd for Fallback {
         (low.simd_into(self), high.simd_into(self))
     }
     #[inline(always)]
-    fn from_vector_mask32x8(self, vector: i32x8<Self>) -> mask32x8<Self> {
-        mask32x8 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask32x8(self, a: mask32x8<Self>) -> i32x8<Self> {
-        i32x8 {
-            val: a.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn set_mask32x8(self, a: &mut mask32x8<Self>, index: usize, value: bool) -> () {
         assert!(
             index < 8usize,
@@ -8356,36 +5472,6 @@ impl Simd for Fallback {
         let mut lanes: [i32; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask32x8<const OFFSET: usize>(
-        self,
-        a: mask32x8<Self>,
-    ) -> mask32x8<Self> {
-        let int = i32x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask32x8 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask32x8<const OFFSET: usize>(
-        self,
-        a: mask32x8<Self>,
-    ) -> mask32x8<Self> {
-        let int = i32x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask32x8 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn combine_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x16<Self> {
@@ -8406,88 +5492,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_f64x4(self, values: f64x4<Self>, mask: mask64x4<Self>) -> f64x4<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_f64x4(
-        self,
-        values: f64x4<Self>,
-        mask: mask64x4<Self>,
-        merge: f64x4<Self>,
-    ) -> f64x4<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_f64x4(self, values: f64x4<Self>, mask: mask64x4<Self>) -> f64x4<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_f64x4(
-        self,
-        values: f64x4<Self>,
-        mask: mask64x4<Self>,
-        merge: f64x4<Self>,
-    ) -> f64x4<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn is_nan_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
-        a.simd_ne(a)
-    }
-    #[inline(always)]
-    fn is_infinite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
-        a.abs().simd_eq(f64::INFINITY)
-    }
-    #[inline(always)]
-    fn is_finite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
-        a.abs().simd_lt(f64::INFINITY)
-    }
-    #[inline(always)]
-    fn is_subnormal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
-        let i: i64x4<Self> = a.bitcast();
-        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & (i & 0x000F_FFFF_FFFF_FFFF_i64).simd_ne(0)
-    }
-    #[inline(always)]
-    fn is_normal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
-        let i: i64x4<Self> = a.bitcast();
-        let exp = i & 0x7FF0_0000_0000_0000_i64;
-        exp.simd_ne(0) & exp.simd_ne(0x7FF0_0000_0000_0000_i64)
-    }
-    #[inline(always)]
-    fn is_sign_positive_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
-        let i: i64x4<Self> = a.bitcast();
-        (i & i64::MIN).simd_eq(0)
-    }
-    #[inline(always)]
-    fn is_sign_negative_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
-        !a.is_sign_positive()
-    }
-    #[inline(always)]
     fn combine_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x8<Self> {
         let combined: [f64; 8usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
         combined.simd_into(self)
@@ -8503,56 +5507,6 @@ impl Simd for Fallback {
         dest[..4usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[4usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn compress_i64x4(self, values: i64x4<Self>, mask: mask64x4<Self>) -> i64x4<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_i64x4(
-        self,
-        values: i64x4<Self>,
-        mask: mask64x4<Self>,
-        merge: i64x4<Self>,
-    ) -> i64x4<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_i64x4(self, values: i64x4<Self>, mask: mask64x4<Self>) -> i64x4<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_i64x4(
-        self,
-        values: i64x4<Self>,
-        mask: mask64x4<Self>,
-        merge: i64x4<Self>,
-    ) -> i64x4<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
     }
     #[inline(always)]
     fn combine_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x8<Self> {
@@ -8572,56 +5526,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_u64x4(self, values: u64x4<Self>, mask: mask64x4<Self>) -> u64x4<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_u64x4(
-        self,
-        values: u64x4<Self>,
-        mask: mask64x4<Self>,
-        merge: u64x4<Self>,
-    ) -> u64x4<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_u64x4(self, values: u64x4<Self>, mask: mask64x4<Self>) -> u64x4<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_u64x4(
-        self,
-        values: u64x4<Self>,
-        mask: mask64x4<Self>,
-        merge: u64x4<Self>,
-    ) -> u64x4<Self> {
-        let mask = mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x32(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
     fn combine_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x8<Self> {
         let combined: [u64; 8usize] = crate::transmute::checked_transmute_copy(&[a.val.0, b.val.0]);
         combined.simd_into(self)
@@ -8630,20 +5534,6 @@ impl Simd for Fallback {
     fn split_u64x4(self, a: u64x4<Self>) -> (u64x2<Self>, u64x2<Self>) {
         let [low, high]: [[u64; 2usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
         (low.simd_into(self), high.simd_into(self))
-    }
-    #[inline(always)]
-    fn from_vector_mask64x4(self, vector: i64x4<Self>) -> mask64x4<Self> {
-        mask64x4 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask64x4(self, a: mask64x4<Self>) -> i64x4<Self> {
-        i64x4 {
-            val: a.val,
-            simd: self,
-        }
     }
     #[inline(always)]
     fn set_mask64x4(self, a: &mut mask64x4<Self>, index: usize, value: bool) -> () {
@@ -8655,36 +5545,6 @@ impl Simd for Fallback {
         let mut lanes: [i64; 4usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask64x4<const OFFSET: usize>(
-        self,
-        a: mask64x4<Self>,
-    ) -> mask64x4<Self> {
-        let int = i64x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask64x4 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask64x4<const OFFSET: usize>(
-        self,
-        a: mask64x4<Self>,
-    ) -> mask64x4<Self> {
-        let int = i64x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask64x4 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn combine_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x8<Self> {
@@ -8704,88 +5564,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_f32x16(self, values: f32x16<Self>, mask: mask32x16<Self>) -> f32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_f32x16(
-        self,
-        values: f32x16<Self>,
-        mask: mask32x16<Self>,
-        merge: f32x16<Self>,
-    ) -> f32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_f32x16(self, values: f32x16<Self>, mask: mask32x16<Self>) -> f32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_f32x16(
-        self,
-        values: f32x16<Self>,
-        mask: mask32x16<Self>,
-        merge: f32x16<Self>,
-    ) -> f32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn is_nan_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
-        a.simd_ne(a)
-    }
-    #[inline(always)]
-    fn is_infinite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
-        a.abs().simd_eq(f32::INFINITY)
-    }
-    #[inline(always)]
-    fn is_finite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
-        a.abs().simd_lt(f32::INFINITY)
-    }
-    #[inline(always)]
-    fn is_subnormal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
-        let i: i32x16<Self> = a.bitcast();
-        (i & 0x7F80_0000_i32).simd_eq(0) & (i & 0x007F_FFFF_i32).simd_ne(0)
-    }
-    #[inline(always)]
-    fn is_normal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
-        let i: i32x16<Self> = a.bitcast();
-        let exp = i & 0x7F80_0000_i32;
-        exp.simd_ne(0) & exp.simd_ne(0x7F80_0000_i32)
-    }
-    #[inline(always)]
-    fn is_sign_positive_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
-        let i: i32x16<Self> = a.bitcast();
-        (i & i32::MIN).simd_eq(0)
-    }
-    #[inline(always)]
-    fn is_sign_negative_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
-        !a.is_sign_positive()
-    }
-    #[inline(always)]
     fn split_f32x16(self, a: f32x16<Self>) -> (f32x8<Self>, f32x8<Self>) {
         let [low, high]: [[f32; 8usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
         (low.simd_into(self), high.simd_into(self))
@@ -8796,56 +5574,6 @@ impl Simd for Fallback {
         dest[..64usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[64usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn compress_i8x64(self, values: i8x64<Self>, mask: mask8x64<Self>) -> i8x64<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_i8x64(
-        self,
-        values: i8x64<Self>,
-        mask: mask8x64<Self>,
-        merge: i8x64<Self>,
-    ) -> i8x64<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_i8x64(self, values: i8x64<Self>, mask: mask8x64<Self>) -> i8x64<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_i8x64(
-        self,
-        values: i8x64<Self>,
-        mask: mask8x64<Self>,
-        merge: i8x64<Self>,
-    ) -> i8x64<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
     }
     #[inline(always)]
     fn split_i8x64(self, a: i8x64<Self>) -> (i8x32<Self>, i8x32<Self>) {
@@ -8927,70 +5655,9 @@ impl Simd for Fallback {
         Bytes::from_bytes(result)
     }
     #[inline(always)]
-    fn compress_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self> {
-        self.compress_merge_u8x64(values, mask, u8x64::splat(self, 0))
-    }
-    #[inline(always)]
-    fn compress_merge_u8x64(
-        self,
-        values: u8x64<Self>,
-        mask: mask8x64<Self>,
-        merge: u8x64<Self>,
-    ) -> u8x64<Self> {
-        let mask = self.to_bitmask_mask8x64(mask);
-        let mut merge_padded = [0u8; 64 + 1];
-        merge_padded[..64].copy_from_slice(&*merge);
-        let mut compacted = merge_padded;
-        let mut output_lane = 0;
-        for input_lane in 0..64 {
-            compacted[output_lane] = values[input_lane];
-            output_lane += ((mask >> input_lane) & 1) as usize;
-        }
-        compacted[output_lane] = merge_padded[output_lane];
-        let mut result = merge;
-        result.copy_from_slice(&compacted[..64]);
-        result
-    }
-    #[inline(always)]
-    fn expand_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self> {
-        self.expand_merge_u8x64(values, mask, u8x64::splat(self, 0))
-    }
-    #[inline(always)]
-    fn expand_merge_u8x64(
-        self,
-        values: u8x64<Self>,
-        mask: mask8x64<Self>,
-        merge: u8x64<Self>,
-    ) -> u8x64<Self> {
-        let mask = self.to_bitmask_mask8x64(mask);
-        let mut result = merge;
-        let mut input_lane = 0;
-        for output_lane in 0..64 {
-            let bit = ((mask >> output_lane) & 1) as u8;
-            let keep = 0u8.wrapping_sub(bit);
-            result[output_lane] = (values[input_lane] & keep) | (result[output_lane] & !keep);
-            input_lane += usize::from(bit);
-        }
-        result
-    }
-    #[inline(always)]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>) {
         let [low, high]: [[u8; 32usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
         (low.simd_into(self), high.simd_into(self))
-    }
-    #[inline(always)]
-    fn from_vector_mask8x64(self, vector: i8x64<Self>) -> mask8x64<Self> {
-        mask8x64 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask8x64(self, a: mask8x64<Self>) -> i8x64<Self> {
-        i8x64 {
-            val: a.val,
-            simd: self,
-        }
     }
     #[inline(always)]
     fn set_mask8x64(self, a: &mut mask8x64<Self>, index: usize, value: bool) -> () {
@@ -9002,36 +5669,6 @@ impl Simd for Fallback {
         let mut lanes: [i8; 64usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask8x64<const OFFSET: usize>(
-        self,
-        a: mask8x64<Self>,
-    ) -> mask8x64<Self> {
-        let int = i8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask8x64<const OFFSET: usize>(
-        self,
-        a: mask8x64<Self>,
-    ) -> mask8x64<Self> {
-        let int = i8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn split_mask8x64(self, a: mask8x64<Self>) -> (mask8x32<Self>, mask8x32<Self>) {
@@ -9046,56 +5683,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_i16x32(self, values: i16x32<Self>, mask: mask16x32<Self>) -> i16x32<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_i16x32(
-        self,
-        values: i16x32<Self>,
-        mask: mask16x32<Self>,
-        merge: i16x32<Self>,
-    ) -> i16x32<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_i16x32(self, values: i16x32<Self>, mask: mask16x32<Self>) -> i16x32<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_i16x32(
-        self,
-        values: i16x32<Self>,
-        mask: mask16x32<Self>,
-        merge: i16x32<Self>,
-    ) -> i16x32<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
     fn split_i16x32(self, a: i16x32<Self>) -> (i16x16<Self>, i16x16<Self>) {
         let [low, high]: [[i16; 16usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
         (low.simd_into(self), high.simd_into(self))
@@ -9108,73 +5695,9 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_u16x32(self, values: u16x32<Self>, mask: mask16x32<Self>) -> u16x32<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_u16x32(
-        self,
-        values: u16x32<Self>,
-        mask: mask16x32<Self>,
-        merge: u16x32<Self>,
-    ) -> u16x32<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_u16x32(self, values: u16x32<Self>, mask: mask16x32<Self>) -> u16x32<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_u16x32(
-        self,
-        values: u16x32<Self>,
-        mask: mask16x32<Self>,
-        merge: u16x32<Self>,
-    ) -> u16x32<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>) {
         let [low, high]: [[u16; 16usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
         (low.simd_into(self), high.simd_into(self))
-    }
-    #[inline(always)]
-    fn from_vector_mask16x32(self, vector: i16x32<Self>) -> mask16x32<Self> {
-        mask16x32 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask16x32(self, a: mask16x32<Self>) -> i16x32<Self> {
-        i16x32 {
-            val: a.val,
-            simd: self,
-        }
     }
     #[inline(always)]
     fn set_mask16x32(self, a: &mut mask16x32<Self>, index: usize, value: bool) -> () {
@@ -9186,36 +5709,6 @@ impl Simd for Fallback {
         let mut lanes: [i16; 32usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask16x32<const OFFSET: usize>(
-        self,
-        a: mask16x32<Self>,
-    ) -> mask16x32<Self> {
-        let int = i16x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask16x32 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask16x32<const OFFSET: usize>(
-        self,
-        a: mask16x32<Self>,
-    ) -> mask16x32<Self> {
-        let int = i16x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask16x32 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn split_mask16x32(self, a: mask16x32<Self>) -> (mask16x16<Self>, mask16x16<Self>) {
@@ -9230,56 +5723,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_i32x16(self, values: i32x16<Self>, mask: mask32x16<Self>) -> i32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_i32x16(
-        self,
-        values: i32x16<Self>,
-        mask: mask32x16<Self>,
-        merge: i32x16<Self>,
-    ) -> i32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_i32x16(self, values: i32x16<Self>, mask: mask32x16<Self>) -> i32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_i32x16(
-        self,
-        values: i32x16<Self>,
-        mask: mask32x16<Self>,
-        merge: i32x16<Self>,
-    ) -> i32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
         let [low, high]: [[i32; 8usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
         (low.simd_into(self), high.simd_into(self))
@@ -9292,73 +5735,9 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_u32x16(self, values: u32x16<Self>, mask: mask32x16<Self>) -> u32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_u32x16(
-        self,
-        values: u32x16<Self>,
-        mask: mask32x16<Self>,
-        merge: u32x16<Self>,
-    ) -> u32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_u32x16(self, values: u32x16<Self>, mask: mask32x16<Self>) -> u32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_u32x16(
-        self,
-        values: u32x16<Self>,
-        mask: mask32x16<Self>,
-        merge: u32x16<Self>,
-    ) -> u32x16<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>) {
         let [low, high]: [[u32; 8usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
         (low.simd_into(self), high.simd_into(self))
-    }
-    #[inline(always)]
-    fn from_vector_mask32x16(self, vector: i32x16<Self>) -> mask32x16<Self> {
-        mask32x16 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask32x16(self, a: mask32x16<Self>) -> i32x16<Self> {
-        i32x16 {
-            val: a.val,
-            simd: self,
-        }
     }
     #[inline(always)]
     fn set_mask32x16(self, a: &mut mask32x16<Self>, index: usize, value: bool) -> () {
@@ -9370,36 +5749,6 @@ impl Simd for Fallback {
         let mut lanes: [i32; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask32x16<const OFFSET: usize>(
-        self,
-        a: mask32x16<Self>,
-    ) -> mask32x16<Self> {
-        let int = i32x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask32x16 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask32x16<const OFFSET: usize>(
-        self,
-        a: mask32x16<Self>,
-    ) -> mask32x16<Self> {
-        let int = i32x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask32x16 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn split_mask32x16(self, a: mask32x16<Self>) -> (mask32x8<Self>, mask32x8<Self>) {
@@ -9414,88 +5763,6 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_f64x8(self, values: f64x8<Self>, mask: mask64x8<Self>) -> f64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_f64x8(
-        self,
-        values: f64x8<Self>,
-        mask: mask64x8<Self>,
-        merge: f64x8<Self>,
-    ) -> f64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_f64x8(self, values: f64x8<Self>, mask: mask64x8<Self>) -> f64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_f64x8(
-        self,
-        values: f64x8<Self>,
-        mask: mask64x8<Self>,
-        merge: f64x8<Self>,
-    ) -> f64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn is_nan_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
-        a.simd_ne(a)
-    }
-    #[inline(always)]
-    fn is_infinite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
-        a.abs().simd_eq(f64::INFINITY)
-    }
-    #[inline(always)]
-    fn is_finite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
-        a.abs().simd_lt(f64::INFINITY)
-    }
-    #[inline(always)]
-    fn is_subnormal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
-        let i: i64x8<Self> = a.bitcast();
-        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & (i & 0x000F_FFFF_FFFF_FFFF_i64).simd_ne(0)
-    }
-    #[inline(always)]
-    fn is_normal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
-        let i: i64x8<Self> = a.bitcast();
-        let exp = i & 0x7FF0_0000_0000_0000_i64;
-        exp.simd_ne(0) & exp.simd_ne(0x7FF0_0000_0000_0000_i64)
-    }
-    #[inline(always)]
-    fn is_sign_positive_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
-        let i: i64x8<Self> = a.bitcast();
-        (i & i64::MIN).simd_eq(0)
-    }
-    #[inline(always)]
-    fn is_sign_negative_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
-        !a.is_sign_positive()
-    }
-    #[inline(always)]
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>) {
         let [low, high]: [[f64; 4usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
         (low.simd_into(self), high.simd_into(self))
@@ -9506,56 +5773,6 @@ impl Simd for Fallback {
         dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
         dest[8usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
         dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn compress_i64x8(self, values: i64x8<Self>, mask: mask64x8<Self>) -> i64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_i64x8(
-        self,
-        values: i64x8<Self>,
-        mask: mask64x8<Self>,
-        merge: i64x8<Self>,
-    ) -> i64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_i64x8(self, values: i64x8<Self>, mask: mask64x8<Self>) -> i64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_i64x8(
-        self,
-        values: i64x8<Self>,
-        mask: mask64x8<Self>,
-        merge: i64x8<Self>,
-    ) -> i64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
     }
     #[inline(always)]
     fn split_i64x8(self, a: i64x8<Self>) -> (i64x4<Self>, i64x4<Self>) {
@@ -9570,73 +5787,9 @@ impl Simd for Fallback {
         dest.simd_into(self)
     }
     #[inline(always)]
-    fn compress_u64x8(self, values: u64x8<Self>, mask: mask64x8<Self>) -> u64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn compress_merge_u64x8(
-        self,
-        values: u64x8<Self>,
-        mask: mask64x8<Self>,
-        merge: u64x8<Self>,
-    ) -> u64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.compress_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
-    fn expand_u64x8(self, values: u64x8<Self>, mask: mask64x8<Self>) -> u64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
-    }
-    #[inline(always)]
-    fn expand_merge_u64x8(
-        self,
-        values: u64x8<Self>,
-        mask: mask64x8<Self>,
-        merge: u64x8<Self>,
-    ) -> u64x8<Self> {
-        let mask = mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&mask.val),
-            simd: self,
-        };
-        Bytes::from_bytes(self.expand_merge_u8x64(
-            Bytes::to_bytes(values),
-            mask,
-            Bytes::to_bytes(merge),
-        ))
-    }
-    #[inline(always)]
     fn split_u64x8(self, a: u64x8<Self>) -> (u64x4<Self>, u64x4<Self>) {
         let [low, high]: [[u64; 4usize]; 2] = crate::transmute::checked_transmute_copy(&a.val.0);
         (low.simd_into(self), high.simd_into(self))
-    }
-    #[inline(always)]
-    fn from_vector_mask64x8(self, vector: i64x8<Self>) -> mask64x8<Self> {
-        mask64x8 {
-            val: vector.val,
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn to_vector_mask64x8(self, a: mask64x8<Self>) -> i64x8<Self> {
-        i64x8 {
-            val: a.val,
-            simd: self,
-        }
     }
     #[inline(always)]
     fn set_mask64x8(self, a: &mut mask64x8<Self>, index: usize, value: bool) -> () {
@@ -9648,36 +5801,6 @@ impl Simd for Fallback {
         let mut lanes: [i64; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
         *a = lanes.simd_into(self);
-    }
-    #[inline(always)]
-    fn rotate_elements_left_mask64x8<const OFFSET: usize>(
-        self,
-        a: mask64x8<Self>,
-    ) -> mask64x8<Self> {
-        let int = i64x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_left::<OFFSET>();
-        mask64x8 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn rotate_elements_right_mask64x8<const OFFSET: usize>(
-        self,
-        a: mask64x8<Self>,
-    ) -> mask64x8<Self> {
-        let int = i64x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        };
-        let rotated = int.rotate_elements_right::<OFFSET>();
-        mask64x8 {
-            val: crate::transmute::checked_transmute_copy(&rotated.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>) {

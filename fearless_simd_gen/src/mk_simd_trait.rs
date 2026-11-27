@@ -7,7 +7,7 @@ use quote::{format_ident, quote};
 use crate::{
     generic::{
         byte_swizzle_op, generic_mask_cast_body, generic_mask_casts_methods, generic_op,
-        generic_op_name, reversed_compare_op,
+        generic_op_name, reversed_compare_op, trait_default_op,
     },
     ops::{
         CoreOpTrait, OpKind, OpSig, TyFlavor, base_trait_ops, ops_for_type, overloaded_ops_for,
@@ -55,6 +55,13 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
                     #method
                 });
             } else if let Some(method) = reversed_compare_op(&op, vec_ty) {
+                methods.extend(quote! {
+                    #[doc = #doc]
+                    #doc_alias
+                    #[inline(always)]
+                    #method
+                });
+            } else if let Some(method) = trait_default_op(&op, vec_ty) {
                 methods.extend(quote! {
                     #[doc = #doc]
                     #doc_alias
@@ -288,10 +295,20 @@ fn mk_simd_base() -> TokenStream {
     for op in base_trait_ops() {
         let doc = op.format_docstring(TyFlavor::VecImpl);
         if let Some(method_sig) = op.vec_trait_method_sig() {
-            methods.push(quote! {
-                #[doc = #doc]
-                #method_sig;
-            });
+            if op.method == "splat" {
+                methods.push(quote! {
+                    #[doc = #doc]
+                    #[inline(always)]
+                    #method_sig {
+                        Self::simd_from(simd, val)
+                    }
+                });
+            } else {
+                methods.push(quote! {
+                    #[doc = #doc]
+                    #method_sig;
+                });
+            }
         }
     }
     let overloaded_ops = [CoreOpTrait::Add, CoreOpTrait::Sub, CoreOpTrait::Mul];
@@ -357,17 +374,33 @@ fn mk_simd_base() -> TokenStream {
                 + IntoIterator<Item = Self::Element>
                 + AsRef<[Self::Element]>
                 + AsMut<[Self::Element]>
+                + for<'a> TryFrom<&'a [Self::Element]>
                 + From<Self>;
-            fn as_slice(&self) -> &[Self::Element];
-            fn as_mut_slice(&mut self) -> &mut [Self::Element];
+            #[inline(always)]
+            fn as_slice(&self) -> &[Self::Element] {
+                self.as_array().as_ref()
+            }
+            #[inline(always)]
+            fn as_mut_slice(&mut self) -> &mut [Self::Element] {
+                self.as_mut_array().as_mut()
+            }
             /// Create a SIMD vector from a slice.
             ///
             /// The slice must be exactly the size of the SIMD vector.
-            fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
+            #[inline(always)]
+            fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+                Self::load_array(
+                    simd,
+                    slice.try_into().unwrap_or_else(|_| unreachable!()),
+                )
+            }
             /// Store a SIMD vector into a slice.
             ///
             /// The slice must be exactly the size of the SIMD vector.
-            fn store_slice(&self, slice: &mut [Self::Element]);
+            #[inline(always)]
+            fn store_slice(&self, slice: &mut [Self::Element]) {
+                slice.copy_from_slice(self.as_array().as_ref());
+            }
             /// Create a SIMD vector from its corresponding lane array.
             #[inline(always)]
             fn load_array(simd: S, val: Self::Array) -> Self {
@@ -703,12 +736,18 @@ fn mk_simd_mask() -> TokenStream {
             /// Create a SIMD mask from signed integer mask lanes.
             ///
             /// The slice must be exactly the size of the SIMD mask.
-            fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
+            #[inline(always)]
+            fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+                Self::from_vector(Self::Ints::from_slice(simd, slice))
+            }
 
             /// Store this SIMD mask as signed integer mask lanes.
             ///
             /// The slice must be exactly the size of the SIMD mask.
-            fn store_slice(&self, slice: &mut [Self::Element]);
+            #[inline(always)]
+            fn store_slice(&self, slice: &mut [Self::Element]) {
+                self.to_vector().store_slice(slice);
+            }
 
             #( #methods )*
         }

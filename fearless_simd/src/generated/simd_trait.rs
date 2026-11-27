@@ -313,23 +313,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_f32x4(self, values: f32x4<Self>, mask: mask32x4<Self>) -> f32x4<Self>;
+    #[inline(always)]
+    fn compress_f32x4(self, values: f32x4<Self>, mask: mask32x4<Self>) -> f32x4<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_f32x4(
         self,
         values: f32x4<Self>,
         mask: mask32x4<Self>,
         merge: f32x4<Self>,
-    ) -> f32x4<Self>;
+    ) -> f32x4<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_f32x4(self, values: f32x4<Self>, mask: mask32x4<Self>) -> f32x4<Self>;
+    #[inline(always)]
+    fn expand_f32x4(self, values: f32x4<Self>, mask: mask32x4<Self>) -> f32x4<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_f32x4(
         self,
         values: f32x4<Self>,
         mask: mask32x4<Self>,
         merge: f32x4<Self>,
-    ) -> f32x4<Self>;
+    ) -> f32x4<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Negate each element of the vector."]
     fn neg_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
@@ -398,9 +422,15 @@ pub trait Simd:
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>);
+    #[inline(always)]
+    fn interleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>) {
+        (self.zip_low_f32x4(a, b), self.zip_high_f32x4(a, b))
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>);
+    #[inline(always)]
+    fn deinterleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>) {
+        (self.unzip_low_f32x4(a, b), self.unzip_high_f32x4(a, b))
+    }
     #[doc = "Compute `(a * b) + c` (potentially fused multiply-add) for each element.\n\nThe result may be computed with one or two rounding errors depending on which can be computed faster on the current platform."]
     fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Compute `(a * b) + c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n# Performance\n\nThe following platforms will use a single fused multiply-add instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512."]
@@ -426,21 +456,52 @@ pub trait Simd:
     #[doc = "Converts degrees to radians.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next."]
     fn to_radians_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Return a mask indicating which elements are NaN."]
-    fn is_nan_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn is_nan_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
+        a.simd_ne(a)
+    }
     #[doc = "Return a mask indicating which elements are positive or negative infinite."]
-    fn is_infinite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn is_infinite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
+        a.abs().simd_eq(f32::INFINITY)
+    }
     #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
-    fn is_finite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn is_finite_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
+        a.abs().simd_lt(f32::INFINITY)
+    }
     #[doc = "Return a mask indicating which elements are subnormal.\n\nThis classifies the stored bit pattern, even when floating-point operations treat subnormals as zero."]
-    fn is_subnormal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn is_subnormal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
+        let i: i32x4<Self> = a.bitcast();
+        (i & 0x7F80_0000_i32).simd_eq(0) & (i & 0x007F_FFFF_i32).simd_ne(0)
+    }
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
-    fn is_normal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn is_normal_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
+        let i: i32x4<Self> = a.bitcast();
+        let exp = i & 0x7F80_0000_i32;
+        exp.simd_ne(0) & exp.simd_ne(0x7F80_0000_i32)
+    }
     #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_positive`] for details."]
-    fn is_sign_positive_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn is_sign_positive_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
+        let i: i32x4<Self> = a.bitcast();
+        (i & i32::MIN).simd_eq(0)
+    }
     #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_negative`] for details."]
-    fn is_sign_negative_f32x4(self, a: f32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn is_sign_negative_f32x4(self, a: f32x4<Self>) -> mask32x4<Self> {
+        !a.is_sign_positive()
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
+    #[inline(always)]
+    fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
+        let mask = a.to_vector();
+        let b = b.bitcast::<i32x4<Self>>();
+        let c = c.bitcast::<i32x4<Self>>();
+        ((mask & b) | (!mask & c)).bitcast()
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x8<Self>;
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
@@ -524,29 +585,59 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_i8x16(self, values: i8x16<Self>, mask: mask8x16<Self>) -> i8x16<Self>;
+    #[inline(always)]
+    fn compress_i8x16(self, values: i8x16<Self>, mask: mask8x16<Self>) -> i8x16<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_i8x16(
         self,
         values: i8x16<Self>,
         mask: mask8x16<Self>,
         merge: i8x16<Self>,
-    ) -> i8x16<Self>;
+    ) -> i8x16<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_i8x16(self, values: i8x16<Self>, mask: mask8x16<Self>) -> i8x16<Self>;
+    #[inline(always)]
+    fn expand_i8x16(self, values: i8x16<Self>, mask: mask8x16<Self>) -> i8x16<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_i8x16(
         self,
         values: i8x16<Self>,
         mask: mask8x16<Self>,
         merge: i8x16<Self>,
-    ) -> i8x16<Self>;
+    ) -> i8x16<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     fn count_ones_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Return the number of zeros in the binary representation of each element."]
-    fn count_zeros_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
+    #[inline(always)]
+    fn count_zeros_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        self.count_ones_i8x16(self.not_i8x16(a))
+    }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
-    fn swap_bytes_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
+    #[inline(always)]
+    fn swap_bytes_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        a
+    }
     #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
     fn reverse_bits_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
@@ -560,13 +651,25 @@ pub trait Simd:
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[inline(always)]
+    fn and_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        Bytes::from_bytes(self.and_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[inline(always)]
+    fn or_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        Bytes::from_bytes(self.or_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[inline(always)]
+    fn xor_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        Bytes::from_bytes(self.xor_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
+    #[inline(always)]
+    fn not_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        a ^ !0
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` and `i8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
@@ -588,7 +691,14 @@ pub trait Simd:
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
-    fn clamp_i8x16(self, a: i8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self>;
+    #[inline(always)]
+    fn clamp_i8x16(self, a: i8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -619,15 +729,30 @@ pub trait Simd:
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>);
+    #[inline(always)]
+    fn interleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>) {
+        (self.zip_low_i8x16(a, b), self.zip_high_i8x16(a, b))
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>);
+    #[inline(always)]
+    fn deinterleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>) {
+        (self.unzip_low_i8x16(a, b), self.unzip_high_i8x16(a, b))
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self>;
+    #[inline(always)]
+    fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
+        let mask = a.to_vector();
+        let b = b.bitcast::<i8x16<Self>>();
+        let c = c.bitcast::<i8x16<Self>>();
+        ((mask & b) | (!mask & c)).bitcast()
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x32<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
-    fn neg_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
+    #[inline(always)]
+    fn neg_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        self.sub_i8x16(self.splat_i8x16(0), a)
+    }
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
     #[doc(alias = "load_interleaved")]
     fn load_four_interleaved_i8x16(self, src: &[i8; 64usize]) -> [i8x16<Self>; 4usize];
@@ -641,13 +766,28 @@ pub trait Simd:
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
     fn widen_i8x16(self, a: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>);
     #[doc = "Multiply corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
-    fn widening_mul_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>);
+    #[inline(always)]
+    fn widening_mul_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>) {
+        let (a0, a1) = self.widen_i8x16(a);
+        let (b0, b1) = self.widen_i8x16(b);
+        (self.mul_i16x8(a0, b0), self.mul_i16x8(a1, b1))
+    }
     #[doc = "Add corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
-    fn widening_add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>);
+    #[inline(always)]
+    fn widening_add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>) {
+        let (a0, a1) = self.widen_i8x16(a);
+        let (b0, b1) = self.widen_i8x16(b);
+        (self.add_i16x8(a0, b0), self.add_i16x8(a1, b1))
+    }
     #[doc = "Add adjacent integer lanes exactly into twice-wide lanes.\n\nOutput lane `i` is `widen(a[2*i]) + widen(a[2*i+1])`. The result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. The sum cannot overflow the widened type.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` produces `[3, 7, 11, 15]`. See [`SimdIntWiden::pairwise_widening_add`] for supported types and examples."]
     fn pairwise_widening_add_i8x16(self, a: i8x16<Self>) -> i16x8<Self>;
     #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
-    fn pairwise_dot_product_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i16x8<Self>;
+    #[inline(always)]
+    fn pairwise_dot_product_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i16x8<Self> {
+        let (low, high) = self.widening_mul_i8x16(a, b);
+        let (even, odd) = self.deinterleave_i16x8(low, high);
+        self.add_i16x8(even, odd)
+    }
     #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
     #[inline(always)]
     fn abs_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
@@ -689,29 +829,68 @@ pub trait Simd:
         indices: u8x16<Self>,
     ) -> u8x16<Self>;
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self>;
+    #[inline(always)]
+    fn compress_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self> {
+        self.compress_merge_u8x16(values, mask, u8x16::splat(self, 0))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_u8x16(
         self,
         values: u8x16<Self>,
         mask: mask8x16<Self>,
         merge: u8x16<Self>,
-    ) -> u8x16<Self>;
+    ) -> u8x16<Self> {
+        let mask = self.to_bitmask_mask8x16(mask);
+        let mut merge_padded = [0u8; 16 + 1];
+        merge_padded[..16].copy_from_slice(&*merge);
+        let mut compacted = merge_padded;
+        let mut output_lane = 0;
+        for input_lane in 0..16 {
+            compacted[output_lane] = values[input_lane];
+            output_lane += ((mask >> input_lane) & 1) as usize;
+        }
+        compacted[output_lane] = merge_padded[output_lane];
+        let mut result = merge;
+        result.copy_from_slice(&compacted[..16]);
+        result
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self>;
+    #[inline(always)]
+    fn expand_u8x16(self, values: u8x16<Self>, mask: mask8x16<Self>) -> u8x16<Self> {
+        self.expand_merge_u8x16(values, mask, u8x16::splat(self, 0))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_u8x16(
         self,
         values: u8x16<Self>,
         mask: mask8x16<Self>,
         merge: u8x16<Self>,
-    ) -> u8x16<Self>;
+    ) -> u8x16<Self> {
+        let mask = self.to_bitmask_mask8x16(mask);
+        let mut result = merge;
+        let mut input_lane = 0;
+        for output_lane in 0..16 {
+            let bit = ((mask >> output_lane) & 1) as u8;
+            let keep = 0u8.wrapping_sub(bit);
+            result[output_lane] = (values[input_lane] & keep) | (result[output_lane] & !keep);
+            input_lane += usize::from(bit);
+        }
+        result
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     fn count_ones_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Return the number of zeros in the binary representation of each element."]
-    fn count_zeros_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
+    #[inline(always)]
+    fn count_zeros_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        self.count_ones_u8x16(self.not_u8x16(a))
+    }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
-    fn swap_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
+    #[inline(always)]
+    fn swap_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        a
+    }
     #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
     fn reverse_bits_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
@@ -731,7 +910,10 @@ pub trait Simd:
     #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
+    #[inline(always)]
+    fn not_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        a ^ !0
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` and `i8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
@@ -753,7 +935,14 @@ pub trait Simd:
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
-    fn clamp_u8x16(self, a: u8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self>;
+    #[inline(always)]
+    fn clamp_u8x16(self, a: u8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -784,11 +973,23 @@ pub trait Simd:
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>);
+    #[inline(always)]
+    fn interleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>) {
+        (self.zip_low_u8x16(a, b), self.zip_high_u8x16(a, b))
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>);
+    #[inline(always)]
+    fn deinterleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>) {
+        (self.unzip_low_u8x16(a, b), self.unzip_high_u8x16(a, b))
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self>;
+    #[inline(always)]
+    fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
+        let mask = a.to_vector();
+        let b = b.bitcast::<i8x16<Self>>();
+        let c = c.bitcast::<i8x16<Self>>();
+        ((mask & b) | (!mask & c)).bitcast()
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self>;
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
@@ -804,13 +1005,28 @@ pub trait Simd:
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
     fn widen_u8x16(self, a: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>);
     #[doc = "Multiply corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
-    fn widening_mul_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>);
+    #[inline(always)]
+    fn widening_mul_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>) {
+        let (a0, a1) = self.widen_u8x16(a);
+        let (b0, b1) = self.widen_u8x16(b);
+        (self.mul_u16x8(a0, b0), self.mul_u16x8(a1, b1))
+    }
     #[doc = "Add corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
-    fn widening_add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>);
+    #[inline(always)]
+    fn widening_add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>) {
+        let (a0, a1) = self.widen_u8x16(a);
+        let (b0, b1) = self.widen_u8x16(b);
+        (self.add_u16x8(a0, b0), self.add_u16x8(a1, b1))
+    }
     #[doc = "Add adjacent integer lanes exactly into twice-wide lanes.\n\nOutput lane `i` is `widen(a[2*i]) + widen(a[2*i+1])`. The result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. The sum cannot overflow the widened type.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` produces `[3, 7, 11, 15]`. See [`SimdIntWiden::pairwise_widening_add`] for supported types and examples."]
     fn pairwise_widening_add_u8x16(self, a: u8x16<Self>) -> u16x8<Self>;
     #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
-    fn pairwise_dot_product_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u16x8<Self>;
+    #[inline(always)]
+    fn pairwise_dot_product_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u16x8<Self> {
+        let (low, high) = self.widening_mul_u8x16(a, b);
+        let (even, odd) = self.deinterleave_u16x8(low, high);
+        self.add_u16x8(even, odd)
+    }
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self>;
     #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
@@ -818,38 +1034,77 @@ pub trait Simd:
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask8x16(self, a: mask8x16<Self>) -> u64;
     #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
-    fn from_vector_mask8x16(self, vector: i8x16<Self>) -> mask8x16<Self>;
+    #[inline(always)]
+    fn from_vector_mask8x16(self, vector: i8x16<Self>) -> mask8x16<Self> {
+        mask8x16 {
+            val: crate::transmute::checked_transmute_copy(&vector.val),
+            simd: self,
+        }
+    }
     #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
-    fn to_vector_mask8x16(self, a: mask8x16<Self>) -> i8x16<Self>;
+    #[inline(always)]
+    fn to_vector_mask8x16(self, a: mask8x16<Self>) -> i8x16<Self> {
+        i8x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask8x16(self, a: &mut mask8x16<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_left_mask8x16<const OFFSET: usize>(
         self,
         a: mask8x16<Self>,
-    ) -> mask8x16<Self>;
+    ) -> mask8x16<Self> {
+        mask8x16::from_vector(a.to_vector().rotate_elements_left::<OFFSET>())
+    }
     #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_right_mask8x16<const OFFSET: usize>(
         self,
         a: mask8x16<Self>,
-    ) -> mask8x16<Self>;
+    ) -> mask8x16<Self> {
+        mask8x16::from_vector(a.to_vector().rotate_elements_right::<OFFSET>())
+    }
     #[doc = "Compute the logical AND of two masks."]
-    fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self>;
+    #[inline(always)]
+    fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
+        mask8x16::from_vector(a.to_vector() & b.to_vector())
+    }
     #[doc = "Compute the logical OR of two masks."]
-    fn or_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self>;
+    #[inline(always)]
+    fn or_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
+        mask8x16::from_vector(a.to_vector() | b.to_vector())
+    }
     #[doc = "Compute the logical XOR of two masks."]
-    fn xor_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self>;
+    #[inline(always)]
+    fn xor_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
+        mask8x16::from_vector(a.to_vector() ^ b.to_vector())
+    }
     #[doc = "Compute the logical NOT of the mask."]
-    fn not_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self>;
+    #[inline(always)]
+    fn not_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self> {
+        mask8x16::from_vector(!a.to_vector())
+    }
     #[doc = "Reverse the order of the mask's logical lanes."]
-    fn reverse_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self>;
+    #[inline(always)]
+    fn reverse_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self> {
+        mask8x16::from_vector(a.to_vector().reverse())
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    #[inline(always)]
     fn select_mask8x16(
         self,
         a: mask8x16<Self>,
         b: mask8x16<Self>,
         c: mask8x16<Self>,
-    ) -> mask8x16<Self>;
+    ) -> mask8x16<Self> {
+        let mask = a.to_vector();
+        let b = b.to_vector();
+        let c = c.to_vector();
+        mask8x16::from_vector((mask & b) | (!mask & c))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compare two masks element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -930,27 +1185,54 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_i16x8(self, values: i16x8<Self>, mask: mask16x8<Self>) -> i16x8<Self>;
+    #[inline(always)]
+    fn compress_i16x8(self, values: i16x8<Self>, mask: mask16x8<Self>) -> i16x8<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_i16x8(
         self,
         values: i16x8<Self>,
         mask: mask16x8<Self>,
         merge: i16x8<Self>,
-    ) -> i16x8<Self>;
+    ) -> i16x8<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_i16x8(self, values: i16x8<Self>, mask: mask16x8<Self>) -> i16x8<Self>;
+    #[inline(always)]
+    fn expand_i16x8(self, values: i16x8<Self>, mask: mask16x8<Self>) -> i16x8<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_i16x8(
         self,
         values: i16x8<Self>,
         mask: mask16x8<Self>,
         merge: i16x8<Self>,
-    ) -> i16x8<Self>;
+    ) -> i16x8<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     fn count_ones_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Return the number of zeros in the binary representation of each element."]
-    fn count_zeros_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
+    #[inline(always)]
+    fn count_zeros_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        self.count_ones_i16x8(self.not_i16x8(a))
+    }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     fn swap_bytes_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
@@ -966,13 +1248,25 @@ pub trait Simd:
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[inline(always)]
+    fn and_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        Bytes::from_bytes(self.and_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[inline(always)]
+    fn or_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        Bytes::from_bytes(self.or_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[inline(always)]
+    fn xor_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        Bytes::from_bytes(self.xor_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
+    #[inline(always)]
+    fn not_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        a ^ !0
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` and `i8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
@@ -994,7 +1288,14 @@ pub trait Simd:
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
-    fn clamp_i16x8(self, a: i16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self>;
+    #[inline(always)]
+    fn clamp_i16x8(self, a: i16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -1025,15 +1326,30 @@ pub trait Simd:
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>);
+    #[inline(always)]
+    fn interleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>) {
+        (self.zip_low_i16x8(a, b), self.zip_high_i16x8(a, b))
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>);
+    #[inline(always)]
+    fn deinterleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>) {
+        (self.unzip_low_i16x8(a, b), self.unzip_high_i16x8(a, b))
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self>;
+    #[inline(always)]
+    fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
+        let mask = a.to_vector();
+        let b = b.bitcast::<i16x8<Self>>();
+        let c = c.bitcast::<i16x8<Self>>();
+        ((mask & b) | (!mask & c)).bitcast()
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x16<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
-    fn neg_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
+    #[inline(always)]
+    fn neg_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        self.sub_i16x8(self.splat_i16x8(0), a)
+    }
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
     #[doc(alias = "load_interleaved")]
     fn load_four_interleaved_i16x8(self, src: &[i16; 32usize]) -> [i16x8<Self>; 4usize];
@@ -1047,13 +1363,28 @@ pub trait Simd:
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
     fn widen_i16x8(self, a: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>);
     #[doc = "Multiply corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
-    fn widening_mul_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>);
+    #[inline(always)]
+    fn widening_mul_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
+        let (a0, a1) = self.widen_i16x8(a);
+        let (b0, b1) = self.widen_i16x8(b);
+        (self.mul_i32x4(a0, b0), self.mul_i32x4(a1, b1))
+    }
     #[doc = "Add corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
-    fn widening_add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>);
+    #[inline(always)]
+    fn widening_add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
+        let (a0, a1) = self.widen_i16x8(a);
+        let (b0, b1) = self.widen_i16x8(b);
+        (self.add_i32x4(a0, b0), self.add_i32x4(a1, b1))
+    }
     #[doc = "Add adjacent integer lanes exactly into twice-wide lanes.\n\nOutput lane `i` is `widen(a[2*i]) + widen(a[2*i+1])`. The result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. The sum cannot overflow the widened type.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` produces `[3, 7, 11, 15]`. See [`SimdIntWiden::pairwise_widening_add`] for supported types and examples."]
     fn pairwise_widening_add_i16x8(self, a: i16x8<Self>) -> i32x4<Self>;
     #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
-    fn pairwise_dot_product_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i32x4<Self>;
+    #[inline(always)]
+    fn pairwise_dot_product_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i32x4<Self> {
+        let (low, high) = self.widening_mul_i16x8(a, b);
+        let (even, odd) = self.deinterleave_i32x4(low, high);
+        self.add_i32x4(even, odd)
+    }
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
@@ -1124,27 +1455,54 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_u16x8(self, values: u16x8<Self>, mask: mask16x8<Self>) -> u16x8<Self>;
+    #[inline(always)]
+    fn compress_u16x8(self, values: u16x8<Self>, mask: mask16x8<Self>) -> u16x8<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_u16x8(
         self,
         values: u16x8<Self>,
         mask: mask16x8<Self>,
         merge: u16x8<Self>,
-    ) -> u16x8<Self>;
+    ) -> u16x8<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_u16x8(self, values: u16x8<Self>, mask: mask16x8<Self>) -> u16x8<Self>;
+    #[inline(always)]
+    fn expand_u16x8(self, values: u16x8<Self>, mask: mask16x8<Self>) -> u16x8<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_u16x8(
         self,
         values: u16x8<Self>,
         mask: mask16x8<Self>,
         merge: u16x8<Self>,
-    ) -> u16x8<Self>;
+    ) -> u16x8<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     fn count_ones_u16x8(self, a: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Return the number of zeros in the binary representation of each element."]
-    fn count_zeros_u16x8(self, a: u16x8<Self>) -> u16x8<Self>;
+    #[inline(always)]
+    fn count_zeros_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        self.count_ones_u16x8(self.not_u16x8(a))
+    }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     fn swap_bytes_u16x8(self, a: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
@@ -1160,13 +1518,25 @@ pub trait Simd:
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[inline(always)]
+    fn and_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        Bytes::from_bytes(self.and_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[inline(always)]
+    fn or_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        Bytes::from_bytes(self.or_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[inline(always)]
+    fn xor_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        Bytes::from_bytes(self.xor_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_u16x8(self, a: u16x8<Self>) -> u16x8<Self>;
+    #[inline(always)]
+    fn not_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        a ^ !0
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` and `i8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
@@ -1188,7 +1558,14 @@ pub trait Simd:
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
-    fn clamp_u16x8(self, a: u16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self>;
+    #[inline(always)]
+    fn clamp_u16x8(self, a: u16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -1219,11 +1596,23 @@ pub trait Simd:
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>);
+    #[inline(always)]
+    fn interleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>) {
+        (self.zip_low_u16x8(a, b), self.zip_high_u16x8(a, b))
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>);
+    #[inline(always)]
+    fn deinterleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>) {
+        (self.unzip_low_u16x8(a, b), self.unzip_high_u16x8(a, b))
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self>;
+    #[inline(always)]
+    fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
+        let mask = a.to_vector();
+        let b = b.bitcast::<i16x8<Self>>();
+        let c = c.bitcast::<i16x8<Self>>();
+        ((mask & b) | (!mask & c)).bitcast()
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x16<Self>;
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
@@ -1239,13 +1628,28 @@ pub trait Simd:
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
     fn widen_u16x8(self, a: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>);
     #[doc = "Multiply corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
-    fn widening_mul_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>);
+    #[inline(always)]
+    fn widening_mul_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
+        let (a0, a1) = self.widen_u16x8(a);
+        let (b0, b1) = self.widen_u16x8(b);
+        (self.mul_u32x4(a0, b0), self.mul_u32x4(a1, b1))
+    }
     #[doc = "Add corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
-    fn widening_add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>);
+    #[inline(always)]
+    fn widening_add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
+        let (a0, a1) = self.widen_u16x8(a);
+        let (b0, b1) = self.widen_u16x8(b);
+        (self.add_u32x4(a0, b0), self.add_u32x4(a1, b1))
+    }
     #[doc = "Add adjacent integer lanes exactly into twice-wide lanes.\n\nOutput lane `i` is `widen(a[2*i]) + widen(a[2*i+1])`. The result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. The sum cannot overflow the widened type.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` produces `[3, 7, 11, 15]`. See [`SimdIntWiden::pairwise_widening_add`] for supported types and examples."]
     fn pairwise_widening_add_u16x8(self, a: u16x8<Self>) -> u32x4<Self>;
     #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
-    fn pairwise_dot_product_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u32x4<Self>;
+    #[inline(always)]
+    fn pairwise_dot_product_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u32x4<Self> {
+        let (low, high) = self.widening_mul_u16x8(a, b);
+        let (even, odd) = self.deinterleave_u32x4(low, high);
+        self.add_u32x4(even, odd)
+    }
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
@@ -1259,38 +1663,77 @@ pub trait Simd:
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask16x8(self, a: mask16x8<Self>) -> u64;
     #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
-    fn from_vector_mask16x8(self, vector: i16x8<Self>) -> mask16x8<Self>;
+    #[inline(always)]
+    fn from_vector_mask16x8(self, vector: i16x8<Self>) -> mask16x8<Self> {
+        mask16x8 {
+            val: crate::transmute::checked_transmute_copy(&vector.val),
+            simd: self,
+        }
+    }
     #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
-    fn to_vector_mask16x8(self, a: mask16x8<Self>) -> i16x8<Self>;
+    #[inline(always)]
+    fn to_vector_mask16x8(self, a: mask16x8<Self>) -> i16x8<Self> {
+        i16x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask16x8(self, a: &mut mask16x8<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_left_mask16x8<const OFFSET: usize>(
         self,
         a: mask16x8<Self>,
-    ) -> mask16x8<Self>;
+    ) -> mask16x8<Self> {
+        mask16x8::from_vector(a.to_vector().rotate_elements_left::<OFFSET>())
+    }
     #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_right_mask16x8<const OFFSET: usize>(
         self,
         a: mask16x8<Self>,
-    ) -> mask16x8<Self>;
+    ) -> mask16x8<Self> {
+        mask16x8::from_vector(a.to_vector().rotate_elements_right::<OFFSET>())
+    }
     #[doc = "Compute the logical AND of two masks."]
-    fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self>;
+    #[inline(always)]
+    fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
+        mask16x8::from_vector(a.to_vector() & b.to_vector())
+    }
     #[doc = "Compute the logical OR of two masks."]
-    fn or_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self>;
+    #[inline(always)]
+    fn or_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
+        mask16x8::from_vector(a.to_vector() | b.to_vector())
+    }
     #[doc = "Compute the logical XOR of two masks."]
-    fn xor_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self>;
+    #[inline(always)]
+    fn xor_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
+        mask16x8::from_vector(a.to_vector() ^ b.to_vector())
+    }
     #[doc = "Compute the logical NOT of the mask."]
-    fn not_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self>;
+    #[inline(always)]
+    fn not_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self> {
+        mask16x8::from_vector(!a.to_vector())
+    }
     #[doc = "Reverse the order of the mask's logical lanes."]
-    fn reverse_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self>;
+    #[inline(always)]
+    fn reverse_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self> {
+        mask16x8::from_vector(a.to_vector().reverse())
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    #[inline(always)]
     fn select_mask16x8(
         self,
         a: mask16x8<Self>,
         b: mask16x8<Self>,
         c: mask16x8<Self>,
-    ) -> mask16x8<Self>;
+    ) -> mask16x8<Self> {
+        let mask = a.to_vector();
+        let b = b.to_vector();
+        let c = c.to_vector();
+        mask16x8::from_vector((mask & b) | (!mask & c))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compare two masks element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -1373,27 +1816,54 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_i32x4(self, values: i32x4<Self>, mask: mask32x4<Self>) -> i32x4<Self>;
+    #[inline(always)]
+    fn compress_i32x4(self, values: i32x4<Self>, mask: mask32x4<Self>) -> i32x4<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_i32x4(
         self,
         values: i32x4<Self>,
         mask: mask32x4<Self>,
         merge: i32x4<Self>,
-    ) -> i32x4<Self>;
+    ) -> i32x4<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_i32x4(self, values: i32x4<Self>, mask: mask32x4<Self>) -> i32x4<Self>;
+    #[inline(always)]
+    fn expand_i32x4(self, values: i32x4<Self>, mask: mask32x4<Self>) -> i32x4<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_i32x4(
         self,
         values: i32x4<Self>,
         mask: mask32x4<Self>,
         merge: i32x4<Self>,
-    ) -> i32x4<Self>;
+    ) -> i32x4<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     fn count_ones_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Return the number of zeros in the binary representation of each element."]
-    fn count_zeros_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
+    #[inline(always)]
+    fn count_zeros_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        self.count_ones_i32x4(self.not_i32x4(a))
+    }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     fn swap_bytes_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
@@ -1409,13 +1879,25 @@ pub trait Simd:
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[inline(always)]
+    fn and_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        Bytes::from_bytes(self.and_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[inline(always)]
+    fn or_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        Bytes::from_bytes(self.or_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[inline(always)]
+    fn xor_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        Bytes::from_bytes(self.xor_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
+    #[inline(always)]
+    fn not_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        a ^ !0
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` and `i8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
@@ -1437,7 +1919,14 @@ pub trait Simd:
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
-    fn clamp_i32x4(self, a: i32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self>;
+    #[inline(always)]
+    fn clamp_i32x4(self, a: i32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -1468,15 +1957,30 @@ pub trait Simd:
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>);
+    #[inline(always)]
+    fn interleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>) {
+        (self.zip_low_i32x4(a, b), self.zip_high_i32x4(a, b))
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>);
+    #[inline(always)]
+    fn deinterleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>) {
+        (self.unzip_low_i32x4(a, b), self.unzip_high_i32x4(a, b))
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self>;
+    #[inline(always)]
+    fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
+        let mask = a.to_vector();
+        let b = b.bitcast::<i32x4<Self>>();
+        let c = c.bitcast::<i32x4<Self>>();
+        ((mask & b) | (!mask & c)).bitcast()
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x8<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
-    fn neg_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
+    #[inline(always)]
+    fn neg_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        self.sub_i32x4(self.splat_i32x4(0), a)
+    }
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
     #[doc(alias = "load_interleaved")]
     fn load_four_interleaved_i32x4(self, src: &[i32; 16usize]) -> [i32x4<Self>; 4usize];
@@ -1490,13 +1994,28 @@ pub trait Simd:
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
     fn widen_i32x4(self, a: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>);
     #[doc = "Multiply corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
-    fn widening_mul_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>);
+    #[inline(always)]
+    fn widening_mul_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>) {
+        let (a0, a1) = self.widen_i32x4(a);
+        let (b0, b1) = self.widen_i32x4(b);
+        (self.mul_i64x2(a0, b0), self.mul_i64x2(a1, b1))
+    }
     #[doc = "Add corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
-    fn widening_add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>);
+    #[inline(always)]
+    fn widening_add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>) {
+        let (a0, a1) = self.widen_i32x4(a);
+        let (b0, b1) = self.widen_i32x4(b);
+        (self.add_i64x2(a0, b0), self.add_i64x2(a1, b1))
+    }
     #[doc = "Add adjacent integer lanes exactly into twice-wide lanes.\n\nOutput lane `i` is `widen(a[2*i]) + widen(a[2*i+1])`. The result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. The sum cannot overflow the widened type.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` produces `[3, 7, 11, 15]`. See [`SimdIntWiden::pairwise_widening_add`] for supported types and examples."]
     fn pairwise_widening_add_i32x4(self, a: i32x4<Self>) -> i64x2<Self>;
     #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
-    fn pairwise_dot_product_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i64x2<Self>;
+    #[inline(always)]
+    fn pairwise_dot_product_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i64x2<Self> {
+        let (low, high) = self.widening_mul_i32x4(a, b);
+        let (even, odd) = self.deinterleave_i64x2(low, high);
+        self.add_i64x2(even, odd)
+    }
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
@@ -1569,27 +2088,54 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_u32x4(self, values: u32x4<Self>, mask: mask32x4<Self>) -> u32x4<Self>;
+    #[inline(always)]
+    fn compress_u32x4(self, values: u32x4<Self>, mask: mask32x4<Self>) -> u32x4<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_u32x4(
         self,
         values: u32x4<Self>,
         mask: mask32x4<Self>,
         merge: u32x4<Self>,
-    ) -> u32x4<Self>;
+    ) -> u32x4<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_u32x4(self, values: u32x4<Self>, mask: mask32x4<Self>) -> u32x4<Self>;
+    #[inline(always)]
+    fn expand_u32x4(self, values: u32x4<Self>, mask: mask32x4<Self>) -> u32x4<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_u32x4(
         self,
         values: u32x4<Self>,
         mask: mask32x4<Self>,
         merge: u32x4<Self>,
-    ) -> u32x4<Self>;
+    ) -> u32x4<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     fn count_ones_u32x4(self, a: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Return the number of zeros in the binary representation of each element."]
-    fn count_zeros_u32x4(self, a: u32x4<Self>) -> u32x4<Self>;
+    #[inline(always)]
+    fn count_zeros_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        self.count_ones_u32x4(self.not_u32x4(a))
+    }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     fn swap_bytes_u32x4(self, a: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
@@ -1605,13 +2151,25 @@ pub trait Simd:
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[inline(always)]
+    fn and_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        Bytes::from_bytes(self.and_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[inline(always)]
+    fn or_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        Bytes::from_bytes(self.or_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[inline(always)]
+    fn xor_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        Bytes::from_bytes(self.xor_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_u32x4(self, a: u32x4<Self>) -> u32x4<Self>;
+    #[inline(always)]
+    fn not_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        a ^ !0
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` and `i8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
@@ -1633,7 +2191,14 @@ pub trait Simd:
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
-    fn clamp_u32x4(self, a: u32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self>;
+    #[inline(always)]
+    fn clamp_u32x4(self, a: u32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -1664,11 +2229,23 @@ pub trait Simd:
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>);
+    #[inline(always)]
+    fn interleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>) {
+        (self.zip_low_u32x4(a, b), self.zip_high_u32x4(a, b))
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>);
+    #[inline(always)]
+    fn deinterleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>) {
+        (self.unzip_low_u32x4(a, b), self.unzip_high_u32x4(a, b))
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self>;
+    #[inline(always)]
+    fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
+        let mask = a.to_vector();
+        let b = b.bitcast::<i32x4<Self>>();
+        let c = c.bitcast::<i32x4<Self>>();
+        ((mask & b) | (!mask & c)).bitcast()
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x8<Self>;
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
@@ -1684,13 +2261,28 @@ pub trait Simd:
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
     fn widen_u32x4(self, a: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>);
     #[doc = "Multiply corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
-    fn widening_mul_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>);
+    #[inline(always)]
+    fn widening_mul_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>) {
+        let (a0, a1) = self.widen_u32x4(a);
+        let (b0, b1) = self.widen_u32x4(b);
+        (self.mul_u64x2(a0, b0), self.mul_u64x2(a1, b1))
+    }
     #[doc = "Add corresponding integer lanes exactly into twice-wide lanes. The first result contains the lower lanes and the second contains the upper lanes."]
-    fn widening_add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>);
+    #[inline(always)]
+    fn widening_add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>) {
+        let (a0, a1) = self.widen_u32x4(a);
+        let (b0, b1) = self.widen_u32x4(b);
+        (self.add_u64x2(a0, b0), self.add_u64x2(a1, b1))
+    }
     #[doc = "Add adjacent integer lanes exactly into twice-wide lanes.\n\nOutput lane `i` is `widen(a[2*i]) + widen(a[2*i+1])`. The result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. The sum cannot overflow the widened type.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` produces `[3, 7, 11, 15]`. See [`SimdIntWiden::pairwise_widening_add`] for supported types and examples."]
     fn pairwise_widening_add_u32x4(self, a: u32x4<Self>) -> u64x2<Self>;
     #[doc = "Multiply corresponding integer lanes exactly in the widened type, then sum adjacent pairs of products.\n\nThe result has half as many lanes, twice the lane width, and unchanged signedness and total bit width. Lane `i` is `widen(a[2*i]) * widen(b[2*i]) + widen(a[2*i+1]) * widen(b[2*i+1])`; addition wraps in the destination type, including in debug builds.\n\nFor example, `[1, 2, 3, 4, 5, 6, 7, 8]` and `[10, 20, 30, 40, 50, 60, 70, 80]` produce `[50, 250, 610, 1130]`. See [`SimdIntWiden::pairwise_dot_product`] for examples."]
-    fn pairwise_dot_product_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u64x2<Self>;
+    #[inline(always)]
+    fn pairwise_dot_product_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u64x2<Self> {
+        let (low, high) = self.widening_mul_u32x4(a, b);
+        let (even, odd) = self.deinterleave_u64x2(low, high);
+        self.add_u64x2(even, odd)
+    }
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     fn narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self>;
     #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
@@ -1706,38 +2298,77 @@ pub trait Simd:
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask32x4(self, a: mask32x4<Self>) -> u64;
     #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
-    fn from_vector_mask32x4(self, vector: i32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn from_vector_mask32x4(self, vector: i32x4<Self>) -> mask32x4<Self> {
+        mask32x4 {
+            val: crate::transmute::checked_transmute_copy(&vector.val),
+            simd: self,
+        }
+    }
     #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
-    fn to_vector_mask32x4(self, a: mask32x4<Self>) -> i32x4<Self>;
+    #[inline(always)]
+    fn to_vector_mask32x4(self, a: mask32x4<Self>) -> i32x4<Self> {
+        i32x4 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask32x4(self, a: &mut mask32x4<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_left_mask32x4<const OFFSET: usize>(
         self,
         a: mask32x4<Self>,
-    ) -> mask32x4<Self>;
+    ) -> mask32x4<Self> {
+        mask32x4::from_vector(a.to_vector().rotate_elements_left::<OFFSET>())
+    }
     #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_right_mask32x4<const OFFSET: usize>(
         self,
         a: mask32x4<Self>,
-    ) -> mask32x4<Self>;
+    ) -> mask32x4<Self> {
+        mask32x4::from_vector(a.to_vector().rotate_elements_right::<OFFSET>())
+    }
     #[doc = "Compute the logical AND of two masks."]
-    fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
+        mask32x4::from_vector(a.to_vector() & b.to_vector())
+    }
     #[doc = "Compute the logical OR of two masks."]
-    fn or_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn or_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
+        mask32x4::from_vector(a.to_vector() | b.to_vector())
+    }
     #[doc = "Compute the logical XOR of two masks."]
-    fn xor_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn xor_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
+        mask32x4::from_vector(a.to_vector() ^ b.to_vector())
+    }
     #[doc = "Compute the logical NOT of the mask."]
-    fn not_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn not_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
+        mask32x4::from_vector(!a.to_vector())
+    }
     #[doc = "Reverse the order of the mask's logical lanes."]
-    fn reverse_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self>;
+    #[inline(always)]
+    fn reverse_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
+        mask32x4::from_vector(a.to_vector().reverse())
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    #[inline(always)]
     fn select_mask32x4(
         self,
         a: mask32x4<Self>,
         b: mask32x4<Self>,
         c: mask32x4<Self>,
-    ) -> mask32x4<Self>;
+    ) -> mask32x4<Self> {
+        let mask = a.to_vector();
+        let b = b.to_vector();
+        let c = c.to_vector();
+        mask32x4::from_vector((mask & b) | (!mask & c))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two masks element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -1820,23 +2451,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_f64x2(self, values: f64x2<Self>, mask: mask64x2<Self>) -> f64x2<Self>;
+    #[inline(always)]
+    fn compress_f64x2(self, values: f64x2<Self>, mask: mask64x2<Self>) -> f64x2<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_f64x2(
         self,
         values: f64x2<Self>,
         mask: mask64x2<Self>,
         merge: f64x2<Self>,
-    ) -> f64x2<Self>;
+    ) -> f64x2<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_f64x2(self, values: f64x2<Self>, mask: mask64x2<Self>) -> f64x2<Self>;
+    #[inline(always)]
+    fn expand_f64x2(self, values: f64x2<Self>, mask: mask64x2<Self>) -> f64x2<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_f64x2(
         self,
         values: f64x2<Self>,
         mask: mask64x2<Self>,
         merge: f64x2<Self>,
-    ) -> f64x2<Self>;
+    ) -> f64x2<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Negate each element of the vector."]
     fn neg_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
@@ -1905,9 +2560,15 @@ pub trait Simd:
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>);
+    #[inline(always)]
+    fn interleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>) {
+        (self.zip_low_f64x2(a, b), self.zip_high_f64x2(a, b))
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>);
+    #[inline(always)]
+    fn deinterleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>) {
+        (self.unzip_low_f64x2(a, b), self.unzip_high_f64x2(a, b))
+    }
     #[doc = "Compute `(a * b) + c` (potentially fused multiply-add) for each element.\n\nThe result may be computed with one or two rounding errors depending on which can be computed faster on the current platform."]
     fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Compute `(a * b) + c` for each element, with a single rounding at the end.\n\nThe result is the infinite-precision product-plus-add rounded once to the element type. This may be substantially slower than `mul_add` on platforms without fused multiply-add instructions, including WebAssembly.\n\n# Precision guarantees\n\nThis function is **not** susceptible to [the bug](https://github.com/rust-lang/compiler-builtins/issues/1262) in Rust standard library and in musl libc that causes incorrect rounding for near-zero values on CPUs without hardware support for this operation.\n\nOn the tier-2 i586-* targets, this function is correct if and only if SSE2 is available on the CPU.\n\nThe exact `NaN` payloads as well as signaling `NaN`s are not preserved.\n\n# Performance\n\nThe following platforms will use a single fused multiply-add instruction for this operation: ARM NEON, x86 AVX2, and x86 AVX512."]
@@ -1933,21 +2594,52 @@ pub trait Simd:
     #[doc = "Converts degrees to radians.\n\nThe precision of this function is non-deterministic. This means it varies by platform, Rust version, and can even differ within the same execution from one invocation to the next."]
     fn to_radians_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Return a mask indicating which elements are NaN."]
-    fn is_nan_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn is_nan_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
+        a.simd_ne(a)
+    }
     #[doc = "Return a mask indicating which elements are positive or negative infinite."]
-    fn is_infinite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn is_infinite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
+        a.abs().simd_eq(f64::INFINITY)
+    }
     #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
-    fn is_finite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn is_finite_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
+        a.abs().simd_lt(f64::INFINITY)
+    }
     #[doc = "Return a mask indicating which elements are subnormal.\n\nThis classifies the stored bit pattern, even when floating-point operations treat subnormals as zero."]
-    fn is_subnormal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn is_subnormal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
+        let i: i64x2<Self> = a.bitcast();
+        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & (i & 0x000F_FFFF_FFFF_FFFF_i64).simd_ne(0)
+    }
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
-    fn is_normal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn is_normal_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
+        let i: i64x2<Self> = a.bitcast();
+        let exp = i & 0x7FF0_0000_0000_0000_i64;
+        exp.simd_ne(0) & exp.simd_ne(0x7FF0_0000_0000_0000_i64)
+    }
     #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_positive`] for details."]
-    fn is_sign_positive_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn is_sign_positive_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
+        let i: i64x2<Self> = a.bitcast();
+        (i & i64::MIN).simd_eq(0)
+    }
     #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_negative`] for details."]
-    fn is_sign_negative_f64x2(self, a: f64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn is_sign_negative_f64x2(self, a: f64x2<Self>) -> mask64x2<Self> {
+        !a.is_sign_positive()
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
+    #[inline(always)]
+    fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
+        let mask = a.to_vector();
+        let b = b.bitcast::<i64x2<Self>>();
+        let c = c.bitcast::<i64x2<Self>>();
+        ((mask & b) | (!mask & c)).bitcast()
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x4<Self>;
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
@@ -2035,27 +2727,54 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_i64x2(self, values: i64x2<Self>, mask: mask64x2<Self>) -> i64x2<Self>;
+    #[inline(always)]
+    fn compress_i64x2(self, values: i64x2<Self>, mask: mask64x2<Self>) -> i64x2<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_i64x2(
         self,
         values: i64x2<Self>,
         mask: mask64x2<Self>,
         merge: i64x2<Self>,
-    ) -> i64x2<Self>;
+    ) -> i64x2<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_i64x2(self, values: i64x2<Self>, mask: mask64x2<Self>) -> i64x2<Self>;
+    #[inline(always)]
+    fn expand_i64x2(self, values: i64x2<Self>, mask: mask64x2<Self>) -> i64x2<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_i64x2(
         self,
         values: i64x2<Self>,
         mask: mask64x2<Self>,
         merge: i64x2<Self>,
-    ) -> i64x2<Self>;
+    ) -> i64x2<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     fn count_ones_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Return the number of zeros in the binary representation of each element."]
-    fn count_zeros_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
+    #[inline(always)]
+    fn count_zeros_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        self.count_ones_i64x2(self.not_i64x2(a))
+    }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     fn swap_bytes_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
@@ -2071,13 +2790,25 @@ pub trait Simd:
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[inline(always)]
+    fn and_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        Bytes::from_bytes(self.and_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[inline(always)]
+    fn or_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        Bytes::from_bytes(self.or_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[inline(always)]
+    fn xor_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        Bytes::from_bytes(self.xor_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
+    #[inline(always)]
+    fn not_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        a ^ !0
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_i64x2(self, a: i64x2<Self>, shift: u32) -> i64x2<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` and `i8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
@@ -2099,7 +2830,14 @@ pub trait Simd:
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
-    fn clamp_i64x2(self, a: i64x2<Self>, b: i64x2<Self>, c: i64x2<Self>) -> i64x2<Self>;
+    #[inline(always)]
+    fn clamp_i64x2(self, a: i64x2<Self>, b: i64x2<Self>, c: i64x2<Self>) -> i64x2<Self> {
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -2130,15 +2868,30 @@ pub trait Simd:
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> (i64x2<Self>, i64x2<Self>);
+    #[inline(always)]
+    fn interleave_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> (i64x2<Self>, i64x2<Self>) {
+        (self.zip_low_i64x2(a, b), self.zip_high_i64x2(a, b))
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> (i64x2<Self>, i64x2<Self>);
+    #[inline(always)]
+    fn deinterleave_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> (i64x2<Self>, i64x2<Self>) {
+        (self.unzip_low_i64x2(a, b), self.unzip_high_i64x2(a, b))
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_i64x2(self, a: mask64x2<Self>, b: i64x2<Self>, c: i64x2<Self>) -> i64x2<Self>;
+    #[inline(always)]
+    fn select_i64x2(self, a: mask64x2<Self>, b: i64x2<Self>, c: i64x2<Self>) -> i64x2<Self> {
+        let mask = a.to_vector();
+        let b = b.bitcast::<i64x2<Self>>();
+        let c = c.bitcast::<i64x2<Self>>();
+        ((mask & b) | (!mask & c)).bitcast()
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x4<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
-    fn neg_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
+    #[inline(always)]
+    fn neg_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        self.sub_i64x2(self.splat_i64x2(0), a)
+    }
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
     #[doc(alias = "load_interleaved")]
     fn load_four_interleaved_i64x2(self, src: &[i64; 8usize]) -> [i64x2<Self>; 4usize];
@@ -2221,27 +2974,54 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_u64x2(self, values: u64x2<Self>, mask: mask64x2<Self>) -> u64x2<Self>;
+    #[inline(always)]
+    fn compress_u64x2(self, values: u64x2<Self>, mask: mask64x2<Self>) -> u64x2<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_u64x2(
         self,
         values: u64x2<Self>,
         mask: mask64x2<Self>,
         merge: u64x2<Self>,
-    ) -> u64x2<Self>;
+    ) -> u64x2<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_u64x2(self, values: u64x2<Self>, mask: mask64x2<Self>) -> u64x2<Self>;
+    #[inline(always)]
+    fn expand_u64x2(self, values: u64x2<Self>, mask: mask64x2<Self>) -> u64x2<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_u8x16(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_u64x2(
         self,
         values: u64x2<Self>,
         mask: mask64x2<Self>,
         merge: u64x2<Self>,
-    ) -> u64x2<Self>;
+    ) -> u64x2<Self> {
+        let mask = mask8x16::from_vector(mask.to_vector().bitcast::<i8x16<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x16(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     fn count_ones_u64x2(self, a: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Return the number of zeros in the binary representation of each element."]
-    fn count_zeros_u64x2(self, a: u64x2<Self>) -> u64x2<Self>;
+    #[inline(always)]
+    fn count_zeros_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        self.count_ones_u64x2(self.not_u64x2(a))
+    }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     fn swap_bytes_u64x2(self, a: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
@@ -2257,13 +3037,25 @@ pub trait Simd:
     #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Compute the bitwise AND of two vectors."]
-    fn and_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[inline(always)]
+    fn and_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        Bytes::from_bytes(self.and_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise OR of two vectors."]
-    fn or_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[inline(always)]
+    fn or_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        Bytes::from_bytes(self.or_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise XOR of two vectors."]
-    fn xor_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[inline(always)]
+    fn xor_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        Bytes::from_bytes(self.xor_u8x16(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+    }
     #[doc = "Compute the bitwise NOT of the vector."]
-    fn not_u64x2(self, a: u64x2<Self>) -> u64x2<Self>;
+    #[inline(always)]
+    fn not_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        a ^ !0
+    }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_u64x2(self, a: u64x2<Self>, shift: u32) -> u64x2<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n# Performance\nThis per-lane shift is slower than shifting the entire vector by a scalar. It is not vectorized at all on WebAssembly, SSE4.2, and for `u8` and `i8` elements on AVX2. Prefer shifting by a single scalar value instead of by a vector whenever possible."]
@@ -2285,7 +3077,14 @@ pub trait Simd:
     #[doc = "Return the element-wise minimum of two vectors.\n\nFor floating-point vectors, if either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
-    fn clamp_u64x2(self, a: u64x2<Self>, b: u64x2<Self>, c: u64x2<Self>) -> u64x2<Self>;
+    #[inline(always)]
+    fn clamp_u64x2(self, a: u64x2<Self>, b: u64x2<Self>, c: u64x2<Self>) -> u64x2<Self> {
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nFor floating-point vectors, this follows Rust's `!=` semantics: a lane is true if either operand is NaN, including when both are NaN. Positive and negative zero compare equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -2316,11 +3115,23 @@ pub trait Simd:
     #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
-    fn interleave_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> (u64x2<Self>, u64x2<Self>);
+    #[inline(always)]
+    fn interleave_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> (u64x2<Self>, u64x2<Self>) {
+        (self.zip_low_u64x2(a, b), self.zip_high_u64x2(a, b))
+    }
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
-    fn deinterleave_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> (u64x2<Self>, u64x2<Self>);
+    #[inline(always)]
+    fn deinterleave_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> (u64x2<Self>, u64x2<Self>) {
+        (self.unzip_low_u64x2(a, b), self.unzip_high_u64x2(a, b))
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
-    fn select_u64x2(self, a: mask64x2<Self>, b: u64x2<Self>, c: u64x2<Self>) -> u64x2<Self>;
+    #[inline(always)]
+    fn select_u64x2(self, a: mask64x2<Self>, b: u64x2<Self>, c: u64x2<Self>) -> u64x2<Self> {
+        let mask = a.to_vector();
+        let b = b.bitcast::<i64x2<Self>>();
+        let c = c.bitcast::<i64x2<Self>>();
+        ((mask & b) | (!mask & c)).bitcast()
+    }
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x4<Self>;
     #[doc = "Load four 128-bit vectors from an array with 4-way interleaving.\n\nThis is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\nFor example, with 32-bit lanes, memory laid out as`[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as`[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`."]
@@ -2348,38 +3159,77 @@ pub trait Simd:
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask64x2(self, a: mask64x2<Self>) -> u64;
     #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
-    fn from_vector_mask64x2(self, vector: i64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn from_vector_mask64x2(self, vector: i64x2<Self>) -> mask64x2<Self> {
+        mask64x2 {
+            val: crate::transmute::checked_transmute_copy(&vector.val),
+            simd: self,
+        }
+    }
     #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
-    fn to_vector_mask64x2(self, a: mask64x2<Self>) -> i64x2<Self>;
+    #[inline(always)]
+    fn to_vector_mask64x2(self, a: mask64x2<Self>) -> i64x2<Self> {
+        i64x2 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask64x2(self, a: &mut mask64x2<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_left_mask64x2<const OFFSET: usize>(
         self,
         a: mask64x2<Self>,
-    ) -> mask64x2<Self>;
+    ) -> mask64x2<Self> {
+        mask64x2::from_vector(a.to_vector().rotate_elements_left::<OFFSET>())
+    }
     #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_right_mask64x2<const OFFSET: usize>(
         self,
         a: mask64x2<Self>,
-    ) -> mask64x2<Self>;
+    ) -> mask64x2<Self> {
+        mask64x2::from_vector(a.to_vector().rotate_elements_right::<OFFSET>())
+    }
     #[doc = "Compute the logical AND of two masks."]
-    fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
+        mask64x2::from_vector(a.to_vector() & b.to_vector())
+    }
     #[doc = "Compute the logical OR of two masks."]
-    fn or_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn or_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
+        mask64x2::from_vector(a.to_vector() | b.to_vector())
+    }
     #[doc = "Compute the logical XOR of two masks."]
-    fn xor_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn xor_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
+        mask64x2::from_vector(a.to_vector() ^ b.to_vector())
+    }
     #[doc = "Compute the logical NOT of the mask."]
-    fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
+        mask64x2::from_vector(!a.to_vector())
+    }
     #[doc = "Reverse the order of the mask's logical lanes."]
-    fn reverse_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self>;
+    #[inline(always)]
+    fn reverse_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
+        mask64x2::from_vector(a.to_vector().reverse())
+    }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    #[inline(always)]
     fn select_mask64x2(
         self,
         a: mask64x2<Self>,
         b: mask64x2<Self>,
         c: mask64x2<Self>,
-    ) -> mask64x2<Self>;
+    ) -> mask64x2<Self> {
+        let mask = a.to_vector();
+        let b = b.to_vector();
+        let c = c.to_vector();
+        mask64x2::from_vector((mask & b) | (!mask & c))
+    }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two masks element-wise for inequality.\n\nReturns a mask where each logical lane is true if the corresponding elements are unequal, and false if equal.\n\nThis is equivalent to negating the mask returned by `simd_eq`."]
@@ -2477,23 +3327,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_f32x8(self, values: f32x8<Self>, mask: mask32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn compress_f32x8(self, values: f32x8<Self>, mask: mask32x8<Self>) -> f32x8<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_f32x8(
         self,
         values: f32x8<Self>,
         mask: mask32x8<Self>,
         merge: f32x8<Self>,
-    ) -> f32x8<Self>;
+    ) -> f32x8<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_f32x8(self, values: f32x8<Self>, mask: mask32x8<Self>) -> f32x8<Self>;
+    #[inline(always)]
+    fn expand_f32x8(self, values: f32x8<Self>, mask: mask32x8<Self>) -> f32x8<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_f32x8(
         self,
         values: f32x8<Self>,
         mask: mask32x8<Self>,
         merge: f32x8<Self>,
-    ) -> f32x8<Self>;
+    ) -> f32x8<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Negate each element of the vector."]
     #[inline(always)]
     fn neg_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
@@ -2816,19 +3690,44 @@ pub trait Simd:
         self.combine_f32x4(self.to_radians_f32x4(a0), self.to_radians_f32x4(a1))
     }
     #[doc = "Return a mask indicating which elements are NaN."]
-    fn is_nan_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn is_nan_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
+        a.simd_ne(a)
+    }
     #[doc = "Return a mask indicating which elements are positive or negative infinite."]
-    fn is_infinite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn is_infinite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
+        a.abs().simd_eq(f32::INFINITY)
+    }
     #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
-    fn is_finite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn is_finite_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
+        a.abs().simd_lt(f32::INFINITY)
+    }
     #[doc = "Return a mask indicating which elements are subnormal.\n\nThis classifies the stored bit pattern, even when floating-point operations treat subnormals as zero."]
-    fn is_subnormal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn is_subnormal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
+        let i: i32x8<Self> = a.bitcast();
+        (i & 0x7F80_0000_i32).simd_eq(0) & (i & 0x007F_FFFF_i32).simd_ne(0)
+    }
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
-    fn is_normal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn is_normal_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
+        let i: i32x8<Self> = a.bitcast();
+        let exp = i & 0x7F80_0000_i32;
+        exp.simd_ne(0) & exp.simd_ne(0x7F80_0000_i32)
+    }
     #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_positive`] for details."]
-    fn is_sign_positive_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn is_sign_positive_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
+        let i: i32x8<Self> = a.bitcast();
+        (i & i32::MIN).simd_eq(0)
+    }
     #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_negative`] for details."]
-    fn is_sign_negative_f32x8(self, a: f32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn is_sign_negative_f32x8(self, a: f32x8<Self>) -> mask32x8<Self> {
+        !a.is_sign_positive()
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_f32x8(self, a: mask32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
@@ -2957,23 +3856,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_i8x32(self, values: i8x32<Self>, mask: mask8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn compress_i8x32(self, values: i8x32<Self>, mask: mask8x32<Self>) -> i8x32<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_i8x32(
         self,
         values: i8x32<Self>,
         mask: mask8x32<Self>,
         merge: i8x32<Self>,
-    ) -> i8x32<Self>;
+    ) -> i8x32<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_i8x32(self, values: i8x32<Self>, mask: mask8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn expand_i8x32(self, values: i8x32<Self>, mask: mask8x32<Self>) -> i8x32<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_i8x32(
         self,
         values: i8x32<Self>,
         mask: mask8x32<Self>,
         merge: i8x32<Self>,
-    ) -> i8x32<Self>;
+    ) -> i8x32<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
@@ -2983,14 +3906,12 @@ pub trait Simd:
     #[doc = "Return the number of zeros in the binary representation of each element."]
     #[inline(always)]
     fn count_zeros_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_i8x16(self.count_zeros_i8x16(a0), self.count_zeros_i8x16(a1))
+        self.count_ones_i8x32(self.not_i8x32(a))
     }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     #[inline(always)]
     fn swap_bytes_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_i8x16(self.swap_bytes_i8x16(a0), self.swap_bytes_i8x16(a1))
+        a
     }
     #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
     #[inline(always)]
@@ -3042,29 +3963,22 @@ pub trait Simd:
     #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn and_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_i8x16(self.and_i8x16(a0, b0), self.and_i8x16(a1, b1))
+        Bytes::from_bytes(self.and_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn or_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_i8x16(self.or_i8x16(a0, b0), self.or_i8x16(a1, b1))
+        Bytes::from_bytes(self.or_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn xor_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_i8x16(self.xor_i8x16(a0, b0), self.xor_i8x16(a1, b1))
+        Bytes::from_bytes(self.xor_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_i8x16(self.not_i8x16(a0), self.not_i8x16(a1))
+        a ^ !0
     }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     #[inline(always)]
@@ -3133,10 +4047,11 @@ pub trait Simd:
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
     #[inline(always)]
     fn clamp_i8x32(self, a: i8x32<Self>, b: i8x32<Self>, c: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        let (c0, c1) = self.split_i8x32(c);
-        self.combine_i8x16(self.clamp_i8x16(a0, b0, c0), self.clamp_i8x16(a1, b1, c1))
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -3245,8 +4160,7 @@ pub trait Simd:
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     #[inline(always)]
     fn neg_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_i8x16(self.neg_i8x16(a0), self.neg_i8x16(a1))
+        self.sub_i8x32(self.splat_i8x32(0), a)
     }
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
     #[inline(always)]
@@ -3361,23 +4275,56 @@ pub trait Simd:
         indices: u8x32<Self>,
     ) -> u8x32<Self>;
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn compress_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self> {
+        self.compress_merge_u8x32(values, mask, u8x32::splat(self, 0))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_u8x32(
         self,
         values: u8x32<Self>,
         mask: mask8x32<Self>,
         merge: u8x32<Self>,
-    ) -> u8x32<Self>;
+    ) -> u8x32<Self> {
+        let mask = self.to_bitmask_mask8x32(mask);
+        let mut merge_padded = [0u8; 32 + 1];
+        merge_padded[..32].copy_from_slice(&*merge);
+        let mut compacted = merge_padded;
+        let mut output_lane = 0;
+        for input_lane in 0..32 {
+            compacted[output_lane] = values[input_lane];
+            output_lane += ((mask >> input_lane) & 1) as usize;
+        }
+        compacted[output_lane] = merge_padded[output_lane];
+        let mut result = merge;
+        result.copy_from_slice(&compacted[..32]);
+        result
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self>;
+    #[inline(always)]
+    fn expand_u8x32(self, values: u8x32<Self>, mask: mask8x32<Self>) -> u8x32<Self> {
+        self.expand_merge_u8x32(values, mask, u8x32::splat(self, 0))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_u8x32(
         self,
         values: u8x32<Self>,
         mask: mask8x32<Self>,
         merge: u8x32<Self>,
-    ) -> u8x32<Self>;
+    ) -> u8x32<Self> {
+        let mask = self.to_bitmask_mask8x32(mask);
+        let mut result = merge;
+        let mut input_lane = 0;
+        for output_lane in 0..32 {
+            let bit = ((mask >> output_lane) & 1) as u8;
+            let keep = 0u8.wrapping_sub(bit);
+            result[output_lane] = (values[input_lane] & keep) | (result[output_lane] & !keep);
+            input_lane += usize::from(bit);
+        }
+        result
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
@@ -3387,14 +4334,12 @@ pub trait Simd:
     #[doc = "Return the number of zeros in the binary representation of each element."]
     #[inline(always)]
     fn count_zeros_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u8x16(self.count_zeros_u8x16(a0), self.count_zeros_u8x16(a1))
+        self.count_ones_u8x32(self.not_u8x32(a))
     }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     #[inline(always)]
     fn swap_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u8x16(self.swap_bytes_u8x16(a0), self.swap_bytes_u8x16(a1))
+        a
     }
     #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
     #[inline(always)]
@@ -3467,8 +4412,7 @@ pub trait Simd:
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u8x16(self.not_u8x16(a0), self.not_u8x16(a1))
+        a ^ !0
     }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     #[inline(always)]
@@ -3537,10 +4481,11 @@ pub trait Simd:
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
     #[inline(always)]
     fn clamp_u8x32(self, a: u8x32<Self>, b: u8x32<Self>, c: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        let (c0, c1) = self.split_u8x32(c);
-        self.combine_u8x16(self.clamp_u8x16(a0, b0, c0), self.clamp_u8x16(a1, b1, c1))
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -3719,53 +4664,63 @@ pub trait Simd:
         lo | (hi << 16usize)
     }
     #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
-    fn from_vector_mask8x32(self, vector: i8x32<Self>) -> mask8x32<Self>;
+    #[inline(always)]
+    fn from_vector_mask8x32(self, vector: i8x32<Self>) -> mask8x32<Self> {
+        mask8x32 {
+            val: crate::transmute::checked_transmute_copy(&vector.val),
+            simd: self,
+        }
+    }
     #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
-    fn to_vector_mask8x32(self, a: mask8x32<Self>) -> i8x32<Self>;
+    #[inline(always)]
+    fn to_vector_mask8x32(self, a: mask8x32<Self>) -> i8x32<Self> {
+        i8x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask8x32(self, a: &mut mask8x32<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_left_mask8x32<const OFFSET: usize>(
         self,
         a: mask8x32<Self>,
-    ) -> mask8x32<Self>;
+    ) -> mask8x32<Self> {
+        mask8x32::from_vector(a.to_vector().rotate_elements_left::<OFFSET>())
+    }
     #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_right_mask8x32<const OFFSET: usize>(
         self,
         a: mask8x32<Self>,
-    ) -> mask8x32<Self>;
+    ) -> mask8x32<Self> {
+        mask8x32::from_vector(a.to_vector().rotate_elements_right::<OFFSET>())
+    }
     #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_mask8x32(a);
-        let (b0, b1) = self.split_mask8x32(b);
-        self.combine_mask8x16(self.and_mask8x16(a0, b0), self.and_mask8x16(a1, b1))
+        mask8x32::from_vector(a.to_vector() & b.to_vector())
     }
     #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn or_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_mask8x32(a);
-        let (b0, b1) = self.split_mask8x32(b);
-        self.combine_mask8x16(self.or_mask8x16(a0, b0), self.or_mask8x16(a1, b1))
+        mask8x32::from_vector(a.to_vector() | b.to_vector())
     }
     #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn xor_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_mask8x32(a);
-        let (b0, b1) = self.split_mask8x32(b);
-        self.combine_mask8x16(self.xor_mask8x16(a0, b0), self.xor_mask8x16(a1, b1))
+        mask8x32::from_vector(a.to_vector() ^ b.to_vector())
     }
     #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not_mask8x32(self, a: mask8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_mask8x32(a);
-        self.combine_mask8x16(self.not_mask8x16(a0), self.not_mask8x16(a1))
+        mask8x32::from_vector(!a.to_vector())
     }
     #[doc = "Reverse the order of the mask's logical lanes."]
     #[inline(always)]
     fn reverse_mask8x32(self, a: mask8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_mask8x32(a);
-        self.combine_mask8x16(self.reverse_mask8x16(a1), self.reverse_mask8x16(a0))
+        mask8x32::from_vector(a.to_vector().reverse())
     }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
@@ -3916,23 +4871,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_i16x16(self, values: i16x16<Self>, mask: mask16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn compress_i16x16(self, values: i16x16<Self>, mask: mask16x16<Self>) -> i16x16<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_i16x16(
         self,
         values: i16x16<Self>,
         mask: mask16x16<Self>,
         merge: i16x16<Self>,
-    ) -> i16x16<Self>;
+    ) -> i16x16<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_i16x16(self, values: i16x16<Self>, mask: mask16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn expand_i16x16(self, values: i16x16<Self>, mask: mask16x16<Self>) -> i16x16<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_i16x16(
         self,
         values: i16x16<Self>,
         mask: mask16x16<Self>,
         merge: i16x16<Self>,
-    ) -> i16x16<Self>;
+    ) -> i16x16<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
@@ -3942,8 +4921,7 @@ pub trait Simd:
     #[doc = "Return the number of zeros in the binary representation of each element."]
     #[inline(always)]
     fn count_zeros_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_i16x8(self.count_zeros_i16x8(a0), self.count_zeros_i16x8(a1))
+        self.count_ones_i16x16(self.not_i16x16(a))
     }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     #[inline(always)]
@@ -4001,29 +4979,22 @@ pub trait Simd:
     #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn and_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i16x8(self.and_i16x8(a0, b0), self.and_i16x8(a1, b1))
+        Bytes::from_bytes(self.and_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn or_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i16x8(self.or_i16x8(a0, b0), self.or_i16x8(a1, b1))
+        Bytes::from_bytes(self.or_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn xor_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i16x8(self.xor_i16x8(a0, b0), self.xor_i16x8(a1, b1))
+        Bytes::from_bytes(self.xor_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_i16x8(self.not_i16x8(a0), self.not_i16x8(a1))
+        a ^ !0
     }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     #[inline(always)]
@@ -4092,10 +5063,11 @@ pub trait Simd:
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
     #[inline(always)]
     fn clamp_i16x16(self, a: i16x16<Self>, b: i16x16<Self>, c: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        let (c0, c1) = self.split_i16x16(c);
-        self.combine_i16x8(self.clamp_i16x8(a0, b0, c0), self.clamp_i16x8(a1, b1, c1))
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -4204,8 +5176,7 @@ pub trait Simd:
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     #[inline(always)]
     fn neg_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_i16x8(self.neg_i16x8(a0), self.neg_i16x8(a1))
+        self.sub_i16x16(self.splat_i16x16(0), a)
     }
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
     #[inline(always)]
@@ -4366,23 +5337,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_u16x16(self, values: u16x16<Self>, mask: mask16x16<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn compress_u16x16(self, values: u16x16<Self>, mask: mask16x16<Self>) -> u16x16<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_u16x16(
         self,
         values: u16x16<Self>,
         mask: mask16x16<Self>,
         merge: u16x16<Self>,
-    ) -> u16x16<Self>;
+    ) -> u16x16<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_u16x16(self, values: u16x16<Self>, mask: mask16x16<Self>) -> u16x16<Self>;
+    #[inline(always)]
+    fn expand_u16x16(self, values: u16x16<Self>, mask: mask16x16<Self>) -> u16x16<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_u16x16(
         self,
         values: u16x16<Self>,
         mask: mask16x16<Self>,
         merge: u16x16<Self>,
-    ) -> u16x16<Self>;
+    ) -> u16x16<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
@@ -4392,8 +5387,7 @@ pub trait Simd:
     #[doc = "Return the number of zeros in the binary representation of each element."]
     #[inline(always)]
     fn count_zeros_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        self.combine_u16x8(self.count_zeros_u16x8(a0), self.count_zeros_u16x8(a1))
+        self.count_ones_u16x16(self.not_u16x16(a))
     }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     #[inline(always)]
@@ -4451,29 +5445,22 @@ pub trait Simd:
     #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn and_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u16x8(self.and_u16x8(a0, b0), self.and_u16x8(a1, b1))
+        Bytes::from_bytes(self.and_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn or_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u16x8(self.or_u16x8(a0, b0), self.or_u16x8(a1, b1))
+        Bytes::from_bytes(self.or_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn xor_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u16x8(self.xor_u16x8(a0, b0), self.xor_u16x8(a1, b1))
+        Bytes::from_bytes(self.xor_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        self.combine_u16x8(self.not_u16x8(a0), self.not_u16x8(a1))
+        a ^ !0
     }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     #[inline(always)]
@@ -4542,10 +5529,11 @@ pub trait Simd:
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
     #[inline(always)]
     fn clamp_u16x16(self, a: u16x16<Self>, b: u16x16<Self>, c: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        let (c0, c1) = self.split_u16x16(c);
-        self.combine_u16x8(self.clamp_u16x8(a0, b0, c0), self.clamp_u16x8(a1, b1, c1))
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -4751,53 +5739,63 @@ pub trait Simd:
         lo | (hi << 8usize)
     }
     #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
-    fn from_vector_mask16x16(self, vector: i16x16<Self>) -> mask16x16<Self>;
+    #[inline(always)]
+    fn from_vector_mask16x16(self, vector: i16x16<Self>) -> mask16x16<Self> {
+        mask16x16 {
+            val: crate::transmute::checked_transmute_copy(&vector.val),
+            simd: self,
+        }
+    }
     #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
-    fn to_vector_mask16x16(self, a: mask16x16<Self>) -> i16x16<Self>;
+    #[inline(always)]
+    fn to_vector_mask16x16(self, a: mask16x16<Self>) -> i16x16<Self> {
+        i16x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask16x16(self, a: &mut mask16x16<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_left_mask16x16<const OFFSET: usize>(
         self,
         a: mask16x16<Self>,
-    ) -> mask16x16<Self>;
+    ) -> mask16x16<Self> {
+        mask16x16::from_vector(a.to_vector().rotate_elements_left::<OFFSET>())
+    }
     #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_right_mask16x16<const OFFSET: usize>(
         self,
         a: mask16x16<Self>,
-    ) -> mask16x16<Self>;
+    ) -> mask16x16<Self> {
+        mask16x16::from_vector(a.to_vector().rotate_elements_right::<OFFSET>())
+    }
     #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_mask16x16(a);
-        let (b0, b1) = self.split_mask16x16(b);
-        self.combine_mask16x8(self.and_mask16x8(a0, b0), self.and_mask16x8(a1, b1))
+        mask16x16::from_vector(a.to_vector() & b.to_vector())
     }
     #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn or_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_mask16x16(a);
-        let (b0, b1) = self.split_mask16x16(b);
-        self.combine_mask16x8(self.or_mask16x8(a0, b0), self.or_mask16x8(a1, b1))
+        mask16x16::from_vector(a.to_vector() | b.to_vector())
     }
     #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn xor_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_mask16x16(a);
-        let (b0, b1) = self.split_mask16x16(b);
-        self.combine_mask16x8(self.xor_mask16x8(a0, b0), self.xor_mask16x8(a1, b1))
+        mask16x16::from_vector(a.to_vector() ^ b.to_vector())
     }
     #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not_mask16x16(self, a: mask16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_mask16x16(a);
-        self.combine_mask16x8(self.not_mask16x8(a0), self.not_mask16x8(a1))
+        mask16x16::from_vector(!a.to_vector())
     }
     #[doc = "Reverse the order of the mask's logical lanes."]
     #[inline(always)]
     fn reverse_mask16x16(self, a: mask16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_mask16x16(a);
-        self.combine_mask16x8(self.reverse_mask16x8(a1), self.reverse_mask16x8(a0))
+        mask16x16::from_vector(a.to_vector().reverse())
     }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
@@ -4951,23 +5949,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_i32x8(self, values: i32x8<Self>, mask: mask32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn compress_i32x8(self, values: i32x8<Self>, mask: mask32x8<Self>) -> i32x8<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_i32x8(
         self,
         values: i32x8<Self>,
         mask: mask32x8<Self>,
         merge: i32x8<Self>,
-    ) -> i32x8<Self>;
+    ) -> i32x8<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_i32x8(self, values: i32x8<Self>, mask: mask32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn expand_i32x8(self, values: i32x8<Self>, mask: mask32x8<Self>) -> i32x8<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_i32x8(
         self,
         values: i32x8<Self>,
         mask: mask32x8<Self>,
         merge: i32x8<Self>,
-    ) -> i32x8<Self>;
+    ) -> i32x8<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
@@ -4977,8 +5999,7 @@ pub trait Simd:
     #[doc = "Return the number of zeros in the binary representation of each element."]
     #[inline(always)]
     fn count_zeros_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_i32x4(self.count_zeros_i32x4(a0), self.count_zeros_i32x4(a1))
+        self.count_ones_i32x8(self.not_i32x8(a))
     }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     #[inline(always)]
@@ -5036,29 +6057,22 @@ pub trait Simd:
     #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn and_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i32x4(self.and_i32x4(a0, b0), self.and_i32x4(a1, b1))
+        Bytes::from_bytes(self.and_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn or_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i32x4(self.or_i32x4(a0, b0), self.or_i32x4(a1, b1))
+        Bytes::from_bytes(self.or_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn xor_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i32x4(self.xor_i32x4(a0, b0), self.xor_i32x4(a1, b1))
+        Bytes::from_bytes(self.xor_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_i32x4(self.not_i32x4(a0), self.not_i32x4(a1))
+        a ^ !0
     }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     #[inline(always)]
@@ -5127,10 +6141,11 @@ pub trait Simd:
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
     #[inline(always)]
     fn clamp_i32x8(self, a: i32x8<Self>, b: i32x8<Self>, c: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        let (c0, c1) = self.split_i32x8(c);
-        self.combine_i32x4(self.clamp_i32x4(a0, b0, c0), self.clamp_i32x4(a1, b1, c1))
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -5239,8 +6254,7 @@ pub trait Simd:
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     #[inline(always)]
     fn neg_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_i32x4(self.neg_i32x4(a0), self.neg_i32x4(a1))
+        self.sub_i32x8(self.splat_i32x8(0), a)
     }
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
     #[inline(always)]
@@ -5403,23 +6417,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_u32x8(self, values: u32x8<Self>, mask: mask32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn compress_u32x8(self, values: u32x8<Self>, mask: mask32x8<Self>) -> u32x8<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_u32x8(
         self,
         values: u32x8<Self>,
         mask: mask32x8<Self>,
         merge: u32x8<Self>,
-    ) -> u32x8<Self>;
+    ) -> u32x8<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_u32x8(self, values: u32x8<Self>, mask: mask32x8<Self>) -> u32x8<Self>;
+    #[inline(always)]
+    fn expand_u32x8(self, values: u32x8<Self>, mask: mask32x8<Self>) -> u32x8<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_u32x8(
         self,
         values: u32x8<Self>,
         mask: mask32x8<Self>,
         merge: u32x8<Self>,
-    ) -> u32x8<Self>;
+    ) -> u32x8<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
@@ -5429,8 +6467,7 @@ pub trait Simd:
     #[doc = "Return the number of zeros in the binary representation of each element."]
     #[inline(always)]
     fn count_zeros_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        self.combine_u32x4(self.count_zeros_u32x4(a0), self.count_zeros_u32x4(a1))
+        self.count_ones_u32x8(self.not_u32x8(a))
     }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     #[inline(always)]
@@ -5488,29 +6525,22 @@ pub trait Simd:
     #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn and_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u32x4(self.and_u32x4(a0, b0), self.and_u32x4(a1, b1))
+        Bytes::from_bytes(self.and_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn or_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u32x4(self.or_u32x4(a0, b0), self.or_u32x4(a1, b1))
+        Bytes::from_bytes(self.or_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn xor_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u32x4(self.xor_u32x4(a0, b0), self.xor_u32x4(a1, b1))
+        Bytes::from_bytes(self.xor_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        self.combine_u32x4(self.not_u32x4(a0), self.not_u32x4(a1))
+        a ^ !0
     }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     #[inline(always)]
@@ -5579,10 +6609,11 @@ pub trait Simd:
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
     #[inline(always)]
     fn clamp_u32x8(self, a: u32x8<Self>, b: u32x8<Self>, c: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        let (c0, c1) = self.split_u32x8(c);
-        self.combine_u32x4(self.clamp_u32x4(a0, b0, c0), self.clamp_u32x4(a1, b1, c1))
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -5794,53 +6825,63 @@ pub trait Simd:
         lo | (hi << 4usize)
     }
     #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
-    fn from_vector_mask32x8(self, vector: i32x8<Self>) -> mask32x8<Self>;
+    #[inline(always)]
+    fn from_vector_mask32x8(self, vector: i32x8<Self>) -> mask32x8<Self> {
+        mask32x8 {
+            val: crate::transmute::checked_transmute_copy(&vector.val),
+            simd: self,
+        }
+    }
     #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
-    fn to_vector_mask32x8(self, a: mask32x8<Self>) -> i32x8<Self>;
+    #[inline(always)]
+    fn to_vector_mask32x8(self, a: mask32x8<Self>) -> i32x8<Self> {
+        i32x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask32x8(self, a: &mut mask32x8<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_left_mask32x8<const OFFSET: usize>(
         self,
         a: mask32x8<Self>,
-    ) -> mask32x8<Self>;
+    ) -> mask32x8<Self> {
+        mask32x8::from_vector(a.to_vector().rotate_elements_left::<OFFSET>())
+    }
     #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_right_mask32x8<const OFFSET: usize>(
         self,
         a: mask32x8<Self>,
-    ) -> mask32x8<Self>;
+    ) -> mask32x8<Self> {
+        mask32x8::from_vector(a.to_vector().rotate_elements_right::<OFFSET>())
+    }
     #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        let (b0, b1) = self.split_mask32x8(b);
-        self.combine_mask32x4(self.and_mask32x4(a0, b0), self.and_mask32x4(a1, b1))
+        mask32x8::from_vector(a.to_vector() & b.to_vector())
     }
     #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn or_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        let (b0, b1) = self.split_mask32x8(b);
-        self.combine_mask32x4(self.or_mask32x4(a0, b0), self.or_mask32x4(a1, b1))
+        mask32x8::from_vector(a.to_vector() | b.to_vector())
     }
     #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn xor_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        let (b0, b1) = self.split_mask32x8(b);
-        self.combine_mask32x4(self.xor_mask32x4(a0, b0), self.xor_mask32x4(a1, b1))
+        mask32x8::from_vector(a.to_vector() ^ b.to_vector())
     }
     #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not_mask32x8(self, a: mask32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        self.combine_mask32x4(self.not_mask32x4(a0), self.not_mask32x4(a1))
+        mask32x8::from_vector(!a.to_vector())
     }
     #[doc = "Reverse the order of the mask's logical lanes."]
     #[inline(always)]
     fn reverse_mask32x8(self, a: mask32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        self.combine_mask32x4(self.reverse_mask32x4(a1), self.reverse_mask32x4(a0))
+        mask32x8::from_vector(a.to_vector().reverse())
     }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
@@ -5994,23 +7035,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_f64x4(self, values: f64x4<Self>, mask: mask64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn compress_f64x4(self, values: f64x4<Self>, mask: mask64x4<Self>) -> f64x4<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_f64x4(
         self,
         values: f64x4<Self>,
         mask: mask64x4<Self>,
         merge: f64x4<Self>,
-    ) -> f64x4<Self>;
+    ) -> f64x4<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_f64x4(self, values: f64x4<Self>, mask: mask64x4<Self>) -> f64x4<Self>;
+    #[inline(always)]
+    fn expand_f64x4(self, values: f64x4<Self>, mask: mask64x4<Self>) -> f64x4<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_f64x4(
         self,
         values: f64x4<Self>,
         mask: mask64x4<Self>,
         merge: f64x4<Self>,
-    ) -> f64x4<Self>;
+    ) -> f64x4<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Negate each element of the vector."]
     #[inline(always)]
     fn neg_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
@@ -6333,19 +7398,44 @@ pub trait Simd:
         self.combine_f64x2(self.to_radians_f64x2(a0), self.to_radians_f64x2(a1))
     }
     #[doc = "Return a mask indicating which elements are NaN."]
-    fn is_nan_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn is_nan_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
+        a.simd_ne(a)
+    }
     #[doc = "Return a mask indicating which elements are positive or negative infinite."]
-    fn is_infinite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn is_infinite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
+        a.abs().simd_eq(f64::INFINITY)
+    }
     #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
-    fn is_finite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn is_finite_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
+        a.abs().simd_lt(f64::INFINITY)
+    }
     #[doc = "Return a mask indicating which elements are subnormal.\n\nThis classifies the stored bit pattern, even when floating-point operations treat subnormals as zero."]
-    fn is_subnormal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn is_subnormal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
+        let i: i64x4<Self> = a.bitcast();
+        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & (i & 0x000F_FFFF_FFFF_FFFF_i64).simd_ne(0)
+    }
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
-    fn is_normal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn is_normal_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
+        let i: i64x4<Self> = a.bitcast();
+        let exp = i & 0x7FF0_0000_0000_0000_i64;
+        exp.simd_ne(0) & exp.simd_ne(0x7FF0_0000_0000_0000_i64)
+    }
     #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_positive`] for details."]
-    fn is_sign_positive_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn is_sign_positive_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
+        let i: i64x4<Self> = a.bitcast();
+        (i & i64::MIN).simd_eq(0)
+    }
     #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_negative`] for details."]
-    fn is_sign_negative_f64x4(self, a: f64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn is_sign_negative_f64x4(self, a: f64x4<Self>) -> mask64x4<Self> {
+        !a.is_sign_positive()
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_f64x4(self, a: mask64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
@@ -6493,23 +7583,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_i64x4(self, values: i64x4<Self>, mask: mask64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn compress_i64x4(self, values: i64x4<Self>, mask: mask64x4<Self>) -> i64x4<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_i64x4(
         self,
         values: i64x4<Self>,
         mask: mask64x4<Self>,
         merge: i64x4<Self>,
-    ) -> i64x4<Self>;
+    ) -> i64x4<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_i64x4(self, values: i64x4<Self>, mask: mask64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn expand_i64x4(self, values: i64x4<Self>, mask: mask64x4<Self>) -> i64x4<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_i64x4(
         self,
         values: i64x4<Self>,
         mask: mask64x4<Self>,
         merge: i64x4<Self>,
-    ) -> i64x4<Self>;
+    ) -> i64x4<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
@@ -6519,8 +7633,7 @@ pub trait Simd:
     #[doc = "Return the number of zeros in the binary representation of each element."]
     #[inline(always)]
     fn count_zeros_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        self.combine_i64x2(self.count_zeros_i64x2(a0), self.count_zeros_i64x2(a1))
+        self.count_ones_i64x4(self.not_i64x4(a))
     }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     #[inline(always)]
@@ -6578,29 +7691,22 @@ pub trait Simd:
     #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn and_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        let (b0, b1) = self.split_i64x4(b);
-        self.combine_i64x2(self.and_i64x2(a0, b0), self.and_i64x2(a1, b1))
+        Bytes::from_bytes(self.and_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn or_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        let (b0, b1) = self.split_i64x4(b);
-        self.combine_i64x2(self.or_i64x2(a0, b0), self.or_i64x2(a1, b1))
+        Bytes::from_bytes(self.or_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn xor_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        let (b0, b1) = self.split_i64x4(b);
-        self.combine_i64x2(self.xor_i64x2(a0, b0), self.xor_i64x2(a1, b1))
+        Bytes::from_bytes(self.xor_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        self.combine_i64x2(self.not_i64x2(a0), self.not_i64x2(a1))
+        a ^ !0
     }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     #[inline(always)]
@@ -6669,10 +7775,11 @@ pub trait Simd:
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
     #[inline(always)]
     fn clamp_i64x4(self, a: i64x4<Self>, b: i64x4<Self>, c: i64x4<Self>) -> i64x4<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        let (b0, b1) = self.split_i64x4(b);
-        let (c0, c1) = self.split_i64x4(c);
-        self.combine_i64x2(self.clamp_i64x2(a0, b0, c0), self.clamp_i64x2(a1, b1, c1))
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -6781,8 +7888,7 @@ pub trait Simd:
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     #[inline(always)]
     fn neg_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        self.combine_i64x2(self.neg_i64x2(a0), self.neg_i64x2(a1))
+        self.sub_i64x4(self.splat_i64x4(0), a)
     }
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     #[inline(always)]
@@ -6894,23 +8000,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_u64x4(self, values: u64x4<Self>, mask: mask64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn compress_u64x4(self, values: u64x4<Self>, mask: mask64x4<Self>) -> u64x4<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_u64x4(
         self,
         values: u64x4<Self>,
         mask: mask64x4<Self>,
         merge: u64x4<Self>,
-    ) -> u64x4<Self>;
+    ) -> u64x4<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_u64x4(self, values: u64x4<Self>, mask: mask64x4<Self>) -> u64x4<Self>;
+    #[inline(always)]
+    fn expand_u64x4(self, values: u64x4<Self>, mask: mask64x4<Self>) -> u64x4<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_u8x32(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_u64x4(
         self,
         values: u64x4<Self>,
         mask: mask64x4<Self>,
         merge: u64x4<Self>,
-    ) -> u64x4<Self>;
+    ) -> u64x4<Self> {
+        let mask = mask8x32::from_vector(mask.to_vector().bitcast::<i8x32<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x32(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_u64x4(self, a: u64x4<Self>) -> u64x4<Self> {
@@ -6920,8 +8050,7 @@ pub trait Simd:
     #[doc = "Return the number of zeros in the binary representation of each element."]
     #[inline(always)]
     fn count_zeros_u64x4(self, a: u64x4<Self>) -> u64x4<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        self.combine_u64x2(self.count_zeros_u64x2(a0), self.count_zeros_u64x2(a1))
+        self.count_ones_u64x4(self.not_u64x4(a))
     }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     #[inline(always)]
@@ -6979,29 +8108,22 @@ pub trait Simd:
     #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn and_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        let (b0, b1) = self.split_u64x4(b);
-        self.combine_u64x2(self.and_u64x2(a0, b0), self.and_u64x2(a1, b1))
+        Bytes::from_bytes(self.and_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn or_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        let (b0, b1) = self.split_u64x4(b);
-        self.combine_u64x2(self.or_u64x2(a0, b0), self.or_u64x2(a1, b1))
+        Bytes::from_bytes(self.or_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn xor_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        let (b0, b1) = self.split_u64x4(b);
-        self.combine_u64x2(self.xor_u64x2(a0, b0), self.xor_u64x2(a1, b1))
+        Bytes::from_bytes(self.xor_u8x32(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_u64x4(self, a: u64x4<Self>) -> u64x4<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        self.combine_u64x2(self.not_u64x2(a0), self.not_u64x2(a1))
+        a ^ !0
     }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     #[inline(always)]
@@ -7070,10 +8192,11 @@ pub trait Simd:
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
     #[inline(always)]
     fn clamp_u64x4(self, a: u64x4<Self>, b: u64x4<Self>, c: u64x4<Self>) -> u64x4<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        let (b0, b1) = self.split_u64x4(b);
-        let (c0, c1) = self.split_u64x4(c);
-        self.combine_u64x2(self.clamp_u64x2(a0, b0, c0), self.clamp_u64x2(a1, b1, c1))
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -7234,53 +8357,63 @@ pub trait Simd:
         lo | (hi << 2usize)
     }
     #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
-    fn from_vector_mask64x4(self, vector: i64x4<Self>) -> mask64x4<Self>;
+    #[inline(always)]
+    fn from_vector_mask64x4(self, vector: i64x4<Self>) -> mask64x4<Self> {
+        mask64x4 {
+            val: crate::transmute::checked_transmute_copy(&vector.val),
+            simd: self,
+        }
+    }
     #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
-    fn to_vector_mask64x4(self, a: mask64x4<Self>) -> i64x4<Self>;
+    #[inline(always)]
+    fn to_vector_mask64x4(self, a: mask64x4<Self>) -> i64x4<Self> {
+        i64x4 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask64x4(self, a: &mut mask64x4<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_left_mask64x4<const OFFSET: usize>(
         self,
         a: mask64x4<Self>,
-    ) -> mask64x4<Self>;
+    ) -> mask64x4<Self> {
+        mask64x4::from_vector(a.to_vector().rotate_elements_left::<OFFSET>())
+    }
     #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_right_mask64x4<const OFFSET: usize>(
         self,
         a: mask64x4<Self>,
-    ) -> mask64x4<Self>;
+    ) -> mask64x4<Self> {
+        mask64x4::from_vector(a.to_vector().rotate_elements_right::<OFFSET>())
+    }
     #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_mask64x4(a);
-        let (b0, b1) = self.split_mask64x4(b);
-        self.combine_mask64x2(self.and_mask64x2(a0, b0), self.and_mask64x2(a1, b1))
+        mask64x4::from_vector(a.to_vector() & b.to_vector())
     }
     #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn or_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_mask64x4(a);
-        let (b0, b1) = self.split_mask64x4(b);
-        self.combine_mask64x2(self.or_mask64x2(a0, b0), self.or_mask64x2(a1, b1))
+        mask64x4::from_vector(a.to_vector() | b.to_vector())
     }
     #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn xor_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_mask64x4(a);
-        let (b0, b1) = self.split_mask64x4(b);
-        self.combine_mask64x2(self.xor_mask64x2(a0, b0), self.xor_mask64x2(a1, b1))
+        mask64x4::from_vector(a.to_vector() ^ b.to_vector())
     }
     #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not_mask64x4(self, a: mask64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_mask64x4(a);
-        self.combine_mask64x2(self.not_mask64x2(a0), self.not_mask64x2(a1))
+        mask64x4::from_vector(!a.to_vector())
     }
     #[doc = "Reverse the order of the mask's logical lanes."]
     #[inline(always)]
     fn reverse_mask64x4(self, a: mask64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_mask64x4(a);
-        self.combine_mask64x2(self.reverse_mask64x2(a1), self.reverse_mask64x2(a0))
+        mask64x4::from_vector(a.to_vector().reverse())
     }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
@@ -7427,23 +8560,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_f32x16(self, values: f32x16<Self>, mask: mask32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn compress_f32x16(self, values: f32x16<Self>, mask: mask32x16<Self>) -> f32x16<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_f32x16(
         self,
         values: f32x16<Self>,
         mask: mask32x16<Self>,
         merge: f32x16<Self>,
-    ) -> f32x16<Self>;
+    ) -> f32x16<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_f32x16(self, values: f32x16<Self>, mask: mask32x16<Self>) -> f32x16<Self>;
+    #[inline(always)]
+    fn expand_f32x16(self, values: f32x16<Self>, mask: mask32x16<Self>) -> f32x16<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_f32x16(
         self,
         values: f32x16<Self>,
         mask: mask32x16<Self>,
         merge: f32x16<Self>,
-    ) -> f32x16<Self>;
+    ) -> f32x16<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Negate each element of the vector."]
     #[inline(always)]
     fn neg_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -7776,19 +8933,44 @@ pub trait Simd:
         self.combine_f32x8(self.to_radians_f32x8(a0), self.to_radians_f32x8(a1))
     }
     #[doc = "Return a mask indicating which elements are NaN."]
-    fn is_nan_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn is_nan_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
+        a.simd_ne(a)
+    }
     #[doc = "Return a mask indicating which elements are positive or negative infinite."]
-    fn is_infinite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn is_infinite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
+        a.abs().simd_eq(f32::INFINITY)
+    }
     #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
-    fn is_finite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn is_finite_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
+        a.abs().simd_lt(f32::INFINITY)
+    }
     #[doc = "Return a mask indicating which elements are subnormal.\n\nThis classifies the stored bit pattern, even when floating-point operations treat subnormals as zero."]
-    fn is_subnormal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn is_subnormal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
+        let i: i32x16<Self> = a.bitcast();
+        (i & 0x7F80_0000_i32).simd_eq(0) & (i & 0x007F_FFFF_i32).simd_ne(0)
+    }
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
-    fn is_normal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn is_normal_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
+        let i: i32x16<Self> = a.bitcast();
+        let exp = i & 0x7F80_0000_i32;
+        exp.simd_ne(0) & exp.simd_ne(0x7F80_0000_i32)
+    }
     #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_positive`] for details."]
-    fn is_sign_positive_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn is_sign_positive_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
+        let i: i32x16<Self> = a.bitcast();
+        (i & i32::MIN).simd_eq(0)
+    }
     #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_negative`] for details."]
-    fn is_sign_negative_f32x16(self, a: f32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn is_sign_negative_f32x16(self, a: f32x16<Self>) -> mask32x16<Self> {
+        !a.is_sign_positive()
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_f32x16(self, a: mask32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
@@ -7915,23 +9097,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_i8x64(self, values: i8x64<Self>, mask: mask8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn compress_i8x64(self, values: i8x64<Self>, mask: mask8x64<Self>) -> i8x64<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_i8x64(
         self,
         values: i8x64<Self>,
         mask: mask8x64<Self>,
         merge: i8x64<Self>,
-    ) -> i8x64<Self>;
+    ) -> i8x64<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_i8x64(self, values: i8x64<Self>, mask: mask8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn expand_i8x64(self, values: i8x64<Self>, mask: mask8x64<Self>) -> i8x64<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_i8x64(
         self,
         values: i8x64<Self>,
         mask: mask8x64<Self>,
         merge: i8x64<Self>,
-    ) -> i8x64<Self>;
+    ) -> i8x64<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
@@ -7941,14 +9147,12 @@ pub trait Simd:
     #[doc = "Return the number of zeros in the binary representation of each element."]
     #[inline(always)]
     fn count_zeros_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.count_zeros_i8x32(a0), self.count_zeros_i8x32(a1))
+        self.count_ones_i8x64(self.not_i8x64(a))
     }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     #[inline(always)]
     fn swap_bytes_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.swap_bytes_i8x32(a0), self.swap_bytes_i8x32(a1))
+        a
     }
     #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
     #[inline(always)]
@@ -8000,29 +9204,22 @@ pub trait Simd:
     #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn and_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.and_i8x32(a0, b0), self.and_i8x32(a1, b1))
+        Bytes::from_bytes(self.and_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn or_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.or_i8x32(a0, b0), self.or_i8x32(a1, b1))
+        Bytes::from_bytes(self.or_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn xor_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.xor_i8x32(a0, b0), self.xor_i8x32(a1, b1))
+        Bytes::from_bytes(self.xor_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.not_i8x32(a0), self.not_i8x32(a1))
+        a ^ !0
     }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     #[inline(always)]
@@ -8091,10 +9288,11 @@ pub trait Simd:
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
     #[inline(always)]
     fn clamp_i8x64(self, a: i8x64<Self>, b: i8x64<Self>, c: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        let (c0, c1) = self.split_i8x64(c);
-        self.combine_i8x32(self.clamp_i8x32(a0, b0, c0), self.clamp_i8x32(a1, b1, c1))
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -8201,8 +9399,7 @@ pub trait Simd:
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     #[inline(always)]
     fn neg_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.neg_i8x32(a0), self.neg_i8x32(a1))
+        self.sub_i8x64(self.splat_i8x64(0), a)
     }
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
     #[inline(always)]
@@ -8317,23 +9514,56 @@ pub trait Simd:
         indices: u8x64<Self>,
     ) -> u8x64<Self>;
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn compress_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self> {
+        self.compress_merge_u8x64(values, mask, u8x64::splat(self, 0))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_u8x64(
         self,
         values: u8x64<Self>,
         mask: mask8x64<Self>,
         merge: u8x64<Self>,
-    ) -> u8x64<Self>;
+    ) -> u8x64<Self> {
+        let mask = self.to_bitmask_mask8x64(mask);
+        let mut merge_padded = [0u8; 64 + 1];
+        merge_padded[..64].copy_from_slice(&*merge);
+        let mut compacted = merge_padded;
+        let mut output_lane = 0;
+        for input_lane in 0..64 {
+            compacted[output_lane] = values[input_lane];
+            output_lane += ((mask >> input_lane) & 1) as usize;
+        }
+        compacted[output_lane] = merge_padded[output_lane];
+        let mut result = merge;
+        result.copy_from_slice(&compacted[..64]);
+        result
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self>;
+    #[inline(always)]
+    fn expand_u8x64(self, values: u8x64<Self>, mask: mask8x64<Self>) -> u8x64<Self> {
+        self.expand_merge_u8x64(values, mask, u8x64::splat(self, 0))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_u8x64(
         self,
         values: u8x64<Self>,
         mask: mask8x64<Self>,
         merge: u8x64<Self>,
-    ) -> u8x64<Self>;
+    ) -> u8x64<Self> {
+        let mask = self.to_bitmask_mask8x64(mask);
+        let mut result = merge;
+        let mut input_lane = 0;
+        for output_lane in 0..64 {
+            let bit = ((mask >> output_lane) & 1) as u8;
+            let keep = 0u8.wrapping_sub(bit);
+            result[output_lane] = (values[input_lane] & keep) | (result[output_lane] & !keep);
+            input_lane += usize::from(bit);
+        }
+        result
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
@@ -8343,14 +9573,12 @@ pub trait Simd:
     #[doc = "Return the number of zeros in the binary representation of each element."]
     #[inline(always)]
     fn count_zeros_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u8x32(self.count_zeros_u8x32(a0), self.count_zeros_u8x32(a1))
+        self.count_ones_u8x64(self.not_u8x64(a))
     }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     #[inline(always)]
     fn swap_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u8x32(self.swap_bytes_u8x32(a0), self.swap_bytes_u8x32(a1))
+        a
     }
     #[doc = "Reverses the order bits in an integer. I.e. the least significant bit becomes the most significant bit and vice versa.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet i = u32x4::from_slice(simd, &[0x01_23_45_67, 0x89_AB_CD_EF, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*i.reverse_bits(), [0xE6_A2_C4_80, 0xF7_B3_D5_91, 0xD0_50_90_10, 0xF0_70_B0_30]);\n# });\n```"]
     #[inline(always)]
@@ -8423,8 +9651,7 @@ pub trait Simd:
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u8x32(self.not_u8x32(a0), self.not_u8x32(a1))
+        a ^ !0
     }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     #[inline(always)]
@@ -8493,10 +9720,11 @@ pub trait Simd:
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
     #[inline(always)]
     fn clamp_u8x64(self, a: u8x64<Self>, b: u8x64<Self>, c: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        let (c0, c1) = self.split_u8x64(c);
-        self.combine_u8x32(self.clamp_u8x32(a0, b0, c0), self.clamp_u8x32(a1, b1, c1))
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -8673,53 +9901,63 @@ pub trait Simd:
         lo | (hi << 32usize)
     }
     #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
-    fn from_vector_mask8x64(self, vector: i8x64<Self>) -> mask8x64<Self>;
+    #[inline(always)]
+    fn from_vector_mask8x64(self, vector: i8x64<Self>) -> mask8x64<Self> {
+        mask8x64 {
+            val: crate::transmute::checked_transmute_copy(&vector.val),
+            simd: self,
+        }
+    }
     #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
-    fn to_vector_mask8x64(self, a: mask8x64<Self>) -> i8x64<Self>;
+    #[inline(always)]
+    fn to_vector_mask8x64(self, a: mask8x64<Self>) -> i8x64<Self> {
+        i8x64 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask8x64(self, a: &mut mask8x64<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_left_mask8x64<const OFFSET: usize>(
         self,
         a: mask8x64<Self>,
-    ) -> mask8x64<Self>;
+    ) -> mask8x64<Self> {
+        mask8x64::from_vector(a.to_vector().rotate_elements_left::<OFFSET>())
+    }
     #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_right_mask8x64<const OFFSET: usize>(
         self,
         a: mask8x64<Self>,
-    ) -> mask8x64<Self>;
+    ) -> mask8x64<Self> {
+        mask8x64::from_vector(a.to_vector().rotate_elements_right::<OFFSET>())
+    }
     #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(self.and_mask8x32(a0, b0), self.and_mask8x32(a1, b1))
+        mask8x64::from_vector(a.to_vector() & b.to_vector())
     }
     #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn or_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(self.or_mask8x32(a0, b0), self.or_mask8x32(a1, b1))
+        mask8x64::from_vector(a.to_vector() | b.to_vector())
     }
     #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn xor_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(self.xor_mask8x32(a0, b0), self.xor_mask8x32(a1, b1))
+        mask8x64::from_vector(a.to_vector() ^ b.to_vector())
     }
     #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not_mask8x64(self, a: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        self.combine_mask8x32(self.not_mask8x32(a0), self.not_mask8x32(a1))
+        mask8x64::from_vector(!a.to_vector())
     }
     #[doc = "Reverse the order of the mask's logical lanes."]
     #[inline(always)]
     fn reverse_mask8x64(self, a: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        self.combine_mask8x32(self.reverse_mask8x32(a1), self.reverse_mask8x32(a0))
+        mask8x64::from_vector(a.to_vector().reverse())
     }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
@@ -8868,23 +10106,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_i16x32(self, values: i16x32<Self>, mask: mask16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn compress_i16x32(self, values: i16x32<Self>, mask: mask16x32<Self>) -> i16x32<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_i16x32(
         self,
         values: i16x32<Self>,
         mask: mask16x32<Self>,
         merge: i16x32<Self>,
-    ) -> i16x32<Self>;
+    ) -> i16x32<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_i16x32(self, values: i16x32<Self>, mask: mask16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn expand_i16x32(self, values: i16x32<Self>, mask: mask16x32<Self>) -> i16x32<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_i16x32(
         self,
         values: i16x32<Self>,
         mask: mask16x32<Self>,
         merge: i16x32<Self>,
-    ) -> i16x32<Self>;
+    ) -> i16x32<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
@@ -8894,8 +10156,7 @@ pub trait Simd:
     #[doc = "Return the number of zeros in the binary representation of each element."]
     #[inline(always)]
     fn count_zeros_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.count_zeros_i16x16(a0), self.count_zeros_i16x16(a1))
+        self.count_ones_i16x32(self.not_i16x32(a))
     }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     #[inline(always)]
@@ -8953,29 +10214,22 @@ pub trait Simd:
     #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn and_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.and_i16x16(a0, b0), self.and_i16x16(a1, b1))
+        Bytes::from_bytes(self.and_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn or_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.or_i16x16(a0, b0), self.or_i16x16(a1, b1))
+        Bytes::from_bytes(self.or_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn xor_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.xor_i16x16(a0, b0), self.xor_i16x16(a1, b1))
+        Bytes::from_bytes(self.xor_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.not_i16x16(a0), self.not_i16x16(a1))
+        a ^ !0
     }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     #[inline(always)]
@@ -9044,10 +10298,11 @@ pub trait Simd:
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
     #[inline(always)]
     fn clamp_i16x32(self, a: i16x32<Self>, b: i16x32<Self>, c: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        let (c0, c1) = self.split_i16x32(c);
-        self.combine_i16x16(self.clamp_i16x16(a0, b0, c0), self.clamp_i16x16(a1, b1, c1))
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -9160,8 +10415,7 @@ pub trait Simd:
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     #[inline(always)]
     fn neg_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.neg_i16x16(a0), self.neg_i16x16(a1))
+        self.sub_i16x32(self.splat_i16x32(0), a)
     }
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
     #[inline(always)]
@@ -9322,23 +10576,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_u16x32(self, values: u16x32<Self>, mask: mask16x32<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn compress_u16x32(self, values: u16x32<Self>, mask: mask16x32<Self>) -> u16x32<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_u16x32(
         self,
         values: u16x32<Self>,
         mask: mask16x32<Self>,
         merge: u16x32<Self>,
-    ) -> u16x32<Self>;
+    ) -> u16x32<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_u16x32(self, values: u16x32<Self>, mask: mask16x32<Self>) -> u16x32<Self>;
+    #[inline(always)]
+    fn expand_u16x32(self, values: u16x32<Self>, mask: mask16x32<Self>) -> u16x32<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_u16x32(
         self,
         values: u16x32<Self>,
         mask: mask16x32<Self>,
         merge: u16x32<Self>,
-    ) -> u16x32<Self>;
+    ) -> u16x32<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
@@ -9348,8 +10626,7 @@ pub trait Simd:
     #[doc = "Return the number of zeros in the binary representation of each element."]
     #[inline(always)]
     fn count_zeros_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u16x16(self.count_zeros_u16x16(a0), self.count_zeros_u16x16(a1))
+        self.count_ones_u16x32(self.not_u16x32(a))
     }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     #[inline(always)]
@@ -9407,29 +10684,22 @@ pub trait Simd:
     #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn and_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.and_u16x16(a0, b0), self.and_u16x16(a1, b1))
+        Bytes::from_bytes(self.and_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn or_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.or_u16x16(a0, b0), self.or_u16x16(a1, b1))
+        Bytes::from_bytes(self.or_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn xor_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.xor_u16x16(a0, b0), self.xor_u16x16(a1, b1))
+        Bytes::from_bytes(self.xor_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u16x16(self.not_u16x16(a0), self.not_u16x16(a1))
+        a ^ !0
     }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     #[inline(always)]
@@ -9498,10 +10768,11 @@ pub trait Simd:
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
     #[inline(always)]
     fn clamp_u16x32(self, a: u16x32<Self>, b: u16x32<Self>, c: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        let (c0, c1) = self.split_u16x32(c);
-        self.combine_u16x16(self.clamp_u16x16(a0, b0, c0), self.clamp_u16x16(a1, b1, c1))
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -9711,53 +10982,63 @@ pub trait Simd:
         lo | (hi << 16usize)
     }
     #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
-    fn from_vector_mask16x32(self, vector: i16x32<Self>) -> mask16x32<Self>;
+    #[inline(always)]
+    fn from_vector_mask16x32(self, vector: i16x32<Self>) -> mask16x32<Self> {
+        mask16x32 {
+            val: crate::transmute::checked_transmute_copy(&vector.val),
+            simd: self,
+        }
+    }
     #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
-    fn to_vector_mask16x32(self, a: mask16x32<Self>) -> i16x32<Self>;
+    #[inline(always)]
+    fn to_vector_mask16x32(self, a: mask16x32<Self>) -> i16x32<Self> {
+        i16x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask16x32(self, a: &mut mask16x32<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_left_mask16x32<const OFFSET: usize>(
         self,
         a: mask16x32<Self>,
-    ) -> mask16x32<Self>;
+    ) -> mask16x32<Self> {
+        mask16x32::from_vector(a.to_vector().rotate_elements_left::<OFFSET>())
+    }
     #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_right_mask16x32<const OFFSET: usize>(
         self,
         a: mask16x32<Self>,
-    ) -> mask16x32<Self>;
+    ) -> mask16x32<Self> {
+        mask16x32::from_vector(a.to_vector().rotate_elements_right::<OFFSET>())
+    }
     #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(self.and_mask16x16(a0, b0), self.and_mask16x16(a1, b1))
+        mask16x32::from_vector(a.to_vector() & b.to_vector())
     }
     #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn or_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(self.or_mask16x16(a0, b0), self.or_mask16x16(a1, b1))
+        mask16x32::from_vector(a.to_vector() | b.to_vector())
     }
     #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn xor_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(self.xor_mask16x16(a0, b0), self.xor_mask16x16(a1, b1))
+        mask16x32::from_vector(a.to_vector() ^ b.to_vector())
     }
     #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not_mask16x32(self, a: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        self.combine_mask16x16(self.not_mask16x16(a0), self.not_mask16x16(a1))
+        mask16x32::from_vector(!a.to_vector())
     }
     #[doc = "Reverse the order of the mask's logical lanes."]
     #[inline(always)]
     fn reverse_mask16x32(self, a: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        self.combine_mask16x16(self.reverse_mask16x16(a1), self.reverse_mask16x16(a0))
+        mask16x32::from_vector(a.to_vector().reverse())
     }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
@@ -9916,23 +11197,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_i32x16(self, values: i32x16<Self>, mask: mask32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn compress_i32x16(self, values: i32x16<Self>, mask: mask32x16<Self>) -> i32x16<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_i32x16(
         self,
         values: i32x16<Self>,
         mask: mask32x16<Self>,
         merge: i32x16<Self>,
-    ) -> i32x16<Self>;
+    ) -> i32x16<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_i32x16(self, values: i32x16<Self>, mask: mask32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn expand_i32x16(self, values: i32x16<Self>, mask: mask32x16<Self>) -> i32x16<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_i32x16(
         self,
         values: i32x16<Self>,
         mask: mask32x16<Self>,
         merge: i32x16<Self>,
-    ) -> i32x16<Self>;
+    ) -> i32x16<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
@@ -9942,8 +11247,7 @@ pub trait Simd:
     #[doc = "Return the number of zeros in the binary representation of each element."]
     #[inline(always)]
     fn count_zeros_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.count_zeros_i32x8(a0), self.count_zeros_i32x8(a1))
+        self.count_ones_i32x16(self.not_i32x16(a))
     }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     #[inline(always)]
@@ -10001,29 +11305,22 @@ pub trait Simd:
     #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn and_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.and_i32x8(a0, b0), self.and_i32x8(a1, b1))
+        Bytes::from_bytes(self.and_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn or_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.or_i32x8(a0, b0), self.or_i32x8(a1, b1))
+        Bytes::from_bytes(self.or_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn xor_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.xor_i32x8(a0, b0), self.xor_i32x8(a1, b1))
+        Bytes::from_bytes(self.xor_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.not_i32x8(a0), self.not_i32x8(a1))
+        a ^ !0
     }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     #[inline(always)]
@@ -10092,10 +11389,11 @@ pub trait Simd:
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
     #[inline(always)]
     fn clamp_i32x16(self, a: i32x16<Self>, b: i32x16<Self>, c: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        let (c0, c1) = self.split_i32x16(c);
-        self.combine_i32x8(self.clamp_i32x8(a0, b0, c0), self.clamp_i32x8(a1, b1, c1))
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -10202,8 +11500,7 @@ pub trait Simd:
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     #[inline(always)]
     fn neg_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.neg_i32x8(a0), self.neg_i32x8(a1))
+        self.sub_i32x16(self.splat_i32x16(0), a)
     }
     #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
     #[inline(always)]
@@ -10370,23 +11667,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_u32x16(self, values: u32x16<Self>, mask: mask32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn compress_u32x16(self, values: u32x16<Self>, mask: mask32x16<Self>) -> u32x16<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_u32x16(
         self,
         values: u32x16<Self>,
         mask: mask32x16<Self>,
         merge: u32x16<Self>,
-    ) -> u32x16<Self>;
+    ) -> u32x16<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_u32x16(self, values: u32x16<Self>, mask: mask32x16<Self>) -> u32x16<Self>;
+    #[inline(always)]
+    fn expand_u32x16(self, values: u32x16<Self>, mask: mask32x16<Self>) -> u32x16<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_u32x16(
         self,
         values: u32x16<Self>,
         mask: mask32x16<Self>,
         merge: u32x16<Self>,
-    ) -> u32x16<Self>;
+    ) -> u32x16<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
@@ -10396,8 +11717,7 @@ pub trait Simd:
     #[doc = "Return the number of zeros in the binary representation of each element."]
     #[inline(always)]
     fn count_zeros_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u32x8(self.count_zeros_u32x8(a0), self.count_zeros_u32x8(a1))
+        self.count_ones_u32x16(self.not_u32x16(a))
     }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     #[inline(always)]
@@ -10455,29 +11775,22 @@ pub trait Simd:
     #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn and_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.and_u32x8(a0, b0), self.and_u32x8(a1, b1))
+        Bytes::from_bytes(self.and_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn or_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.or_u32x8(a0, b0), self.or_u32x8(a1, b1))
+        Bytes::from_bytes(self.or_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn xor_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.xor_u32x8(a0, b0), self.xor_u32x8(a1, b1))
+        Bytes::from_bytes(self.xor_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u32x8(self.not_u32x8(a0), self.not_u32x8(a1))
+        a ^ !0
     }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     #[inline(always)]
@@ -10546,10 +11859,11 @@ pub trait Simd:
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
     #[inline(always)]
     fn clamp_u32x16(self, a: u32x16<Self>, b: u32x16<Self>, c: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        let (c0, c1) = self.split_u32x16(c);
-        self.combine_u32x8(self.clamp_u32x8(a0, b0, c0), self.clamp_u32x8(a1, b1, c1))
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -10759,53 +12073,63 @@ pub trait Simd:
         lo | (hi << 8usize)
     }
     #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
-    fn from_vector_mask32x16(self, vector: i32x16<Self>) -> mask32x16<Self>;
+    #[inline(always)]
+    fn from_vector_mask32x16(self, vector: i32x16<Self>) -> mask32x16<Self> {
+        mask32x16 {
+            val: crate::transmute::checked_transmute_copy(&vector.val),
+            simd: self,
+        }
+    }
     #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
-    fn to_vector_mask32x16(self, a: mask32x16<Self>) -> i32x16<Self>;
+    #[inline(always)]
+    fn to_vector_mask32x16(self, a: mask32x16<Self>) -> i32x16<Self> {
+        i32x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask32x16(self, a: &mut mask32x16<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_left_mask32x16<const OFFSET: usize>(
         self,
         a: mask32x16<Self>,
-    ) -> mask32x16<Self>;
+    ) -> mask32x16<Self> {
+        mask32x16::from_vector(a.to_vector().rotate_elements_left::<OFFSET>())
+    }
     #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_right_mask32x16<const OFFSET: usize>(
         self,
         a: mask32x16<Self>,
-    ) -> mask32x16<Self>;
+    ) -> mask32x16<Self> {
+        mask32x16::from_vector(a.to_vector().rotate_elements_right::<OFFSET>())
+    }
     #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(self.and_mask32x8(a0, b0), self.and_mask32x8(a1, b1))
+        mask32x16::from_vector(a.to_vector() & b.to_vector())
     }
     #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn or_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(self.or_mask32x8(a0, b0), self.or_mask32x8(a1, b1))
+        mask32x16::from_vector(a.to_vector() | b.to_vector())
     }
     #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn xor_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(self.xor_mask32x8(a0, b0), self.xor_mask32x8(a1, b1))
+        mask32x16::from_vector(a.to_vector() ^ b.to_vector())
     }
     #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not_mask32x16(self, a: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        self.combine_mask32x8(self.not_mask32x8(a0), self.not_mask32x8(a1))
+        mask32x16::from_vector(!a.to_vector())
     }
     #[doc = "Reverse the order of the mask's logical lanes."]
     #[inline(always)]
     fn reverse_mask32x16(self, a: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        self.combine_mask32x8(self.reverse_mask32x8(a1), self.reverse_mask32x8(a0))
+        mask32x16::from_vector(a.to_vector().reverse())
     }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
@@ -10957,23 +12281,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_f64x8(self, values: f64x8<Self>, mask: mask64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn compress_f64x8(self, values: f64x8<Self>, mask: mask64x8<Self>) -> f64x8<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_f64x8(
         self,
         values: f64x8<Self>,
         mask: mask64x8<Self>,
         merge: f64x8<Self>,
-    ) -> f64x8<Self>;
+    ) -> f64x8<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_f64x8(self, values: f64x8<Self>, mask: mask64x8<Self>) -> f64x8<Self>;
+    #[inline(always)]
+    fn expand_f64x8(self, values: f64x8<Self>, mask: mask64x8<Self>) -> f64x8<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_f64x8(
         self,
         values: f64x8<Self>,
         mask: mask64x8<Self>,
         merge: f64x8<Self>,
-    ) -> f64x8<Self>;
+    ) -> f64x8<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Negate each element of the vector."]
     #[inline(always)]
     fn neg_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
@@ -11296,19 +12644,44 @@ pub trait Simd:
         self.combine_f64x4(self.to_radians_f64x4(a0), self.to_radians_f64x4(a1))
     }
     #[doc = "Return a mask indicating which elements are NaN."]
-    fn is_nan_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn is_nan_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
+        a.simd_ne(a)
+    }
     #[doc = "Return a mask indicating which elements are positive or negative infinite."]
-    fn is_infinite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn is_infinite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
+        a.abs().simd_eq(f64::INFINITY)
+    }
     #[doc = "Return a mask indicating which elements are neither infinite nor NaN."]
-    fn is_finite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn is_finite_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
+        a.abs().simd_lt(f64::INFINITY)
+    }
     #[doc = "Return a mask indicating which elements are subnormal.\n\nThis classifies the stored bit pattern, even when floating-point operations treat subnormals as zero."]
-    fn is_subnormal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn is_subnormal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
+        let i: i64x8<Self> = a.bitcast();
+        (i & 0x7FF0_0000_0000_0000_i64).simd_eq(0) & (i & 0x000F_FFFF_FFFF_FFFF_i64).simd_ne(0)
+    }
     #[doc = "Return a mask indicating which elements are neither zero, infinite, subnormal, or NaN."]
-    fn is_normal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn is_normal_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
+        let i: i64x8<Self> = a.bitcast();
+        let exp = i & 0x7FF0_0000_0000_0000_i64;
+        exp.simd_ne(0) & exp.simd_ne(0x7FF0_0000_0000_0000_i64)
+    }
     #[doc = "Return a mask indicating which elements have a positive sign, including `+0.0`, NaNs with positive sign bit and positive infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_positive`] for details."]
-    fn is_sign_positive_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn is_sign_positive_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
+        let i: i64x8<Self> = a.bitcast();
+        (i & i64::MIN).simd_eq(0)
+    }
     #[doc = "Return a mask indicating which elements have a negative sign, including `-0.0`, NaNs with negative sign bit and negative infinity.\n\nNaN inputs may produce an unexpected or non-portable result, see [`f32::is_sign_negative`] for details."]
-    fn is_sign_negative_f64x8(self, a: f64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn is_sign_negative_f64x8(self, a: f64x8<Self>) -> mask64x8<Self> {
+        !a.is_sign_positive()
+    }
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
     fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
@@ -11454,23 +12827,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_i64x8(self, values: i64x8<Self>, mask: mask64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn compress_i64x8(self, values: i64x8<Self>, mask: mask64x8<Self>) -> i64x8<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_i64x8(
         self,
         values: i64x8<Self>,
         mask: mask64x8<Self>,
         merge: i64x8<Self>,
-    ) -> i64x8<Self>;
+    ) -> i64x8<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_i64x8(self, values: i64x8<Self>, mask: mask64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn expand_i64x8(self, values: i64x8<Self>, mask: mask64x8<Self>) -> i64x8<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_i64x8(
         self,
         values: i64x8<Self>,
         mask: mask64x8<Self>,
         merge: i64x8<Self>,
-    ) -> i64x8<Self>;
+    ) -> i64x8<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
@@ -11480,8 +12877,7 @@ pub trait Simd:
     #[doc = "Return the number of zeros in the binary representation of each element."]
     #[inline(always)]
     fn count_zeros_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        self.combine_i64x4(self.count_zeros_i64x4(a0), self.count_zeros_i64x4(a1))
+        self.count_ones_i64x8(self.not_i64x8(a))
     }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     #[inline(always)]
@@ -11539,29 +12935,22 @@ pub trait Simd:
     #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn and_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.and_i64x4(a0, b0), self.and_i64x4(a1, b1))
+        Bytes::from_bytes(self.and_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn or_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.or_i64x4(a0, b0), self.or_i64x4(a1, b1))
+        Bytes::from_bytes(self.or_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn xor_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        self.combine_i64x4(self.xor_i64x4(a0, b0), self.xor_i64x4(a1, b1))
+        Bytes::from_bytes(self.xor_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        self.combine_i64x4(self.not_i64x4(a0), self.not_i64x4(a1))
+        a ^ !0
     }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     #[inline(always)]
@@ -11630,10 +13019,11 @@ pub trait Simd:
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
     #[inline(always)]
     fn clamp_i64x8(self, a: i64x8<Self>, b: i64x8<Self>, c: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        let (b0, b1) = self.split_i64x8(b);
-        let (c0, c1) = self.split_i64x8(c);
-        self.combine_i64x4(self.clamp_i64x4(a0, b0, c0), self.clamp_i64x4(a1, b1, c1))
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -11740,8 +13130,7 @@ pub trait Simd:
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     #[inline(always)]
     fn neg_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        self.combine_i64x4(self.neg_i64x4(a0), self.neg_i64x4(a1))
+        self.sub_i64x8(self.splat_i64x8(0), a)
     }
     #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
     #[inline(always)]
@@ -11853,23 +13242,47 @@ pub trait Simd:
         ))
     }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\nThis is equivalent to [`SimdBase::compress_merge`] with a zeroed merge vector."]
-    fn compress_u64x8(self, values: u64x8<Self>, mask: mask64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn compress_u64x8(self, values: u64x8<Self>, mask: mask64x8<Self>) -> u64x8<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Compact the elements selected by `mask` into consecutive low lanes, preserving their order.\n\nLanes above the number of selected elements retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[k] = values[i];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn compress_merge_u64x8(
         self,
         values: u64x8<Self>,
         mask: mask64x8<Self>,
         merge: u64x8<Self>,
-    ) -> u64x8<Self>;
+    ) -> u64x8<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.compress_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes are zero (positive zero for floats).\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros..\n\nThis is equivalent to [`SimdBase::expand_merge`] with a zeroed merge vector."]
-    fn expand_u64x8(self, values: u64x8<Self>, mask: mask64x8<Self>) -> u64x8<Self>;
+    #[inline(always)]
+    fn expand_u64x8(self, values: u64x8<Self>, mask: mask64x8<Self>) -> u64x8<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_u8x64(Bytes::to_bytes(values), mask))
+    }
     #[doc = "Expand consecutive low elements from `values` into the lanes selected by `mask`, preserving their order.\n\nUnselected lanes retain the corresponding values from `merge`.\n\nElements are moved without changing their bits, including floating-point NaN payloads and signed zeros.\n\n## Pseudo code\n\n```ignore\nlet mut result = merge;\nlet mut k = 0;\nfor i in 0..LEN {\n    if mask[i] {\n        result[i] = values[k];\n        k += 1;\n    }\n}\nreturn result;\n```"]
+    #[inline(always)]
     fn expand_merge_u64x8(
         self,
         values: u64x8<Self>,
         mask: mask64x8<Self>,
         merge: u64x8<Self>,
-    ) -> u64x8<Self>;
+    ) -> u64x8<Self> {
+        let mask = mask8x64::from_vector(mask.to_vector().bitcast::<i8x64<Self>>());
+        Bytes::from_bytes(self.expand_merge_u8x64(
+            Bytes::to_bytes(values),
+            mask,
+            Bytes::to_bytes(merge),
+        ))
+    }
     #[doc = "Return the number of ones in the binary representation of each element."]
     #[inline(always)]
     fn count_ones_u64x8(self, a: u64x8<Self>) -> u64x8<Self> {
@@ -11879,8 +13292,7 @@ pub trait Simd:
     #[doc = "Return the number of zeros in the binary representation of each element."]
     #[inline(always)]
     fn count_zeros_u64x8(self, a: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        self.combine_u64x4(self.count_zeros_u64x4(a0), self.count_zeros_u64x4(a1))
+        self.count_ones_u64x8(self.not_u64x8(a))
     }
     #[doc = "Reverses the byte order of the integer.\n\n# Examples\n\n```\n# use fearless_simd::*;\n# dispatch!(Level::new(), simd => {\nlet a = u16x8::from_slice(simd, &[0x00_01, 0x02_03, 0x04_05, 0x06_07, 0x08_09, 0x0A_0B, 0x0C_0D, 0x0E_0F]);\nassert_eq!(*a.swap_bytes(), [0x01_00, 0x03_02, 0x05_04, 0x07_06, 0x09_08, 0x0B_0A, 0x0D_0C, 0x0F_0E]);\n\nlet b = u32x4::from_slice(simd, &[0x00_01_02_03, 0x04_05_06_07, 0x08_09_0A_0B, 0x0C_0D_0E_0F]);\nassert_eq!(*b.swap_bytes(), [0x03_02_01_00, 0x07_06_05_04, 0x0B_0A_09_08, 0x0F_0E_0D_0C]);\n\nlet c = u64x2::from_slice(simd, &[0x00_01_02_03_04_05_06_07, 0x08_09_0A_0B_0C_0D_0E_0F]);\nassert_eq!(*c.swap_bytes(), [0x07_06_05_04_03_02_01_00, 0x0F_0E_0D_0C_0B_0A_09_08]);\n# });\n```"]
     #[inline(always)]
@@ -11938,29 +13350,22 @@ pub trait Simd:
     #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn and_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.and_u64x4(a0, b0), self.and_u64x4(a1, b1))
+        Bytes::from_bytes(self.and_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn or_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.or_u64x4(a0, b0), self.or_u64x4(a1, b1))
+        Bytes::from_bytes(self.or_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn xor_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        self.combine_u64x4(self.xor_u64x4(a0, b0), self.xor_u64x4(a1, b1))
+        Bytes::from_bytes(self.xor_u8x64(Bytes::to_bytes(a), Bytes::to_bytes(b)))
     }
     #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not_u64x8(self, a: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        self.combine_u64x4(self.not_u64x4(a0), self.not_u64x4(a1))
+        a ^ !0
     }
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     #[inline(always)]
@@ -12029,10 +13434,11 @@ pub trait Simd:
     #[doc = "Clamp each element to the interval `[b, c]`.\n\nIf `b > c`, or `b` or `c` are NaN, the result is implementation-defined for that lane.\n\nIf `a` is NaN, the result is an implementation-defined non-deterministic NaN value. I.e. the result of the lane will be a NaN value but its exact bit pattern is not specified.\n\nIf one floating-point operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n# Panics\nPanics with debug assertions if `b > c` for any element or any element of `b` or `c` is NaN."]
     #[inline(always)]
     fn clamp_u64x8(self, a: u64x8<Self>, b: u64x8<Self>, c: u64x8<Self>) -> u64x8<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        let (b0, b1) = self.split_u64x8(b);
-        let (c0, c1) = self.split_u64x8(c);
-        self.combine_u64x4(self.clamp_u64x4(a0, b0, c0), self.clamp_u64x4(a1, b1, c1))
+        debug_assert!(
+            b.simd_le(c).all_true(),
+            "clamp requires min <= max for all elements"
+        );
+        a.max(b).min(c)
     }
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     #[inline(always)]
@@ -12191,53 +13597,63 @@ pub trait Simd:
         lo | (hi << 4usize)
     }
     #[doc = "Create a SIMD mask from an integer vector of the same width.\n\nA lane value of -1 means \"true\", a lane value of 0 means \"false\", and all other lane values result in unspecified behavior."]
-    fn from_vector_mask64x8(self, vector: i64x8<Self>) -> mask64x8<Self>;
+    #[inline(always)]
+    fn from_vector_mask64x8(self, vector: i64x8<Self>) -> mask64x8<Self> {
+        mask64x8 {
+            val: crate::transmute::checked_transmute_copy(&vector.val),
+            simd: self,
+        }
+    }
     #[doc = "Convert a SIMD mask to an integer vector of the same width.\n\n\"True\" maps to -1 and \"false\" maps to 0."]
-    fn to_vector_mask64x8(self, a: mask64x8<Self>) -> i64x8<Self>;
+    #[inline(always)]
+    fn to_vector_mask64x8(self, a: mask64x8<Self>) -> i64x8<Self> {
+        i64x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
     #[doc = "Set one logical lane of a SIMD mask."]
     fn set_mask64x8(self, a: &mut mask64x8<Self>, index: usize, value: bool) -> ();
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_left_mask64x8<const OFFSET: usize>(
         self,
         a: mask64x8<Self>,
-    ) -> mask64x8<Self>;
+    ) -> mask64x8<Self> {
+        mask64x8::from_vector(a.to_vector().rotate_elements_left::<OFFSET>())
+    }
     #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
+    #[inline(always)]
     fn rotate_elements_right_mask64x8<const OFFSET: usize>(
         self,
         a: mask64x8<Self>,
-    ) -> mask64x8<Self>;
+    ) -> mask64x8<Self> {
+        mask64x8::from_vector(a.to_vector().rotate_elements_right::<OFFSET>())
+    }
     #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(self.and_mask64x4(a0, b0), self.and_mask64x4(a1, b1))
+        mask64x8::from_vector(a.to_vector() & b.to_vector())
     }
     #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn or_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(self.or_mask64x4(a0, b0), self.or_mask64x4(a1, b1))
+        mask64x8::from_vector(a.to_vector() | b.to_vector())
     }
     #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn xor_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(self.xor_mask64x4(a0, b0), self.xor_mask64x4(a1, b1))
+        mask64x8::from_vector(a.to_vector() ^ b.to_vector())
     }
     #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not_mask64x8(self, a: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        self.combine_mask64x4(self.not_mask64x4(a0), self.not_mask64x4(a1))
+        mask64x8::from_vector(!a.to_vector())
     }
     #[doc = "Reverse the order of the mask's logical lanes."]
     #[inline(always)]
     fn reverse_mask64x8(self, a: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        self.combine_mask64x4(self.reverse_mask64x4(a1), self.reverse_mask64x4(a0))
+        mask64x8::from_vector(a.to_vector().reverse())
     }
     #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     #[inline(always)]
@@ -12644,17 +14060,30 @@ pub trait SimdBase<S: Simd>:
         + IntoIterator<Item = Self::Element>
         + AsRef<[Self::Element]>
         + AsMut<[Self::Element]>
+        + for<'a> TryFrom<&'a [Self::Element]>
         + From<Self>;
-    fn as_slice(&self) -> &[Self::Element];
-    fn as_mut_slice(&mut self) -> &mut [Self::Element];
+    #[inline(always)]
+    fn as_slice(&self) -> &[Self::Element] {
+        self.as_array().as_ref()
+    }
+    #[inline(always)]
+    fn as_mut_slice(&mut self) -> &mut [Self::Element] {
+        self.as_mut_array().as_mut()
+    }
     #[doc = r" Create a SIMD vector from a slice."]
     #[doc = r""]
     #[doc = r" The slice must be exactly the size of the SIMD vector."]
-    fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        Self::load_array(simd, slice.try_into().unwrap_or_else(|_| unreachable!()))
+    }
     #[doc = r" Store a SIMD vector into a slice."]
     #[doc = r""]
     #[doc = r" The slice must be exactly the size of the SIMD vector."]
-    fn store_slice(&self, slice: &mut [Self::Element]);
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        slice.copy_from_slice(self.as_array().as_ref());
+    }
     #[doc = r" Create a SIMD vector from its corresponding lane array."]
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
@@ -12990,7 +14419,10 @@ pub trait SimdBase<S: Simd>:
     #[doc = "Compute the absolute value of each element.\n\nUnsigned integers are unchanged. Signed integers use wrapping absolute value: the minimum representable value remains unchanged. This matches `i32::abs()`.\n\nFor floating-point elements, clear the sign bit, preserving all other bits. For example, negative zero becomes positive zero."]
     fn abs(self) -> Self;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat(simd: S, val: Self::Element) -> Self;
+    #[inline(always)]
+    fn splat(simd: S, val: Self::Element) -> Self {
+        Self::simd_from(simd, val)
+    }
     #[doc = "Reverse the order of the vector's elements."]
     fn reverse(self) -> Self;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::LEN` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::LEN`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::LEN - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
@@ -13348,11 +14780,17 @@ pub trait SimdMask<S: Simd>:
     #[doc = r" Create a SIMD mask from signed integer mask lanes."]
     #[doc = r""]
     #[doc = r" The slice must be exactly the size of the SIMD mask."]
-    fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        Self::from_vector(Self::Ints::from_slice(simd, slice))
+    }
     #[doc = r" Store this SIMD mask as signed integer mask lanes."]
     #[doc = r""]
     #[doc = r" The slice must be exactly the size of the SIMD mask."]
-    fn store_slice(&self, slice: &mut [Self::Element]);
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        self.to_vector().store_slice(slice);
+    }
     #[doc = "Rotate the mask elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]
     fn rotate_elements_left<const OFFSET: usize>(self) -> Self;
     #[doc = "Rotate the mask elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::LEN`, it wraps modulo `Self::LEN`."]

@@ -338,6 +338,280 @@ pub(crate) fn pairwise_dot_product_method(op: Op, ty: &VecType) -> TokenStream {
     }
 }
 
+/// Implement a mask element rotation without assuming a vector-backed mask
+/// representation, so the body is valid for compact predicate masks too.
+pub(crate) fn mask_rotate_method(
+    op: &Op,
+    vec_ty: &VecType,
+    direction: ElementDirection,
+) -> TokenStream {
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let rotate = match direction {
+        ElementDirection::Left => quote! { rotate_elements_left },
+        ElementDirection::Right => quote! { rotate_elements_right },
+    };
+    let mask_ty = vec_ty.rust();
+    quote! {
+        #method_sig {
+            #mask_ty::from_vector(a.to_vector().#rotate::<OFFSET>())
+        }
+    }
+}
+
+/// Implement mask reversal through the corresponding signed integer vector.
+pub(crate) fn mask_reverse_method(op: &Op, vec_ty: &VecType) -> TokenStream {
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let mask_ty = vec_ty.rust();
+    quote! {
+        #method_sig {
+            #mask_ty::from_vector(a.to_vector().reverse())
+        }
+    }
+}
+
+/// Implement element selection with bitwise operations, without relying on a
+/// backend-specific blend intrinsic.
+pub(crate) fn select_method(op: &Op, vec_ty: &VecType) -> TokenStream {
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let int_ty = vec_ty.cast(ScalarType::Int).rust();
+    if vec_ty.scalar == ScalarType::Mask {
+        let mask_ty = vec_ty.rust();
+        quote! {
+            #method_sig {
+                let mask = a.to_vector();
+                let b = b.to_vector();
+                let c = c.to_vector();
+                #mask_ty::from_vector((mask & b) | (!mask & c))
+            }
+        }
+    } else {
+        quote! {
+            #method_sig {
+                let mask = a.to_vector();
+                let b = b.bitcast::<#int_ty<Self>>();
+                let c = c.bitcast::<#int_ty<Self>>();
+                ((mask & b) | (!mask & c)).bitcast()
+            }
+        }
+    }
+}
+
+pub(crate) fn interleave_method(op: &Op, vec_ty: &VecType) -> TokenStream {
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let zip_low = generic_op_name("zip_low", vec_ty);
+    let zip_high = generic_op_name("zip_high", vec_ty);
+    quote! {
+        #method_sig {
+            (self.#zip_low(a, b), self.#zip_high(a, b))
+        }
+    }
+}
+
+pub(crate) fn deinterleave_method(op: &Op, vec_ty: &VecType) -> TokenStream {
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let unzip_low = generic_op_name("unzip_low", vec_ty);
+    let unzip_high = generic_op_name("unzip_high", vec_ty);
+    quote! {
+        #method_sig {
+            (self.#unzip_low(a, b), self.#unzip_high(a, b))
+        }
+    }
+}
+
+/// Forward element-width-independent bitwise operations through the byte vector.
+pub(crate) fn byte_binary_default_op(op: &Op, vec_ty: &VecType) -> TokenStream {
+    assert_ne!(vec_ty.scalar, ScalarType::Mask);
+    assert_ne!(*vec_ty, vec_ty.bytes_ty());
+    assert!(matches!(op.method, "and" | "or" | "xor"));
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let byte_method = generic_op_name(op.method, &vec_ty.bytes_ty());
+    quote! {
+        #method_sig {
+            Bytes::from_bytes(self.#byte_method(Bytes::to_bytes(a), Bytes::to_bytes(b)))
+        }
+    }
+}
+
+/// Implement mask bitwise operations through the corresponding integer vector.
+pub(crate) fn mask_binary_default_op(op: &Op, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(vec_ty.scalar, ScalarType::Mask);
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let mask_ty = vec_ty.rust();
+    match op.method {
+        "and" => quote! {
+            #method_sig {
+                #mask_ty::from_vector(a.to_vector() & b.to_vector())
+            }
+        },
+        "or" => quote! {
+            #method_sig {
+                #mask_ty::from_vector(a.to_vector() | b.to_vector())
+            }
+        },
+        "xor" => quote! {
+            #method_sig {
+                #mask_ty::from_vector(a.to_vector() ^ b.to_vector())
+            }
+        },
+        "not" => quote! {
+            #method_sig {
+                #mask_ty::from_vector(!a.to_vector())
+            }
+        },
+        _ => unreachable!("mask_binary_default_op only handles bitwise operations"),
+    }
+}
+
+/// Mask/integer-vector conversions are bitcasts when masks are vector-backed.
+pub(crate) fn mask_from_vector_default_op(op: &Op, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(vec_ty.scalar, ScalarType::Mask);
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let mask_ty = vec_ty.rust();
+    quote! {
+        #method_sig {
+            #mask_ty {
+                val: crate::transmute::checked_transmute_copy(&vector.val),
+                simd: self,
+            }
+        }
+    }
+}
+
+pub(crate) fn mask_to_vector_default_op(op: &Op, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(vec_ty.scalar, ScalarType::Mask);
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let int_ty = vec_ty.cast(ScalarType::Int).rust();
+    quote! {
+        #method_sig {
+            #int_ty {
+                val: crate::transmute::checked_transmute_copy(&a.val),
+                simd: self,
+            }
+        }
+    }
+}
+
+/// Forward typed compression/expansion through bytes using only the public mask
+/// conversion methods, so the body is valid for compact predicate masks too.
+pub(crate) fn byte_compact_default_op(op: &Op, vec_ty: &VecType) -> TokenStream {
+    assert_ne!(vec_ty.scalar, ScalarType::Mask);
+    assert_ne!(*vec_ty, vec_ty.bytes_ty());
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    let byte_ty = vec_ty.bytes_ty();
+    let byte_method = generic_op_name(op.method, &byte_ty);
+    let byte_mask_ty = byte_ty.mask_ty().rust();
+    let byte_int_ty = byte_ty.cast(ScalarType::Int).rust();
+    let merge_arg = match op.sig {
+        OpSig::Compress { merge: true } | OpSig::Expand { merge: true } => {
+            quote! { , Bytes::to_bytes(merge) }
+        }
+        OpSig::Compress { merge: false } | OpSig::Expand { merge: false } => TokenStream::new(),
+        _ => unreachable!("only compact operations can be forwarded through bytes"),
+    };
+    quote! {
+        #method_sig {
+            let mask = #byte_mask_ty::from_vector(
+                mask.to_vector().bitcast::<#byte_int_ty<Self>>(),
+            );
+            Bytes::from_bytes(self.#byte_method(Bytes::to_bytes(values), mask #merge_arg))
+        }
+    }
+}
+
+/// Implementations that can be shared by every backend in the `Simd` trait.
+///
+/// These operations are expressed in terms of other `Simd` methods rather than
+/// platform intrinsics, so generating a copy in each backend only adds work for
+/// the compiler. Backends that have a faster platform-specific formulation
+/// override the trait default via [`crate::level::Level::overrides_trait_default`].
+pub(crate) fn trait_default_op(op: &Op, vec_ty: &VecType) -> Option<TokenStream> {
+    let method_sig = op.simd_trait_method_sig(vec_ty);
+    match op.sig {
+        OpSig::Unary if op.method == "swap_bytes" && vec_ty.scalar_bits == 8 => {
+            Some(quote! { #method_sig { a } })
+        }
+        OpSig::Unary
+            if op.method == "count_zeros"
+                && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) =>
+        {
+            let not = generic_op_name("not", vec_ty);
+            let count_ones = generic_op_name("count_ones", vec_ty);
+            Some(quote! {
+                #method_sig {
+                    self.#count_ones(self.#not(a))
+                }
+            })
+        }
+        OpSig::Unary
+            if op.method == "not"
+                && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) =>
+        {
+            Some(quote! { #method_sig { a ^ !0 } })
+        }
+        OpSig::Unary
+            if op.method == "neg"
+                && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) =>
+        {
+            let splat = generic_op_name("splat", vec_ty);
+            let sub = generic_op_name("sub", vec_ty);
+            Some(quote! {
+                #method_sig {
+                    self.#sub(self.#splat(0), a)
+                }
+            })
+        }
+        OpSig::UnaryClassify => Some(generic_classify(method_sig, op.method, vec_ty)),
+        OpSig::Ternary
+            if op.method == "clamp"
+                && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) =>
+        {
+            Some(generic_clamp_int(method_sig))
+        }
+        OpSig::RotateElements { direction } if vec_ty.scalar == ScalarType::Mask => {
+            Some(mask_rotate_method(op, vec_ty, direction))
+        }
+        OpSig::Unary if op.method == "reverse" && vec_ty.scalar == ScalarType::Mask => {
+            Some(mask_reverse_method(op, vec_ty))
+        }
+        OpSig::MaskFromVector => Some(mask_from_vector_default_op(op, vec_ty)),
+        OpSig::MaskToVector => Some(mask_to_vector_default_op(op, vec_ty)),
+        // Wider vectors keep the existing split/combine default, which avoids
+        // redundant work on backends whose native width is 128 bits.
+        OpSig::Select if vec_ty.n_bits() <= 128 => Some(select_method(op, vec_ty)),
+        OpSig::Binary
+            if vec_ty.scalar == ScalarType::Mask && matches!(op.method, "and" | "or" | "xor") =>
+        {
+            Some(mask_binary_default_op(op, vec_ty))
+        }
+        OpSig::Unary if vec_ty.scalar == ScalarType::Mask && matches!(op.method, "not") => {
+            Some(mask_binary_default_op(op, vec_ty))
+        }
+        OpSig::Binary
+            if matches!(op.method, "and" | "or" | "xor")
+                && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
+                && *vec_ty != vec_ty.bytes_ty() =>
+        {
+            Some(byte_binary_default_op(op, vec_ty))
+        }
+        OpSig::Interleave if vec_ty.n_bits() <= 128 => Some(interleave_method(op, vec_ty)),
+        OpSig::Deinterleave if vec_ty.n_bits() <= 128 => Some(deinterleave_method(op, vec_ty)),
+        OpSig::Compress { .. } | OpSig::Expand { .. } if vec_ty.scalar != ScalarType::Mask => {
+            if *vec_ty == vec_ty.bytes_ty() {
+                Some(generic_op(op, vec_ty))
+            } else {
+                Some(byte_compact_default_op(op, vec_ty))
+            }
+        }
+        OpSig::WideningBinary { .. } if vec_ty.n_bits() <= 128 => {
+            Some(widening_binary_method(*op, vec_ty))
+        }
+        OpSig::PairwiseDotProduct { .. } if vec_ty.n_bits() <= 128 => {
+            Some(pairwise_dot_product_method(*op, vec_ty))
+        }
+        _ => None,
+    }
+}
+
 /// Generic operation implementations.
 ///
 /// Most operations are implemented using split/combine, while some forward to
